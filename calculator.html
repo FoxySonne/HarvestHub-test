@@ -108,7 +108,7 @@ body {
     background: var(--card);
     padding: 24px;
     border-radius: 14px;
-    text-align: center;
+    text-align: left;
 }
 
 .button {
@@ -196,21 +196,13 @@ body {
 
     <!-- MAIN -->
     <div class="main">
-
         <div class="hero">
-            <h1>Stop fighting.</h1>
-            <h1><span style="color:var(--lightgreen)">Start farming.</span></h1>
+					<div id="main-placeholder"></div>
 
-            <p>Ваш лучший помощник для Tiles Survive</p>
-
-            <a href="knowledge.html" class="button">База знаний</a>
-            <a href="calculator.html" class="button">Калькулятор</a>
-          
-
-         </div>
 
         <!-- Блок с центрированными заголовками -->
-        <div class="centered-titles">
+        <div class="main">
+        <div class="hero">
             <h2>Игра по крупному</h2>
             <h2>Турбочерепашка&VS</h2>
         </div>
@@ -265,6 +257,13 @@ fetch('sidebar.html')
     document.getElementById('sidebar-container').innerHTML = data;
   });
 </script>
-
+<script>
+  function loadBlock(placeholderId, sourceFile) {
+    const el = document.getElementById(placeholderId);
+    if (!el) return;
+    fetch(sourceFile).then(r => r.ok && r.text()).then(html => el.innerHTML = html).catch(e => console.error(e));
+  }
+  loadBlock('main-placeholder', 'main-title.html');
+</script>
 </body>
 </html>
