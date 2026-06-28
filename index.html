@@ -197,7 +197,7 @@ body {
     <!-- MAIN -->
     <div class="main">
         <div class="hero">
-					<div id="main-placeholder"></div>
+					<div id="main-container"></div>
 
 					</div>
         <h3>Популярные гайды</h3>
@@ -259,7 +259,7 @@ fetch('sidebar.html')
     if (!el) return;
     fetch(sourceFile).then(r => r.ok && r.text()).then(html => el.innerHTML = html).catch(e => console.error(e));
   }
-  loadBlock('main-placeholder', 'main-title.html');
+  loadBlock('main-container;', 'main-title.html');
 </script>
 
 </body>
