@@ -102,6 +102,7 @@ body {
 /* ===== MAIN ===== */
 .main {
     padding: 20px;
+    border-radius: 14px;
 }
 
 .hero {
@@ -194,22 +195,14 @@ body {
         <div id="sidebar-container">
 </div></div>
 
-    <!-- MAIN -->
+        <!-- MAIN -->
     <div class="main">
-
         <div class="hero">
-            <h1>Stop fighting.</h1>
-            <h1><span style="color:var(--lightgreen)">Start farming.</span></h1>
-
-            <p>Ваш лучший помощник для Tiles Survive</p>
-
-            <a href="knowledge.html" class="button">База знаний</a>
-            <a href="calculator.html" class="button">Калькулятор</a>
-        </div>
+					<div id="main-placeholder"></div>
      
 
         <h3>Популярные гайды</h3>
-        <h3>Последние обновления</h3>
+        <h3>Последние обновления</h3> </div>
 
     </div>
 
@@ -262,5 +255,26 @@ fetch('sidebar.html')
   });
 </script>
 
+<script>
+
+function loadBlock(placeholderId, sourceFile) {
+
+    const el = document.getElementById(placeholderId);
+
+    if (!el) return;
+
+    fetch(sourceFile)
+
+        .then(r => r.text())
+
+        .then(html => el.innerHTML = html);
+
+}
+
+loadBlock('main-placeholder', 'main-title.html');
+
+</script>
+
+    
 </body>
 </html>
