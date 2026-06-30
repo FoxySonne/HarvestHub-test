@@ -8,7 +8,7 @@
 /* COLORS */
 
 --bg:#0f1115;
---panel:#3e4e70;
+--panel:#213054;
 --card:#1a1f2a;
 --card-hover:#212837;
 --text:#e6e6e6;
@@ -27,7 +27,7 @@
 --success:#3d8a52;
 
 --border:#2b3140;
---shadow:0 8px 24px rgba(0,0,0,.35);
+--shadow:inset 0 8px 24px rgba(0,0,0,.35);
 
 
 /* LAYOUT */
@@ -409,9 +409,9 @@ PAGE HEADER
 
 .page-header{
 
-background:var(--card);
+background:var(--panel);
 
-padding:32px;
+padding:0px;
 
 border-radius:var(--radius-large);
 
@@ -1418,9 +1418,7 @@ grid-template-columns:1fr;
 
 .page-header{
 
-padding:24px;
-
-}
+padding:24px;}
 
 .section,
 
