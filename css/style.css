@@ -228,7 +228,7 @@ min-height:100vh;
 }
 
 
-.container{
+.{
 
 display:block;
 
@@ -1287,15 +1287,19 @@ display:none;
 
 display:grid;
 
-grid-template-columns:220px 1fr 260px;
+grid-template-columns:
+   220px 
+   minmax(700 px, 1fr)
+   260px;
 
-gap:24px;
+gap:32 px;
 
-max-width:var(--site-width);
+width:min(1900px, calc(100%-40px));
 
-margin:0 auto;
+margin:20px auto;
 
 min-height:100vh;
+   align-items:start;
 
 }
 
