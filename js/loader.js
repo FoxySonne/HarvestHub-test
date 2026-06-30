@@ -16,9 +16,11 @@ function loadBlock(containerId, filePath) {
 // Загрузка страницы в центральную область
 function loadPage(pageName) {
 
-    loadBlock("page-content", "pages/" + pageName);
+    // Запоминаем последнюю открытую страницу
 
-    // Если открыто мобильное меню — закрываем его
+    localStorage.setItem("currentPage", pageName);
+
+    loadBlock("page-content", "pages/" + pageName);
 
     if (window.innerWidth < 900) {
 
