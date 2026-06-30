@@ -18,4 +18,12 @@ function loadPage(pageName) {
 
     loadBlock("page-content", "pages/" + pageName);
 
+    // Если открыто мобильное меню — закрываем его
+
+    if (window.innerWidth < 900) {
+
+        closeMenu();
+
+    }
+
 }
