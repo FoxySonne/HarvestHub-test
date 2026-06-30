@@ -1355,9 +1355,7 @@ grid-template-columns:repeat(4,1fr);
 
 }
 
-.button-group{
-   flex-direction:row;
-}
+
 
 /* ==========================================================
 MOBILE
@@ -1397,6 +1395,9 @@ width:100%;
 
 min-width:100%;
 
+}
+.button-group{
+   flex-direction:row;
 }
 
 .input-small,
