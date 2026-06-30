@@ -1,5 +1,5 @@
 // После полной загрузки страницы
-window.addEventListener("DOMContentLoaded", function () {
+window.addEventListener("DOMContentLoaded", () => {
 
     // Левое меню
     loadBlock(
@@ -14,6 +14,8 @@ window.addEventListener("DOMContentLoaded", function () {
     );
 
     // Главная страница
-    loadPage("home.html");
+    loadPage(
+        "pages/home.html"
+    );
 
 });
