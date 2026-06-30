@@ -6,28 +6,20 @@ function clearSiteCache() {
 
     }
 
-    // Удаляем кэш браузера
-
     if ("caches" in window) {
 
         caches.keys().then(cacheNames => {
 
-            cacheNames.forEach(cacheName => {
-
-                caches.delete(cacheName);
-
-            });
+            cacheNames.forEach(cacheName => caches.delete(cacheName));
 
         });
 
     }
 
-    // Через небольшую паузу обновляем страницу
+    // Сбрасываем последнюю открытую страницу
 
-    setTimeout(() => {
+    localStorage.removeItem("currentPage");
 
-        location.reload(true);
-
-    }, 500);
+    location.reload();
 
 }
