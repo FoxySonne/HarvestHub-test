@@ -249,7 +249,7 @@ gap:16px;
 
 padding:16px 20px;
 
-background:var(--panel);
+background:var(--card);
 
 position:sticky;
 
@@ -409,7 +409,7 @@ PAGE HEADER
 
 .page-header{
 
-background:var(--panel);
+background:var(--card);
 
 padding:0px;
 
@@ -609,7 +609,7 @@ margin-top:24px;
 
 .right-panel{
 
-background:var(--panel);
+background:var(--card);
 
 padding:24px;
 
