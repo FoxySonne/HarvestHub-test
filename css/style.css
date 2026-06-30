@@ -699,6 +699,12 @@ cursor:not-allowed;
 
 }
 
+.button-group{
+   display:flex;
+   flex-direction:column;
+   gap: 12px;
+   margin-top:20px;
+}
 
 /* ==========================================================
 FULL WIDTH BUTTON
@@ -1349,6 +1355,9 @@ grid-template-columns:repeat(4,1fr);
 
 }
 
+.button-group{
+   flex-direction:row;
+}
 
 /* ==========================================================
 MOBILE
