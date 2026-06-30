@@ -16,6 +16,8 @@ window.addEventListener("DOMContentLoaded", () => {
         "components/main-title.html"
         );
 
-    loadPage("home.html");
+    const lastPage = localStorage.getItem("currentPage") || "home.html";
+
+loadPage(lastPage);
 
 });
