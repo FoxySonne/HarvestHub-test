@@ -11,6 +11,11 @@ window.addEventListener("DOMContentLoaded", () => {
         "components/rightbar.html"
     );
 
+    loadBlock(
+        "main-title-container",
+        "components/main-title.html"
+        );
+
     loadPage("home.html");
 
 });
