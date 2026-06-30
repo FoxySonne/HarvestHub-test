@@ -1289,12 +1289,12 @@ display:grid;
 
 grid-template-columns:
    220px 
-   minmax(700 px, 1fr)
+   minmax(700px, 1fr)
    260px;
 
-gap:32 px;
+gap:32px;
 
-width:min(1900px, calc(100%-40px));
+width:min(1900px, calc(100% - 40px));
 
 margin:20px auto;
 
