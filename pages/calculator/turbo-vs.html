@@ -14,7 +14,7 @@
 
     <select id="daySelector" class="day-select">
 
-      <!-- будет заполняться через JS -->
+      <!-- заполняется через JS -->
 
     </select>
 
@@ -24,27 +24,23 @@
 
   <div class="turbo-content">
 
-    <!-- Левая колонка -->
+    <!-- Заголовки колонок -->
 
-    <div class="column turtle">
+    <div class="table-header">
 
-      <h3>Черепашка</h3>
+      <span class="col-left">Черепашка</span>
 
-      <div id="turtleList" class="list"></div>
+      <span class="col-center"></span>
 
-    </div>
-
-    <!-- Центральная колонка -->
-
-    <div class="column vs">
-
-      <h3>Дуэль союза</h3>
-
-      <div id="vsList" class="list"></div>
+      <span class="col-right">Дуэль союза</span>
 
     </div>
 
-    <!-- Правая часть -->
+    <!-- ЕДИНЫЙ список действий -->
+
+    <div id="actionsList" class="actions-list"></div>
+
+    <!-- Правая часть (результаты) -->
 
     <div class="results">
 
@@ -61,3 +57,7 @@
   </div>
 
 </div>
+
+<!-- подключение JS -->
+
+<script type="module" src="../js/turbo-vs.js"></script>
