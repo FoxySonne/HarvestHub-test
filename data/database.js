@@ -117,7 +117,7 @@ points: {
 turtle: 0,
 vs: 250,
 ipk: 42}},
-    {name: "Увеличьте силу на 1 с помощью строительства)", id: "building_power", categoryId: "power",
+    {name: "Увеличьте силу на 1 с помощью строительства", id: "building_power", categoryId: "power",
 points: {
 turtle: 0,
 vs: 4,
@@ -196,7 +196,7 @@ ipk: 0}},
 },
 points: {
 turtle: 0,
-vs:50000 ,
+vs: 50000 ,
 ipk: 0}},
     {name: "Используйте очки выносливости", id: "stamina_points", categoryId: "misc",
 points: {
