@@ -392,6 +392,5 @@ sun: {
 {type: "action", id: "infected_recon"},
 {type: "category", id: "infected"},
 {type: "action", id: "purchases"}],
-  vs: [ ]
-      },
-  },};
+  vs: [ ]}
+}};
