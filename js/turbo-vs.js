@@ -1,5 +1,39 @@
 import { database } from "../data/database.js";
 
+// 🔹 инициализация dropdown
+
+function initDaySelector() {
+
+  const select = document.getElementById("daySelector");
+
+  database.dayOrder.forEach(key => {
+
+  const day = database.days[key];
+
+  if (!day) return;
+
+  const option = document.createElement("option");
+
+  option.value = key;
+
+  option.textContent = day.name;
+
+  select.appendChild(option);
+
+});
+
+
+// 🔹 рендер дня
+
+function renderDay(dayKey) {
+
+  const day = database.days[dayKey];
+
+  const container = document.getElementById("actionsList");
+
+  container.innerHTML = "";
+
+
 // 🔹 разворачиваем список (actions + categories)
 
 function resolveDayList(list) {
@@ -110,15 +144,6 @@ function createRow(action, turtleIds, vsIds) {
 
 }
 
-// 🔹 рендер дня
-
-function renderDay(dayKey) {
-
-  const day = database.days[dayKey];
-
-  const container = document.getElementById("actionsList");
-
-  container.innerHTML = "";
 
   // 👉 разворачиваем категории
 
@@ -234,27 +259,6 @@ function appendInputs(container, action) {
 
 }
 
-// 🔹 инициализация dropdown
-
-function initDaySelector() {
-
-  const select = document.getElementById("daySelector");
-
-  database.dayOrder.forEach(key => {
-
-  const day = database.days[key];
-
-  if (!day) return;
-
-  const option = document.createElement("option");
-
-  option.value = key;
-
-  option.textContent = day.name;
-
-  select.appendChild(option);
-
-});
 
   // старт
 
