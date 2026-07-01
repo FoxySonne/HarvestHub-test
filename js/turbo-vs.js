@@ -82,9 +82,7 @@ function createRow(action, turtleIds, vsIds) {
 
   row.className = "row";
 
-  const turtleIds = resolveDayList(day.turtle || []);
-
-const vsIds = resolveDayList(day.vs || []);
+};
 
   // 🔹 левый блок (черепашка)
 
@@ -92,7 +90,9 @@ const vsIds = resolveDayList(day.vs || []);
 
   turtleWrapper.className = "input-group";
 
-  if (isTurtle) {
+  const isTurtle = turtleIds.includes(action.id);
+
+if (isTurtle) {
 
     appendInputs(turtleWrapper, action);
 
@@ -121,6 +121,8 @@ const vsIds = resolveDayList(day.vs || []);
   const vsWrapper = document.createElement("div");
 
   vsWrapper.className = "input-group";
+
+  const isVs = vsIds.includes(action.id);
 
   if (isVs) {
 
