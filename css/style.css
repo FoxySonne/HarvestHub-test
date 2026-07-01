@@ -27,7 +27,7 @@
 --success:#3d8a52;
 
 --border:#2b3140;
---shadow:inset 0 8px 24px rgba(0,0,0,.35);
+--shadow: 0 8px 24px rgba(0,0,0,.35);
 
 
 /* LAYOUT */
@@ -182,14 +182,18 @@ LINKS
 
 a{
 
-color:var(--accent);
+color:var(--text);
 
 text-decoration:none;
 
 transition:var(--transition);
 
 }
+a:hover{
 
+color:var(--accent-hover);
+
+}
 
 /* ==========================================================
 IMAGES
