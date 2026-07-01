@@ -130,9 +130,6 @@ function initDaySelector() {
 
     // 🔹 создаём строку
     function createRow(action, turtleIds, vsIds) {
-
-      const row = document.createElement("div");
-      row.className = "row";
     
       const row = document.createElement("div");
       row.className = "row";
