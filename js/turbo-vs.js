@@ -52,23 +52,29 @@ function createRow(action, turtleIds, vsIds) {
 
   const isVs = vsIds.includes(action.id);
 
-  // левый input (турбочерепашка)
+  // 🔹 левый блок (черепашка)
 
-  const turtleInput = document.createElement("input");
+  const turtleWrapper = document.createElement("div");
 
-  turtleInput.type = "number";
+  turtleWrapper.className = "input-group";
 
-  turtleInput.className = "input";
+  if (isTurtle) {
 
-  if (!isTurtle) {
+    appendInputs(turtleWrapper, action);
 
-    turtleInput.disabled = true;
+  } else {
 
-    turtleInput.placeholder = "—";
+    const empty = document.createElement("input");
+
+    empty.disabled = true;
+
+    empty.placeholder = "—";
+
+    turtleWrapper.appendChild(empty);
 
   }
 
-  // название действия
+  // 🔹 название
 
   const label = document.createElement("span");
 
@@ -76,23 +82,29 @@ function createRow(action, turtleIds, vsIds) {
 
   label.textContent = action.name;
 
-  // правый input (VS)
+  // 🔹 правый блок (VS)
 
-  const vsInput = document.createElement("input");
+  const vsWrapper = document.createElement("div");
 
-  vsInput.type = "number";
+  vsWrapper.className = "input-group";
 
-  vsInput.className = "input";
+  if (isVs) {
 
-  if (!isVs) {
+    appendInputs(vsWrapper, action);
 
-    vsInput.disabled = true;
+  } else {
 
-    vsInput.placeholder = "—";
+    const empty = document.createElement("input");
+
+    empty.disabled = true;
+
+    empty.placeholder = "—";
+
+    vsWrapper.appendChild(empty);
 
   }
 
-  row.append(turtleInput, label, vsInput);
+  row.append(turtleWrapper, label, vsWrapper);
 
   return row;
 
@@ -113,6 +125,76 @@ function renderDay(dayKey) {
   const turtleIds = resolveDayList(day.turtle);
 
   const vsIds = resolveDayList(day.vs);
+  
+  // 🔹 добавляем поддержку разных типов действий
+
+function appendInputs(container, action) {
+
+  // если есть уровни
+
+  if (action.options) {
+
+    const select = document.createElement("select");
+
+    action.options.forEach(opt => {
+
+      const option = document.createElement("option");
+
+      option.value = opt.value;
+
+      option.textContent = opt.label;
+
+      select.appendChild(option);
+
+    });
+
+    const input = document.createElement("input");
+
+    input.type = "number";
+
+    input.placeholder = "0";
+
+    container.append(select, input);
+
+  }
+
+  // если ограниченный диапазон
+
+  else if (action.quantityOptions) {
+
+    const select = document.createElement("select");
+
+    for (let i = action.quantityOptions.min; i <= action.quantityOptions.max; i++) {
+
+      const option = document.createElement("option");
+
+      option.value = i;
+
+      option.textContent = i;
+
+      select.appendChild(option);
+
+    }
+
+    container.append(select);
+
+  }
+
+  // обычное действие
+
+  else {
+
+    const input = document.createElement("input");
+
+    input.type = "number";
+
+    input.placeholder = "0";
+
+    container.append(input);
+
+  }
+
+}
 
   // 👉 объединяем без дублей
 
@@ -158,17 +240,21 @@ function initDaySelector() {
 
   const select = document.getElementById("daySelector");
 
-  Object.entries(database.days).forEach(([key, day]) => {
+  database.dayOrder.forEach(key => {
 
-    const option = document.createElement("option");
+  const day = database.days[key];
 
-    option.value = key;
+  if (!day) return;
 
-    option.textContent = day.name;
+  const option = document.createElement("option");
 
-    select.appendChild(option);
+  option.value = key;
 
-  });
+  option.textContent = day.name;
+
+  select.appendChild(option);
+
+});
 
   // старт
 
