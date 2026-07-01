@@ -75,3 +75,36 @@ function renderDay(dayKey) {
 // 🔹 старт (пока просто понедельник)
 
 renderDay("mon");
+
+
+function initDaySelector() {
+
+  const select = document.getElementById("daySelector");
+
+  Object.entries(database.days).forEach(([key, day]) => {
+
+    const option = document.createElement("option");
+
+    option.value = key;        // 👈 ВАЖНО: ключ
+
+    option.textContent = day.name; // 👈 отображение
+
+    select.appendChild(option);
+
+  });
+
+  // стартовый день
+
+  select.value = "mon";
+
+  renderDay("mon");
+
+  // переключение
+
+  select.addEventListener("change", (e) => {
+
+    renderDay(e.target.value);
+
+  });
+
+}
