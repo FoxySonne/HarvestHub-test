@@ -1,8 +1,7 @@
       import { database } from "../data/database.js";
 
 // 🔹 инициализация dropdown
-function initDaySelector() {
-
+export function init() {
   const select = document.getElementById("daySelector");
 
   database.dayOrder.forEach(key => {
@@ -242,6 +241,3 @@ function initDaySelector() {
 
 }
 
-// 🔹 запуск
-
-initDaySelector();
