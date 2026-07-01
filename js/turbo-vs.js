@@ -258,7 +258,7 @@ function initDaySelector() {
 
   // старт
 
-  const firstDay = Object.keys(database.days)[0];
+  const firstDay = database.dayOrder[0];
 
   select.value = firstDay;
 
