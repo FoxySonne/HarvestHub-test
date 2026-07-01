@@ -289,7 +289,7 @@ dayOrder: ["mon","tue","wed","thu","fri","sat","sun"],
       name: "понедельник",
       turtle: [
 {type: "category", id: "equipment"},
-{type: "category", id: "troop_upgrade"},
+{type: "action", id: "troop_upgrade"},
 {type: "action", id: "research_1m"},
 {type: "action", id: "purchases"},
               ],
@@ -348,7 +348,7 @@ fri: {
 {type: "category", id: "chief_collection"},
 {type: "action", id: "purchases"},],
       vs: [
-{type: "category", id: "troop_upgrade"},
+{type: "action", id: "troop_upgrade"},
 {type: "category", id: "power"},
 {type: "action", id: "research_1m"},
 {type: "action", id: "building_1m"},
@@ -390,7 +390,7 @@ sun: {
 {type: "action", id: "building_1m"},
 {type: "action", id: "unholy_raid"},
 {type: "action", id: "infected_recon"},
-{type: "category", id: "infected"},
+{type: "action", id: "infected"},
 {type: "action", id: "purchases"}],
   vs: [ ]}
 }};
