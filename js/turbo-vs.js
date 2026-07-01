@@ -29,12 +29,12 @@ function renderDay(dayKey) {
 
   const day = database.days[dayKey];
 
-  const container = document.getElementById("actionsList");
+  const container = document.getElementById("actionList");
 
   container.innerHTML = "";
 
 
-// 🔹 разворачиваем список (actions + categories)
+// 🔹 разворачиваем список (action + category)
 
 function resolveDayList(list) {
 
@@ -60,7 +60,7 @@ function resolveDayList(list) {
 
     if (item.type === "category") {
 
-      return database.actions
+      return database.action
 
         .filter(a => a.categoryId === item.id)
 
@@ -225,27 +225,27 @@ function appendInputs(container, action) {
 
   const allIds = [...new Set([...turtleIds, ...vsIds])];
 
-  // 👉 получаем actions
+  // 👉 получаем action
 
-  const actions = allIds
+  const action = allIds
 
-    .map(id => database.actions.find(a => a.id === id))
+    .map(id => database.action.find(a => a.id === id))
 
     .filter(Boolean);
 
   // 👉 группировка по категориям (БЕЗ вывода названий)
 
-  database.categories.forEach(category => {
+  database.category.forEach(category => {
 
-    const categoryActions = actions.filter(
+    const categoryaction = action.filter(
 
       a => a.categoryId === category.id
 
     );
 
-    if (categoryActions.length === 0) return;
+    if (categoryaction.length === 0) return;
 
-    categoryActions.forEach(action => {
+    categoryaction.forEach(action => {
 
       container.appendChild(
 
