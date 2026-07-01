@@ -1,12 +1,56 @@
 import { database } from "../data/database.js";
 
+// 🔹 разворачиваем список (actions + categories)
+
+function resolveDayList(list) {
+
+  return list.flatMap(item => {
+
+    // если просто строка (старый формат)
+
+    if (typeof item === "string") {
+
+      return item;
+
+    }
+
+    // если конкретное действие
+
+    if (item.type === "action") {
+
+      return item.id;
+
+    }
+
+    // если категория
+
+    if (item.type === "category") {
+
+      return database.actions
+
+        .filter(a => a.categoryId === item.id)
+
+        .map(a => a.id);
+
+    }
+
+    return [];
+
+  });
+
+}
+
 // 🔹 создаём строку
 
-function createRow(action, day) {
+function createRow(action, turtleIds, vsIds) {
 
   const row = document.createElement("div");
 
   row.className = "row";
+
+  const isTurtle = turtleIds.includes(action.id);
+
+  const isVs = vsIds.includes(action.id);
 
   // левый input (турбочерепашка)
 
@@ -16,9 +60,11 @@ function createRow(action, day) {
 
   turtleInput.className = "input";
 
-  if (!day.turtle.includes(action.id)) {
+  if (!isTurtle) {
 
     turtleInput.disabled = true;
+
+    turtleInput.placeholder = "—";
 
   }
 
@@ -38,9 +84,11 @@ function createRow(action, day) {
 
   vsInput.className = "input";
 
-  if (!day.vs.includes(action.id)) {
+  if (!isVs) {
 
     vsInput.disabled = true;
+
+    vsInput.placeholder = "—";
 
   }
 
@@ -50,7 +98,7 @@ function createRow(action, day) {
 
 }
 
-// 🔹 рендер списка
+// 🔹 рендер дня
 
 function renderDay(dayKey) {
 
@@ -60,22 +108,51 @@ function renderDay(dayKey) {
 
   container.innerHTML = "";
 
-  const allIds = [...new Set([...day.turtle, ...day.vs])];
+  // 👉 разворачиваем категории
 
-  allIds.forEach(id => {
+  const turtleIds = resolveDayList(day.turtle);
 
-    const action = database.actions.find(a => a.id === id);
+  const vsIds = resolveDayList(day.vs);
 
-    container.appendChild(createRow(action, day));
+  // 👉 объединяем без дублей
+
+  const allIds = [...new Set([...turtleIds, ...vsIds])];
+
+  // 👉 получаем actions
+
+  const actions = allIds
+
+    .map(id => database.actions.find(a => a.id === id))
+
+    .filter(Boolean);
+
+  // 👉 группировка по категориям (БЕЗ вывода названий)
+
+  database.categories.forEach(category => {
+
+    const categoryActions = actions.filter(
+
+      a => a.categoryId === category.id
+
+    );
+
+    if (categoryActions.length === 0) return;
+
+    categoryActions.forEach(action => {
+
+      container.appendChild(
+
+        createRow(action, turtleIds, vsIds)
+
+      );
+
+    });
 
   });
 
 }
 
-// 🔹 старт (пока просто понедельник)
-
-renderDay("mon");
-
+// 🔹 инициализация dropdown
 
 function initDaySelector() {
 
@@ -85,19 +162,21 @@ function initDaySelector() {
 
     const option = document.createElement("option");
 
-    option.value = key;        // 👈 ВАЖНО: ключ
+    option.value = key;
 
-    option.textContent = day.name; // 👈 отображение
+    option.textContent = day.name;
 
     select.appendChild(option);
 
   });
 
-  // стартовый день
+  // старт
 
-  select.value = "mon";
+  const firstDay = Object.keys(database.days)[0];
 
-  renderDay("mon");
+  select.value = firstDay;
+
+  renderDay(firstDay);
 
   // переключение
 
@@ -108,3 +187,7 @@ function initDaySelector() {
   });
 
 }
+
+// 🔹 запуск
+
+initDaySelector();
