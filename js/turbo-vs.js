@@ -82,9 +82,9 @@ function createRow(action, turtleIds, vsIds) {
 
   row.className = "row";
 
-  const isTurtle = turtleIds.includes(action.id);
+  const turtleIds = resolveDayList(day.turtle || []);
 
-  const isVs = vsIds.includes(action.id);
+const vsIds = resolveDayList(day.vs || []);
 
   // 🔹 левый блок (черепашка)
 
