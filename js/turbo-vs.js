@@ -1,4 +1,4 @@
-import { database } from "../data/database.js";
+import { database } from "../../data/database.js";
 
 // 🔹 инициализация dropdown
 
