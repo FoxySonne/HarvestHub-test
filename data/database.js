@@ -8,6 +8,7 @@ export const database = {
     { name: "Коллекция шефа", id: "chief_collection"},
     { name: "Сбор ресурсов", id: "resource_gathering"},
     { name: "Улучшение войск", id: "troop_upgrade"},
+    {name: "Зараженные", id: "infected"},
     { name: "Прочее", id: "misc"}
   ],
   actions: [
@@ -41,11 +42,6 @@ export const database = {
     { name: "Собрать 20 ед. металла", id: "metal_20", categoryId: "resource_gathering"},
     { name: "Собрать 5 ед. топлива", id: "fuel_5", categoryId: "resource_gathering"},
     { name: "Покупки", id: "purchases", categoryId: "misc"},
-    { name: "Зараженные 1–6 ур", id: "infected_1_6", categoryId: "misc"},
-    { name: "Зараженные 7–12 ур", id: "infected_7_12", categoryId: "misc"},
-    { name: "Зараженные 13–18 ур", id: "infected_13_18", categoryId: "misc"},
-    { name: "Зараженные 19–24 ур", id: "infected_19_24", categoryId: "misc"},
-    { name: "Зараженные 25–30 ур", id: "infected_25_30", categoryId: "misc"},
     { name: "1 рейд на нечестивого зараженного", id: "unholy_raid", categoryId: "misc"},
     { name: "Зараженный в разведмиссиях", id: "infected_recon", categoryId: "misc"},
     { name: "Завершение разведмиссий пн, пт", id: "recon_mon_fri", categoryId: "misc"},
@@ -74,6 +70,15 @@ options: [
 {value: 10 ,label: "10 уровень"}
 ]
  }
+  { name: "Уничтожайте зараженных", id: "infected", categoryId: "infected",
+options:[
+{value: 1, label: "Зараженные 1–6 ур"},
+{value: 2, label: "Зараженные 7-12 ур"},
+{value: 3, label: "Зараженные 13–18 ур"},
+{value: 4, label: "Зараженные 19–24 ур"},
+{value: 5, label: "Зараженные 25-30 ур"}
+]
+},
  ],
 dayOrder: ["mon","tue","wed","thu","fri","sat","sun"],
   days: { 
@@ -182,14 +187,19 @@ sat: {
 sun: {
       name: "воскресенье",
       turtle: [
-{type: "", id: ""},
+{type: "categories", id: "heroes"},
+{type: "categories", id: "titan"},
+{type: "categories", id: "chief_collection"},
+{type: "categories", id: "resource_gathering"},
+{type: "categories", id: "equipment"},
+{type: "actions", id: "research_1m"},
+{type: "actions", id: "building_1m"},
+{type: "actions", id: "unholy_raid"},
+{type: "actions", id: "infected_recon"},
+{type: "", id: "infected"},
 {type: "actions", id: "purchases"}
-],
-      vs: [
-{type: "", id: ""},
-{type: "actions", id: "purchases"}
- ]
-    }
+]
+      }
 
   }
 };
