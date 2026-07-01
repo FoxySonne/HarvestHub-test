@@ -1,5 +1,5 @@
 export const database = {
-  categories: [
+  .categories: [
     {name: "Снаряжение", id: "equipment"},
     {name: "Герои", id: "heroes"},
     {name: "Титан", id: "titan"},
@@ -198,5 +198,6 @@ sun: {
 {type: "actions", id: "infected_recon"},
 {type: "", id: "infected"},
 {type: "actions", id: "purchases"}
-]}
+],
+ vs: [none]}
   }};
