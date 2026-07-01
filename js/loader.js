@@ -1,40 +1,32 @@
 // Загрузка любого HTML-файла в нужное место страницы
-function loadBlock(containerId, filePath) {
+async function loadBlock(containerId, filePath) {
 
     const container = document.getElementById(containerId);
 
     if (!container) return;
 
-    fetch(filePath)
-        .then(response => response.text())
-        .then(html => {
+    const response = await fetch(filePath);
+    const html = await response.text();
 
-            container.innerHTML = html;
+    container.innerHTML = html;
 
-            // Удаляем JS предыдущей страницы
-            const oldScript = document.getElementById("page-script");
-            if (oldScript) {
-                oldScript.remove();
-            }
+    // Получаем имя файла
+    const fileName = filePath
+        .split("/")
+        .pop()
+        .replace(".html", "");
 
-            // Получаем имя HTML-файла без расширения
-            const fileName = filePath
-                .split("/")
-                .pop()
-                .replace(".html", "");
+    try {
 
-            // Подключаем соответствующий JS
-            const script = document.createElement("script");
-            script.id = "page-script";
-            script.type = "module";
-            script.src = `js/${fileName}.js`;
+        const module = await import(`./${fileName}.js`);
 
-            // Если файла нет — просто ничего не происходит
-            script.onerror = () => script.remove();
+        if (typeof module.init === "function") {
+            module.init();
+        }
 
-            document.body.appendChild(script);
-
-        });
+    } catch (e) {
+        // JS для этой страницы отсутствует — это нормально
+    }
 
 }
 
