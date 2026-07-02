@@ -1,0 +1,184 @@
+/* ==========================================================
+Отвечает за: все формы сайта — поля ввода, textarea, select, checkbox, radio, а также размеры инпутов.
+========================================================== */
+
+/* ==========================================================
+FORMS
+========================================================== */
+
+.form{
+
+display:flex;
+
+flex-direction:column;
+
+gap:20px;
+
+}
+
+.form-group{
+
+display:flex;
+
+flex-direction:column;
+
+gap:8px;
+
+}
+
+label{
+
+font-weight:bold;
+
+color:white;
+
+}
+
+
+/* ==========================================================
+INPUTS
+========================================================== */
+
+input[type=text],
+input[type=number],
+input[type=password],
+input[type=email],
+input[type=search],
+textarea,
+select{
+
+width:100%;
+
+height:48px;
+
+padding:0 16px;
+
+background:var(--panel);
+
+color:var(--text);
+
+border:1px solid var(--border);
+
+border-radius:var(--radius);
+
+font-size:17px;
+
+font-family:inherit;
+
+transition:var(--transition);
+
+}
+
+textarea{
+
+height:180px;
+
+padding:16px;
+
+resize:vertical;
+
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+
+outline:none;
+
+border-color:var(--accent);
+
+}
+
+
+/* ==========================================================
+INPUT WIDTHS
+========================================================== */
+
+.input-small{
+
+max-width:140px;
+
+}
+
+.input-medium{
+
+max-width:220px;
+
+}
+
+.input-large{
+
+max-width:320px;
+
+}
+
+
+/* ==========================================================
+SELECT
+========================================================== */
+
+select{
+
+cursor:pointer;
+
+}
+
+
+/* ==========================================================
+CHECKBOX
+========================================================== */
+
+.checkbox{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+margin-bottom:12px;
+
+}
+
+.checkbox input{
+
+width:20px;
+
+height:20px;
+
+accent-color:var(--accent);
+
+}
+
+/* ==========================================================
+RADIO - галочки
+========================================================== */
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.radio input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+
+/* ==========================================================
+MOBILE
+========================================================== */
+
+@media (max-width:899px){
+
+.input-small,
+.input-medium,
+.input-large{
+
+max-width:100%;
+
+}
+
+}
