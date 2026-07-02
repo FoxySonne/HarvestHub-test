@@ -1,0 +1,94 @@
+/* ==========================================================
+   VARIABLES 
+   Отвечает за: все переменные проекта (цвета, размеры, отступы, радиусы, анимации). Если захотите сменить тему сайта, почти все изменится только здесь.
+========================================================== */
+
+:root{
+
+/* COLORS */
+
+--bg:#0f1115;
+
+--panel:#151922;
+
+--card:#1a1f2a;
+
+--card-hover:#212837;
+
+--text:#e6e6e6;
+
+--text-soft:#cfcfcf;
+
+--text-muted:#8f98a8;
+
+--accent:#8BEA63;
+
+--accent-hover:#9EF277;
+
+--button:#3a7a3a;
+
+--button-hover:#478f47;
+
+--danger:#d64f4f;
+
+--warning:#d9a43d;
+
+--info:#448de4;
+
+--success:#3d8a52;
+
+--border:#2b3140;
+
+--shadow:0 8px 24px rgba(0,0,0,.35);
+
+
+/* LAYOUT */
+
+--site-width:1600px;
+
+--sidebar-width:220px;
+
+--rightbar-width:260px;
+
+--content-width:100%;
+
+
+/* SPACING */
+
+--space-4:4px;
+
+--space-8:8px;
+
+--space-12:12px;
+
+--space-16:16px;
+
+--space-20:20px;
+
+--space-24:24px;
+
+--space-32:32px;
+
+--space-40:40px;
+
+--space-48:48px;
+
+
+/* RADIUS */
+
+--radius-small:8px;
+
+--radius:12px;
+
+--radius-large:16px;
+
+--radius-xl:20px;
+
+
+/* CONTROLS */
+
+--control-height:48px;
+
+--transition:.2s ease;
+
+}
