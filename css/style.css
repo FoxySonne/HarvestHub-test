@@ -1,16 +1,14 @@
 @import url("variables.css");
-@import url("reset.css");
-@import url("typography.css");
+@import url("base.css");
 
 @import url("layout.css");
 @import url("desktop.css");
 @import url("mobile.css");
 
-@import url("buttons.css");
+@import url("components.css");
 @import url("forms.css");
-@import url("cards.css");
-@import url("grids.css");
+@import url("buttons.css");
 @import url("utilities.css");
-@import url("ui.css");
+
 
 @import url("turbo-vs.css");
