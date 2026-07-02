@@ -1,0 +1,121 @@
+/* ==========================================================
+BUTTONS
+========================================================== */
+
+.button,
+button,
+input[type=submit],
+input[type=button]{
+
+display:inline-flex;
+
+justify-content:center;
+
+align-items:center;
+
+min-width:220px;
+
+height:48px;
+
+padding:0 24px;
+
+background:var(--button);
+
+border:none;
+
+border-radius:var(--radius);
+
+color:white;
+
+font-size:17px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.button:hover,
+button:hover,
+input[type=submit]:hover,
+input[type=button]:hover{
+
+background:var(--button-hover);
+
+}
+
+.button:disabled,
+button:disabled{
+
+opacity:.5;
+
+cursor:not-allowed;
+
+}
+
+
+/* ==========================================================
+BUTTON GROUP
+========================================================== */
+
+.button-group{
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+margin-top:20px;
+
+}
+
+
+/* ==========================================================
+FULL WIDTH BUTTON
+========================================================== */
+
+.button-block{
+
+display:flex;
+
+width:100%;
+
+}
+
+
+/* ==========================================================
+DESKTOP
+========================================================== */
+
+@media (min-width:900px){
+
+.button-group{
+
+flex-direction:row;
+
+}
+
+}
+
+
+/* ==========================================================
+MOBILE
+========================================================== */
+
+@media (max-width:899px){
+
+.button,
+button,
+input[type=submit],
+input[type=button]{
+
+width:100%;
+
+min-width:100%;
+
+}
+
+}
