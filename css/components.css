@@ -1,0 +1,150 @@
+/* ==========================================================
+Отвечает за: все визуальные блоки сайта — карточки, секции, шапки страниц, информационные блоки и футер.
+========================================================== */
+
+/* ==========================================================
+PAGE HEADER
+========================================================== */
+
+.page-header{
+
+background:var(--card);
+
+padding:12px;
+
+border-radius:var(--radius);
+
+margin-bottom:24px;
+
+box-shadow:var(--shadow);
+
+}
+
+.page-subtitle{
+
+font-size:20px;
+
+color:var(--text-soft);
+
+margin-top:12px;
+
+}
+
+/* ==========================================================
+SECTIONS
+========================================================== */
+
+.section{
+
+background:var(--card);
+
+border-radius:var(--radius-large);
+
+padding:24px;
+
+margin-bottom:24px;
+
+box-shadow:var(--shadow);
+
+}
+
+.section-title{
+
+margin-bottom:20px;
+
+}
+
+/* ==========================================================
+CARDS
+========================================================== */
+
+.card{
+
+background:var(--card);
+
+border-radius:var(--radius-large);
+
+padding:24px;
+
+box-shadow:var(--shadow);
+
+transition:var(--transition);
+
+width:100%;
+
+}
+
+.card:hover{
+
+background:var(--card-hover);
+
+}
+
+.card-title{
+
+font-size:24px;
+
+font-weight:bold;
+
+margin-bottom:16px;
+
+}
+
+.card-text{
+
+color:var(--text-soft);
+
+}
+
+
+/* ==========================================================
+BOX
+========================================================== */
+
+.box{
+
+background:var(--card);
+
+padding:20px;
+
+border-radius:var(--radius-large);
+
+box-shadow:var(--shadow);
+
+margin:0;
+
+}
+
+
+/* ==========================================================
+INFO BLOCK
+========================================================== */
+
+.info-block{
+
+padding:24px;
+
+background:var(--panel);
+
+border-radius:var(--radius-large);
+
+margin-bottom:20px;
+
+}
+
+
+/* ==========================================================
+FOOTER
+========================================================== */
+
+.footer{
+
+margin-top:48px;
+
+padding:32px 0;
+
+border-top:1px solid var(--border);
+
+font-size:16px;
+
+}
