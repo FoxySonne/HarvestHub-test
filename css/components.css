@@ -270,6 +270,215 @@ ACTION LIST
 }
 
 /* ==========================================================
+BIG GAME
+========================================================== */
+
+.big-game-page {
+  gap: 20px;
+}
+
+.big-game-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 24px;
+  align-items: center;
+}
+
+.big-game-total-box,
+.big-game-category-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.big-game-total-box strong {
+  color: var(--accent);
+  font-size: 28px;
+}
+
+.big-game-category-box select {
+  max-width: 180px;
+}
+
+.big-game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 18px;
+  align-items: start;
+}
+
+.big-game-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.big-game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.big-game-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.big-game-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.big-game-card-title h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.big-game-icon {
+  color: var(--accent);
+  font-size: 22px;
+}
+
+.big-game-card-status,
+.big-game-category-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  color: transparent;
+  flex: 0 0 auto;
+}
+
+.big-game-card-status.is-active,
+.big-game-category-item.is-active .big-game-category-check {
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+
+.big-game-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.big-game-stats div,
+.big-game-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 74px;
+  gap: 10px;
+  align-items: center;
+}
+
+.big-game-stats span,
+.big-game-row label {
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.big-game-stats strong {
+  grid-column: 2 / 4;
+  justify-self: end;
+  font-weight: 500;
+}
+
+.big-game-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.big-game-row input {
+  height: 34px;
+  padding: 0 8px;
+  text-align: center;
+}
+
+.big-game-need {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+
+.big-game-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 20px;
+}
+
+.big-game-category-item {
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.big-game-hint {
+  color: var(--text-soft);
+}
+
+@media (max-width: 899px) {
+  .big-game-toolbar,
+  .big-game-layout,
+  .big-game-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .big-game-toolbar {
+    gap: 14px;
+  }
+
+  .big-game-total-box,
+  .big-game-category-box {
+    justify-content: space-between;
+    font-size: 16px;
+  }
+
+  .big-game-total-box strong {
+    font-size: 20px;
+  }
+
+  .big-game-categories {
+    display: none;
+  }
+
+  .big-game-stats div,
+  .big-game-row {
+    grid-template-columns: minmax(0, 1fr) 56px 64px;
+  }
+
+  .big-game-card-title h3 {
+    font-size: 17px;
+  }
+}
+
+/* ==========================================================
 RESULTS
 ========================================================== */
 
