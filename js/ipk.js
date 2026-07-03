@@ -142,21 +142,26 @@ function calculateCard(card) {
   const target = Number(card.dataset.target || 0);
   let result = 0;
 
-  card.querySelectorAll(".ipk-row").forEach(row => {
+  const rows = Array.from(card.querySelectorAll(".ipk-row"));
+
+  rows.forEach(row => {
     const input = row.querySelector("input");
-    const need = row.querySelector(".ipk-need");
     const quantity = parseNumber(input?.value);
     const points = Number(row.dataset.points || 0);
 
     result += quantity * points;
-
-    if (need) {
-      const currentMissing = Math.max(target - result, 0);
-      need.textContent = points > 0 ? formatNumber(Math.ceil(currentMissing / points)) : "0";
-    }
   });
 
   const missing = Math.max(target - result, 0);
+
+  rows.forEach(row => {
+    const need = row.querySelector(".ipk-need");
+    const points = Number(row.dataset.points || 0);
+
+    if (need) {
+      need.textContent = points > 0 ? formatNumber(Math.ceil(missing / points)) : "0";
+    }
+  });
 
   card.querySelector("[data-ipk-result]").textContent = formatNumber(result);
   card.querySelector("[data-ipk-missing]").textContent = formatNumber(missing);
