@@ -1,1 +1,103 @@
+/* ==========================================================
+DESKTOP: 900px+
+========================================================== */
 
+@media (min-width: 900px) {
+
+  .topbar,
+  .overlay {
+    display: none;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) 260px;
+    gap: 24px;
+
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .left {
+    position: sticky;
+    top: 20px;
+    left: 0;
+    height: calc(100vh - 40px);
+    border-radius: var(--radius-large);
+  }
+
+  .main {
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+  }
+
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    position: sticky;
+    top: 20px;
+  }
+
+  .adaptive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* закреплённый блок: всегда справа в первом ряду */
+  .desktop-fixed-right {
+    grid-column: -2 / -1;
+    grid-row: 1;
+  }
+
+  .turbo-content {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr) minmax(260px, 320px);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .results {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+/* ==========================================================
+DESKTOP: 900–1600px
+========================================================== */
+
+@media (min-width: 900px) and (max-width: 1599px) {
+
+  .container {
+    grid-template-columns: 220px minmax(0, 1fr) 240px;
+    gap: 20px;
+    padding: 16px;
+  }
+
+  .adaptive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+/* ==========================================================
+WIDE DESKTOP: 1600px+
+========================================================== */
+
+@media (min-width: 1600px) {
+
+  .container {
+    grid-template-columns: 240px minmax(0, 1fr) 280px;
+    gap: 28px;
+    padding: 24px;
+  }
+
+  .adaptive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
