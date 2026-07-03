@@ -1,579 +1,71 @@
-/* ==========================================================
-Отвечает за: все визуальные блоки сайта — карточки, секции, шапки страниц, информационные блоки и футер.
-========================================================== */
-
-/* ==========================================================
-PAGE HEADER
-========================================================== */
-
-.page-header{
-
-background:var(--card);
-
-padding:12px;
-
-border-radius:var(--radius);
-
-margin-bottom:24px;
-
-box-shadow:var(--shadow);
-
-}
-
-.page-subtitle{
-
-font-size:20px;
-
-color:var(--text-soft);
-
-margin-top:12px;
-
-}
-
-/* ==========================================================
-SECTIONS
-========================================================== */
-
-.section{
-
-background:var(--card);
-
-border-radius:var(--radius-large);
-
-padding:24px;
-
-margin-bottom:24px;
-
-box-shadow:var(--shadow);
-
-}
-
-.section-title{
-
-margin-bottom:20px;
-
-}
-
-/* ==========================================================
-CARDS
-========================================================== */
-
-.card{
-
-background:var(--card);
-
-border-radius:var(--radius-large);
-
-padding:24px;
-
-box-shadow:var(--shadow);
-
-transition:var(--transition);
-
-width:100%;
-
-}
-
-.card:hover{
-
-background:var(--card-hover);
-
-}
-
-.card-title{
-
-font-size:24px;
-
-font-weight:bold;
-
-margin-bottom:16px;
-
-}
-
-.card-text{
-
-color:var(--text-soft);
-
-}
-
-
-/* ==========================================================
-BOX
-========================================================== */
-
-.box{
-
-background:var(--card);
-
-padding:20px;
-
-border-radius:var(--radius-large);
-
-box-shadow:var(--shadow);
-
-margin:0;
-
-}
-
-
-/* ==========================================================
-INFO BLOCK
-========================================================== */
-
-.info-block{
-
-padding:24px;
-
-background:var(--panel);
-
-border-radius:var(--radius-large);
-
-margin-bottom:20px;
-
-}
-
-
-/* ==========================================================
-FOOTER
-========================================================== */
-
-.footer{
-
-margin-top:48px;
-
-padding:32px 0;
-
-border-top:1px solid var(--border);
-
-font-size:16px;
-
-}
-
-/* ==========================================================
-PAGE SECTION
-========================================================== */
-
-.page-section {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.page-section h1 {
-  margin: 0;
-  font-size: 32px;
-  line-height: 1.2;
-}
-
-/* ==========================================================
-CARD
-========================================================== */
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-large);
-  padding: 20px;
-  box-shadow: var(--shadow);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.card-header h3 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.turbo-card {
-  min-width: 0;
-}
-
-/* ==========================================================
-ACTION LIST
-========================================================== */
-
-.action-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.action-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(150px, 32vw, 170px);
-  gap: 12px;
-  align-items: center;
-}
-
-.action-row-with-level {
-  grid-template-columns: minmax(0, 1fr) clamp(150px, 32vw, 170px);
-}
-
-.action-row label {
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.3;
-}
-
-.action-controls {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  min-width: 0;
-}
-
-.action-row-with-level .action-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  min-width: 0;
-}
-
-.action-row input,
-.action-row select {
-  width: 100%;
-  min-width: 0;
-}
-
-.action-row-with-level .action-level-select,
-.action-row-with-level .action-quantity-input {
-  flex: 1 1 0;
-  width: 0;
-  min-width: 0;
-}
-
-.action-row-with-level .action-level-select {
-  padding-left: 8px;
-  padding-right: 6px;
-}
-
-.action-row-with-level .action-quantity-input {
-  padding-left: 8px;
-  padding-right: 8px;
-  text-align: center;
-}
-
-.action-row-text {
-  display: block;
-  padding: 14px 16px;
-  color: var(--text-soft);
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  line-height: 1.4;
-}
-
-/* ==========================================================
-BIG GAME
-========================================================== */
-
-.big-game-page {
-  gap: 18px;
-}
-
-.big-game-mobile-categories {
-  display: none;
-}
-
-.big-game-total-card {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  width: fit-content;
-  min-width: 320px;
-}
-
-.big-game-total-card span {
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.big-game-total-card strong {
-  color: var(--button);
-  font-size: 28px;
-}
-
-.big-game-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(230px, 280px);
-  gap: 18px;
-  align-items: start;
-}
-
-.big-game-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 14px;
-  align-items: start;
-}
-
-.big-game-card {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.big-game-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.big-game-card-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.big-game-card-toggle,
-.big-game-collapse-button {
-  border: none;
-  background: transparent;
-  color: var(--text-soft);
-  font: inherit;
-  cursor: pointer;
-}
-
-.big-game-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.big-game-card.is-collapsed .big-game-card-body {
-  display: none;
-}
-
-.big-game-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.big-game-stats div,
-.big-game-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 80px 86px;
-  gap: 8px;
-  align-items: center;
-}
-
-.big-game-stats span,
-.big-game-row label {
-  color: var(--text);
-  line-height: 1.35;
-}
-
-.big-game-stats strong {
-  grid-column: 2 / 4;
-  justify-self: end;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.big-game-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.big-game-row input[type="number"],
-.big-game-need {
-  width: 100% !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
-  box-sizing: border-box !important;
-  border-radius: var(--radius-small) !important;
-  padding: 0 8px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  line-height: 1 !important;
-  white-space: nowrap !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.big-game-row input[type="number"] {
-  text-align: center;
-  appearance: textfield;
-  border: 1px solid var(--border);
-}
-
-.big-game-need {
-  text-align: center;
-  background: var(--button);
-  color: white;
-  border: 1px solid var(--button);
-}
-
-.big-game-desktop-categories {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  position: sticky;
-  top: 20px;
-}
-
-.big-game-desktop-categories h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.big-game-category-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.big-game-category-list.is-collapsed {
-  display: none;
-}
-
-.big-game-category-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--text);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.big-game-switch {
-  position: relative;
-  display: inline-flex;
-  flex: 0 0 auto;
-}
-
-.big-game-switch input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.big-game-switch-track {
-  width: 52px;
-  height: 28px;
-  padding: 3px;
-  border-radius: 999px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  transition: var(--transition);
-}
-
-.big-game-switch-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--text-muted);
-  color: transparent;
-  font-size: 13px;
-  font-weight: 900;
-  transform: translateX(0);
-  transition: var(--transition);
-}
-
-.big-game-switch input:checked + .big-game-switch-track {
-  background: var(--button);
-  border-color: var(--button);
-  box-shadow: none;
-}
-
-.big-game-switch input:checked + .big-game-switch-track .big-game-switch-thumb {
-  background: var(--button);
-  color: white;
-  transform: translateX(24px);
-}
-
-.big-game-hint {
-  color: var(--text-soft);
-}
-
-@media (max-width: 899px) {
-  .big-game-mobile-categories {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .big-game-collapse-button {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 0;
-    color: var(--text);
-    font-weight: 700;
-  }
-
-  .big-game-total-card {
-    width: 100%;
-    min-width: 0;
-    justify-content: space-between;
-  }
-
-  .big-game-total-card span {
-    font-size: 16px;
-  }
-
-  .big-game-total-card strong {
-    font-size: 22px;
-  }
-
-  .big-game-layout,
-  .big-game-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .big-game-desktop-categories {
-    display: none;
-  }
-
-  .big-game-stats div,
-  .big-game-row {
-    grid-template-columns: minmax(0, 1fr) 58px 76px;
-    gap: 8px;
-  }
-
-  .big-game-card-header h3 {
-    font-size: 17px;
-  }
-}
-
-/* ==========================================================
-RESULTS
-========================================================== */
-
-.result-block {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.result-block:last-child {
-  border-bottom: none;
-}
-
-.result-block h4 {
-  margin: 0 0 8px;
-}
-
-.result-block div {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--accent);
-}
+/* Визуальные блоки сайта: карточки, секции, шапки страниц, информационные блоки и футер. */
+
+.page-header{background:var(--card);padding:12px;border-radius:var(--radius);margin-bottom:24px;box-shadow:var(--shadow)}
+.page-subtitle{font-size:20px;color:var(--text-soft);margin-top:12px}
+.section{background:var(--card);border-radius:var(--radius-large);padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
+.section-title{margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-large);padding:20px;box-shadow:var(--shadow);transition:var(--transition);width:100%}
+.card:hover{background:var(--card-hover)}
+.card-title{font-size:24px;font-weight:bold;margin-bottom:16px}
+.card-text{color:var(--text-soft)}
+.box{background:var(--card);padding:20px;border-radius:var(--radius-large);box-shadow:var(--shadow);margin:0}
+.info-block{padding:24px;background:var(--panel);border-radius:var(--radius-large);margin-bottom:20px}
+.footer{margin-top:48px;padding:32px 0;border-top:1px solid var(--border);font-size:16px}
+.page-section{display:flex;flex-direction:column;gap:18px}
+.page-section h1{margin:0;font-size:32px;line-height:1.2}
+.card-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.card-header h3{margin:0;font-size:20px}
+.turbo-card{min-width:0}
+.action-list{display:flex;flex-direction:column;gap:10px}
+.action-row{display:grid;grid-template-columns:minmax(0,1fr) clamp(150px,32vw,170px);gap:12px;align-items:center}
+.action-row-with-level{grid-template-columns:minmax(0,1fr) clamp(150px,32vw,170px)}
+.action-row label{color:var(--text);font-size:14px;line-height:1.3}
+.action-controls{display:grid;grid-template-columns:1fr;gap:8px;min-width:0}
+.action-row-with-level .action-controls{display:flex;gap:8px;align-items:center;min-width:0}
+.action-row input,.action-row select{width:100%;min-width:0}
+.action-row-with-level .action-level-select,.action-row-with-level .action-quantity-input{flex:1 1 0;width:0;min-width:0}
+.action-row-with-level .action-level-select{padding-left:8px;padding-right:6px}
+.action-row-with-level .action-quantity-input{padding-left:8px;padding-right:8px;text-align:center}
+.action-row-text{display:block;padding:14px 16px;color:var(--text-soft);background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);line-height:1.4}
+
+/* IPK */
+.ipk-page{gap:18px}
+.ipk-mobile-categories{display:none}
+.ipk-total-card{display:flex;align-items:center;gap:20px;width:fit-content;min-width:320px}
+.ipk-total-card span{font-size:22px;font-weight:700}
+.ipk-total-card strong{color:var(--button);font-size:28px}
+.ipk-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,280px);gap:18px;align-items:start}
+.ipk-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;align-items:start}
+.ipk-card{display:flex;flex-direction:column;gap:16px}
+.ipk-card-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ipk-card-header h3{margin:0;font-size:18px}
+.ipk-card-toggle,.ipk-collapse-button{border:none;background:transparent;color:var(--text-soft);font:inherit;cursor:pointer}
+.ipk-card-body{display:flex;flex-direction:column;gap:16px}
+.ipk-card.is-collapsed .ipk-card-body{display:none}
+.ipk-stats{display:flex;flex-direction:column;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.ipk-stats div,.ipk-row{display:grid;grid-template-columns:minmax(0,1fr) 80px 86px;gap:8px;align-items:center}
+.ipk-stats span,.ipk-row label{color:var(--text);line-height:1.35}
+.ipk-stats strong{grid-column:2/4;justify-self:end;font-weight:500;white-space:nowrap}
+.ipk-rows{display:flex;flex-direction:column;gap:10px}
+.ipk-row input[type="number"],.ipk-need{width:100%!important;height:32px!important;min-height:32px!important;max-height:32px!important;box-sizing:border-box!important;border-radius:var(--radius-small)!important;padding:0 8px!important;font-size:14px!important;font-weight:600!important;line-height:1!important;white-space:nowrap!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.ipk-row input[type="number"]{text-align:center;appearance:textfield;border:1px solid var(--border)}
+.ipk-need{text-align:center;background:var(--button);color:white;border:1px solid var(--button)}
+.ipk-desktop-categories{display:flex;flex-direction:column;gap:14px;position:sticky;top:20px}
+.ipk-desktop-categories h3{margin:0;font-size:18px}
+.ipk-category-list{display:flex;flex-direction:column;gap:12px}
+.ipk-category-list.is-collapsed{display:none}
+.ipk-category-item{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--text);font-weight:600;cursor:pointer}
+.ipk-switch{position:relative;display:inline-flex;flex:0 0 auto}
+.ipk-switch input{position:absolute;opacity:0;pointer-events:none}
+.ipk-switch-track{width:52px;height:28px;padding:3px;border-radius:999px;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;transition:var(--transition)}
+.ipk-switch-thumb{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--text-muted);color:transparent;font-size:13px;font-weight:900;transform:translateX(0);transition:var(--transition)}
+.ipk-switch input:checked+.ipk-switch-track{background:var(--button);border-color:var(--button);box-shadow:none}
+.ipk-switch input:checked+.ipk-switch-track .ipk-switch-thumb{background:var(--button);color:white;transform:translateX(24px)}
+.ipk-hint{color:var(--text-soft)}
+
+@media (max-width:899px){.ipk-mobile-categories{display:flex;flex-direction:column;gap:14px}.ipk-collapse-button{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0;color:var(--text);font-weight:700}.ipk-total-card{width:100%;min-width:0;justify-content:space-between}.ipk-total-card span{font-size:16px}.ipk-total-card strong{font-size:22px}.ipk-layout,.ipk-cards{grid-template-columns:1fr}.ipk-desktop-categories{display:none}.ipk-stats div,.ipk-row{grid-template-columns:minmax(0,1fr) 58px 76px;gap:8px}.ipk-card-header h3{font-size:17px}}
+
+.result-block{padding:14px 0;border-bottom:1px solid var(--border)}
+.result-block:last-child{border-bottom:none}
+.result-block h4{margin:0 0 8px}
+.result-block div{font-size:24px;font-weight:700;color:var(--accent)}
