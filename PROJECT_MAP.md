@@ -794,7 +794,9 @@
 - `setText` — Описание пока не добавлено.
 - `setValue` — Описание пока не добавлено.
 - `sumRequirementsForBuilding` — Описание пока не добавлено.
+- `syncLinkedRaidInputs` — Описание пока не добавлено.
 - `syncMainBuildingLevel` — Описание пока не добавлено.
+- `syncValue` — Описание пока не добавлено.
 - `updateAll` — Описание пока не добавлено.
 - `updateBuildingNeeds` — Описание пока не добавлено.
 - `updateProduction` — Описание пока не добавлено.
