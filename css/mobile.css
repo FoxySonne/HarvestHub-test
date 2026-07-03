@@ -1,1 +1,73 @@
+/* ==========================================================
+MOBILE: до 899px
+========================================================== */
 
+@media (max-width: 899px) {
+
+  .container {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    display: flex;
+  }
+
+  .main {
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .left {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 240px;
+    height: 100vh;
+    z-index: 1000;
+  }
+
+  .left.active {
+    left: 0;
+  }
+
+  .right {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .grid,
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .adaptive-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .flex,
+  .flex-between {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* закреплённый блок на мобильной версии становится самым верхним */
+  .desktop-fixed-right {
+    order: -1;
+  }
+
+  .turbo-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .results {
+    order: -1;
+  }
+}
