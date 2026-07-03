@@ -612,10 +612,14 @@
 - `formatNumber` — Описание пока не добавлено.
 - `getActionById` — Описание пока не добавлено.
 - `getActionPoints` — Описание пока не добавлено.
+- `getRowKey` — Описание пока не добавлено.
 - `init` — Инициализатор страницы/модуля. Для turbo-vs.js запускает заполнение select дней и первый рендер калькулятора.
 - `parseNumber` — Описание пока не добавлено.
 - `renderCategoryList` — Описание пока не добавлено.
 - `renderIpk` — Описание пока не добавлено.
+- `renderSelectedCards` — Описание пока не добавлено.
+- `saveAllValues` — Описание пока не добавлено.
+- `saveCardValues` — Описание пока не добавлено.
 - `setCategoryEnabled` — Описание пока не добавлено.
 - `setupMobileCategoryCollapse` — Описание пока не добавлено.
 - `updateIpkResults` — Описание пока не добавлено.
