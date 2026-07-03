@@ -93,6 +93,77 @@ SEASON RESOURCES — compact calculator layout
   font-size: 14px;
 }
 
+.season-building-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.season-building-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 154px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.season-building-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.season-building-check input {
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  min-height: 16px;
+}
+
+.season-building-check span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.season-building-levels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.season-building-level {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.season-building-level span {
+  color: var(--text-soft);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.season-building-level select {
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.season-build-total-mobile {
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
 .season-raid-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -224,5 +295,13 @@ SEASON RESOURCES — compact calculator layout
 
   .season-inline-fields {
     grid-template-columns: 1fr 82px;
+  }
+
+  .season-building-row {
+    grid-template-columns: 1fr;
+  }
+
+  .season-building-levels {
+    grid-template-columns: 1fr 1fr;
   }
 }
