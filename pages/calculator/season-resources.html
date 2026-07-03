@@ -13,6 +13,24 @@
       </div>
 
       <div class="season-panel">
+        <h4>Какие здания нужно достроить</h4>
+
+        <div class="season-building-list" id="seasonBuildingList"></div>
+
+        <div class="season-total-grid">
+          <div class="season-total-card">
+            <span>Нужно Вода / Рыба / Вольфрам</span>
+            <strong id="buildingNeedSecondary">0</strong>
+          </div>
+
+          <div class="season-total-card">
+            <span>Нужно Бензин / Фрукты / Кварц</span>
+            <strong id="buildingNeedPrimary">0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="season-panel">
         <h4>Настройки производства</h4>
 
         <div class="season-form-grid season-form-grid-compact">
@@ -103,19 +121,12 @@
         <section class="season-panel">
           <h4>Сколько времени нужно</h4>
 
-          <div class="season-inline-fields">
-            <label class="season-field">
-              <span>Нужно Вода / Рыба / Вольфрам</span>
-              <input id="productionNeedSecondary" type="number" min="0" value="0">
-            </label>
-
-            <label class="season-field">
-              <span>Нужно Бензин / Фрукты / Кварц</span>
-              <input id="productionNeedPrimary" type="number" min="0" value="0">
-            </label>
-          </div>
+          <input id="productionNeedSecondary" type="hidden" value="0">
+          <input id="productionNeedPrimary" type="hidden" value="0">
 
           <div class="season-results season-results-compact">
+            <div><span>Нужно Вода / Рыба / Вольфрам</span><strong id="productionNeedSecondaryText">0</strong></div>
+            <div><span>Нужно Бензин / Фрукты / Кварц</span><strong id="productionNeedPrimaryText">0</strong></div>
             <div><span>Потребуется часов</span><strong id="productionNeedHours">0</strong></div>
           </div>
         </section>
@@ -131,19 +142,17 @@
       </div>
 
       <div class="season-panel">
-        <h4>Что нужно и что уже есть</h4>
+        <h4>Что уже есть</h4>
+
+        <input id="raidNeedPrimary" type="hidden" value="0">
+        <input id="raidNeedSecondary" type="hidden" value="0">
+
+        <div class="season-results season-results-compact season-build-total-mobile">
+          <div><span>Нужно Бензин / Фрукты / Кварц</span><strong id="raidNeedPrimaryText">0</strong></div>
+          <div><span>Нужно Вода / Рыба / Вольфрам</span><strong id="raidNeedSecondaryText">0</strong></div>
+        </div>
 
         <div class="season-form-grid season-form-grid-compact">
-          <label class="season-field">
-            <span>Нужно Бензин / Фрукты / Кварц</span>
-            <input id="raidNeedPrimary" type="number" min="0" value="0">
-          </label>
-
-          <label class="season-field">
-            <span>Нужно Вода / Рыба / Вольфрам</span>
-            <input id="raidNeedSecondary" type="number" min="0" value="0">
-          </label>
-
           <label class="season-field">
             <span>Алмазы</span>
             <input id="raidDiamonds" type="number" min="0" value="0">
