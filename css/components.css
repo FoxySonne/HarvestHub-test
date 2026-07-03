@@ -206,13 +206,13 @@ ACTION LIST
 
 .action-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(90px, 130px);
+  grid-template-columns: minmax(0, 1fr) clamp(150px, 32vw, 170px);
   gap: 12px;
   align-items: center;
 }
 
 .action-row-with-level {
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  grid-template-columns: minmax(0, 1fr) clamp(150px, 32vw, 170px);
 }
 
 .action-row label {
@@ -229,13 +229,25 @@ ACTION LIST
 }
 
 .action-row-with-level .action-controls {
-  grid-template-columns: minmax(0, 1fr) 80px;
+  grid-template-columns: minmax(0, 1fr) 52px;
+  align-items: center;
 }
 
 .action-row input,
 .action-row select {
   width: 100%;
   min-width: 0;
+}
+
+.action-row-with-level .action-level-select {
+  padding-left: 10px;
+  padding-right: 8px;
+}
+
+.action-row-with-level .action-quantity-input {
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align: center;
 }
 
 /* ==========================================================
