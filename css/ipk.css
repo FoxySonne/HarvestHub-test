@@ -1,0 +1,169 @@
+/* ==========================================================
+IPK CALCULATOR — mobile overflow fixes
+========================================================== */
+
+.ipk-page,
+.ipk-layout,
+.ipk-cards,
+.ipk-card,
+.ipk-card-body,
+.ipk-rows,
+.ipk-row {
+  min-width: 0;
+}
+
+@media (max-width: 899px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .main,
+  .page-section,
+  .ipk-page,
+  .ipk-layout,
+  .ipk-cards,
+  .ipk-mobile-categories,
+  .ipk-total-card,
+  .ipk-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .ipk-page {
+    gap: 14px;
+  }
+
+  .ipk-page h1 {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .ipk-mobile-categories,
+  .ipk-total-card,
+  .ipk-card {
+    padding: 14px;
+  }
+
+  .ipk-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ipk-card {
+    gap: 12px;
+  }
+
+  .ipk-card-body {
+    gap: 12px;
+  }
+
+  .ipk-card-header {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .ipk-card-header h3 {
+    min-width: 0;
+    font-size: 16px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .ipk-card-toggle {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+  }
+
+  .ipk-stats {
+    gap: 8px;
+    padding-bottom: 12px;
+  }
+
+  .ipk-stats div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .ipk-stats span {
+    min-width: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .ipk-stats strong {
+    grid-column: auto;
+    justify-self: end;
+    max-width: 44vw;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ipk-rows {
+    gap: 8px;
+  }
+
+  .ipk-row {
+    grid-template-columns: minmax(0, 1fr) 52px 62px;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .ipk-row label {
+    min-width: 0;
+    font-size: 13px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .ipk-row input[type="number"],
+  .ipk-need {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    padding: 0 4px !important;
+    font-size: 12px !important;
+    border-radius: var(--radius-small) !important;
+  }
+
+  .ipk-need {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ipk-category-item {
+    min-width: 0;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .ipk-category-item > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ipk-switch-track {
+    width: 48px;
+    height: 26px;
+  }
+
+  .ipk-switch-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ipk-switch input:checked + .ipk-switch-track .ipk-switch-thumb {
+    transform: translateX(22px);
+  }
+}
