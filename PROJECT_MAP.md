@@ -891,6 +891,8 @@
 - `alphaNeedDiscountDiamonds` — Описание пока не добавлено.
 - `alphaNeedEnergy` — Описание пока не добавлено.
 - `alphaNeedLevel` — Описание пока не добавлено.
+- `buildingNeedPrimary` — Описание пока не добавлено.
+- `buildingNeedSecondary` — Описание пока не добавлено.
 - `infectedFarmEnergy` — Описание пока не добавлено.
 - `infectedFarmLevel` — Описание пока не добавлено.
 - `infectedFarmPrimary` — Описание пока не добавлено.
@@ -908,7 +910,9 @@
 - `productionMegapolis` — Описание пока не добавлено.
 - `productionNeedHours` — Описание пока не добавлено.
 - `productionNeedPrimary` — Описание пока не добавлено.
+- `productionNeedPrimaryText` — Описание пока не добавлено.
 - `productionNeedSecondary` — Описание пока не добавлено.
+- `productionNeedSecondaryText` — Описание пока не добавлено.
 - `productionPremiumPass` — Описание пока не добавлено.
 - `productionPrimaryPerHour` — Описание пока не добавлено.
 - `productionPrimaryTotal` — Описание пока не добавлено.
@@ -923,12 +927,17 @@
 - `raidDiscountCans` — Описание пока не добавлено.
 - `raidEnergy` — Описание пока не добавлено.
 - `raidNeedPrimary` — Описание пока не добавлено.
+- `raidNeedPrimaryText` — Описание пока не добавлено.
 - `raidNeedSecondary` — Описание пока не добавлено.
+- `raidNeedSecondaryText` — Описание пока не добавлено.
+- `seasonBuildingList` — Описание пока не добавлено.
 
 **Классы:**
 - `card` — Универсальная большая карточка контента с фоном, радиусом, тенью и hover-состоянием.
 - `card-header` — Описание пока не добавлено.
 - `page-section` — Описание пока не добавлено.
+- `season-build-total-mobile` — Описание пока не добавлено.
+- `season-building-list` — Описание пока не добавлено.
 - `season-card` — Описание пока не добавлено.
 - `season-card-header` — Описание пока не добавлено.
 - `season-compact-card` — Описание пока не добавлено.
