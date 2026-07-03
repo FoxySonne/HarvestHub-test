@@ -744,24 +744,24 @@
 - `section` — Логический раздел страницы, чаще всего отдельный визуальный блок.
 
 **ID:**
-- `bigGameCards` — Описание пока не добавлено.
-- `bigGameDesktopCategoriesList` — Описание пока не добавлено.
-- `bigGameMobileCategoriesList` — Описание пока не добавлено.
-- `bigGameToggleCategories` — Описание пока не добавлено.
-- `bigGameToggleIcon` — Описание пока не добавлено.
-- `bigGameTotal` — Описание пока не добавлено.
+- `ipkCards` — Описание пока не добавлено.
+- `ipkDesktopCategoriesList` — Описание пока не добавлено.
+- `ipkMobileCategoriesList` — Описание пока не добавлено.
+- `ipkToggleCategories` — Описание пока не добавлено.
+- `ipkToggleIcon` — Описание пока не добавлено.
+- `ipkTotal` — Описание пока не добавлено.
 
 **Классы:**
-- `big-game-cards` — Описание пока не добавлено.
-- `big-game-category-list` — Описание пока не добавлено.
-- `big-game-collapse-button` — Описание пока не добавлено.
-- `big-game-desktop-categories` — Описание пока не добавлено.
-- `big-game-hint` — Описание пока не добавлено.
-- `big-game-layout` — Описание пока не добавлено.
-- `big-game-mobile-categories` — Описание пока не добавлено.
-- `big-game-page` — Описание пока не добавлено.
-- `big-game-total-card` — Описание пока не добавлено.
 - `card` — Универсальная большая карточка контента с фоном, радиусом, тенью и hover-состоянием.
+- `ipk-cards` — Описание пока не добавлено.
+- `ipk-category-list` — Описание пока не добавлено.
+- `ipk-collapse-button` — Описание пока не добавлено.
+- `ipk-desktop-categories` — Описание пока не добавлено.
+- `ipk-hint` — Описание пока не добавлено.
+- `ipk-layout` — Описание пока не добавлено.
+- `ipk-mobile-categories` — Описание пока не добавлено.
+- `ipk-page` — Описание пока не добавлено.
+- `ipk-total-card` — Описание пока не добавлено.
 - `page-section` — Описание пока не добавлено.
 
 ---
