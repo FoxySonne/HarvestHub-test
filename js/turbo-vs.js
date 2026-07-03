@@ -39,6 +39,33 @@ function getActionById(actionId) {
 }
 
 /* ==========================================================
+СОРТИРУЕМ ДЕЙСТВИЯ ПО ПОРЯДКУ В DATABASE.JS
+Сначала порядок категорий из database.category,
+внутри категории — порядок действий из database.action.
+========================================================== */
+
+function sortActionIdsByDatabaseOrder(actionIds) {
+  return [...actionIds].sort((firstId, secondId) => {
+    const firstAction = getActionById(firstId);
+    const secondAction = getActionById(secondId);
+
+    if (!firstAction || !secondAction) return 0;
+
+    const firstCategoryIndex = database.category.findIndex(category => category.id === firstAction.categoryId);
+    const secondCategoryIndex = database.category.findIndex(category => category.id === secondAction.categoryId);
+
+    if (firstCategoryIndex !== secondCategoryIndex) {
+      return firstCategoryIndex - secondCategoryIndex;
+    }
+
+    const firstActionIndex = database.action.findIndex(action => action.id === firstId);
+    const secondActionIndex = database.action.findIndex(action => action.id === secondId);
+
+    return firstActionIndex - secondActionIndex;
+  });
+}
+
+/* ==========================================================
 СИНХРОНИЗИРУЕМ ОДИНАКОВЫЕ ДЕЙСТВИЯ
 Если действие есть и в Черепашке, и в VS, значение дублируется.
 ========================================================== */
@@ -273,8 +300,8 @@ function renderDay(dayId) {
   turtleList.innerHTML = "";
   vsList.innerHTML = "";
 
-  const turtleIds = resolveDayList(day.turtle || []);
-  const vsIds = resolveDayList(day.vs || []);
+  const turtleIds = sortActionIdsByDatabaseOrder(resolveDayList(day.turtle || []));
+  const vsIds = sortActionIdsByDatabaseOrder(resolveDayList(day.vs || []));
 
   turtleIds.forEach(actionId => {
     const action = getActionById(actionId);
