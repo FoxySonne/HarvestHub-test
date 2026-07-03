@@ -18,14 +18,16 @@ async function loadBlock(containerId, filePath) {
 
     try {
 
-        const module = await import(`./${fileName}.js`);
+        const module = await import(`./${fileName}.js?v=${Date.now()}`);
 
         if (typeof module.init === "function") {
             module.init();
         }
 
     } catch (e) {
-        // JS для этой страницы отсутствует — это нормально
+        // JS для этой страницы отсутствует — это нормально.
+        // Но если JS есть и сломался, эту ошибку теперь видно в консоли.
+        console.warn(`JS-модуль для страницы ${fileName} не был запущен:`, e);
     }
 
 }
