@@ -69,3 +69,137 @@
 .result-block:last-child{border-bottom:none}
 .result-block h4{margin:0 0 8px}
 .result-block div{font-size:24px;font-weight:700;color:var(--accent)}
+
+/* SEASON RESOURCES CALCULATOR */
+.season-page {
+  gap: 18px;
+}
+
+.season-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.season-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.season-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.season-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.season-field span {
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.season-field input,
+.season-field select {
+  width: 100%;
+}
+
+.season-subgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.season-subgrid-production {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.season-mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.season-mini-card h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.season-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.season-results div,
+.season-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.season-results div:last-child {
+  border-bottom: none;
+}
+
+.season-results span,
+.season-summary span {
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.season-results strong,
+.season-summary strong {
+  color: var(--accent);
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.season-results-large {
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.season-summary {
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+@media (min-width: 1600px) {
+  .season-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 899px) {
+  .season-form-grid,
+  .season-subgrid,
+  .season-subgrid-production {
+    grid-template-columns: 1fr;
+  }
+
+  .season-results div,
+  .season-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
