@@ -70,7 +70,7 @@
 
 **Переходы loadPage():**
 - `calculator.html`
-- `knowledge.htmll`
+- `knowledge.html`
 
 ---
 
