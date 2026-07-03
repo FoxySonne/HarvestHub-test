@@ -611,23 +611,29 @@
 
 **Функции:**
 - `createCard` — Описание пока не добавлено.
-- `createCategoryItem` — Описание пока не добавлено.
-- `fillFilter` — Описание пока не добавлено.
+- `createCategoryCheckbox` — Описание пока не добавлено.
 - `formatNumber` — Описание пока не добавлено.
 - `init` — Инициализатор страницы/модуля. Для turbo-vs.js запускает заполнение select дней и первый рендер калькулятора.
 - `renderBigGame` — Описание пока не добавлено.
+- `renderCategoryList` — Описание пока не добавлено.
+- `setupMobileCategoryCollapse` — Описание пока не добавлено.
 
 **Экспорты:**
 - `init` — Экспортируемая функция инициализации страницы, которую loader.js вызывает после подгрузки HTML.
 
 **DOM ID, к которым обращается JS:**
 - `bigGameCards` — Описание пока не добавлено.
-- `bigGameCategories` — Описание пока не добавлено.
-- `bigGameCategoryFilter` — Описание пока не добавлено.
+- `bigGameDesktopCategoriesList` — Описание пока не добавлено.
+- `bigGameMobileCategoriesList` — Описание пока не добавлено.
+- `bigGameToggleCategories` — Описание пока не добавлено.
+- `bigGameToggleIcon` — Описание пока не добавлено.
 
 **CSS-классы, которыми управляет JS:**
 - `big-game-card` — Описание пока не добавлено.
+- `big-game-card-toggle` — Описание пока не добавлено.
+- `big-game-category-item` — Описание пока не добавлено.
 - `card` — Универсальная большая карточка контента с фоном, радиусом, тенью и hover-состоянием.
+- `is-collapsed` — Описание пока не добавлено.
 
 ---
 
