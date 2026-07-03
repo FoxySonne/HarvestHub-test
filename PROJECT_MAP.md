@@ -406,6 +406,7 @@
 - `season-results-compact` — Описание пока не добавлено.
 - `season-subgrid-production` — Описание пока не добавлено.
 - `season-summary-pill` — Описание пока не добавлено.
+- `season-summary-row` — Описание пока не добавлено.
 - `season-total-card` — Описание пока не добавлено.
 - `season-total-grid` — Описание пока не добавлено.
 
