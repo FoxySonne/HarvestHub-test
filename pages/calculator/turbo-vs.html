@@ -1,59 +1,44 @@
-<div class="turbo-container">
+<section class="page-section">
 
-  <h1 class="title">
+  <h1>Турбочерепашка & VS Дуэль союза</h1>
 
-    Турбочерепашка & VS Дуэль союза
-
-  </h1>
-
-  <!-- День недели -->
-
-  <div class="day-block">
-
-    <span class="day-label">День недели:</span>
-
-    <select id="daySelector" class="day-select">
-
-      <!-- заполняется через JS -->
-
-    </select>
-
-  </div>
-
-  <!-- Основной блок -->
+  <label for="daySelector">День недели:</label>
+  <select id="daySelector"></select>
 
   <div class="turbo-content">
 
-    <!-- Заголовки колонок -->
+    <section class="card turbo-card">
+      <div class="card-header">
+        <h3>Черепашка</h3>
+      </div>
 
-    <div class="table-header">
+      <div id="turtleList" class="action-list"></div>
+    </section>
 
-      <span class="col-left">Черепашка</span>
+    <section class="card turbo-card">
+      <div class="card-header">
+        <h3>Дуэль союза</h3>
+      </div>
 
-      <span class="col-center"></span>
+      <div id="vsList" class="action-list"></div>
+    </section>
 
-      <span class="col-right">Дуэль союза</span>
+    <section class="card turbo-card results desktop-fixed-right">
+      <div class="card-header">
+        <h3>Итоги</h3>
+      </div>
 
-    </div>
+      <div class="result-block">
+        <h4>Всего Турбочерепашка:</h4>
+        <div id="turtleTotal">0</div>
+      </div>
 
-    <!-- ЕДИНЫЙ список действий -->
-
-    <div id="actionList" class="action-list"></div>
-
-    <!-- Правая часть (результаты) -->
-
-    <div class="results">
-
-      <h3>Всего Турбочерепашка:</h3>
-
-      <div class="result-box"></div>
-
-      <h3>Всего VS Дуэль союза:</h3>
-
-      <div class="result-box"></div>
-
-    </div>
+      <div class="result-block">
+        <h4>Всего VS Дуэль союза:</h4>
+        <div id="vsTotal">0</div>
+      </div>
+    </section>
 
   </div>
 
-</div>
+</section>
