@@ -730,19 +730,22 @@
 
 **ID:**
 - `bigGameCards` — Описание пока не добавлено.
-- `bigGameCategories` — Описание пока не добавлено.
-- `bigGameCategoryFilter` — Описание пока не добавлено.
+- `bigGameDesktopCategoriesList` — Описание пока не добавлено.
+- `bigGameMobileCategoriesList` — Описание пока не добавлено.
+- `bigGameToggleCategories` — Описание пока не добавлено.
+- `bigGameToggleIcon` — Описание пока не добавлено.
 - `bigGameTotal` — Описание пока не добавлено.
 
 **Классы:**
 - `big-game-cards` — Описание пока не добавлено.
-- `big-game-categories` — Описание пока не добавлено.
-- `big-game-category-box` — Описание пока не добавлено.
+- `big-game-category-list` — Описание пока не добавлено.
+- `big-game-collapse-button` — Описание пока не добавлено.
+- `big-game-desktop-categories` — Описание пока не добавлено.
 - `big-game-hint` — Описание пока не добавлено.
 - `big-game-layout` — Описание пока не добавлено.
+- `big-game-mobile-categories` — Описание пока не добавлено.
 - `big-game-page` — Описание пока не добавлено.
-- `big-game-toolbar` — Описание пока не добавлено.
-- `big-game-total-box` — Описание пока не добавлено.
+- `big-game-total-card` — Описание пока не добавлено.
 - `card` — Универсальная большая карточка контента с фоном, радиусом, тенью и hover-состоянием.
 - `page-section` — Описание пока не добавлено.
 
