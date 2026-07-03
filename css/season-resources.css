@@ -1,0 +1,206 @@
+/* ==========================================================
+SEASON RESOURCES — compact calculator layout
+========================================================== */
+
+.season-compact-page {
+  gap: 14px;
+}
+
+.season-compact-page h1 {
+  font-size: clamp(24px, 2.4vw, 32px);
+}
+
+.season-compact-layout {
+  gap: 18px;
+}
+
+.season-compact-card {
+  gap: 14px;
+  padding: 16px;
+}
+
+.season-card-header {
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+
+.season-card-header h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.season-card-header p {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.season-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.season-panel h4,
+.season-panel-title h4 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.season-panel-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.season-panel-title span {
+  color: var(--text-soft);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.season-form-grid-compact {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.season-inline-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 10px;
+}
+
+.season-field {
+  gap: 5px;
+}
+
+.season-field span {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.season-field input,
+.season-field select {
+  min-height: 34px;
+  padding: 6px 9px;
+  font-size: 14px;
+}
+
+.season-raid-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.season-raid-panel {
+  gap: 12px;
+}
+
+.season-results-compact {
+  gap: 0;
+}
+
+.season-results-compact div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 7px 0;
+  min-height: 30px;
+}
+
+.season-results-compact span,
+.season-total-card span,
+.season-summary-pill span {
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.season-results-compact strong,
+.season-total-card strong,
+.season-summary-pill strong {
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.season-summary-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 150px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.season-total-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.season-total-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.season-subgrid-production {
+  gap: 12px;
+}
+
+@media (min-width: 1200px) {
+  .season-compact-layout {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    align-items: start;
+  }
+}
+
+@media (min-width: 1600px) {
+  .season-compact-layout {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  }
+}
+
+@media (max-width: 899px) {
+  .season-compact-card {
+    padding: 14px;
+  }
+
+  .season-card-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .season-summary-pill {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .season-form-grid-compact,
+  .season-raid-grid,
+  .season-total-grid,
+  .season-subgrid-production {
+    grid-template-columns: 1fr;
+  }
+
+  .season-inline-fields {
+    grid-template-columns: 1fr 82px;
+  }
+}
