@@ -81,13 +81,19 @@ SEASON RESOURCES — compact calculator layout
 .season-panel-title {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
 }
 
 .season-panel-title span {
-  color: var(--text-soft);
-  font-size: 14px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 4px 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
   white-space: nowrap;
 }
 
