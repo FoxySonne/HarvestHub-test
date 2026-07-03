@@ -399,8 +399,8 @@
 - `season-building-levels` — Описание пока не добавлено.
 - `season-building-list` — Описание пока не добавлено.
 - `season-building-row` — Описание пока не добавлено.
+- `season-building-totals-card` — Описание пока не добавлено.
 - `season-buildings-card` — Описание пока не добавлено.
-- `season-card` — Описание пока не добавлено.
 - `season-card-header` — Описание пока не добавлено.
 - `season-compact-card` — Описание пока не добавлено.
 - `season-compact-layout` — Описание пока не добавлено.
@@ -410,8 +410,10 @@
 - `season-inline-fields` — Описание пока не добавлено.
 - `season-panel` — Описание пока не добавлено.
 - `season-panel-title` — Описание пока не добавлено.
+- `season-production-card` — Описание пока не добавлено.
 - `season-raid-grid` — Описание пока не добавлено.
 - `season-raid-panel` — Описание пока не добавлено.
+- `season-raids-card` — Описание пока не добавлено.
 - `season-results-compact` — Описание пока не добавлено.
 - `season-subgrid-production` — Описание пока не добавлено.
 - `season-summary-pill` — Описание пока не добавлено.
@@ -448,7 +450,7 @@
 - `forms.css` — Поля форм и элементы ввода.
 - `layout.css` — Общий каркас сайта.
 - `mobile.css` — Мобильная адаптивность.
-- `season-resources.css?v=20260703-6` — Описание пока не добавлено.
+- `season-resources.css?v=20260703-7` — Описание пока не добавлено.
 - `utilities.css?v=20260703-2` — Описание пока не добавлено.
 - `variables.css` — Глобальные CSS-переменные темы и размеров.
 
