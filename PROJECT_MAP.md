@@ -769,22 +769,40 @@
 - `calculateFarmByDrops` — Описание пока не добавлено.
 - `calculateNeedByDrops` — Описание пока не добавлено.
 - `calculateProductionPerHour` — Описание пока не добавлено.
+- `createLevelSelect` — Описание пока не добавлено.
 - `fillSelect` — Описание пока не добавлено.
 - `getBonus` — Описание пока не добавлено.
 - `getByLevel` — Описание пока не добавлено.
 - `init` — Инициализатор страницы/модуля. Для turbo-vs.js запускает заполнение select дней и первый рендер калькулятора.
 - `num` — Описание пока не добавлено.
+- `renderBuildingRows` — Описание пока не добавлено.
 - `setDefaults` — Описание пока не добавлено.
 - `setText` — Описание пока не добавлено.
+- `setValue` — Описание пока не добавлено.
+- `sumRequirementsForBuilding` — Описание пока не добавлено.
 - `updateAll` — Описание пока не добавлено.
+- `updateBuildingNeeds` — Описание пока не добавлено.
 - `updateProduction` — Описание пока не добавлено.
 - `updateRaids` — Описание пока не добавлено.
 
 **Импорты:**
+- `../data/season-buildings-database.js` — Описание пока не добавлено.
 - `../data/season-database.js` — Описание пока не добавлено.
 
 **Экспорты:**
 - `init` — Экспортируемая функция инициализации страницы, которую loader.js вызывает после подгрузки HTML.
+
+**DOM ID, к которым обращается JS:**
+- `seasonBuildingList` — Описание пока не добавлено.
+
+**CSS-классы, которыми управляет JS:**
+- `season-building-check` — Описание пока не добавлено.
+- `season-building-current` — Описание пока не добавлено.
+- `season-building-enabled` — Описание пока не добавлено.
+- `season-building-level` — Описание пока не добавлено.
+- `season-building-levels` — Описание пока не добавлено.
+- `season-building-row` — Описание пока не добавлено.
+- `season-building-target` — Описание пока не добавлено.
 
 ---
 
