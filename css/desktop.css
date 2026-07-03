@@ -66,6 +66,18 @@ DESKTOP: 900px+
     grid-column: 3;
     grid-row: 1;
   }
+
+  .action-row-with-level .action-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-row-with-level .action-level-select,
+  .action-row-with-level .action-quantity-input {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 /* ==========================================================
