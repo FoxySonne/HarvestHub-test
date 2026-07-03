@@ -398,7 +398,7 @@ BIG GAME
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: white;
+  color: #10240c;
   font-weight: 700;
 }
 
@@ -432,13 +432,58 @@ BIG GAME
   gap: 12px;
   color: var(--text);
   font-weight: 600;
+  cursor: pointer;
 }
 
-.big-game-category-item input {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  accent-color: var(--accent);
+.big-game-switch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.big-game-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.big-game-switch-track {
+  width: 52px;
+  height: 28px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.big-game-switch-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--text-muted);
+  color: transparent;
+  font-size: 13px;
+  font-weight: 900;
+  transform: translateX(0);
+  transition: var(--transition);
+}
+
+.big-game-switch input:checked + .big-game-switch-track {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 14px rgba(139, 234, 99, .32);
+}
+
+.big-game-switch input:checked + .big-game-switch-track .big-game-switch-thumb {
+  background: var(--card);
+  color: var(--accent);
+  transform: translateX(24px);
 }
 
 .big-game-hint {
