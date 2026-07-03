@@ -144,6 +144,23 @@ SEASON RESOURCES — compact calculator layout
   border-radius: var(--radius);
 }
 
+.season-summary-row {
+  width: 100%;
+  min-width: 0;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.season-summary-row span {
+  font-size: 13px;
+}
+
+.season-summary-row strong {
+  font-size: 22px;
+}
+
 .season-total-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -190,6 +207,11 @@ SEASON RESOURCES — compact calculator layout
 
   .season-summary-pill {
     width: 100%;
+    align-items: flex-start;
+  }
+
+  .season-summary-row {
+    flex-direction: column;
     align-items: flex-start;
   }
 
