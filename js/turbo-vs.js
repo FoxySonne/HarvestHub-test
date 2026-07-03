@@ -8,7 +8,7 @@ import { database } from "../data/database.js";
 - { type: "category", id: "equipment" }
 ========================================================== */
 
-function resolveDayList(list) {
+function resolveDayList(list = []) {
   return list.flatMap(item => {
     if (typeof item === "string") {
       return item;
@@ -50,11 +50,6 @@ function createActionRow(action, eventType) {
   const controls = document.createElement("div");
   controls.className = "action-controls";
 
-  /*
-    Вариант 1:
-    Действие с выбором уровня + количеством.
-    Например: Улучшение войск.
-  */
   if (action.options) {
     row.classList.add("action-row-with-level");
 
@@ -87,11 +82,6 @@ function createActionRow(action, eventType) {
     return row;
   }
 
-  /*
-    Вариант 2:
-    Действие с фиксированным количеством через выпадающий список.
-    Например: Отправки S-класс, Грузовики А-класс.
-  */
   if (action.quantityOptions) {
     const quantitySelect = document.createElement("select");
     quantitySelect.className = "action-quantity-select";
@@ -119,10 +109,6 @@ function createActionRow(action, eventType) {
     return row;
   }
 
-  /*
-    Вариант 3:
-    Обычное действие с простым числовым полем.
-  */
   const input = document.createElement("input");
   input.type = "number";
   input.min = "0";
@@ -141,14 +127,24 @@ function createActionRow(action, eventType) {
 
 /* ==========================================================
 ПОЛУЧАЕМ ОЧКИ ЗА ДЕЙСТВИЕ
-Пока безопасная версия: если очков нет — считаем 0.
+Берём очки из самого действия: action.points.
+Для действий с уровнями берём action.points[eventType][level].
 ========================================================== */
 
-function getPoints(actionId, eventType) {
-  if (!database.points) return 0;
-  if (!database.points[actionId]) return 0;
+function getPoints(actionId, eventType, level = null) {
+  const action = getActionById(actionId);
 
-  return database.points[actionId][eventType] || 0;
+  if (!action || !action.points) return 0;
+
+  const points = action.points[eventType];
+
+  if (points == null) return 0;
+
+  if (typeof points === "object") {
+    return Number(points[level]) || 0;
+  }
+
+  return Number(points) || 0;
 }
 
 /* ==========================================================
@@ -159,14 +155,19 @@ function updateTotals() {
   let turtleTotal = 0;
   let vsTotal = 0;
 
-  const inputs = document.querySelectorAll(".action-row input");
+  const controls = document.querySelectorAll(
+    ".action-row input[data-action-id], .action-row select[data-action-id]"
+  );
 
-  inputs.forEach(input => {
-    const value = Number(input.value) || 0;
-    const actionId = input.dataset.actionId;
-    const eventType = input.dataset.eventType;
+  controls.forEach(control => {
+    const value = Number(control.value) || 0;
+    const actionId = control.dataset.actionId;
+    const eventType = control.dataset.eventType;
+    const row = control.closest(".action-row");
+    const levelSelect = row?.querySelector(".action-level-select");
+    const level = levelSelect ? levelSelect.value : null;
 
-    const points = getPoints(actionId, eventType);
+    const points = getPoints(actionId, eventType, level);
     const total = value * points;
 
     if (eventType === "turtle") {
@@ -234,7 +235,7 @@ function renderDay(dayId) {
 ЗАПУСК КАЛЬКУЛЯТОРА
 ========================================================== */
 
-function initTurboVsCalculator() {
+export function init() {
   const daySelector = document.getElementById("daySelector");
 
   if (!daySelector) return;
@@ -259,5 +260,3 @@ function initTurboVsCalculator() {
 
   renderDay(daySelector.value);
 }
-
-initTurboVsCalculator();
