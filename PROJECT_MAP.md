@@ -36,6 +36,7 @@
 - 📁 **pages**
   - 📁 **calculator**
     - 📄 `pages/calculator/ipk.html`
+    - 📄 `pages/calculator/season-resources.html`
     - 📄 `pages/calculator/turbo-vs.html` — Страница калькулятора Турбочерепашка & VS Дуэль союза: выбор дня недели, центральный список действий в трёх колонках и правый блок результатов. Данные и строки заполняются через js/turbo-vs.js.
   - 📄 `pages/calculator.html` — Раздел калькуляторов. Сейчас содержит заголовок и ссылку на калькулятор Турбочерепашка&VS, который подгружается как pages/calculator/turbo-vs.html.
   - 📄 `pages/events.html` — Заготовка страницы ивентов. Пока файл пустой и готов для будущего контента по событиям игры.
@@ -774,6 +775,76 @@
 - `ipk-page` — Описание пока не добавлено.
 - `ipk-total-card` — Описание пока не добавлено.
 - `page-section` — Описание пока не добавлено.
+
+---
+
+### `pages/calculator/season-resources.html`
+
+Описание файла пока не добавлено.
+
+**HTML-теги блоков:**
+- `section` — Логический раздел страницы, чаще всего отдельный визуальный блок.
+
+**ID:**
+- `alphaFarmEnergy` — Описание пока не добавлено.
+- `alphaFarmLevel` — Описание пока не добавлено.
+- `alphaFarmPrimary` — Описание пока не добавлено.
+- `alphaFarmRuns` — Описание пока не добавлено.
+- `alphaFarmSecondary` — Описание пока не добавлено.
+- `alphaNeedCans` — Описание пока не добавлено.
+- `alphaNeedDiamonds` — Описание пока не добавлено.
+- `alphaNeedDiscountDiamonds` — Описание пока не добавлено.
+- `alphaNeedEnergy` — Описание пока не добавлено.
+- `alphaNeedLevel` — Описание пока не добавлено.
+- `infectedFarmEnergy` — Описание пока не добавлено.
+- `infectedFarmLevel` — Описание пока не добавлено.
+- `infectedFarmPrimary` — Описание пока не добавлено.
+- `infectedFarmRuns` — Описание пока не добавлено.
+- `infectedFarmSecondary` — Описание пока не добавлено.
+- `infectedNeedCans` — Описание пока не добавлено.
+- `infectedNeedDiamonds` — Описание пока не добавлено.
+- `infectedNeedDiscountDiamonds` — Описание пока не добавлено.
+- `infectedNeedEnergy` — Описание пока не добавлено.
+- `infectedNeedLevel` — Описание пока не добавлено.
+- `productionBuildingLevel` — Описание пока не добавлено.
+- `productionBull` — Описание пока не добавлено.
+- `productionHours` — Описание пока не добавлено.
+- `productionLabLevel` — Описание пока не добавлено.
+- `productionMegapolis` — Описание пока не добавлено.
+- `productionNeedHours` — Описание пока не добавлено.
+- `productionNeedPrimary` — Описание пока не добавлено.
+- `productionNeedSecondary` — Описание пока не добавлено.
+- `productionPremiumPass` — Описание пока не добавлено.
+- `productionPrimaryPerHour` — Описание пока не добавлено.
+- `productionPrimaryTotal` — Описание пока не добавлено.
+- `productionSeasonLevel` — Описание пока не добавлено.
+- `productionSecondaryPerHour` — Описание пока не добавлено.
+- `productionSecondaryTotal` — Описание пока не добавлено.
+- `productionVillage` — Описание пока не добавлено.
+- `productionWeeklyPass` — Описание пока не добавлено.
+- `raidAvailableEnergy` — Описание пока не добавлено.
+- `raidCans` — Описание пока не добавлено.
+- `raidDiamonds` — Описание пока не добавлено.
+- `raidDiscountCans` — Описание пока не добавлено.
+- `raidEnergy` — Описание пока не добавлено.
+- `raidNeedPrimary` — Описание пока не добавлено.
+- `raidNeedSecondary` — Описание пока не добавлено.
+
+**Классы:**
+- `card` — Универсальная большая карточка контента с фоном, радиусом, тенью и hover-состоянием.
+- `card-header` — Описание пока не добавлено.
+- `page-section` — Описание пока не добавлено.
+- `season-card` — Описание пока не добавлено.
+- `season-field` — Описание пока не добавлено.
+- `season-form-grid` — Описание пока не добавлено.
+- `season-layout` — Описание пока не добавлено.
+- `season-mini-card` — Описание пока не добавлено.
+- `season-page` — Описание пока не добавлено.
+- `season-results` — Описание пока не добавлено.
+- `season-results-large` — Описание пока не добавлено.
+- `season-subgrid` — Описание пока не добавлено.
+- `season-subgrid-production` — Описание пока не добавлено.
+- `season-summary` — Описание пока не добавлено.
 
 ---
 
