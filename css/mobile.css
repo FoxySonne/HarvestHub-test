@@ -16,7 +16,6 @@ MOBILE: до 899px
 
   .main {
     width: 100%;
-    min-width: 0;
     padding: 16px;
   }
 
@@ -26,7 +25,6 @@ MOBILE: до 899px
     left: -260px;
     width: 240px;
     height: 100vh;
-    z-index: 1000;
   }
 
   .left.active {
@@ -36,16 +34,15 @@ MOBILE: до 899px
   .right {
     display: flex;
     flex-direction: column;
-    padding: 16px;
     gap: 16px;
+    padding: 0 16px 16px;
   }
 
+  .adaptive-grid,
   .grid,
   .grid-2,
   .grid-3,
-  .grid-4,
-  .adaptive-grid {
-    display: grid;
+  .grid-4 {
     grid-template-columns: 1fr;
     gap: 16px;
   }
@@ -56,7 +53,6 @@ MOBILE: до 899px
     align-items: stretch;
   }
 
-  /* закреплённый блок на мобильной версии становится самым верхним */
   .desktop-fixed-right {
     order: -1;
   }
@@ -69,5 +65,19 @@ MOBILE: до 899px
 
   .results {
     order: -1;
+  }
+
+  .button,
+  button,
+  input[type=submit],
+  input[type=button] {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .input-small,
+  .input-medium,
+  .input-large {
+    max-width: 100%;
   }
 }
