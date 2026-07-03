@@ -28,6 +28,36 @@ function setValue(id, value) {
   element.value = String(Math.round(value));
 }
 
+function syncValue(sourceId, targetId) {
+  const source = document.getElementById(sourceId);
+  const target = document.getElementById(targetId);
+
+  if (!source || !target) return;
+
+  target.value = source.value;
+}
+
+function syncLinkedRaidInputs(target) {
+  if (!target || !target.id) return;
+
+  const linkedPairs = {
+    alphaNeedLevel: "alphaFarmLevel",
+    alphaFarmLevel: "alphaNeedLevel",
+    alphaNeedEnergy: "alphaFarmEnergy",
+    alphaFarmEnergy: "alphaNeedEnergy",
+    infectedNeedLevel: "infectedFarmLevel",
+    infectedFarmLevel: "infectedNeedLevel",
+    infectedNeedEnergy: "infectedFarmEnergy",
+    infectedFarmEnergy: "infectedNeedEnergy"
+  };
+
+  const linkedId = linkedPairs[target.id];
+
+  if (!linkedId) return;
+
+  syncValue(target.id, linkedId);
+}
+
 function getByLevel(list, level) {
   return list.find(item => Number(item.level) === Number(level)) || list[0];
 }
@@ -364,8 +394,15 @@ function bindCalculatorInputs() {
   const inputs = document.querySelectorAll(".season-page input, .season-page select");
 
   inputs.forEach(input => {
-    input.addEventListener("input", updateAll);
-    input.addEventListener("change", updateAll);
+    input.addEventListener("input", event => {
+      syncLinkedRaidInputs(event.target);
+      updateAll();
+    });
+
+    input.addEventListener("change", event => {
+      syncLinkedRaidInputs(event.target);
+      updateAll();
+    });
   });
 }
 
@@ -375,6 +412,10 @@ function setDefaults() {
     alphaFarmLevel: 10,
     infectedNeedLevel: 30,
     infectedFarmLevel: 30,
+    alphaNeedEnergy: 19,
+    alphaFarmEnergy: 19,
+    infectedNeedEnergy: 7,
+    infectedFarmEnergy: 7,
     productionBuildingLevel: 1,
     productionLabLevel: 0,
     productionSeasonLevel: 0,
