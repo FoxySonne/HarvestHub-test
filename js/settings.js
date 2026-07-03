@@ -1,4 +1,4 @@
-function clearSiteCache() {
+async function clearSiteCache() {
 
     if (!confirm("Очистить кэш HarvestHub?")) {
 
@@ -6,20 +6,38 @@ function clearSiteCache() {
 
     }
 
-    if ("caches" in window) {
+    try {
 
-        caches.keys().then(cacheNames => {
+        if ("caches" in window) {
 
-            cacheNames.forEach(cacheName => caches.delete(cacheName));
+            const cacheNames = await caches.keys();
 
-        });
+            await Promise.all(
+                cacheNames.map(cacheName => caches.delete(cacheName))
+            );
+
+        }
+
+        if ("serviceWorker" in navigator) {
+
+            const registrations = await navigator.serviceWorker.getRegistrations();
+
+            await Promise.all(
+                registrations.map(registration => registration.unregister())
+            );
+
+        }
+
+        localStorage.removeItem("currentPage");
+        sessionStorage.clear();
+
+        window.location.reload();
+
+    } catch (error) {
+
+        console.error("Ошибка при очистке кэша:", error);
+        alert("Не удалось полностью очистить кэш. Попробуй обновить страницу вручную.");
 
     }
-
-    // Сбрасываем последнюю открытую страницу
-
-    localStorage.removeItem("currentPage");
-
-    location.reload();
 
 }
