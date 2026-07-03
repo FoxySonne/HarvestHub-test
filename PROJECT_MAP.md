@@ -878,16 +878,27 @@
 - `card-header` — Описание пока не добавлено.
 - `page-section` — Описание пока не добавлено.
 - `season-card` — Описание пока не добавлено.
+- `season-card-header` — Описание пока не добавлено.
+- `season-compact-card` — Описание пока не добавлено.
+- `season-compact-layout` — Описание пока не добавлено.
+- `season-compact-page` — Описание пока не добавлено.
 - `season-field` — Описание пока не добавлено.
 - `season-form-grid` — Описание пока не добавлено.
+- `season-form-grid-compact` — Описание пока не добавлено.
+- `season-inline-fields` — Описание пока не добавлено.
 - `season-layout` — Описание пока не добавлено.
-- `season-mini-card` — Описание пока не добавлено.
 - `season-page` — Описание пока не добавлено.
+- `season-panel` — Описание пока не добавлено.
+- `season-panel-title` — Описание пока не добавлено.
+- `season-raid-grid` — Описание пока не добавлено.
+- `season-raid-panel` — Описание пока не добавлено.
 - `season-results` — Описание пока не добавлено.
-- `season-results-large` — Описание пока не добавлено.
+- `season-results-compact` — Описание пока не добавлено.
 - `season-subgrid` — Описание пока не добавлено.
 - `season-subgrid-production` — Описание пока не добавлено.
-- `season-summary` — Описание пока не добавлено.
+- `season-summary-pill` — Описание пока не добавлено.
+- `season-total-card` — Описание пока не добавлено.
+- `season-total-grid` — Описание пока не добавлено.
 
 ---
 
