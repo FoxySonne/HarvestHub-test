@@ -229,7 +229,7 @@ ACTION LIST
 }
 
 .action-row-with-level .action-controls {
-  grid-template-columns: minmax(0, 1fr) 52px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
 }
 
