@@ -1,6 +1,8 @@
 import { seasonDatabase } from "../data/season-database.js";
 import { seasonBuildingsDatabase } from "../data/season-buildings-database.js";
 
+const MAX_DISCOUNT_CANS = 50;
+
 const numberFormat = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 1
 });
@@ -104,13 +106,38 @@ function renderBuildingRows() {
     targetWrap.className = "season-building-level";
     targetWrap.innerHTML = "<span>Нужно</span>";
 
-    const targetSelect = createLevelSelect("season-building-target", 30);
+    const targetSelect = createLevelSelect("season-building-target", 0);
     targetWrap.appendChild(targetSelect);
 
     levels.append(currentWrap, targetWrap);
     row.append(checkLabel, levels);
     container.appendChild(row);
   });
+}
+
+function syncMainBuildingLevel() {
+  const mainRow = document.querySelector('.season-building-row[data-building-id="main"]');
+  const productionLevel = document.getElementById("productionBuildingLevel");
+
+  if (!mainRow || !productionLevel) return;
+
+  const targetLevel = Number(mainRow.querySelector(".season-building-target")?.value) || 0;
+  const currentLevel = Number(mainRow.querySelector(".season-building-current")?.value) || 0;
+  const syncedLevel = targetLevel || currentLevel || 1;
+
+  productionLevel.value = String(Math.min(30, Math.max(1, syncedLevel)));
+}
+
+function normalizeDiscountCans() {
+  const input = document.getElementById("raidDiscountCans");
+
+  if (!input) return;
+
+  const value = Math.min(MAX_DISCOUNT_CANS, Math.max(0, Number(input.value) || 0));
+
+  if (Number(input.value) !== value) {
+    input.value = String(value);
+  }
 }
 
 function sumRequirementsForBuilding(type, currentLevel, targetLevel) {
@@ -191,7 +218,7 @@ function calculateNeedByDrops(needPrimary, needSecondary, drop, energyPerRun) {
 
 function calculateAvailableEnergy() {
   const diamonds = num("raidDiamonds");
-  const discountCansAvailable = num("raidDiscountCans");
+  const discountCansAvailable = Math.min(MAX_DISCOUNT_CANS, num("raidDiscountCans"));
   const existingCans = num("raidCans");
   const existingEnergy = num("raidEnergy");
 
@@ -344,16 +371,16 @@ function bindCalculatorInputs() {
 
 function setDefaults() {
   const defaults = {
-    alphaNeedLevel: 8,
-    alphaFarmLevel: 7,
+    alphaNeedLevel: 10,
+    alphaFarmLevel: 10,
     infectedNeedLevel: 30,
     infectedFarmLevel: 30,
-    productionBuildingLevel: 29,
-    productionLabLevel: 5,
-    productionSeasonLevel: 3,
-    productionPremiumPass: 2,
-    productionWeeklyPass: 2,
-    productionVillage: 2,
+    productionBuildingLevel: 1,
+    productionLabLevel: 0,
+    productionSeasonLevel: 0,
+    productionPremiumPass: 1,
+    productionWeeklyPass: 1,
+    productionVillage: 1,
     productionMegapolis: 1,
     productionBull: 1
   };
@@ -365,6 +392,8 @@ function setDefaults() {
 }
 
 function updateAll() {
+  normalizeDiscountCans();
+  syncMainBuildingLevel();
   updateBuildingNeeds();
   updateRaids();
   updateProduction();
