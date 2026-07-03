@@ -1,5 +1,7 @@
 import { database } from "../data/database.js";
 
+let isSyncingControls = false;
+
 /* ==========================================================
 РАЗВОРАЧИВАЕМ СПИСОК ДНЯ
 Поддерживает:
@@ -37,6 +39,56 @@ function getActionById(actionId) {
 }
 
 /* ==========================================================
+СИНХРОНИЗИРУЕМ ОДИНАКОВЫЕ ДЕЙСТВИЯ
+Если действие есть и в Черепашке, и в VS, значение дублируется.
+========================================================== */
+
+function getQuantityControl(row) {
+  return row.querySelector("input[data-action-id], select[data-action-id]");
+}
+
+function syncActionControls(actionId, sourceControl) {
+  if (isSyncingControls) return;
+
+  isSyncingControls = true;
+
+  const sourceRow = sourceControl.closest(".action-row");
+  const sourceQuantityControl = sourceControl.matches("input[data-action-id], select[data-action-id]")
+    ? sourceControl
+    : null;
+  const sourceLevelSelect = sourceControl.classList.contains("action-level-select")
+    ? sourceControl
+    : null;
+
+  const rows = document.querySelectorAll(".action-row");
+
+  rows.forEach(row => {
+    if (row === sourceRow) return;
+
+    const rowQuantityControl = getQuantityControl(row);
+    const rowLevelSelect = row.querySelector(".action-level-select");
+    const rowActionId = rowQuantityControl?.dataset.actionId || rowLevelSelect?.dataset.levelActionId;
+
+    if (rowActionId !== actionId) return;
+
+    if (sourceQuantityControl && rowQuantityControl) {
+      rowQuantityControl.value = sourceQuantityControl.value;
+    }
+
+    if (sourceLevelSelect && rowLevelSelect) {
+      rowLevelSelect.value = sourceLevelSelect.value;
+    }
+  });
+
+  isSyncingControls = false;
+}
+
+function handleControlChange(actionId, sourceControl) {
+  syncActionControls(actionId, sourceControl);
+  updateTotals();
+}
+
+/* ==========================================================
 СОЗДАЁМ СТРОКУ ДЕЙСТВИЯ
 ========================================================== */
 
@@ -55,6 +107,7 @@ function createActionRow(action, eventType) {
 
     const levelSelect = document.createElement("select");
     levelSelect.className = "action-level-select";
+    levelSelect.dataset.levelActionId = action.id;
 
     action.options.forEach(optionData => {
       const option = document.createElement("option");
@@ -73,8 +126,13 @@ function createActionRow(action, eventType) {
     quantityInput.dataset.eventType = eventType;
     quantityInput.dataset.hasLevel = "true";
 
-    levelSelect.addEventListener("change", updateTotals);
-    quantityInput.addEventListener("input", updateTotals);
+    levelSelect.addEventListener("change", () => {
+      handleControlChange(action.id, levelSelect);
+    });
+
+    quantityInput.addEventListener("input", () => {
+      handleControlChange(action.id, quantityInput);
+    });
 
     controls.append(levelSelect, quantityInput);
     row.append(label, controls);
@@ -101,7 +159,9 @@ function createActionRow(action, eventType) {
     quantitySelect.dataset.actionId = action.id;
     quantitySelect.dataset.eventType = eventType;
 
-    quantitySelect.addEventListener("change", updateTotals);
+    quantitySelect.addEventListener("change", () => {
+      handleControlChange(action.id, quantitySelect);
+    });
 
     controls.appendChild(quantitySelect);
     row.append(label, controls);
@@ -117,7 +177,9 @@ function createActionRow(action, eventType) {
   input.dataset.actionId = action.id;
   input.dataset.eventType = eventType;
 
-  input.addEventListener("input", updateTotals);
+  input.addEventListener("input", () => {
+    handleControlChange(action.id, input);
+  });
 
   controls.appendChild(input);
   row.append(label, controls);
