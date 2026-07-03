@@ -1,5 +1,8 @@
 import { database } from "../data/database.js";
 
+let selectedCategoryIds = new Set();
+const ipkValues = new Map();
+
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("ru-RU");
 }
@@ -23,18 +26,44 @@ function getActionPoints(action, item) {
   return typeof ipkPoints === "number" ? ipkPoints : 0;
 }
 
+function getRowKey(categoryId, item) {
+  return `${categoryId}:${item.id}:${item.option ?? ""}`;
+}
+
 function createRows(category) {
   return category.actions.map(item => {
     const action = getActionById(item.id);
     const points = getActionPoints(action, item);
+    const key = getRowKey(category.id, item);
 
     return {
       id: item.id,
       option: item.option,
+      key,
       label: item.label || action?.name || item.id,
       points,
+      value: ipkValues.get(key) || "",
     };
   });
+}
+
+function saveCardValues(card) {
+  card.querySelectorAll(".ipk-row").forEach(row => {
+    const key = row.dataset.key;
+    const input = row.querySelector("input");
+
+    if (!key || !input) return;
+
+    if (input.value === "") {
+      ipkValues.delete(key);
+    } else {
+      ipkValues.set(key, input.value);
+    }
+  });
+}
+
+function saveAllValues() {
+  document.querySelectorAll(".ipk-card").forEach(card => saveCardValues(card));
 }
 
 function createCard(category) {
@@ -59,9 +88,9 @@ function createCard(category) {
 
       <div class="ipk-rows">
         ${rows.map(row => `
-          <div class="ipk-row" data-action-id="${row.id}" data-option="${row.option ?? ""}" data-points="${row.points}">
+          <div class="ipk-row" data-key="${row.key}" data-action-id="${row.id}" data-option="${row.option ?? ""}" data-points="${row.points}">
             <label>${row.label}</label>
-            <input type="number" min="0" value="" inputmode="numeric">
+            <input type="number" min="0" value="${row.value}" inputmode="numeric">
             <div class="ipk-need">${row.points > 0 ? formatNumber(Math.ceil(category.target / row.points)) : "0"}</div>
           </div>
         `).join("")}
@@ -75,7 +104,10 @@ function createCard(category) {
     toggleButton.textContent = card.classList.contains("is-collapsed") ? "›" : "⌄";
   });
 
-  card.addEventListener("input", updateIpkResults);
+  card.addEventListener("input", () => {
+    saveCardValues(card);
+    updateIpkResults();
+  });
 
   return card;
 }
@@ -88,7 +120,7 @@ function createCategoryCheckbox(category) {
   label.innerHTML = `
     <span>${category.name}</span>
     <span class="ipk-switch">
-      <input type="checkbox" checked>
+      <input type="checkbox" ${selectedCategoryIds.has(category.id) ? "checked" : ""}>
       <span class="ipk-switch-track">
         <span class="ipk-switch-thumb">✓</span>
       </span>
@@ -111,18 +143,35 @@ function renderCategoryList(container) {
   });
 }
 
+function renderSelectedCards() {
+  const cardsContainer = document.getElementById("ipkCards");
+
+  if (!cardsContainer) return;
+
+  saveAllValues();
+  cardsContainer.innerHTML = "";
+
+  database.categoryIpk
+    .filter(category => selectedCategoryIds.has(category.id))
+    .forEach(category => {
+      cardsContainer.appendChild(createCard(category));
+    });
+
+  updateIpkResults();
+}
+
 function setCategoryEnabled(categoryId, isEnabled) {
+  if (isEnabled) {
+    selectedCategoryIds.add(categoryId);
+  } else {
+    selectedCategoryIds.delete(categoryId);
+  }
+
   document.querySelectorAll(`.ipk-category-item[data-category-id="${categoryId}"] input`).forEach(input => {
     input.checked = isEnabled;
   });
 
-  const card = document.querySelector(`.ipk-card[data-category-id="${categoryId}"]`);
-
-  if (card) {
-    card.hidden = !isEnabled;
-  }
-
-  updateIpkResults();
+  renderSelectedCards();
 }
 
 function setupMobileCategoryCollapse() {
@@ -174,11 +223,7 @@ function updateIpkResults() {
   let totalResult = 0;
 
   document.querySelectorAll(".ipk-card").forEach(card => {
-    const result = calculateCard(card);
-
-    if (!card.hidden) {
-      totalResult += result;
-    }
+    totalResult += calculateCard(card);
   });
 
   if (total) {
@@ -187,22 +232,17 @@ function updateIpkResults() {
 }
 
 function renderIpk() {
-  const cardsContainer = document.getElementById("ipkCards");
   const desktopCategories = document.getElementById("ipkDesktopCategoriesList");
   const mobileCategories = document.getElementById("ipkMobileCategoriesList");
 
-  if (!cardsContainer || !desktopCategories || !mobileCategories) return;
+  if (!desktopCategories || !mobileCategories) return;
 
-  cardsContainer.innerHTML = "";
-
-  database.categoryIpk.forEach(category => {
-    cardsContainer.appendChild(createCard(category));
-  });
+  selectedCategoryIds = new Set(database.categoryIpk.map(category => category.id));
 
   renderCategoryList(desktopCategories);
   renderCategoryList(mobileCategories);
   setupMobileCategoryCollapse();
-  updateIpkResults();
+  renderSelectedCards();
 }
 
 export function init() {
