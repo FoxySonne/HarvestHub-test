@@ -385,29 +385,30 @@ BIG GAME
   gap: 10px;
 }
 
-.big-game-row input {
+.big-game-row input,
+.big-game-need {
   height: 34px;
-  padding: 0 8px;
-  text-align: center;
-  white-space: nowrap;
+  min-height: 34px;
+  box-sizing: border-box;
   border-radius: var(--radius-small);
   font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.big-game-row input {
+  padding: 0 8px;
+  text-align: center;
 }
 
 .big-game-need {
-  min-height: 34px;
   padding: 0 8px;
-  border-radius: var(--radius-small);
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--button);
   color: white;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  line-height: 1;
 }
 
 .big-game-desktop-categories {
