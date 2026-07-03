@@ -793,6 +793,7 @@
 - `setDefaults` — Описание пока не добавлено.
 - `setText` — Описание пока не добавлено.
 - `setValue` — Описание пока не добавлено.
+- `shouldSyncMainBuildingLevel` — Описание пока не добавлено.
 - `sumRequirementsForBuilding` — Описание пока не добавлено.
 - `syncLinkedRaidInputs` — Описание пока не добавлено.
 - `syncMainBuildingLevel` — Описание пока не добавлено.
