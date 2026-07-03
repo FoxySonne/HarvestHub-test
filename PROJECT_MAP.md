@@ -971,6 +971,7 @@
 - `page-section` — Описание пока не добавлено.
 - `season-build-total-mobile` — Описание пока не добавлено.
 - `season-building-list` — Описание пока не добавлено.
+- `season-building-totals-card` — Описание пока не добавлено.
 - `season-buildings-card` — Описание пока не добавлено.
 - `season-card` — Описание пока не добавлено.
 - `season-card-header` — Описание пока не добавлено.
@@ -985,8 +986,10 @@
 - `season-page` — Описание пока не добавлено.
 - `season-panel` — Описание пока не добавлено.
 - `season-panel-title` — Описание пока не добавлено.
+- `season-production-card` — Описание пока не добавлено.
 - `season-raid-grid` — Описание пока не добавлено.
 - `season-raid-panel` — Описание пока не добавлено.
+- `season-raids-card` — Описание пока не добавлено.
 - `season-results` — Описание пока не добавлено.
 - `season-results-compact` — Описание пока не добавлено.
 - `season-subgrid` — Описание пока не добавлено.
