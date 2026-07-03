@@ -4,29 +4,34 @@
 
   <div class="season-layout season-compact-layout">
 
+    <section class="card season-card season-compact-card season-buildings-card">
+      <div class="card-header season-card-header">
+        <div>
+          <h3>Какие здания нужно достроить</h3>
+          <p>Выбери здания, текущий уровень и нужный уровень. Итоговые ресурсы автоматически уйдут в производство и рейды.</p>
+        </div>
+      </div>
+
+      <div class="season-building-list" id="seasonBuildingList"></div>
+
+      <div class="season-total-grid">
+        <div class="season-total-card">
+          <span>Нужно Вода / Рыба / Вольфрам</span>
+          <strong id="buildingNeedSecondary">0</strong>
+        </div>
+
+        <div class="season-total-card">
+          <span>Нужно Бензин / Фрукты / Кварц</span>
+          <strong id="buildingNeedPrimary">0</strong>
+        </div>
+      </div>
+    </section>
+
     <section class="card season-card season-compact-card">
       <div class="card-header season-card-header">
         <div>
           <h3>Производство</h3>
           <p>Расчёт производства в час и времени до нужного количества.</p>
-        </div>
-      </div>
-
-      <div class="season-panel">
-        <h4>Какие здания нужно достроить</h4>
-
-        <div class="season-building-list" id="seasonBuildingList"></div>
-
-        <div class="season-total-grid">
-          <div class="season-total-card">
-            <span>Нужно Вода / Рыба / Вольфрам</span>
-            <strong id="buildingNeedSecondary">0</strong>
-          </div>
-
-          <div class="season-total-card">
-            <span>Нужно Бензин / Фрукты / Кварц</span>
-            <strong id="buildingNeedPrimary">0</strong>
-          </div>
         </div>
       </div>
 
@@ -40,12 +45,12 @@
           </label>
 
           <label class="season-field">
-            <span>Лаборатория</span>
+            <span>Лаборатория — навык производства</span>
             <select id="productionLabLevel"></select>
           </label>
 
           <label class="season-field">
-            <span>Сезонное здание</span>
+            <span>Сезонное здание — навык производства</span>
             <select id="productionSeasonLevel"></select>
           </label>
 
@@ -160,7 +165,7 @@
 
           <label class="season-field">
             <span>Банки со скидкой</span>
-            <input id="raidDiscountCans" type="number" min="0" value="0">
+            <input id="raidDiscountCans" type="number" min="0" max="50" value="0">
           </label>
 
           <label class="season-field">
