@@ -392,5 +392,5 @@ sun: {
 {type: "action", id: "infected_recon"},
 {type: "action", id: "infected"},
 {type: "action", id: "purchases"}],
-  vs: [ ]}
+  vs: [text: "Отдыхаем, кайфуем, собираем воду в резурвуаре!"]}
 }};
