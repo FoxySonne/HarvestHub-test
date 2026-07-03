@@ -1,7 +1,6 @@
 const bigGameCategories = [
   {
     id: "building",
-    icon: "⛏",
     name: "Строительство поселения",
     target: 250000,
     missing: 224800,
@@ -15,7 +14,6 @@ const bigGameCategories = [
   },
   {
     id: "research",
-    icon: "🔬",
     name: "Исследование технологий",
     target: 300000,
     missing: 300000,
@@ -29,7 +27,6 @@ const bigGameCategories = [
   },
   {
     id: "equipment",
-    icon: "♻",
     name: "Усиление снаряжения",
     target: 200000,
     missing: 171430,
@@ -45,7 +42,6 @@ const bigGameCategories = [
   },
   {
     id: "titan",
-    icon: "⚡",
     name: "Развитие титана",
     target: 300000,
     missing: 300000,
@@ -59,7 +55,6 @@ const bigGameCategories = [
   },
   {
     id: "heroes",
-    icon: "★",
     name: "Улучшение героя",
     target: 300000,
     missing: 300000,
@@ -74,7 +69,6 @@ const bigGameCategories = [
   },
   {
     id: "chief",
-    icon: "⌘",
     name: "Шеф коллекция",
     target: 300000,
     missing: 10000,
@@ -88,7 +82,6 @@ const bigGameCategories = [
   },
   {
     id: "troops",
-    icon: "♙",
     name: "Улучшение войск",
     target: 300000,
     missing: 258000,
@@ -114,80 +107,88 @@ function createCard(category) {
 
   card.innerHTML = `
     <header class="big-game-card-header">
-      <div class="big-game-card-title">
-        <span class="big-game-icon">${category.icon}</span>
-        <h3>${category.name}</h3>
-      </div>
-      <div class="big-game-card-status ${category.enabled ? "is-active" : ""}">✓</div>
+      <h3>${category.name}</h3>
+      <button class="big-game-card-toggle" type="button" aria-label="Свернуть категорию">⌄</button>
     </header>
 
-    <div class="big-game-stats">
-      <div><span>Очков нужно:</span><strong>${formatNumber(category.target)}</strong></div>
-      <div><span>Не хватает:</span><strong>${formatNumber(category.missing)}</strong></div>
-      <div><span>Получу:</span><strong>${formatNumber(category.result)}</strong></div>
-    </div>
+    <div class="big-game-card-body">
+      <div class="big-game-stats">
+        <div><span>Очков нужно:</span><strong>${formatNumber(category.target)}</strong></div>
+        <div><span>Не хватает:</span><strong>${formatNumber(category.missing)}</strong></div>
+        <div><span>Получу:</span><strong>${formatNumber(category.result)}</strong></div>
+      </div>
 
-    <div class="big-game-rows">
-      ${category.rows.map(row => `
-        <div class="big-game-row">
-          <label>${row.label}</label>
-          <input type="number" min="0" value="${row.value}">
-          <div class="big-game-need">${row.need}</div>
-        </div>
-      `).join("")}
+      <div class="big-game-rows">
+        ${category.rows.map(row => `
+          <div class="big-game-row">
+            <label>${row.label}</label>
+            <input type="number" min="0" value="${row.value}">
+            <div class="big-game-need">${row.need}</div>
+          </div>
+        `).join("")}
+      </div>
     </div>
   `;
+
+  const toggleButton = card.querySelector(".big-game-card-toggle");
+  toggleButton.addEventListener("click", () => {
+    card.classList.toggle("is-collapsed");
+    toggleButton.textContent = card.classList.contains("is-collapsed") ? "›" : "⌄";
+  });
 
   return card;
 }
 
-function createCategoryItem(category) {
-  const item = document.createElement("button");
-  item.type = "button";
-  item.className = `big-game-category-item ${category.enabled ? "is-active" : ""}`;
-  item.dataset.categoryId = category.id;
+function createCategoryCheckbox(category) {
+  const label = document.createElement("label");
+  label.className = "big-game-category-item";
+  label.dataset.categoryId = category.id;
 
-  item.innerHTML = `
+  label.innerHTML = `
     <span>${category.name}</span>
-    <span class="big-game-category-check">✓</span>
+    <input type="checkbox" ${category.enabled ? "checked" : ""}>
   `;
 
-  return item;
+  return label;
 }
 
-function fillFilter(select) {
+function renderCategoryList(container) {
+  container.innerHTML = "";
+
   bigGameCategories.forEach(category => {
-    const option = document.createElement("option");
-    option.value = category.id;
-    option.textContent = category.name;
-    select.appendChild(option);
+    container.appendChild(createCategoryCheckbox(category));
+  });
+}
+
+function setupMobileCategoryCollapse() {
+  const button = document.getElementById("bigGameToggleCategories");
+  const icon = document.getElementById("bigGameToggleIcon");
+  const list = document.getElementById("bigGameMobileCategoriesList");
+
+  if (!button || !icon || !list) return;
+
+  button.addEventListener("click", () => {
+    list.classList.toggle("is-collapsed");
+    icon.textContent = list.classList.contains("is-collapsed") ? "Показать" : "Свернуть";
   });
 }
 
 function renderBigGame() {
   const cardsContainer = document.getElementById("bigGameCards");
-  const categoriesContainer = document.getElementById("bigGameCategories");
-  const categoryFilter = document.getElementById("bigGameCategoryFilter");
+  const desktopCategories = document.getElementById("bigGameDesktopCategoriesList");
+  const mobileCategories = document.getElementById("bigGameMobileCategoriesList");
 
-  if (!cardsContainer || !categoriesContainer || !categoryFilter) return;
+  if (!cardsContainer || !desktopCategories || !mobileCategories) return;
 
   cardsContainer.innerHTML = "";
-  categoriesContainer.innerHTML = "";
-
-  fillFilter(categoryFilter);
 
   bigGameCategories.forEach(category => {
     cardsContainer.appendChild(createCard(category));
-    categoriesContainer.appendChild(createCategoryItem(category));
   });
 
-  categoryFilter.addEventListener("change", () => {
-    const value = categoryFilter.value;
-
-    document.querySelectorAll(".big-game-card").forEach(card => {
-      card.hidden = value !== "all" && card.dataset.categoryId !== value;
-    });
-  });
+  renderCategoryList(desktopCategories);
+  renderCategoryList(mobileCategories);
+  setupMobileCategoryCollapse();
 }
 
 export function init() {
