@@ -399,6 +399,7 @@
 - `season-building-levels` — Описание пока не добавлено.
 - `season-building-list` — Описание пока не добавлено.
 - `season-building-row` — Описание пока не добавлено.
+- `season-buildings-card` — Описание пока не добавлено.
 - `season-card-header` — Описание пока не добавлено.
 - `season-compact-card` — Описание пока не добавлено.
 - `season-compact-layout` — Описание пока не добавлено.
