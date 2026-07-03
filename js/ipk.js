@@ -1,115 +1,40 @@
-const ipkCategories = [
-  {
-    id: "building",
-    name: "Строительство поселения",
-    target: 250000,
-    missing: 250000,
-    result: 0,
-    enabled: true,
-    rows: [
-      {label: "Увеличьте силу на 1 с помощью строительства", value: "", need: "0"},
-      {label: "Ускорьте строительство на 1 мин.", value: "", need: "0"},
-      {label: "Получайте алмазы x1", value: "", need: "0"},
-    ],
-  },
-  {
-    id: "research",
-    name: "Исследование технологий",
-    target: 200000,
-    missing: 200000,
-    result: 0,
-    enabled: false,
-    rows: [
-      {label: "Увеличьте силу на 1 с помощью исследования", value: "", need: "0"},
-      {label: "Ускорьте исследование на 1 мин.", value: "", need: "0"},
-      {label: "Получайте алмазы x1", value: "", need: "0"},
-    ],
-  },
-  {
-    id: "equipment",
-    name: "Усиление снаряжения",
-    target: 200000,
-    missing: 200000,
-    result: 0,
-    enabled: true,
-    rows: [
-      {label: "Синий болт", value: "", need: "0"},
-      {label: "Фиолетовый болт", value: "", need: "0"},
-      {label: "Золотой болт", value: "", need: "0"},
-      {label: "? болт", value: "", need: "0"},
-      {label: "Получайте алмазы x1", value: "", need: "0"},
-    ],
-  },
-  {
-    id: "titan",
-    name: "Развитие титана",
-    target: 200000,
-    missing: 200000,
-    result: 0,
-    enabled: false,
-    rows: [
-      {label: "Используйте клетку титана", value: "", need: "0"},
-      {label: "Используйте 100 ед. опыта титана", value: "", need: "0"},
-      {label: "Получайте алмазы x1", value: "", need: "0"},
-    ],
-  },
-  {
-    id: "heroes",
-    name: "Улучшение героя",
-    target: 300000,
-    missing: 300000,
-    result: 0,
-    enabled: false,
-    rows: [
-      {label: "Золотой фрагмент героя", value: "", need: "0"},
-      {label: "Фиол фрагмент героя", value: "", need: "0"},
-      {label: "Синий фрагмент героя", value: "", need: "0"},
-      {label: "Книги героев", value: "", need: "0"},
-      {label: "Получайте алмазы x1", value: "", need: "0"},
-    ],
-  },
-  {
-    id: "chief",
-    name: "Шеф коллекция",
-    target: 300000,
-    missing: 300000,
-    result: 0,
-    enabled: true,
-    rows: [
-      {label: "Используйте общие детали", value: "", need: "0"},
-      {label: "Используйте чертежи", value: "", need: "0"},
-      {label: "Получайте алмазы x1", value: "", need: "0"},
-    ],
-  },
-  {
-    id: "troops",
-    name: "Улучшение войск",
-    target: 300000,
-    missing: 300000,
-    result: 0,
-    enabled: true,
-    rows: [
-      {label: "Ускорьте обучение на 1 мин.", value: "", need: "0"},
-      {label: "Обучить солдат 1 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 2 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 3 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 4 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 5 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 6 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 7 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 8 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 9 ур.", value: "", need: "0"},
-      {label: "Обучить солдат 10 ур.", value: "", need: "0"},
-      {label: "Получайте алмазы x1", value: "", need: "0"},
-    ],
-  },
-];
+import { database } from "../data/database.js";
 
 function formatNumber(value) {
-  return Number(value).toLocaleString("ru-RU");
+  return Number(value || 0).toLocaleString("ru-RU");
+}
+
+function getActionById(actionId) {
+  return database.action.find(action => action.id === actionId);
+}
+
+function getActionPoints(action, item) {
+  const ipkPoints = action?.points?.ipk ?? 0;
+
+  if (item.option !== undefined && typeof ipkPoints === "object") {
+    return ipkPoints[item.option] ?? 0;
+  }
+
+  return typeof ipkPoints === "number" ? ipkPoints : 0;
+}
+
+function createRows(category) {
+  return category.actions.map(item => {
+    const action = getActionById(item.id);
+    const points = getActionPoints(action, item);
+
+    return {
+      id: item.id,
+      option: item.option,
+      label: item.label || action?.name || item.id,
+      value: "",
+      need: points > 0 ? Math.ceil(category.target / points) : 0,
+    };
+  });
 }
 
 function createCard(category) {
+  const rows = createRows(category);
   const card = document.createElement("article");
   card.className = "ipk-card card";
   card.dataset.categoryId = category.id;
@@ -123,16 +48,16 @@ function createCard(category) {
     <div class="ipk-card-body">
       <div class="ipk-stats">
         <div><span>Очков нужно:</span><strong>${formatNumber(category.target)}</strong></div>
-        <div><span>Не хватает:</span><strong>${formatNumber(category.missing)}</strong></div>
-        <div><span>Получу:</span><strong>${formatNumber(category.result)}</strong></div>
+        <div><span>Не хватает:</span><strong>${formatNumber(category.target)}</strong></div>
+        <div><span>Получу:</span><strong>0</strong></div>
       </div>
 
       <div class="ipk-rows">
-        ${category.rows.map(row => `
-          <div class="ipk-row">
+        ${rows.map(row => `
+          <div class="ipk-row" data-action-id="${row.id}" data-option="${row.option ?? ""}">
             <label>${row.label}</label>
             <input type="number" min="0" value="${row.value}">
-            <div class="ipk-need">${row.need}</div>
+            <div class="ipk-need">${formatNumber(row.need)}</div>
           </div>
         `).join("")}
       </div>
@@ -156,7 +81,7 @@ function createCategoryCheckbox(category) {
   label.innerHTML = `
     <span>${category.name}</span>
     <span class="ipk-switch">
-      <input type="checkbox" ${category.enabled ? "checked" : ""}>
+      <input type="checkbox" checked>
       <span class="ipk-switch-track">
         <span class="ipk-switch-thumb">✓</span>
       </span>
@@ -169,7 +94,7 @@ function createCategoryCheckbox(category) {
 function renderCategoryList(container) {
   container.innerHTML = "";
 
-  ipkCategories.forEach(category => {
+  database.categoryIpk.forEach(category => {
     container.appendChild(createCategoryCheckbox(category));
   });
 }
@@ -191,18 +116,23 @@ function renderIpk() {
   const cardsContainer = document.getElementById("ipkCards");
   const desktopCategories = document.getElementById("ipkDesktopCategoriesList");
   const mobileCategories = document.getElementById("ipkMobileCategoriesList");
+  const total = document.getElementById("ipkTotal");
 
   if (!cardsContainer || !desktopCategories || !mobileCategories) return;
 
   cardsContainer.innerHTML = "";
 
-  ipkCategories.forEach(category => {
+  database.categoryIpk.forEach(category => {
     cardsContainer.appendChild(createCard(category));
   });
 
   renderCategoryList(desktopCategories);
   renderCategoryList(mobileCategories);
   setupMobileCategoryCollapse();
+
+  if (total) {
+    total.textContent = "0";
+  }
 }
 
 export function init() {
