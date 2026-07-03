@@ -1,203 +1,243 @@
-<section class="page-section season-page">
+<section class="page-section season-page season-compact-page">
 
   <h1>Сезонные ресурсы</h1>
 
-  <div class="season-layout">
+  <div class="season-layout season-compact-layout">
 
-    <section class="card season-card">
-      <div class="card-header">
-        <h3>Рейды</h3>
+    <section class="card season-card season-compact-card">
+      <div class="card-header season-card-header">
+        <div>
+          <h3>Рейды</h3>
+          <p>Расчёт энергии, банок, алмазов и добычи ресурсов.</p>
+        </div>
+        <div class="season-summary-pill">
+          <span>Доступно энергии</span>
+          <strong id="raidAvailableEnergy">0</strong>
+        </div>
       </div>
 
-      <div class="season-form-grid">
-        <label class="season-field">
-          <span>Сколько Бензина / Фруктов / Кварца нужно</span>
-          <input id="raidNeedPrimary" type="number" min="0" value="0">
-        </label>
+      <div class="season-panel">
+        <h4>Что нужно и что уже есть</h4>
 
-        <label class="season-field">
-          <span>Сколько Воды / Рыбы / Вольфрама нужно</span>
-          <input id="raidNeedSecondary" type="number" min="0" value="0">
-        </label>
+        <div class="season-form-grid season-form-grid-compact">
+          <label class="season-field">
+            <span>Нужно Бензин / Фрукты / Кварц</span>
+            <input id="raidNeedPrimary" type="number" min="0" value="0">
+          </label>
 
-        <label class="season-field">
-          <span>Сколько алмазов есть</span>
-          <input id="raidDiamonds" type="number" min="0" value="0">
-        </label>
+          <label class="season-field">
+            <span>Нужно Вода / Рыба / Вольфрам</span>
+            <input id="raidNeedSecondary" type="number" min="0" value="0">
+          </label>
 
-        <label class="season-field">
-          <span>Сколько банок со скидкой доступно</span>
-          <input id="raidDiscountCans" type="number" min="0" value="0">
-        </label>
+          <label class="season-field">
+            <span>Алмазы</span>
+            <input id="raidDiamonds" type="number" min="0" value="0">
+          </label>
 
-        <label class="season-field">
-          <span>Сколько банок уже есть</span>
-          <input id="raidCans" type="number" min="0" value="0">
-        </label>
+          <label class="season-field">
+            <span>Банки со скидкой</span>
+            <input id="raidDiscountCans" type="number" min="0" value="0">
+          </label>
 
-        <label class="season-field">
-          <span>Сколько энергии уже есть</span>
-          <input id="raidEnergy" type="number" min="0" value="0">
-        </label>
+          <label class="season-field">
+            <span>Банки в наличии</span>
+            <input id="raidCans" type="number" min="0" value="0">
+          </label>
+
+          <label class="season-field">
+            <span>Энергия в наличии</span>
+            <input id="raidEnergy" type="number" min="0" value="0">
+          </label>
+        </div>
       </div>
 
-      <div class="season-subgrid">
-        <section class="season-mini-card">
-          <h4>Сколько нужно потратить на альфу</h4>
+      <div class="season-raid-grid">
+        <section class="season-panel season-raid-panel">
+          <div class="season-panel-title">
+            <h4>Альфа</h4>
+            <span>нужно потратить</span>
+          </div>
 
-          <label class="season-field">
-            <span>Уровень альфы</span>
-            <select id="alphaNeedLevel"></select>
-          </label>
+          <div class="season-inline-fields">
+            <label class="season-field">
+              <span>Уровень</span>
+              <select id="alphaNeedLevel"></select>
+            </label>
 
-          <label class="season-field">
-            <span>Энергии на запуск</span>
-            <input id="alphaNeedEnergy" type="number" min="1" value="19">
-          </label>
+            <label class="season-field">
+              <span>Энергия</span>
+              <input id="alphaNeedEnergy" type="number" min="1" value="19">
+            </label>
+          </div>
 
-          <div class="season-results">
-            <div><span>Кол-во в банках</span><strong id="alphaNeedCans">0</strong></div>
-            <div><span>Алмазов потребуется</span><strong id="alphaNeedDiamonds">0</strong></div>
-            <div><span>Алмазов со скидкой, max 12000</span><strong id="alphaNeedDiscountDiamonds">0</strong></div>
+          <div class="season-results season-results-compact">
+            <div><span>Банок</span><strong id="alphaNeedCans">0</strong></div>
+            <div><span>Алмазов</span><strong id="alphaNeedDiamonds">0</strong></div>
+            <div><span>Со скидкой</span><strong id="alphaNeedDiscountDiamonds">0</strong></div>
           </div>
         </section>
 
-        <section class="season-mini-card">
-          <h4>Сколько можно получить с альфы</h4>
+        <section class="season-panel season-raid-panel">
+          <div class="season-panel-title">
+            <h4>Альфа</h4>
+            <span>можно получить</span>
+          </div>
 
-          <label class="season-field">
-            <span>Уровень альфы</span>
-            <select id="alphaFarmLevel"></select>
-          </label>
+          <div class="season-inline-fields">
+            <label class="season-field">
+              <span>Уровень</span>
+              <select id="alphaFarmLevel"></select>
+            </label>
 
-          <label class="season-field">
-            <span>Энергии на запуск</span>
-            <input id="alphaFarmEnergy" type="number" min="1" value="19">
-          </label>
+            <label class="season-field">
+              <span>Энергия</span>
+              <input id="alphaFarmEnergy" type="number" min="1" value="19">
+            </label>
+          </div>
 
-          <div class="season-results">
-            <div><span>Всего запусков</span><strong id="alphaFarmRuns">0</strong></div>
-            <div><span>Бензина / Фруктов / Кварца</span><strong id="alphaFarmPrimary">0</strong></div>
-            <div><span>Воды / Рыбы / Вольфрама</span><strong id="alphaFarmSecondary">0</strong></div>
+          <div class="season-results season-results-compact">
+            <div><span>Запусков</span><strong id="alphaFarmRuns">0</strong></div>
+            <div><span>Бензин / Фрукты / Кварц</span><strong id="alphaFarmPrimary">0</strong></div>
+            <div><span>Вода / Рыба / Вольфрам</span><strong id="alphaFarmSecondary">0</strong></div>
           </div>
         </section>
 
-        <section class="season-mini-card">
-          <h4>Сколько нужно потратить на заражённого</h4>
+        <section class="season-panel season-raid-panel">
+          <div class="season-panel-title">
+            <h4>Заражённый</h4>
+            <span>нужно потратить</span>
+          </div>
 
-          <label class="season-field">
-            <span>Уровень заражённого</span>
-            <select id="infectedNeedLevel"></select>
-          </label>
+          <div class="season-inline-fields">
+            <label class="season-field">
+              <span>Уровень</span>
+              <select id="infectedNeedLevel"></select>
+            </label>
 
-          <label class="season-field">
-            <span>Энергии на запуск</span>
-            <input id="infectedNeedEnergy" type="number" min="1" value="7">
-          </label>
+            <label class="season-field">
+              <span>Энергия</span>
+              <input id="infectedNeedEnergy" type="number" min="1" value="7">
+            </label>
+          </div>
 
-          <div class="season-results">
-            <div><span>Кол-во в банках</span><strong id="infectedNeedCans">0</strong></div>
-            <div><span>Алмазов потребуется</span><strong id="infectedNeedDiamonds">0</strong></div>
-            <div><span>Алмазов со скидкой, max 12000</span><strong id="infectedNeedDiscountDiamonds">0</strong></div>
+          <div class="season-results season-results-compact">
+            <div><span>Банок</span><strong id="infectedNeedCans">0</strong></div>
+            <div><span>Алмазов</span><strong id="infectedNeedDiamonds">0</strong></div>
+            <div><span>Со скидкой</span><strong id="infectedNeedDiscountDiamonds">0</strong></div>
           </div>
         </section>
 
-        <section class="season-mini-card">
-          <h4>Сколько можно получить с заражённого</h4>
+        <section class="season-panel season-raid-panel">
+          <div class="season-panel-title">
+            <h4>Заражённый</h4>
+            <span>можно получить</span>
+          </div>
 
-          <label class="season-field">
-            <span>Уровень заражённого</span>
-            <select id="infectedFarmLevel"></select>
-          </label>
+          <div class="season-inline-fields">
+            <label class="season-field">
+              <span>Уровень</span>
+              <select id="infectedFarmLevel"></select>
+            </label>
 
-          <label class="season-field">
-            <span>Энергии на запуск</span>
-            <input id="infectedFarmEnergy" type="number" min="1" value="7">
-          </label>
+            <label class="season-field">
+              <span>Энергия</span>
+              <input id="infectedFarmEnergy" type="number" min="1" value="7">
+            </label>
+          </div>
 
-          <div class="season-results">
-            <div><span>Всего запусков</span><strong id="infectedFarmRuns">0</strong></div>
-            <div><span>Бензина / Фруктов / Кварца</span><strong id="infectedFarmPrimary">0</strong></div>
-            <div><span>Воды / Рыбы / Вольфрама</span><strong id="infectedFarmSecondary">0</strong></div>
+          <div class="season-results season-results-compact">
+            <div><span>Запусков</span><strong id="infectedFarmRuns">0</strong></div>
+            <div><span>Бензин / Фрукты / Кварц</span><strong id="infectedFarmPrimary">0</strong></div>
+            <div><span>Вода / Рыба / Вольфрам</span><strong id="infectedFarmSecondary">0</strong></div>
           </div>
         </section>
-      </div>
-
-      <div class="season-summary">
-        <span>Всего доступно энергии с учётом алмазов и банок</span>
-        <strong id="raidAvailableEnergy">0</strong>
       </div>
     </section>
 
-    <section class="card season-card">
-      <div class="card-header">
-        <h3>Производство</h3>
+    <section class="card season-card season-compact-card">
+      <div class="card-header season-card-header">
+        <div>
+          <h3>Производство</h3>
+          <p>Расчёт производства в час и времени до нужного количества.</p>
+        </div>
       </div>
 
-      <div class="season-form-grid">
-        <label class="season-field">
-          <span>Уровень здания</span>
-          <select id="productionBuildingLevel"></select>
-        </label>
+      <div class="season-panel">
+        <h4>Настройки производства</h4>
 
-        <label class="season-field">
-          <span>Навык в лаборатории</span>
-          <select id="productionLabLevel"></select>
-        </label>
+        <div class="season-form-grid season-form-grid-compact">
+          <label class="season-field">
+            <span>Уровень здания</span>
+            <select id="productionBuildingLevel"></select>
+          </label>
 
-        <label class="season-field">
-          <span>Навык в сезонном здании</span>
-          <select id="productionSeasonLevel"></select>
-        </label>
+          <label class="season-field">
+            <span>Лаборатория</span>
+            <select id="productionLabLevel"></select>
+          </label>
 
-        <label class="season-field">
-          <span>Сезонный абонемент премиум</span>
-          <select id="productionPremiumPass">
-            <option value="1">Нет</option>
-            <option value="2">Да</option>
-          </select>
-        </label>
+          <label class="season-field">
+            <span>Сезонное здание</span>
+            <select id="productionSeasonLevel"></select>
+          </label>
 
-        <label class="season-field">
-          <span>Недельный пропуск сезона</span>
-          <select id="productionWeeklyPass">
-            <option value="1">Нет</option>
-            <option value="2">Да</option>
-          </select>
-        </label>
+          <label class="season-field">
+            <span>Премиум абонемент</span>
+            <select id="productionPremiumPass">
+              <option value="1">Нет</option>
+              <option value="2">Да</option>
+            </select>
+          </label>
 
-        <label class="season-field">
-          <span>Союз занял деревню</span>
-          <select id="productionVillage">
-            <option value="1">Нет</option>
-            <option value="2">Да</option>
-          </select>
-        </label>
+          <label class="season-field">
+            <span>Недельный пропуск</span>
+            <select id="productionWeeklyPass">
+              <option value="1">Нет</option>
+              <option value="2">Да</option>
+            </select>
+          </label>
 
-        <label class="season-field">
-          <span>Союз занял мегаполис</span>
-          <select id="productionMegapolis">
-            <option value="1">Нет</option>
-            <option value="2">Да</option>
-          </select>
-        </label>
+          <label class="season-field">
+            <span>Деревня</span>
+            <select id="productionVillage">
+              <option value="1">Нет</option>
+              <option value="2">Да</option>
+            </select>
+          </label>
 
-        <label class="season-field">
-          <span>Могучий бык</span>
-          <select id="productionBull">
-            <option value="1">Нет</option>
-            <option value="2">Да</option>
-          </select>
-        </label>
+          <label class="season-field">
+            <span>Мегаполис</span>
+            <select id="productionMegapolis">
+              <option value="1">Нет</option>
+              <option value="2">Да</option>
+            </select>
+          </label>
+
+          <label class="season-field">
+            <span>Могучий бык</span>
+            <select id="productionBull">
+              <option value="1">Нет</option>
+              <option value="2">Да</option>
+            </select>
+          </label>
+        </div>
       </div>
 
-      <div class="season-results season-results-large">
-        <div><span>Производство в час Воды / Рыбы / Вольфрама</span><strong id="productionSecondaryPerHour">0</strong></div>
-        <div><span>Производство в час Бензина / Фруктов / Кварца</span><strong id="productionPrimaryPerHour">0</strong></div>
+      <div class="season-total-grid">
+        <div class="season-total-card">
+          <span>В час: Вода / Рыба / Вольфрам</span>
+          <strong id="productionSecondaryPerHour">0</strong>
+        </div>
+
+        <div class="season-total-card">
+          <span>В час: Бензин / Фрукты / Кварц</span>
+          <strong id="productionPrimaryPerHour">0</strong>
+        </div>
       </div>
 
       <div class="season-subgrid season-subgrid-production">
-        <section class="season-mini-card">
+        <section class="season-panel">
           <h4>Сколько будет произведено</h4>
 
           <label class="season-field">
@@ -205,27 +245,29 @@
             <input id="productionHours" type="number" min="0" step="0.1" value="10">
           </label>
 
-          <div class="season-results">
-            <div><span>Воды / Рыбы / Вольфрама</span><strong id="productionSecondaryTotal">0</strong></div>
-            <div><span>Бензина / Фруктов / Кварца</span><strong id="productionPrimaryTotal">0</strong></div>
+          <div class="season-results season-results-compact">
+            <div><span>Вода / Рыба / Вольфрам</span><strong id="productionSecondaryTotal">0</strong></div>
+            <div><span>Бензин / Фрукты / Кварц</span><strong id="productionPrimaryTotal">0</strong></div>
           </div>
         </section>
 
-        <section class="season-mini-card">
+        <section class="season-panel">
           <h4>Сколько времени нужно</h4>
 
-          <label class="season-field">
-            <span>Нужно Воды / Рыбы / Вольфрама</span>
-            <input id="productionNeedSecondary" type="number" min="0" value="0">
-          </label>
+          <div class="season-inline-fields">
+            <label class="season-field">
+              <span>Нужно Вода / Рыба / Вольфрам</span>
+              <input id="productionNeedSecondary" type="number" min="0" value="0">
+            </label>
 
-          <label class="season-field">
-            <span>Нужно Бензина / Фруктов / Кварца</span>
-            <input id="productionNeedPrimary" type="number" min="0" value="0">
-          </label>
+            <label class="season-field">
+              <span>Нужно Бензин / Фрукты / Кварц</span>
+              <input id="productionNeedPrimary" type="number" min="0" value="0">
+            </label>
+          </div>
 
-          <div class="season-results">
-            <div><span>Времени потребуется, часов</span><strong id="productionNeedHours">0</strong></div>
+          <div class="season-results season-results-compact">
+            <div><span>Потребуется часов</span><strong id="productionNeedHours">0</strong></div>
           </div>
         </section>
       </div>
