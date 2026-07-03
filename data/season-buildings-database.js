@@ -1,7 +1,7 @@
 export const seasonBuildingsDatabase = {
   buildingTypes: {
     main: {
-      name: "Корабль / Остроншип / Маяк",
+      name: "Корабль / Острошип / Маяк",
       requirements: [
         { level: 1, secondary: 0, primary: 0 },
         { level: 2, secondary: 750, primary: 500 },
@@ -182,7 +182,7 @@ export const seasonBuildingsDatabase = {
   },
 
   buildings: [
-    { id: "main", name: "Корабль / Остроншип / Маяк", type: "main" },
+    { id: "main", name: "Корабль / Острошип / Маяк", type: "main" },
     { id: "secondary_factory_1", name: "Завод Воды / Рыбы / Вольфрама 1", type: "secondaryFactory" },
     { id: "secondary_factory_2", name: "Завод Воды / Рыбы / Вольфрама 2", type: "secondaryFactory" },
     { id: "primary_factory_1", name: "Завод Бензина / Фруктов / Кварца 1", type: "primaryFactory" },
