@@ -47,6 +47,82 @@ function createActionRow(action, eventType) {
   const label = document.createElement("label");
   label.textContent = action.name;
 
+  const controls = document.createElement("div");
+  controls.className = "action-controls";
+
+  /*
+    Вариант 1:
+    Действие с выбором уровня + количеством.
+    Например: Улучшение войск.
+  */
+  if (action.options) {
+    row.classList.add("action-row-with-level");
+
+    const levelSelect = document.createElement("select");
+    levelSelect.className = "action-level-select";
+
+    action.options.forEach(optionData => {
+      const option = document.createElement("option");
+      option.value = optionData.value;
+      option.textContent = optionData.label;
+      levelSelect.appendChild(option);
+    });
+
+    const quantityInput = document.createElement("input");
+    quantityInput.type = "number";
+    quantityInput.min = "0";
+    quantityInput.value = "0";
+    quantityInput.className = "action-quantity-input";
+
+    quantityInput.dataset.actionId = action.id;
+    quantityInput.dataset.eventType = eventType;
+    quantityInput.dataset.hasLevel = "true";
+
+    levelSelect.addEventListener("change", updateTotals);
+    quantityInput.addEventListener("input", updateTotals);
+
+    controls.append(levelSelect, quantityInput);
+    row.append(label, controls);
+
+    return row;
+  }
+
+  /*
+    Вариант 2:
+    Действие с фиксированным количеством через выпадающий список.
+    Например: Отправки S-класс, Грузовики А-класс.
+  */
+  if (action.quantityOptions) {
+    const quantitySelect = document.createElement("select");
+    quantitySelect.className = "action-quantity-select";
+
+    const zeroOption = document.createElement("option");
+    zeroOption.value = "0";
+    zeroOption.textContent = "0";
+    quantitySelect.appendChild(zeroOption);
+
+    for (let i = action.quantityOptions.min; i <= action.quantityOptions.max; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = i;
+      quantitySelect.appendChild(option);
+    }
+
+    quantitySelect.dataset.actionId = action.id;
+    quantitySelect.dataset.eventType = eventType;
+
+    quantitySelect.addEventListener("change", updateTotals);
+
+    controls.appendChild(quantitySelect);
+    row.append(label, controls);
+
+    return row;
+  }
+
+  /*
+    Вариант 3:
+    Обычное действие с простым числовым полем.
+  */
   const input = document.createElement("input");
   input.type = "number";
   input.min = "0";
@@ -57,7 +133,8 @@ function createActionRow(action, eventType) {
 
   input.addEventListener("input", updateTotals);
 
-  row.append(label, input);
+  controls.appendChild(input);
+  row.append(label, controls);
 
   return row;
 }
