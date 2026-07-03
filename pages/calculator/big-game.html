@@ -2,23 +2,27 @@
 
   <h1>Игра по крупному</h1>
 
-  <section class="big-game-toolbar card">
-    <div class="big-game-total-box">
-      <span>Получу всего:</span>
-      <strong id="bigGameTotal">347 970</strong>
-    </div>
+  <section class="big-game-mobile-categories card">
+    <button class="big-game-collapse-button" id="bigGameToggleCategories" type="button">
+      <span>Категории</span>
+      <span id="bigGameToggleIcon">Свернуть</span>
+    </button>
 
-    <div class="big-game-category-box">
-      <span>Категории:</span>
-      <select id="bigGameCategoryFilter">
-        <option value="all">Показать все</option>
-      </select>
-    </div>
+    <div id="bigGameMobileCategoriesList" class="big-game-category-list"></div>
+  </section>
+
+  <section class="big-game-total-card card">
+    <span>Получу всего:</span>
+    <strong id="bigGameTotal">347 970</strong>
   </section>
 
   <section class="big-game-layout">
     <div id="bigGameCards" class="big-game-cards"></div>
-    <aside id="bigGameCategories" class="big-game-categories card"></aside>
+
+    <aside class="big-game-desktop-categories card">
+      <h3>Категории</h3>
+      <div id="bigGameDesktopCategoriesList" class="big-game-category-list"></div>
+    </aside>
   </section>
 
   <div class="big-game-hint card">
