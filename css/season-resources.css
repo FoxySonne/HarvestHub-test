@@ -27,6 +27,23 @@ SEASON RESOURCES — compact calculator layout
   display: none;
 }
 
+.season-building-totals-card {
+  gap: 12px;
+  padding: 14px;
+}
+
+.season-building-totals-card .season-card-header h3 {
+  font-size: 18px;
+}
+
+.season-production-card {
+  align-self: end;
+}
+
+.season-raids-card {
+  grid-column: 1 / -1;
+}
+
 .season-card-header {
   align-items: flex-start;
   margin-bottom: 0;
@@ -257,7 +274,7 @@ SEASON RESOURCES — compact calculator layout
   gap: 12px;
 }
 
-.season-buildings-card .season-total-grid {
+.season-building-totals-card .season-total-grid {
   grid-template-columns: 1fr;
   gap: 8px;
 }
@@ -273,15 +290,15 @@ SEASON RESOURCES — compact calculator layout
   border-radius: var(--radius);
 }
 
-.season-buildings-card .season-total-card {
-  padding: 8px 10px;
+.season-building-totals-card .season-total-card {
+  padding: 10px 12px;
 }
 
-.season-buildings-card .season-total-card span {
+.season-building-totals-card .season-total-card span {
   font-size: 13px;
 }
 
-.season-buildings-card .season-total-card strong {
+.season-building-totals-card .season-total-card strong {
   font-size: 18px;
 }
 
@@ -292,11 +309,29 @@ SEASON RESOURCES — compact calculator layout
 @media (min-width: 1200px) {
   .season-compact-layout {
     grid-template-columns: minmax(360px, 0.78fr) minmax(0, 1.22fr);
-    align-items: start;
+    align-items: stretch;
   }
 
-  .season-compact-layout > .season-card:nth-child(3) {
+  .season-buildings-card {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .season-building-totals-card {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .season-production-card {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+  }
+
+  .season-raids-card {
     grid-column: 1 / -1;
+    grid-row: 3;
   }
 }
 
@@ -330,7 +365,7 @@ SEASON RESOURCES — compact calculator layout
   .season-raid-grid,
   .season-total-grid,
   .season-subgrid-production,
-  .season-buildings-card .season-total-grid {
+  .season-building-totals-card .season-total-grid {
     grid-template-columns: 1fr;
   }
 
