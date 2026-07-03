@@ -274,37 +274,34 @@ BIG GAME
 ========================================================== */
 
 .big-game-page {
-  gap: 20px;
+  gap: 18px;
 }
 
-.big-game-toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-  gap: 24px;
-  align-items: center;
+.big-game-mobile-categories {
+  display: none;
 }
 
-.big-game-total-box,
-.big-game-category-box {
+.big-game-total-card {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
+  width: fit-content;
+  min-width: 320px;
+}
+
+.big-game-total-card span {
   font-size: 22px;
   font-weight: 700;
 }
 
-.big-game-total-box strong {
+.big-game-total-card strong {
   color: var(--accent);
   font-size: 28px;
 }
 
-.big-game-category-box select {
-  max-width: 180px;
-}
-
 .big-game-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 280px);
   gap: 18px;
   align-items: start;
 }
@@ -313,12 +310,13 @@ BIG GAME
   display: grid;
   grid-template-columns: repeat(2, minmax(280px, 1fr));
   gap: 14px;
+  align-items: start;
 }
 
 .big-game-card {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .big-game-card-header {
@@ -328,40 +326,28 @@ BIG GAME
   gap: 12px;
 }
 
-.big-game-card-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.big-game-card-title h3 {
+.big-game-card-header h3 {
   margin: 0;
   font-size: 18px;
 }
 
-.big-game-icon {
-  color: var(--accent);
-  font-size: 22px;
+.big-game-card-toggle,
+.big-game-collapse-button {
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  cursor: pointer;
 }
 
-.big-game-card-status,
-.big-game-category-check {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--panel);
-  color: transparent;
-  flex: 0 0 auto;
+.big-game-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.big-game-card-status.is-active,
-.big-game-category-item.is-active .big-game-category-check {
-  background: var(--accent);
-  color: white;
-  font-weight: 700;
+.big-game-card.is-collapsed .big-game-card-body {
+  display: none;
 }
 
 .big-game-stats {
@@ -416,27 +402,43 @@ BIG GAME
   font-weight: 700;
 }
 
-.big-game-categories {
+.big-game-desktop-categories {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   position: sticky;
   top: 20px;
 }
 
+.big-game-desktop-categories h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.big-game-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.big-game-category-list.is-collapsed {
+  display: none;
+}
+
 .big-game-category-item {
-  width: 100%;
-  padding: 8px 0;
-  border: none;
-  background: transparent;
-  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.big-game-category-item input {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  accent-color: var(--accent);
 }
 
 .big-game-hint {
@@ -444,27 +446,42 @@ BIG GAME
 }
 
 @media (max-width: 899px) {
-  .big-game-toolbar,
+  .big-game-mobile-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .big-game-collapse-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .big-game-total-card {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+  }
+
+  .big-game-total-card span {
+    font-size: 16px;
+  }
+
+  .big-game-total-card strong {
+    font-size: 22px;
+  }
+
   .big-game-layout,
   .big-game-cards {
     grid-template-columns: 1fr;
   }
 
-  .big-game-toolbar {
-    gap: 14px;
-  }
-
-  .big-game-total-box,
-  .big-game-category-box {
-    justify-content: space-between;
-    font-size: 16px;
-  }
-
-  .big-game-total-box strong {
-    font-size: 20px;
-  }
-
-  .big-game-categories {
+  .big-game-desktop-categories {
     display: none;
   }
 
@@ -473,7 +490,7 @@ BIG GAME
     grid-template-columns: minmax(0, 1fr) 56px 64px;
   }
 
-  .big-game-card-title h3 {
+  .big-game-card-header h3 {
     font-size: 17px;
   }
 }
