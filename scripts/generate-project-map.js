@@ -149,14 +149,16 @@ function extractJsInfo(content) {
   const imports = [...content.matchAll(/import\s+.*?from\s+["']([^"']+)["']/g)]
     .map(m => m[1]);
 
-  const exports = [
-    ...content.matchAll(/export\s+\{([^}]+)\}/g)
-      .flatMap(m => m[1].split(",").map(x => x.trim())),
-    ...content.matchAll(/export\s+function\s+([a-zA-Z0-9_$]+)\s*\(/g)
-      .map(m => m[1]),
-    ...content.matchAll(/export\s+const\s+([a-zA-Z0-9_$]+)/g)
-      .map(m => m[1])
-  ];
+ const exports = [
+  ...[...content.matchAll(/export\s+\{([^}]+)\}/g)]
+    .flatMap(m => m[1].split(",").map(x => x.trim())),
+
+  ...[...content.matchAll(/export\s+function\s+([a-zA-Z0-9_$]+)\s*\(/g)]
+    .map(m => m[1]),
+
+  ...[...content.matchAll(/export\s+const\s+([a-zA-Z0-9_$]+)/g)]
+    .map(m => m[1])
+];
 
   return {
     functions: [...new Set(functions)],
