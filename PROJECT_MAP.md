@@ -914,6 +914,7 @@
 
 **Переходы loadPage():**
 - `calculator/ipk.html`
+- `calculator/season-resources.html`
 - `calculator/turbo-vs.html`
 
 ---
