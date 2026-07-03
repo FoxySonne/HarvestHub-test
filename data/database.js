@@ -101,6 +101,92 @@ export const database = {
     {name: "Покупки", id: "purchases", categoryId: "misc", points: {turtle: 400, vs: 20, ipk: 60}},
   ],
 
+  categoryIpk: [
+    {
+      id: "building",
+      name: "Строительство поселения",
+      target: 250000,
+      actions: [
+        {id: "building_power"},
+        {id: "building_1m"},
+        {id: "purchases", label: "Получайте алмазы x1"},
+      ],
+    },
+    {
+      id: "research",
+      name: "Исследование технологий",
+      target: 200000,
+      actions: [
+        {id: "research_power"},
+        {id: "research_1m"},
+        {id: "purchases", label: "Получайте алмазы x1"},
+      ],
+    },
+    {
+      id: "equipment",
+      name: "Усиление снаряжения",
+      target: 200000,
+      actions: [
+        {id: "blue_bolt"},
+        {id: "purple_bolt"},
+        {id: "gold_bolt"},
+        {id: "unknown_bolt", label: "? болт"},
+        {id: "purchases", label: "Получайте алмазы x1"},
+      ],
+    },
+    {
+      id: "titan",
+      name: "Развитие титана",
+      target: 200000,
+      actions: [
+        {id: "titan_cells", label: "Используйте клетку титана"},
+        {id: "titan_exp_100", label: "Используйте 100 ед. опыта титана"},
+        {id: "purchases", label: "Получайте алмазы x1"},
+      ],
+    },
+    {
+      id: "heroes",
+      name: "Улучшение героя",
+      target: 300000,
+      actions: [
+        {id: "gold_hero_card"},
+        {id: "purple_hero_card", label: "Фиол фрагмент героя"},
+        {id: "blue_hero_card"},
+        {id: "hero_books"},
+        {id: "purchases", label: "Получайте алмазы x1"},
+      ],
+    },
+    {
+      id: "chief",
+      name: "Шеф коллекция",
+      target: 300000,
+      actions: [
+        {id: "gears", label: "Используйте общие детали"},
+        {id: "blueprints", label: "Используйте чертежи"},
+        {id: "purchases", label: "Получайте алмазы x1"},
+      ],
+    },
+    {
+      id: "troops",
+      name: "Улучшение войск",
+      target: 300000,
+      actions: [
+        {id: "training_1m"},
+        {id: "troop_upgrade", option: 1, label: "Обучить солдат 1 ур."},
+        {id: "troop_upgrade", option: 2, label: "Обучить солдат 2 ур."},
+        {id: "troop_upgrade", option: 3, label: "Обучить солдат 3 ур."},
+        {id: "troop_upgrade", option: 4, label: "Обучить солдат 4 ур."},
+        {id: "troop_upgrade", option: 5, label: "Обучить солдат 5 ур."},
+        {id: "troop_upgrade", option: 6, label: "Обучить солдат 6 ур."},
+        {id: "troop_upgrade", option: 7, label: "Обучить солдат 7 ур."},
+        {id: "troop_upgrade", option: 8, label: "Обучить солдат 8 ур."},
+        {id: "troop_upgrade", option: 9, label: "Обучить солдат 9 ур."},
+        {id: "troop_upgrade", option: 10, label: "Обучить солдат 10 ур."},
+        {id: "purchases", label: "Получайте алмазы x1"},
+      ],
+    },
+  ],
+
   dayOrder: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
 
   days: {
