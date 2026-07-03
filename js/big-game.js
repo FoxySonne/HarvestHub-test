@@ -146,7 +146,12 @@ function createCategoryCheckbox(category) {
 
   label.innerHTML = `
     <span>${category.name}</span>
-    <input type="checkbox" ${category.enabled ? "checked" : ""}>
+    <span class="big-game-switch">
+      <input type="checkbox" ${category.enabled ? "checked" : ""}>
+      <span class="big-game-switch-track">
+        <span class="big-game-switch-thumb">✓</span>
+      </span>
+    </span>
   `;
 
   return label;
