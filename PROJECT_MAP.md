@@ -965,6 +965,7 @@
 - `page-section` — Описание пока не добавлено.
 - `season-build-total-mobile` — Описание пока не добавлено.
 - `season-building-list` — Описание пока не добавлено.
+- `season-buildings-card` — Описание пока не добавлено.
 - `season-card` — Описание пока не добавлено.
 - `season-card-header` — Описание пока не добавлено.
 - `season-compact-card` — Описание пока не добавлено.
