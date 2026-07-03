@@ -11,9 +11,8 @@ DESKTOP: 900px+
 
   .container {
     display: grid;
-    grid-template-columns: 220px minmax(0, 1fr) 260px;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--rightbar-width);
     gap: 24px;
-
     width: 100%;
     min-height: 100vh;
     padding: 20px;
@@ -28,8 +27,8 @@ DESKTOP: 900px+
   }
 
   .main {
-    min-width: 0;
     width: 100%;
+    min-width: 0;
     padding: 0;
   }
 
@@ -37,22 +36,23 @@ DESKTOP: 900px+
     display: flex;
     flex-direction: column;
     gap: 20px;
-
     position: sticky;
     top: 20px;
+    height: fit-content;
   }
 
   .adaptive-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     align-items: start;
   }
 
-  /* закреплённый блок: всегда справа в первом ряду */
   .desktop-fixed-right {
     grid-column: -2 / -1;
     grid-row: 1;
+  }
+
+  .button-group {
+    flex-direction: row;
   }
 
   .turbo-content {
@@ -69,19 +69,23 @@ DESKTOP: 900px+
 }
 
 /* ==========================================================
-DESKTOP: 900–1600px
+DESKTOP: 900–1599px
 ========================================================== */
 
 @media (min-width: 900px) and (max-width: 1599px) {
 
+  :root {
+    --sidebar-width: 220px;
+    --rightbar-width: 240px;
+  }
+
   .container {
-    grid-template-columns: 220px minmax(0, 1fr) 240px;
     gap: 20px;
     padding: 16px;
   }
 
   .adaptive-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }
 
@@ -91,8 +95,12 @@ WIDE DESKTOP: 1600px+
 
 @media (min-width: 1600px) {
 
+  :root {
+    --sidebar-width: 240px;
+    --rightbar-width: 280px;
+  }
+
   .container {
-    grid-template-columns: 240px minmax(0, 1fr) 280px;
     gap: 28px;
     padding: 24px;
   }
