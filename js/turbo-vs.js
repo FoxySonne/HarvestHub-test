@@ -19,7 +19,7 @@ function resolveDayList(list) {
     }
 
     if (item.type === "category") {
-      return database.actions
+      return database.action
         .filter(action => action.categoryId === item.id)
         .map(action => action.id);
     }
@@ -33,7 +33,7 @@ function resolveDayList(list) {
 ========================================================== */
 
 function getActionById(actionId) {
-  return database.actions.find(action => action.id === actionId);
+  return database.action.find(action => action.id === actionId);
 }
 
 /* ==========================================================
