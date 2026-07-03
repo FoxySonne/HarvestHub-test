@@ -250,6 +250,16 @@ ACTION LIST
   text-align: center;
 }
 
+.action-row-text {
+  display: block;
+  padding: 14px 16px;
+  color: var(--text-soft);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  line-height: 1.4;
+}
+
 /* ==========================================================
 RESULTS
 ========================================================== */
