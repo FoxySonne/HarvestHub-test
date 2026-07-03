@@ -1,4 +1,5 @@
 import { seasonDatabase } from "../data/season-database.js";
+import { seasonBuildingsDatabase } from "../data/season-buildings-database.js";
 
 const numberFormat = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 1
@@ -15,6 +16,14 @@ function setText(id, value) {
   if (!element) return;
 
   element.textContent = numberFormat.format(value);
+}
+
+function setValue(id, value) {
+  const element = document.getElementById(id);
+
+  if (!element) return;
+
+  element.value = String(Math.round(value));
 }
 
 function getByLevel(list, level) {
@@ -38,6 +47,127 @@ function fillSelect(id, list, defaultValue = null) {
   if (defaultValue !== null) {
     select.value = String(defaultValue);
   }
+}
+
+function createLevelSelect(className, defaultValue) {
+  const select = document.createElement("select");
+  select.className = className;
+
+  for (let level = 0; level <= 30; level++) {
+    const option = document.createElement("option");
+    option.value = String(level);
+    option.textContent = level === 0 ? "0" : `${level}`;
+    select.appendChild(option);
+  }
+
+  select.value = String(defaultValue);
+
+  return select;
+}
+
+function renderBuildingRows() {
+  const container = document.getElementById("seasonBuildingList");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  seasonBuildingsDatabase.buildings.forEach(building => {
+    const row = document.createElement("div");
+    row.className = "season-building-row";
+    row.dataset.buildingId = building.id;
+    row.dataset.buildingType = building.type;
+
+    const checkLabel = document.createElement("label");
+    checkLabel.className = "season-building-check";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "season-building-enabled";
+
+    const name = document.createElement("span");
+    name.textContent = building.name;
+
+    checkLabel.append(checkbox, name);
+
+    const levels = document.createElement("div");
+    levels.className = "season-building-levels";
+
+    const currentWrap = document.createElement("label");
+    currentWrap.className = "season-building-level";
+    currentWrap.innerHTML = "<span>Есть</span>";
+
+    const currentSelect = createLevelSelect("season-building-current", 0);
+    currentWrap.appendChild(currentSelect);
+
+    const targetWrap = document.createElement("label");
+    targetWrap.className = "season-building-level";
+    targetWrap.innerHTML = "<span>Нужно</span>";
+
+    const targetSelect = createLevelSelect("season-building-target", 30);
+    targetWrap.appendChild(targetSelect);
+
+    levels.append(currentWrap, targetWrap);
+    row.append(checkLabel, levels);
+    container.appendChild(row);
+  });
+}
+
+function sumRequirementsForBuilding(type, currentLevel, targetLevel) {
+  const table = seasonBuildingsDatabase.buildingTypes[type]?.requirements || [];
+  const start = Math.max(1, currentLevel + 1);
+  const end = Math.max(start - 1, targetLevel);
+
+  let secondary = 0;
+  let primary = 0;
+
+  for (let level = start; level <= end; level++) {
+    const requirement = getByLevel(table, level);
+
+    secondary += Number(requirement?.secondary) || 0;
+    primary += Number(requirement?.primary) || 0;
+  }
+
+  return { secondary, primary };
+}
+
+function updateBuildingNeeds() {
+  let secondary = 0;
+  let primary = 0;
+
+  const rows = document.querySelectorAll(".season-building-row");
+
+  rows.forEach(row => {
+    const enabled = row.querySelector(".season-building-enabled")?.checked;
+
+    if (!enabled) return;
+
+    const currentLevel = Number(row.querySelector(".season-building-current")?.value) || 0;
+    const targetLevel = Number(row.querySelector(".season-building-target")?.value) || 0;
+
+    if (targetLevel <= currentLevel) return;
+
+    const requirement = sumRequirementsForBuilding(
+      row.dataset.buildingType,
+      currentLevel,
+      targetLevel
+    );
+
+    secondary += requirement.secondary;
+    primary += requirement.primary;
+  });
+
+  setValue("raidNeedPrimary", primary);
+  setValue("raidNeedSecondary", secondary);
+  setValue("productionNeedPrimary", primary);
+  setValue("productionNeedSecondary", secondary);
+
+  setText("buildingNeedPrimary", primary);
+  setText("buildingNeedSecondary", secondary);
+  setText("raidNeedPrimaryText", primary);
+  setText("raidNeedSecondaryText", secondary);
+  setText("productionNeedPrimaryText", primary);
+  setText("productionNeedSecondaryText", secondary);
 }
 
 function calculateNeedByDrops(needPrimary, needSecondary, drop, energyPerRun) {
@@ -235,6 +365,7 @@ function setDefaults() {
 }
 
 function updateAll() {
+  updateBuildingNeeds();
   updateRaids();
   updateProduction();
 }
@@ -249,6 +380,7 @@ export function init() {
   fillSelect("productionLabLevel", seasonDatabase.labProductionBonus);
   fillSelect("productionSeasonLevel", seasonDatabase.seasonalBuildingProductionBonus);
 
+  renderBuildingRows();
   setDefaults();
   bindCalculatorInputs();
   updateAll();
