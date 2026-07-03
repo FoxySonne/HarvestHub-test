@@ -8,6 +8,7 @@ let isSyncingControls = false;
 - "blue_bolt"
 - { type: "action", id: "blue_bolt" }
 - { type: "category", id: "equipment" }
+- { type: "text", text: "..." }
 ========================================================== */
 
 function resolveDayList(list = []) {
@@ -26,6 +27,10 @@ function resolveDayList(list = []) {
         .map(action => action.id);
     }
 
+    if (item.type === "text") {
+      return item;
+    }
+
     return [];
   });
 }
@@ -42,12 +47,17 @@ function getActionById(actionId) {
 СОРТИРУЕМ ДЕЙСТВИЯ ПО ПОРЯДКУ В DATABASE.JS
 Сначала порядок категорий из database.category,
 внутри категории — порядок действий из database.action.
+Текстовые строки оставляем после действий.
 ========================================================== */
 
-function sortActionIdsByDatabaseOrder(actionIds) {
-  return [...actionIds].sort((firstId, secondId) => {
-    const firstAction = getActionById(firstId);
-    const secondAction = getActionById(secondId);
+function sortDayItemsByDatabaseOrder(items) {
+  return [...items].sort((firstItem, secondItem) => {
+    if (typeof firstItem !== "string" && typeof secondItem !== "string") return 0;
+    if (typeof firstItem !== "string") return 1;
+    if (typeof secondItem !== "string") return -1;
+
+    const firstAction = getActionById(firstItem);
+    const secondAction = getActionById(secondItem);
 
     if (!firstAction || !secondAction) return 0;
 
@@ -58,8 +68,8 @@ function sortActionIdsByDatabaseOrder(actionIds) {
       return firstCategoryIndex - secondCategoryIndex;
     }
 
-    const firstActionIndex = database.action.findIndex(action => action.id === firstId);
-    const secondActionIndex = database.action.findIndex(action => action.id === secondId);
+    const firstActionIndex = database.action.findIndex(action => action.id === firstItem);
+    const secondActionIndex = database.action.findIndex(action => action.id === secondItem);
 
     return firstActionIndex - secondActionIndex;
   });
@@ -113,6 +123,18 @@ function syncActionControls(actionId, sourceControl) {
 function handleControlChange(actionId, sourceControl) {
   syncActionControls(actionId, sourceControl);
   updateTotals();
+}
+
+/* ==========================================================
+СОЗДАЁМ ТЕКСТОВУЮ СТРОКУ
+========================================================== */
+
+function createTextRow(text) {
+  const row = document.createElement("div");
+  row.className = "action-row action-row-text";
+  row.textContent = text;
+
+  return row;
 }
 
 /* ==========================================================
@@ -281,6 +303,27 @@ function updateTotals() {
 }
 
 /* ==========================================================
+РИСУЕМ СПИСОК
+========================================================== */
+
+function renderList(container, items, eventType) {
+  items.forEach(item => {
+    if (typeof item !== "string") {
+      if (item.type === "text") {
+        container.appendChild(createTextRow(item.text));
+      }
+
+      return;
+    }
+
+    const action = getActionById(item);
+    if (!action) return;
+
+    container.appendChild(createActionRow(action, eventType));
+  });
+}
+
+/* ==========================================================
 РИСУЕМ ДЕНЬ
 ========================================================== */
 
@@ -300,22 +343,11 @@ function renderDay(dayId) {
   turtleList.innerHTML = "";
   vsList.innerHTML = "";
 
-  const turtleIds = sortActionIdsByDatabaseOrder(resolveDayList(day.turtle || []));
-  const vsIds = sortActionIdsByDatabaseOrder(resolveDayList(day.vs || []));
+  const turtleItems = sortDayItemsByDatabaseOrder(resolveDayList(day.turtle || []));
+  const vsItems = sortDayItemsByDatabaseOrder(resolveDayList(day.vs || []));
 
-  turtleIds.forEach(actionId => {
-    const action = getActionById(actionId);
-    if (!action) return;
-
-    turtleList.appendChild(createActionRow(action, "turtle"));
-  });
-
-  vsIds.forEach(actionId => {
-    const action = getActionById(actionId);
-    if (!action) return;
-
-    vsList.appendChild(createActionRow(action, "vs"));
-  });
+  renderList(turtleList, turtleItems, "turtle");
+  renderList(vsList, vsItems, "vs");
 
   updateTotals();
 }
