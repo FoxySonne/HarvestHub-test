@@ -58,6 +58,12 @@ function syncLinkedRaidInputs(target) {
   syncValue(target.id, linkedId);
 }
 
+function shouldSyncMainBuildingLevel(target) {
+  if (!target) return true;
+
+  return Boolean(target.closest?.('.season-building-row[data-building-id="main"]'));
+}
+
 function getByLevel(list, level) {
   return list.find(item => Number(item.level) === Number(level)) || list[0];
 }
@@ -396,12 +402,12 @@ function bindCalculatorInputs() {
   inputs.forEach(input => {
     input.addEventListener("input", event => {
       syncLinkedRaidInputs(event.target);
-      updateAll();
+      updateAll(event.target);
     });
 
     input.addEventListener("change", event => {
       syncLinkedRaidInputs(event.target);
-      updateAll();
+      updateAll(event.target);
     });
   });
 }
@@ -432,9 +438,13 @@ function setDefaults() {
   });
 }
 
-function updateAll() {
+function updateAll(target = null) {
   normalizeDiscountCans();
-  syncMainBuildingLevel();
+
+  if (shouldSyncMainBuildingLevel(target)) {
+    syncMainBuildingLevel();
+  }
+
   updateBuildingNeeds();
   updateRaids();
   updateProduction();
