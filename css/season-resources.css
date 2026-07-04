@@ -142,6 +142,12 @@ SEASON RESOURCES — compact calculator layout
   font-weight: 700;
 }
 
+.season-tooltip-label {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
 .season-efficiency-field select {
   min-height: 32px;
   padding: 4px 8px;
@@ -233,6 +239,10 @@ SEASON RESOURCES — compact calculator layout
 
 .season-raid-panel {
   gap: 14px;
+}
+
+.season-raid-need-grid .season-field span {
+  min-height: 0;
 }
 
 .season-results-compact {
