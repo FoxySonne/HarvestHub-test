@@ -41,3 +41,27 @@ async function clearSiteCache() {
     }
 
 }
+
+function initAdvancedModeSetting() {
+
+    const toggle = document.getElementById("advancedModeToggle");
+
+    if (!toggle) return;
+
+    toggle.value = typeof window.getAdvancedMode === "function" && window.getAdvancedMode() ? "1" : "0";
+
+    toggle.addEventListener("change", () => {
+
+        if (typeof window.setAdvancedMode === "function") {
+            window.setAdvancedMode(toggle.value === "1");
+        }
+
+    });
+
+}
+
+function init() {
+
+    initAdvancedModeSetting();
+
+}
