@@ -19,6 +19,12 @@ function findDirectTitle(card) {
   return Array.from(card.children).find(child => /^H[1-4]$/.test(child.tagName));
 }
 
+function shouldSkipCard(card) {
+  return card.dataset.noCollapse === "true" ||
+    card.classList.contains("ipk-card") ||
+    Boolean(card.querySelector(":scope > .ipk-card-header, :scope .ipk-card-toggle"));
+}
+
 function ensureCardHeader(card) {
   let header = Array.from(card.children).find(child => child.classList.contains("card-header"));
 
@@ -48,14 +54,15 @@ function setCardCollapsed(card, collapsed) {
   card.dataset.collapsed = collapsed ? "true" : "false";
 
   if (button) {
-    button.textContent = collapsed ? "Развернуть" : "Свернуть";
+    button.textContent = collapsed ? "›" : "⌄";
     button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    button.setAttribute("aria-label", collapsed ? "Развернуть блок" : "Свернуть блок");
   }
 }
 
 function bindCard(card, index) {
   if (!card || card.dataset.collapsibleCardBound === "true") return;
-  if (card.dataset.noCollapse === "true") return;
+  if (shouldSkipCard(card)) return;
 
   const header = ensureCardHeader(card);
   if (!header) return;
@@ -69,7 +76,6 @@ function bindCard(card, index) {
     button = document.createElement("button");
     button.type = "button";
     button.className = "collapsible-card-toggle";
-    button.setAttribute("aria-label", "Свернуть или развернуть блок");
     header.appendChild(button);
   }
 
