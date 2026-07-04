@@ -125,14 +125,18 @@ MOBILE COLLAPSIBLE CARDS
 
 .collapsible-card-toggle {
   display: none;
-  flex-shrink: 0;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--panel);
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: 24px;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
 }
@@ -180,7 +184,7 @@ ALERTS
   border-left: 5px solid transparent;
 }
 .alert-success { background: rgba(61,138,82,.15); border-color: var(--success); }
-.alert-danger  { background: rgba(214,79,79,.15);  border-color: var(--danger); }
+.alert-danger  { background: rgba(214,79,79,.15);  color: var(--danger); }
 .alert-warning { background: rgba(217,164,61,.15); border-color: var(--warning); }
 .alert-info    { background: rgba(68,141,228,.15); border-color: var(--info); }
 
