@@ -4,18 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>HarvestHub</title>
-    <link rel="stylesheet" href="css/style.css?v=20260704-12">
+    <link rel="stylesheet" href="css/style.css?v=20260704-13">
     <style>
         @media (max-width: 899px) {
+            .collapsible-card {
+                position: relative;
+            }
+
+            .collapsible-card-header {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) 32px;
+                align-items: start !important;
+                column-gap: 12px;
+            }
+
+            .collapsible-card-header > :first-child {
+                min-width: 0;
+            }
+
             button.collapsible-card-toggle {
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
+                grid-column: 2;
+                grid-row: 1;
+                justify-self: end;
+                align-self: start;
                 width: 32px !important;
                 height: 32px !important;
                 min-width: 32px !important;
                 max-width: 32px !important;
                 padding: 0 !important;
+                margin: -4px 0 0 !important;
                 background: transparent !important;
                 border: 0 !important;
                 color: var(--text) !important;
@@ -51,7 +71,7 @@
     <script src="js/menu.js"></script>
     <script src="js/loader.js?v=20260704-10"></script>
     <script src="js/profile-block.js?v=20260704-2"></script>
-    <script src="js/collapsible-cards.js?v=20260704-4"></script>
+    <script src="js/collapsible-cards.js?v=20260704-5"></script>
     <script src="js/app.js"></script>
     <script src="js/settings.js?v=20260704-5"></script>
 </body>
