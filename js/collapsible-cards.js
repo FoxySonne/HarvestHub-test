@@ -1,8 +1,5 @@
 const COLLAPSIBLE_CARD_STATE_PREFIX = "harvesthub_collapsible_card_state:";
-
-function isMobileViewport() {
-  return window.matchMedia("(max-width: 899px)").matches;
-}
+let collapsibleObserver = null;
 
 function getCurrentPageName() {
   return localStorage.getItem("currentPage") || "unknown";
@@ -96,21 +93,31 @@ function bindCollapsibleCards() {
   const pageContent = document.getElementById("page-content");
   if (!pageContent) return;
 
-  Array.from(pageContent.querySelectorAll(":scope > .card, :scope > section.card, .page-section > .card, .season-page > .card"))
+  Array.from(pageContent.querySelectorAll(".card"))
     .forEach((card, index) => bindCard(card, index));
 }
 
-const observer = new MutationObserver(() => bindCollapsibleCards());
-
-window.addEventListener("DOMContentLoaded", () => {
-  bindCollapsibleCards();
-
+function startCollapsibleObserver() {
   const pageContent = document.getElementById("page-content");
-  if (pageContent) observer.observe(pageContent, { childList: true, subtree: true });
-});
+  if (!pageContent) return;
+
+  if (collapsibleObserver) collapsibleObserver.disconnect();
+
+  collapsibleObserver = new MutationObserver(() => bindCollapsibleCards());
+  collapsibleObserver.observe(pageContent, { childList: true, subtree: true });
+
+  bindCollapsibleCards();
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", startCollapsibleObserver);
+} else {
+  startCollapsibleObserver();
+}
 
 window.addEventListener("harvesthub:profile-block-ready", () => bindCollapsibleCards());
 window.addEventListener("harvesthub:advanced-mode-change", () => bindCollapsibleCards());
 window.addEventListener("resize", () => bindCollapsibleCards());
 
 window.bindCollapsibleCards = bindCollapsibleCards;
+window.startCollapsibleObserver = startCollapsibleObserver;
