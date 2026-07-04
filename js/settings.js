@@ -80,6 +80,16 @@ function setProfileMessage(message) {
 
 }
 
+function confirmLocalDataStorage() {
+
+    return confirm(
+        "Нажимая эту кнопку, ты соглашаешься, что HarvestHub будет сохранять данные профиля и введённые в калькуляторах значения на этом устройстве.\n\n" +
+        "Данные хранятся локально в браузере этого устройства и могут быть удалены при очистке данных сайта, кэша или localStorage.\n\n" +
+        "Код из 4 цифр нужен только для доступа к локальному профилю. Пока данные не синхронизируются между устройствами автоматически."
+    );
+
+}
+
 function updateProfileStatus() {
 
     const status = document.getElementById("profileStatus");
@@ -103,6 +113,8 @@ function createProfileFromSettings() {
 
     if (typeof window.createUserProfile !== "function") return;
 
+    if (!confirmLocalDataStorage()) return;
+
     const result = window.createUserProfile(values.nickname, values.state, values.pin);
 
     setProfileMessage(result.message);
@@ -115,6 +127,8 @@ function loginProfileFromSettings() {
     const values = getProfileFormValues();
 
     if (typeof window.loginUserProfile !== "function") return;
+
+    if (!confirmLocalDataStorage()) return;
 
     const result = window.loginUserProfile(values.nickname, values.state, values.pin);
 
