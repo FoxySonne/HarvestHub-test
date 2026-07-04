@@ -130,6 +130,8 @@ SEASON RESOURCES — compact calculator layout
 }
 
 .season-efficiency-field {
+  position: relative;
+  overflow: visible;
   padding: 8px 9px;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -143,9 +145,48 @@ SEASON RESOURCES — compact calculator layout
 }
 
 .season-tooltip-label {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
   cursor: help;
   text-decoration: underline dotted;
   text-underline-offset: 3px;
+  outline: none;
+}
+
+.season-tooltip-label::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 50;
+  width: max-content;
+  max-width: min(270px, calc(100vw - 48px));
+  padding: 8px 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: var(--transition);
+}
+
+.season-tooltip-label:hover::after,
+.season-tooltip-label:focus::after,
+.season-tooltip-label:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.season-tooltip-label:focus-visible {
+  color: var(--accent);
 }
 
 .season-efficiency-field select {
