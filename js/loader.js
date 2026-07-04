@@ -1,3 +1,4 @@
+const SITE_ASSET_VERSION = "20260704-3";
 const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
 const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
 const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
@@ -79,17 +80,11 @@ function validateProfileData(nickname, state, pin) {
     const cleanPin = normalizeProfilePin(pin);
 
     if (!cleanNickname || !cleanState || !cleanPin) {
-        return {
-            ok: false,
-            message: "Заполни никнейм, номер штата и код"
-        };
+        return { ok: false, message: "Заполни никнейм, номер штата и код" };
     }
 
     if (!/^\d{4}$/.test(cleanPin)) {
-        return {
-            ok: false,
-            message: "Код должен состоять из 4 цифр"
-        };
+        return { ok: false, message: "Код должен состоять из 4 цифр" };
     }
 
     return {
@@ -109,10 +104,7 @@ function createUserProfile(nickname, state, pin) {
     const profileId = getProfileId(validation.nickname, validation.state);
 
     if (profiles[profileId]) {
-        return {
-            ok: false,
-            message: "Такой профиль уже есть на этом устройстве"
-        };
+        return { ok: false, message: "Такой профиль уже есть на этом устройстве" };
     }
 
     profiles[profileId] = {
@@ -127,11 +119,7 @@ function createUserProfile(nickname, state, pin) {
     localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
     applyActiveProfileSetting();
 
-    return {
-        ok: true,
-        profile: profiles[profileId],
-        message: "Профиль создан"
-    };
+    return { ok: true, profile: profiles[profileId], message: "Профиль создан" };
 }
 
 function loginUserProfile(nickname, state, pin) {
@@ -144,21 +132,14 @@ function loginUserProfile(nickname, state, pin) {
     const profile = profiles[profileId];
 
     if (!profile || profile.pin !== validation.pin) {
-        return {
-            ok: false,
-            message: "Профиль не найден или код неверный"
-        };
+        return { ok: false, message: "Профиль не найден или код неверный" };
     }
 
     savePageFormState(currentLoadedPage);
     localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
     applyActiveProfileSetting();
 
-    return {
-        ok: true,
-        profile,
-        message: "Профиль выбран"
-    };
+    return { ok: true, profile, message: "Профиль выбран" };
 }
 
 function logoutUserProfile() {
@@ -166,10 +147,7 @@ function logoutUserProfile() {
     localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
     applyActiveProfileSetting();
 
-    return {
-        ok: true,
-        message: "Профиль отключён"
-    };
+    return { ok: true, message: "Профиль отключён" };
 }
 
 function applyActiveProfileSetting() {
@@ -241,17 +219,9 @@ function getFieldKey(field, index) {
     const buildingRow = field.closest?.(".season-building-row");
 
     if (buildingRow?.dataset?.buildingId) {
-        if (field.classList.contains("season-building-enabled")) {
-            return `building:${buildingRow.dataset.buildingId}:enabled`;
-        }
-
-        if (field.classList.contains("season-building-current")) {
-            return `building:${buildingRow.dataset.buildingId}:current`;
-        }
-
-        if (field.classList.contains("season-building-target")) {
-            return `building:${buildingRow.dataset.buildingId}:target`;
-        }
+        if (field.classList.contains("season-building-enabled")) return `building:${buildingRow.dataset.buildingId}:enabled`;
+        if (field.classList.contains("season-building-current")) return `building:${buildingRow.dataset.buildingId}:current`;
+        if (field.classList.contains("season-building-target")) return `building:${buildingRow.dataset.buildingId}:target`;
     }
 
     if (field.id) return `id:${field.id}`;
@@ -263,9 +233,7 @@ function getFieldKey(field, index) {
 function getFieldValue(field) {
     const type = (field.type || "").toLowerCase();
 
-    if (type === "checkbox" || type === "radio") {
-        return field.checked;
-    }
+    if (type === "checkbox" || type === "radio") return field.checked;
 
     return field.value;
 }
@@ -305,18 +273,12 @@ function restorePageFormState(pageName) {
 
     if (!state || typeof state !== "object") return;
 
-    const restoredFields = [];
-
     fields.forEach((field, index) => {
         const key = getFieldKey(field, index);
 
         if (!Object.prototype.hasOwnProperty.call(state, key)) return;
 
         setFieldValue(field, state[key]);
-        restoredFields.push(field);
-    });
-
-    restoredFields.forEach(field => {
         field.dispatchEvent(new Event("input", { bubbles: true }));
         field.dispatchEvent(new Event("change", { bubbles: true }));
     });
@@ -330,7 +292,6 @@ function bindPageFormPersistence(pageName) {
         if (field.dataset.formPersistenceBound === pageName) return;
 
         field.dataset.formPersistenceBound = pageName;
-
         field.addEventListener("input", () => savePageFormState(pageName));
         field.addEventListener("change", () => savePageFormState(pageName));
     });
@@ -370,19 +331,14 @@ function getPopularPages(currentPage = "") {
     const visits = readPageVisits();
 
     const popularPages = pagesDatabase
-        .map(page => ({
-            ...page,
-            visits: Number(visits[page.path]) || 0
-        }))
+        .map(page => ({ ...page, visits: Number(visits[page.path]) || 0 }))
         .filter(page => page.visits > 0 && page.path !== currentPage)
         .sort((a, b) => {
             if (b.visits !== a.visits) return b.visits - a.visits;
             return a.title.localeCompare(b.title, "ru");
         });
 
-    if (popularPages.length > 0) {
-        return popularPages.slice(0, MAX_QUICK_LINKS);
-    }
+    if (popularPages.length > 0) return popularPages.slice(0, MAX_QUICK_LINKS);
 
     return getDefaultQuickLinks()
         .filter(page => page.path !== currentPage)
@@ -412,10 +368,7 @@ function renderQuickLinks(currentPage = localStorage.getItem("currentPage") || "
         link.addEventListener("click", event => {
             event.preventDefault();
             const pagePath = link.dataset.pagePath;
-
-            if (pagePath) {
-                loadPage(pagePath);
-            }
+            if (pagePath) loadPage(pagePath);
         });
     });
 }
@@ -427,66 +380,49 @@ function getGlobalInitName(fileName) {
         .join("") + "Init";
 }
 
-// Загрузка любого HTML-файла в нужное место страницы
-async function loadBlock(containerId, filePath) {
+function withCacheBust(filePath) {
+    const separator = filePath.includes("?") ? "&" : "?";
+    return `${filePath}${separator}v=${SITE_ASSET_VERSION}-${Date.now()}`;
+}
 
+async function loadBlock(containerId, filePath) {
     const container = document.getElementById(containerId);
 
     if (!container) return false;
 
-    const response = await fetch(filePath);
+    const response = await fetch(withCacheBust(filePath), { cache: "no-store" });
 
     if (!response.ok) {
         console.warn(`Не удалось загрузить ${filePath}:`, response.status);
         return false;
     }
 
-    const html = await response.text();
+    container.innerHTML = await response.text();
 
-    container.innerHTML = html;
-
-    // Получаем имя файла
-    const fileName = filePath
-        .split("/")
-        .pop()
-        .replace(".html", "");
+    const fileName = filePath.split("/").pop().replace(".html", "");
 
     try {
-
-        const module = await import(`./${fileName}.js?v=${Date.now()}`);
+        const module = await import(`./${fileName}.js?v=${SITE_ASSET_VERSION}-${Date.now()}`);
 
         if (typeof module.init === "function") {
             module.init();
         } else {
             const globalInitName = getGlobalInitName(fileName);
-
-            if (typeof window[globalInitName] === "function") {
-                window[globalInitName]();
-            }
+            if (typeof window[globalInitName] === "function") window[globalInitName]();
         }
-
     } catch (e) {
-        // JS для этой страницы отсутствует — это нормально.
-        // Но если JS есть и сломался, эту ошибку теперь видно в консоли.
         console.warn(`JS-модуль для страницы ${fileName} не был запущен:`, e);
 
         const globalInitName = getGlobalInitName(fileName);
-
-        if (typeof window[globalInitName] === "function") {
-            window[globalInitName]();
-        }
+        if (typeof window[globalInitName] === "function") window[globalInitName]();
     }
 
-    if (containerId === "rightbar-container") {
-        renderQuickLinks();
-    }
+    if (containerId === "rightbar-container") renderQuickLinks();
 
     return true;
 }
 
-// Загрузка страницы в центральную область
 async function loadPage(pageName) {
-
     savePageFormState(currentLoadedPage);
 
     const isLoaded = await loadBlock("page-content", "pages/" + pageName);
@@ -505,10 +441,7 @@ async function loadPage(pageName) {
     trackPageVisit(pageName);
     renderQuickLinks(pageName);
 
-    if (window.innerWidth < 900 && typeof closeMenu === "function") {
-        closeMenu();
-    }
-
+    if (window.innerWidth < 900 && typeof closeMenu === "function") closeMenu();
 }
 
 window.addEventListener("beforeunload", () => {
