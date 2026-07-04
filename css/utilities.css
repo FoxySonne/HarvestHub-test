@@ -6,31 +6,37 @@ TOOLTIPS - для всплывающих подсказок
   display: inline-flex;
   align-items: center;
   cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
 }
 
 .tooltip::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 0;
-  bottom: calc(100% + 10px);
-  width: 260px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 15px;
-  line-height: 1.4;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: min(320px, 80vw);
+  padding: 7px 10px;
+  background: #f7f7f7;
+  border: 1px solid #8f8f8f;
+  border-radius: 3px;
+  color: #222;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.35;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(8px);
+  transform: translateY(4px);
   transition: var(--transition);
   pointer-events: none;
-  z-index: 999;
-  box-shadow: var(--shadow);
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+  white-space: normal;
 }
 
-.tooltip:hover::after {
+.tooltip:hover::after,
+.tooltip:focus-visible::after {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
