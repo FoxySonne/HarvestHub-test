@@ -56,14 +56,92 @@ function initAdvancedModeSetting() {
             window.setAdvancedMode(toggle.checked);
         }
 
+        updateProfileStatus();
+
     });
+
+}
+
+function getProfileFormValues() {
+
+    return {
+        nickname: document.getElementById("profileNickname")?.value || "",
+        state: document.getElementById("profileState")?.value || "",
+        pin: document.getElementById("profilePin")?.value || ""
+    };
+
+}
+
+function setProfileMessage(message) {
+
+    const element = document.getElementById("profileMessage");
+
+    if (element) element.textContent = message || "";
+
+}
+
+function updateProfileStatus() {
+
+    const status = document.getElementById("profileStatus");
+
+    if (!status) return;
+
+    const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
+
+    if (!profile) {
+        status.textContent = "Профиль не выбран";
+        return;
+    }
+
+    status.textContent = `Выбран профиль: ${profile.nickname}, штат ${profile.state}`;
+
+}
+
+function createProfileFromSettings() {
+
+    const values = getProfileFormValues();
+
+    if (typeof window.createUserProfile !== "function") return;
+
+    const result = window.createUserProfile(values.nickname, values.state, values.pin);
+
+    setProfileMessage(result.message);
+    updateProfileStatus();
+
+}
+
+function loginProfileFromSettings() {
+
+    const values = getProfileFormValues();
+
+    if (typeof window.loginUserProfile !== "function") return;
+
+    const result = window.loginUserProfile(values.nickname, values.state, values.pin);
+
+    setProfileMessage(result.message);
+    updateProfileStatus();
+
+}
+
+function logoutProfileFromSettings() {
+
+    if (typeof window.logoutUserProfile !== "function") return;
+
+    const result = window.logoutUserProfile();
+
+    setProfileMessage(result.message);
+    updateProfileStatus();
 
 }
 
 function initSettingsPage() {
 
     initAdvancedModeSetting();
+    updateProfileStatus();
 
 }
 
+window.createProfileFromSettings = createProfileFromSettings;
+window.loginProfileFromSettings = loginProfileFromSettings;
+window.logoutProfileFromSettings = logoutProfileFromSettings;
 window.settingsInit = initSettingsPage;
