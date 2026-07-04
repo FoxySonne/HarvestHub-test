@@ -91,9 +91,10 @@ function fillSelect(id, list, defaultValue = null) {
   }
 }
 
-function createLevelSelect(className, defaultValue) {
+function createLevelSelect(className, defaultValue, id = "") {
   const select = document.createElement("select");
   select.className = className;
+  if (id) select.id = id;
 
   for (let level = 0; level <= 30; level++) {
     const option = document.createElement("option");
@@ -104,6 +105,135 @@ function createLevelSelect(className, defaultValue) {
 
   select.value = String(defaultValue);
   return select;
+}
+
+function createProfileLevelField(id, label, defaultValue = 0) {
+  const field = document.createElement("label");
+  field.className = "profile-block-field";
+
+  const title = document.createElement("span");
+  title.textContent = label;
+
+  field.append(title, createLevelSelect("", defaultValue, id));
+  return field;
+}
+
+function getSeasonEndUtcTime() {
+  const now = typeof window.getHarvestHubUtcTime === "function"
+    ? window.getHarvestHubUtcTime().date
+    : new Date();
+
+  const days = Math.max(0, num("seasonProfileDaysLeft"));
+  const hours = Math.max(0, num("seasonProfileHoursLeft"));
+  const rawEnd = new Date(now.getTime() + (days * 24 + hours) * 60 * 60 * 1000);
+
+  const nextUtcDayChange = new Date(Date.UTC(
+    rawEnd.getUTCFullYear(),
+    rawEnd.getUTCMonth(),
+    rawEnd.getUTCDate() + 1,
+    0,
+    0,
+    0
+  ));
+
+  return nextUtcDayChange;
+}
+
+function formatUtcDate(date) {
+  return date.toLocaleString("ru-RU", {
+    timeZone: "UTC",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function updateSeasonProfileBlockSummary() {
+  const summary = document.getElementById("seasonProfileEndSummary");
+  if (!summary) return;
+
+  summary.innerHTML = `Конец сезона по расчёту: <strong>${formatUtcDate(getSeasonEndUtcTime())} UTC</strong>`;
+}
+
+function renderSeasonProfileBlock() {
+  if (typeof window.setProfileBlockContent !== "function") return;
+
+  const container = document.createElement("div");
+  container.className = "season-profile-block";
+
+  container.innerHTML = `
+    <div class="profile-block-grid">
+      <label class="profile-block-field">
+        <span>Дней до конца сезона</span>
+        <input id="seasonProfileDaysLeft" type="number" min="0" value="0">
+      </label>
+
+      <label class="profile-block-field">
+        <span>Часов до конца сезона</span>
+        <input id="seasonProfileHoursLeft" type="number" min="0" max="23" value="0">
+      </label>
+    </div>
+
+    <div id="seasonProfileEndSummary" class="profile-block-result"></div>
+
+    <p class="profile-block-note">Конец сезона считается как ближайшая смена дня по UTC после указанного времени.</p>
+
+    <div class="profile-block-grid" id="seasonProfileMainBuildings"></div>
+
+    <div class="profile-block-grid" id="seasonProfileFactories"></div>
+
+    <p class="profile-block-note">
+      <span class="tooltip" data-tooltip="Уровни заводов влияют на расчёт производства ресурсов в час. Для двух заводов Воды / Рыбы / Вольфрама берётся производство вторичного ресурса, для двух заводов Бензина / Фруктов / Кварца — производство основного ресурса.">Как работают уровни заводов?</span>
+    </p>
+  `;
+
+  const mainBuildings = container.querySelector("#seasonProfileMainBuildings");
+  mainBuildings.append(
+    createProfileLevelField("seasonProfileShipLevel", "Корабль"),
+    createProfileLevelField("seasonProfileThornLevel", "Острошип"),
+    createProfileLevelField("seasonProfileLighthouseLevel", "Маяк")
+  );
+
+  const factories = container.querySelector("#seasonProfileFactories");
+  factories.append(
+    createProfileLevelField("seasonProfileSecondaryFactory1", "Завод Воды / Рыбы / Вольфрама 1"),
+    createProfileLevelField("seasonProfileSecondaryFactory2", "Завод Воды / Рыбы / Вольфрама 2"),
+    createProfileLevelField("seasonProfilePrimaryFactory1", "Завод Бензина / Фруктов / Кварца 1"),
+    createProfileLevelField("seasonProfilePrimaryFactory2", "Завод Бензина / Фруктов / Кварца 2")
+  );
+
+  window.setProfileBlockContent({
+    description: "Данные продвинутого режима для сезонных расчётов.",
+    content: container
+  });
+
+  updateSeasonProfileBlockSummary();
+
+  container.addEventListener("input", event => handleCalculatorInput(event.target));
+  container.addEventListener("change", event => handleCalculatorInput(event.target));
+}
+
+function getProfileFactoryProduction() {
+  const secondaryFactory1 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfileSecondaryFactory1"));
+  const secondaryFactory2 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfileSecondaryFactory2"));
+  const primaryFactory1 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfilePrimaryFactory1"));
+  const primaryFactory2 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfilePrimaryFactory2"));
+
+  const hasProfileFactoryLevels = [
+    "seasonProfileSecondaryFactory1",
+    "seasonProfileSecondaryFactory2",
+    "seasonProfilePrimaryFactory1",
+    "seasonProfilePrimaryFactory2"
+  ].some(id => document.getElementById(id));
+
+  if (!hasProfileFactoryLevels) return null;
+
+  return {
+    secondary: (Number(secondaryFactory1?.secondary) || 0) + (Number(secondaryFactory2?.secondary) || 0),
+    primary: (Number(primaryFactory1?.primary) || 0) + (Number(primaryFactory2?.primary) || 0)
+  };
 }
 
 function syncBuildingRow(row) {
@@ -336,7 +466,8 @@ function getBonus(list, level) {
 }
 
 function calculateProductionPerHour() {
-  const base = getByLevel(seasonDatabase.productionByBuildingLevel, num("productionBuildingLevel"));
+  const profileFactoryProduction = getProfileFactoryProduction();
+  const base = profileFactoryProduction || getByLevel(seasonDatabase.productionByBuildingLevel, num("productionBuildingLevel"));
   const labBonus = getBonus(seasonDatabase.labProductionBonus, num("productionLabLevel"));
   const seasonBonus = getBonus(seasonDatabase.seasonalBuildingProductionBonus, num("productionSeasonLevel"));
   const village = num("productionVillage") === 2 ? seasonDatabase.territoryBuffs.villageProduction : 0;
@@ -382,6 +513,7 @@ function handleCalculatorInput(target) {
     isRaidNeedManual = false;
   }
 
+  updateSeasonProfileBlockSummary();
   syncLinkedRaidInputs(target);
   updateAll(target);
 }
@@ -452,6 +584,7 @@ export function init() {
 
   renderBuildingRows();
   setDefaults();
+  renderSeasonProfileBlock();
   bindCalculatorInputs();
   updateAll();
 }
