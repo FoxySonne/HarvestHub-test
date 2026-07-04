@@ -60,8 +60,10 @@ function initAdvancedModeSetting() {
 
 }
 
-function init() {
+function initSettingsPage() {
 
     initAdvancedModeSetting();
 
 }
+
+window.initSettingsPage = initSettingsPage;
