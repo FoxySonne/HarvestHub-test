@@ -13,7 +13,7 @@
       </div>
 
       <label class="season-field season-efficiency-field">
-        <span>Навык инженерная эффективность в сезонной постройке</span>
+        <span class="season-tooltip-label" title="навык уменьшает стоимость построек, слева второй в ветке навыков">Навык инженерная эффективность в сезонной постройке</span>
         <select id="buildingEfficiencyLevel">
           <option value="0">0 уровень — 0%</option>
           <option value="1">1 уровень — −1%</option>
@@ -179,15 +179,23 @@
       </div>
 
       <div class="season-panel">
-        <h4>Что уже есть</h4>
+        <h4>Что нужно получить</h4>
 
-        <input id="raidNeedPrimary" type="hidden" value="0">
-        <input id="raidNeedSecondary" type="hidden" value="0">
+        <div class="season-form-grid season-form-grid-compact season-raid-need-grid">
+          <label class="season-field">
+            <span>Бензин / Фрукты / Кварц</span>
+            <input id="raidNeedPrimary" type="number" min="0" value="0">
+          </label>
 
-        <div class="season-results season-results-compact season-build-total-mobile">
-          <div><span>Осталось Бензин / Фрукты / Кварц</span><strong id="raidNeedPrimaryText">0</strong></div>
-          <div><span>Осталось Вода / Рыба / Вольфрам</span><strong id="raidNeedSecondaryText">0</strong></div>
+          <label class="season-field">
+            <span>Вода / Рыба / Вольфрам</span>
+            <input id="raidNeedSecondary" type="number" min="0" value="0">
+          </label>
         </div>
+      </div>
+
+      <div class="season-panel">
+        <h4>Что уже есть</h4>
 
         <div class="season-form-grid season-form-grid-compact">
           <label class="season-field">
