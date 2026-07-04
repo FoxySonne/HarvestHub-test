@@ -1,6 +1,7 @@
 import { database } from "../data/database.js";
 
 let isSyncingControls = false;
+let isDaySelectedManually = false;
 
 /* ==========================================================
 РАЗВОРАЧИВАЕМ СПИСОК ДНЯ
@@ -33,6 +34,22 @@ function resolveDayList(list = []) {
 
     return [];
   });
+}
+
+/* ==========================================================
+ПОЛУЧАЕМ ТЕКУЩИЙ ДЕНЬ ПО ГРИНВИЧУ
+========================================================== */
+
+function getCurrentUtcDayId() {
+  const utcDayId = typeof window.getHarvestHubUtcDayId === "function"
+    ? window.getHarvestHubUtcDayId()
+    : null;
+
+  if (utcDayId && database.days[utcDayId]) {
+    return utcDayId;
+  }
+
+  return database.dayOrder[0];
 }
 
 /* ==========================================================
@@ -375,8 +392,22 @@ export function init() {
     daySelector.appendChild(option);
   });
 
+  daySelector.value = getCurrentUtcDayId();
+
   daySelector.addEventListener("change", () => {
+    isDaySelectedManually = true;
     renderDay(daySelector.value);
+  });
+
+  window.addEventListener("harvesthub:utc-day-change", event => {
+    if (isDaySelectedManually) return;
+
+    const dayId = event.detail?.dayId;
+
+    if (!dayId || !database.days[dayId]) return;
+
+    daySelector.value = dayId;
+    renderDay(dayId);
   });
 
   renderDay(daySelector.value);
