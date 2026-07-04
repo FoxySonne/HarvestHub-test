@@ -144,69 +144,8 @@ SEASON RESOURCES — compact calculator layout
   font-weight: 700;
 }
 
-.season-tooltip-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.season-tooltip-label {
-  min-width: 0;
-  cursor: default;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
-}
-
-.season-tooltip-details {
-  position: relative;
-  flex: 0 0 auto;
-}
-
-.season-tooltip-details summary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text-soft);
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-  list-style: none;
-}
-
-.season-tooltip-details summary::-webkit-details-marker {
-  display: none;
-}
-
-.season-tooltip-details[open] summary {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-.season-tooltip-details div {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 8px);
-  z-index: 50;
-  width: 270px;
-  max-width: calc(100vw - 48px);
-  padding: 8px 10px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
-  box-shadow: var(--shadow);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.35;
+.season-efficiency-field .tooltip {
+  align-self: flex-start;
 }
 
 .season-efficiency-field select {
