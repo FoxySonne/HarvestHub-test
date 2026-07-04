@@ -1,4 +1,4 @@
-const SITE_ASSET_VERSION = "20260704-3";
+const SITE_ASSET_VERSION = "20260704-4";
 const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
 const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
 const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
@@ -7,6 +7,19 @@ const ACTIVE_PROFILE_STORAGE_KEY = "harvesthub_active_profile";
 const MAX_QUICK_LINKS = 5;
 
 let currentLoadedPage = localStorage.getItem("currentPage") || "";
+let currentUtcDayId = "";
+let utcClockTimerId = null;
+
+const UTC_DAY_IDS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const UTC_DAY_NAMES = {
+    mon: "понедельник",
+    tue: "вторник",
+    wed: "среда",
+    thu: "четверг",
+    fri: "пятница",
+    sat: "суббота",
+    sun: "воскресенье"
+};
 
 const pagesDatabase = [
     { title: "Главная", path: "home.html", group: "Основное" },
@@ -21,6 +34,80 @@ const pagesDatabase = [
     { title: "Турбочерепашка & VS", path: "calculator/turbo-vs.html", group: "Калькуляторы" },
     { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" }
 ];
+
+function padTimePart(value) {
+    return String(value).padStart(2, "0");
+}
+
+function getHarvestHubUtcTime(date = new Date()) {
+    const dayId = UTC_DAY_IDS[date.getUTCDay()];
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + 1;
+    const day = date.getUTCDate();
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const seconds = date.getUTCSeconds();
+
+    return {
+        date,
+        timestamp: date.getTime(),
+        iso: date.toISOString(),
+        year,
+        month,
+        day,
+        hours,
+        minutes,
+        seconds,
+        dayIndex: date.getUTCDay(),
+        dayId,
+        dayName: UTC_DAY_NAMES[dayId],
+        dateKey: `${year}-${padTimePart(month)}-${padTimePart(day)}`,
+        timeKey: `${padTimePart(hours)}:${padTimePart(minutes)}:${padTimePart(seconds)}`
+    };
+}
+
+function getHarvestHubUtcDayId(date = new Date()) {
+    return getHarvestHubUtcTime(date).dayId;
+}
+
+function applyHarvestHubUtcTime() {
+    const time = getHarvestHubUtcTime();
+    const previousDayId = currentUtcDayId;
+
+    currentUtcDayId = time.dayId;
+
+    document.documentElement.dataset.utcDate = time.dateKey;
+    document.documentElement.dataset.utcTime = time.timeKey;
+    document.documentElement.dataset.utcDay = time.dayId;
+
+    if (document.body) {
+        document.body.dataset.utcDate = time.dateKey;
+        document.body.dataset.utcTime = time.timeKey;
+        document.body.dataset.utcDay = time.dayId;
+    }
+
+    window.harvestHubUtcTime = time;
+
+    window.dispatchEvent(new CustomEvent("harvesthub:utc-time-change", {
+        detail: time
+    }));
+
+    if (previousDayId && previousDayId !== time.dayId) {
+        window.dispatchEvent(new CustomEvent("harvesthub:utc-day-change", {
+            detail: time
+        }));
+    }
+
+    return time;
+}
+
+function startHarvestHubUtcClock() {
+    applyHarvestHubUtcTime();
+
+    if (utcClockTimerId) return;
+
+    utcClockTimerId = window.setInterval(applyHarvestHubUtcTime, 30000);
+}
 
 function readJsonStorage(key, fallback = {}) {
     try {
@@ -211,6 +298,9 @@ function getPersistableFields(container) {
     return Array.from(container.querySelectorAll("input, select, textarea"))
         .filter(field => {
             const type = (field.type || "").toLowerCase();
+
+            if (field.dataset.noPersist === "true") return false;
+
             return !["button", "submit", "reset", "hidden", "file"].includes(type);
         });
 }
@@ -448,6 +538,7 @@ window.addEventListener("beforeunload", () => {
     savePageFormState(currentLoadedPage || localStorage.getItem("currentPage") || "");
 });
 
+startHarvestHubUtcClock();
 applyAdvancedModeSetting();
 applyActiveProfileSetting();
 
@@ -464,3 +555,6 @@ window.createUserProfile = createUserProfile;
 window.loginUserProfile = loginUserProfile;
 window.logoutUserProfile = logoutUserProfile;
 window.applyActiveProfileSetting = applyActiveProfileSetting;
+window.getHarvestHubUtcTime = getHarvestHubUtcTime;
+window.getHarvestHubUtcDayId = getHarvestHubUtcDayId;
+window.applyHarvestHubUtcTime = applyHarvestHubUtcTime;
