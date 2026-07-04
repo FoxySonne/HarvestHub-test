@@ -3,6 +3,8 @@ const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
 const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
 const MAX_QUICK_LINKS = 5;
 
+let currentLoadedPage = localStorage.getItem("currentPage") || "";
+
 const pagesDatabase = [
     { title: "Главная", path: "home.html", group: "Основное" },
     { title: "База знаний", path: "knowledge.html", group: "Основное" },
@@ -121,9 +123,14 @@ function setFieldValue(field, value) {
     field.value = String(value ?? "");
 }
 
-function savePageFormState(pageName) {
+function savePageFormState(pageName = currentLoadedPage) {
+    if (!pageName) return;
+
     const container = document.getElementById("page-content");
     const fields = getPersistableFields(container);
+
+    if (fields.length === 0) return;
+
     const state = {};
 
     fields.forEach((field, index) => {
@@ -322,16 +329,18 @@ async function loadBlock(containerId, filePath) {
 // Загрузка страницы в центральную область
 async function loadPage(pageName) {
 
+    savePageFormState(currentLoadedPage);
+
     const isLoaded = await loadBlock("page-content", "pages/" + pageName);
 
     if (!isLoaded) return;
 
+    currentLoadedPage = pageName;
+    localStorage.setItem("currentPage", pageName);
+
     restorePageFormState(pageName);
     bindPageFormPersistence(pageName);
     savePageFormState(pageName);
-
-    // Запоминаем последнюю открытую страницу
-    localStorage.setItem("currentPage", pageName);
 
     applyAdvancedModeSetting();
     trackPageVisit(pageName);
@@ -343,11 +352,16 @@ async function loadPage(pageName) {
 
 }
 
+window.addEventListener("beforeunload", () => {
+    savePageFormState(currentLoadedPage || localStorage.getItem("currentPage") || "");
+});
+
 applyAdvancedModeSetting();
 
 window.loadPage = loadPage;
 window.loadBlock = loadBlock;
 window.renderQuickLinks = renderQuickLinks;
+window.savePageFormState = savePageFormState;
 window.getAdvancedMode = isAdvancedModeEnabled;
 window.setAdvancedMode = setAdvancedMode;
 window.applyAdvancedModeSetting = applyAdvancedModeSetting;
