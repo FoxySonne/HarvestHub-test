@@ -130,9 +130,13 @@ SEASON RESOURCES — compact calculator layout
 }
 
 .season-efficiency-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 7px;
   position: relative;
   overflow: visible;
-  padding: 8px 9px;
+  padding: 6px 7px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
@@ -140,17 +144,20 @@ SEASON RESOURCES — compact calculator layout
 
 .season-efficiency-field span {
   min-height: 0;
-  font-size: 12px;
-  font-weight: 700;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .season-efficiency-field .tooltip {
-  align-self: flex-start;
+  align-self: center;
 }
 
 .season-efficiency-field select {
-  min-height: 32px;
-  padding: 4px 8px;
+  width: 58px;
+  min-height: 28px;
+  padding: 3px 5px;
   font-size: 13px;
 }
 
@@ -440,5 +447,9 @@ SEASON RESOURCES — compact calculator layout
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+  }
+
+  .season-efficiency-field {
+    grid-template-columns: minmax(0, 1fr) 58px;
   }
 }
