@@ -255,6 +255,13 @@ function renderQuickLinks(currentPage = localStorage.getItem("currentPage") || "
     });
 }
 
+function getGlobalInitName(fileName) {
+    return fileName
+        .split("-")
+        .map((part, index) => index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1))
+        .join("") + "Init";
+}
+
 // Загрузка любого HTML-файла в нужное место страницы
 async function loadBlock(containerId, filePath) {
 
@@ -285,12 +292,24 @@ async function loadBlock(containerId, filePath) {
 
         if (typeof module.init === "function") {
             module.init();
+        } else {
+            const globalInitName = getGlobalInitName(fileName);
+
+            if (typeof window[globalInitName] === "function") {
+                window[globalInitName]();
+            }
         }
 
     } catch (e) {
         // JS для этой страницы отсутствует — это нормально.
         // Но если JS есть и сломался, эту ошибку теперь видно в консоли.
         console.warn(`JS-модуль для страницы ${fileName} не был запущен:`, e);
+
+        const globalInitName = getGlobalInitName(fileName);
+
+        if (typeof window[globalInitName] === "function") {
+            window[globalInitName]();
+        }
     }
 
     if (containerId === "rightbar-container") {
