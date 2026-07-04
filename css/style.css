@@ -1,7 +1,7 @@
 @import url("variables.css");
 @import url("base.css");
 @import url("layout.css");
-@import url("forms.css");
+@import url("forms.css?v=20260704-1");
 @import url("buttons.css");
 @import url("components.css?v=20260704-2");
 @import url("season-resources.css?v=20260704-5");
