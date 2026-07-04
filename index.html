@@ -4,7 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>HarvestHub</title>
-    <link rel="stylesheet" href="css/style.css?v=20260704-11">
+    <link rel="stylesheet" href="css/style.css?v=20260704-12">
+    <style>
+        @media (max-width: 899px) {
+            button.collapsible-card-toggle {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 32px !important;
+                height: 32px !important;
+                min-width: 32px !important;
+                max-width: 32px !important;
+                padding: 0 !important;
+                background: transparent !important;
+                border: 0 !important;
+                color: var(--text) !important;
+                font-size: 24px !important;
+                line-height: 1 !important;
+                box-shadow: none !important;
+            }
+
+            button.collapsible-card-toggle:hover {
+                background: transparent !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="overlay" id="overlay"></div>
