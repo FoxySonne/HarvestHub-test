@@ -48,12 +48,12 @@ function initAdvancedModeSetting() {
 
     if (!toggle) return;
 
-    toggle.value = typeof window.getAdvancedMode === "function" && window.getAdvancedMode() ? "1" : "0";
+    toggle.checked = typeof window.getAdvancedMode === "function" && window.getAdvancedMode();
 
     toggle.addEventListener("change", () => {
 
         if (typeof window.setAdvancedMode === "function") {
-            window.setAdvancedMode(toggle.value === "1");
+            window.setAdvancedMode(toggle.checked);
         }
 
     });
