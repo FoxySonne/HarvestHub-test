@@ -1,6 +1,6 @@
-async function clearSiteCache() {
+async function resetAllSiteData() {
 
-    if (!confirm("Очистить кэш HarvestHub?")) {
+    if (!confirm("Сбросить все данные HarvestHub? Будут удалены сохранённые значения калькуляторов, настройки, профили и локальные данные сайта на этом устройстве.")) {
 
         return;
 
@@ -28,17 +28,23 @@ async function clearSiteCache() {
 
         }
 
-        localStorage.removeItem("currentPage");
+        localStorage.clear();
         sessionStorage.clear();
 
         window.location.reload();
 
     } catch (error) {
 
-        console.error("Ошибка при очистке кэша:", error);
-        alert("Не удалось полностью очистить кэш. Попробуй обновить страницу вручную.");
+        console.error("Ошибка при сбросе данных:", error);
+        alert("Не удалось полностью сбросить данные. Попробуй обновить страницу вручную.");
 
     }
+
+}
+
+async function clearSiteCache() {
+
+    return resetAllSiteData();
 
 }
 
@@ -84,7 +90,7 @@ function confirmLocalDataStorage() {
 
     return confirm(
         "Нажимая эту кнопку, ты соглашаешься, что HarvestHub будет сохранять данные профиля и введённые в калькуляторах значения на этом устройстве.\n\n" +
-        "Данные хранятся локально в браузере этого устройства и могут быть удалены при очистке данных сайта, кэша или localStorage.\n\n" +
+        "Данные хранятся локально в браузере этого устройства и могут быть удалены при сбросе данных сайта, очистке браузера или localStorage.\n\n" +
         "Код из 4 цифр нужен только для доступа к локальному профилю. Пока данные не синхронизируются между устройствами автоматически."
     );
 
@@ -113,8 +119,6 @@ function createProfileFromSettings() {
 
     if (typeof window.createUserProfile !== "function") return;
 
-    if (!confirmLocalDataStorage()) return;
-
     const result = window.createUserProfile(values.nickname, values.state, values.pin);
 
     setProfileMessage(result.message);
@@ -127,8 +131,6 @@ function loginProfileFromSettings() {
     const values = getProfileFormValues();
 
     if (typeof window.loginUserProfile !== "function") return;
-
-    if (!confirmLocalDataStorage()) return;
 
     const result = window.loginUserProfile(values.nickname, values.state, values.pin);
 
@@ -155,6 +157,9 @@ function initSettingsPage() {
 
 }
 
+window.resetAllSiteData = resetAllSiteData;
+window.clearSiteCache = clearSiteCache;
+window.confirmLocalDataStorage = confirmLocalDataStorage;
 window.createProfileFromSettings = createProfileFromSettings;
 window.loginProfileFromSettings = loginProfileFromSettings;
 window.logoutProfileFromSettings = logoutProfileFromSettings;
