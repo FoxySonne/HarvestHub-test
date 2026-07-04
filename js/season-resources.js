@@ -15,26 +15,20 @@ function num(id) {
 
 function setText(id, value) {
   const element = document.getElementById(id);
-
   if (!element) return;
-
   element.textContent = numberFormat.format(value);
 }
 
 function setValue(id, value) {
   const element = document.getElementById(id);
-
   if (!element) return;
-
   element.value = String(Math.round(value));
 }
 
 function syncValue(sourceId, targetId) {
   const source = document.getElementById(sourceId);
   const target = document.getElementById(targetId);
-
   if (!source || !target) return;
-
   target.value = source.value;
 }
 
@@ -53,9 +47,7 @@ function syncLinkedRaidInputs(target) {
   };
 
   const linkedId = linkedPairs[target.id];
-
   if (!linkedId) return;
-
   syncValue(target.id, linkedId);
 }
 
@@ -74,7 +66,6 @@ function isBuildingNeedSource(target) {
 
 function shouldSyncMainBuildingLevel(target) {
   if (!target) return true;
-
   return Boolean(target.closest?.('.season-building-row[data-building-id="main"]'));
 }
 
@@ -84,7 +75,6 @@ function getByLevel(list, level) {
 
 function fillSelect(id, list, defaultValue = null) {
   const select = document.getElementById(id);
-
   if (!select) return;
 
   select.innerHTML = "";
@@ -113,13 +103,42 @@ function createLevelSelect(className, defaultValue) {
   }
 
   select.value = String(defaultValue);
-
   return select;
+}
+
+function syncBuildingRow(row) {
+  if (!row) return;
+
+  const checkbox = row.querySelector(".season-building-enabled");
+  const currentSelect = row.querySelector(".season-building-current");
+  const targetSelect = row.querySelector(".season-building-target");
+
+  if (!checkbox || !currentSelect || !targetSelect) return;
+
+  const currentLevel = Number(currentSelect.value) || 0;
+  let targetLevel = Number(targetSelect.value) || 0;
+
+  Array.from(targetSelect.options).forEach(option => {
+    const optionLevel = Number(option.value) || 0;
+    option.disabled = optionLevel > 0 && optionLevel < currentLevel;
+  });
+
+  if (currentLevel > 0 && targetLevel < currentLevel) {
+    targetLevel = currentLevel;
+    targetSelect.value = String(currentLevel);
+  }
+
+  if (currentLevel > 0 || targetLevel > 0) {
+    checkbox.checked = true;
+  }
+}
+
+function syncAllBuildingRows() {
+  document.querySelectorAll(".season-building-row").forEach(row => syncBuildingRow(row));
 }
 
 function renderBuildingRows() {
   const container = document.getElementById("seasonBuildingList");
-
   if (!container) return;
 
   container.innerHTML = "";
@@ -148,27 +167,23 @@ function renderBuildingRows() {
     const currentWrap = document.createElement("label");
     currentWrap.className = "season-building-level";
     currentWrap.innerHTML = "<span>Есть</span>";
-
-    const currentSelect = createLevelSelect("season-building-current", 0);
-    currentWrap.appendChild(currentSelect);
+    currentWrap.appendChild(createLevelSelect("season-building-current", 0));
 
     const targetWrap = document.createElement("label");
     targetWrap.className = "season-building-level";
     targetWrap.innerHTML = "<span>Нужно</span>";
-
-    const targetSelect = createLevelSelect("season-building-target", 0);
-    targetWrap.appendChild(targetSelect);
+    targetWrap.appendChild(createLevelSelect("season-building-target", 0));
 
     levels.append(currentWrap, targetWrap);
     row.append(checkLabel, levels);
     container.appendChild(row);
+    syncBuildingRow(row);
   });
 }
 
 function syncMainBuildingLevel() {
   const mainRow = document.querySelector('.season-building-row[data-building-id="main"]');
   const productionLevel = document.getElementById("productionBuildingLevel");
-
   if (!mainRow || !productionLevel) return;
 
   const targetLevel = Number(mainRow.querySelector(".season-building-target")?.value) || 0;
@@ -180,27 +195,21 @@ function syncMainBuildingLevel() {
 
 function normalizeDiscountCans() {
   const input = document.getElementById("raidDiscountCans");
-
   if (!input) return;
 
   const value = Math.min(MAX_DISCOUNT_CANS, Math.max(0, Number(input.value) || 0));
-
-  if (Number(input.value) !== value) {
-    input.value = String(value);
-  }
+  if (Number(input.value) !== value) input.value = String(value);
 }
 
 function sumRequirementsForBuilding(type, currentLevel, targetLevel) {
   const table = seasonBuildingsDatabase.buildingTypes[type]?.requirements || [];
   const start = Math.max(1, currentLevel + 1);
   const end = Math.max(start - 1, targetLevel);
-
   let secondary = 0;
   let primary = 0;
 
   for (let level = start; level <= end; level++) {
     const requirement = getByLevel(table, level);
-
     secondary += Number(requirement?.secondary) || 0;
     primary += Number(requirement?.primary) || 0;
   }
@@ -221,31 +230,21 @@ function updateBuildingNeeds() {
   let secondaryTotal = 0;
   let primaryTotal = 0;
 
-  const rows = document.querySelectorAll(".season-building-row");
-
-  rows.forEach(row => {
+  document.querySelectorAll(".season-building-row").forEach(row => {
     const enabled = row.querySelector(".season-building-enabled")?.checked;
-
     if (!enabled) return;
 
     const currentLevel = Number(row.querySelector(".season-building-current")?.value) || 0;
     const targetLevel = Number(row.querySelector(".season-building-target")?.value) || 0;
-
     if (targetLevel <= currentLevel) return;
 
-    const requirement = sumRequirementsForBuilding(
-      row.dataset.buildingType,
-      currentLevel,
-      targetLevel
-    );
-
+    const requirement = sumRequirementsForBuilding(row.dataset.buildingType, currentLevel, targetLevel);
     secondaryTotal += requirement.secondary;
     primaryTotal += requirement.primary;
   });
 
   const secondaryAfterEfficiency = applyEngineeringReduction(secondaryTotal);
   const primaryAfterEfficiency = applyEngineeringReduction(primaryTotal);
-
   const secondary = Math.max(0, secondaryAfterEfficiency - num("buildingOwnedSecondary"));
   const primary = Math.max(0, primaryAfterEfficiency - num("buildingOwnedPrimary"));
 
@@ -275,10 +274,7 @@ function calculateNeedByDrops(needPrimary, needSecondary, drop, energyPerRun) {
     energyNeeded,
     cansNeeded,
     diamonds: cansNeeded * seasonDatabase.energy.regularCanCost,
-    discountDiamonds: Math.min(
-      cansNeeded * seasonDatabase.energy.discountCanCost,
-      seasonDatabase.energy.maxDiscountDiamonds
-    )
+    discountDiamonds: Math.min(cansNeeded * seasonDatabase.energy.discountCanCost, seasonDatabase.energy.maxDiscountDiamonds)
   };
 }
 
@@ -287,12 +283,7 @@ function calculateAvailableEnergy() {
   const discountCansAvailable = Math.min(MAX_DISCOUNT_CANS, num("raidDiscountCans"));
   const existingCans = num("raidCans");
   const existingEnergy = num("raidEnergy");
-
-  const discountCansBought = Math.min(
-    discountCansAvailable,
-    Math.floor(diamonds / seasonDatabase.energy.discountCanCost)
-  );
-
+  const discountCansBought = Math.min(discountCansAvailable, Math.floor(diamonds / seasonDatabase.energy.discountCanCost));
   const diamondsAfterDiscount = diamonds - discountCansBought * seasonDatabase.energy.discountCanCost;
   const regularCansBought = Math.floor(diamondsAfterDiscount / seasonDatabase.energy.regularCanCost);
 
@@ -304,12 +295,7 @@ function calculateAvailableEnergy() {
 
 function calculateFarmByDrops(drop, energyPerRun, availableEnergy) {
   const runs = energyPerRun > 0 ? Math.floor(availableEnergy / energyPerRun) : 0;
-
-  return {
-    runs,
-    primary: runs * drop.primary,
-    secondary: runs * drop.secondary
-  };
+  return { runs, primary: runs * drop.primary, secondary: runs * drop.secondary };
 }
 
 function updateRaids() {
@@ -318,47 +304,25 @@ function updateRaids() {
   const availableEnergy = calculateAvailableEnergy();
 
   const alphaNeedDrop = getByLevel(seasonDatabase.alphaDrops, num("alphaNeedLevel"));
-  const alphaNeed = calculateNeedByDrops(
-    needPrimary,
-    needSecondary,
-    alphaNeedDrop,
-    num("alphaNeedEnergy")
-  );
-
+  const alphaNeed = calculateNeedByDrops(needPrimary, needSecondary, alphaNeedDrop, num("alphaNeedEnergy"));
   setText("alphaNeedCans", alphaNeed.cansNeeded);
   setText("alphaNeedDiamonds", alphaNeed.diamonds);
   setText("alphaNeedDiscountDiamonds", alphaNeed.discountDiamonds);
 
   const alphaFarmDrop = getByLevel(seasonDatabase.alphaDrops, num("alphaFarmLevel"));
-  const alphaFarm = calculateFarmByDrops(
-    alphaFarmDrop,
-    num("alphaFarmEnergy"),
-    availableEnergy
-  );
-
+  const alphaFarm = calculateFarmByDrops(alphaFarmDrop, num("alphaFarmEnergy"), availableEnergy);
   setText("alphaFarmRuns", alphaFarm.runs);
   setText("alphaFarmPrimary", alphaFarm.primary);
   setText("alphaFarmSecondary", alphaFarm.secondary);
 
   const infectedNeedDrop = getByLevel(seasonDatabase.infectedDrops, num("infectedNeedLevel"));
-  const infectedNeed = calculateNeedByDrops(
-    needPrimary,
-    needSecondary,
-    infectedNeedDrop,
-    num("infectedNeedEnergy")
-  );
-
+  const infectedNeed = calculateNeedByDrops(needPrimary, needSecondary, infectedNeedDrop, num("infectedNeedEnergy"));
   setText("infectedNeedCans", infectedNeed.cansNeeded);
   setText("infectedNeedDiamonds", infectedNeed.diamonds);
   setText("infectedNeedDiscountDiamonds", infectedNeed.discountDiamonds);
 
   const infectedFarmDrop = getByLevel(seasonDatabase.infectedDrops, num("infectedFarmLevel"));
-  const infectedFarm = calculateFarmByDrops(
-    infectedFarmDrop,
-    num("infectedFarmEnergy"),
-    availableEnergy
-  );
-
+  const infectedFarm = calculateFarmByDrops(infectedFarmDrop, num("infectedFarmEnergy"), availableEnergy);
   setText("infectedFarmRuns", infectedFarm.runs);
   setText("infectedFarmPrimary", infectedFarm.primary);
   setText("infectedFarmSecondary", infectedFarm.secondary);
@@ -372,49 +336,29 @@ function getBonus(list, level) {
 }
 
 function calculateProductionPerHour() {
-  const base = getByLevel(
-    seasonDatabase.productionByBuildingLevel,
-    num("productionBuildingLevel")
-  );
-
+  const base = getByLevel(seasonDatabase.productionByBuildingLevel, num("productionBuildingLevel"));
   const labBonus = getBonus(seasonDatabase.labProductionBonus, num("productionLabLevel"));
-  const seasonBonus = getBonus(
-    seasonDatabase.seasonalBuildingProductionBonus,
-    num("productionSeasonLevel")
-  );
-
+  const seasonBonus = getBonus(seasonDatabase.seasonalBuildingProductionBonus, num("productionSeasonLevel"));
   const village = num("productionVillage") === 2 ? seasonDatabase.territoryBuffs.villageProduction : 0;
   const factory = num("productionVillage") === 2 ? seasonDatabase.territoryBuffs.factoryProduction : 0;
   const megapolis = num("productionMegapolis") === 2 ? seasonDatabase.territoryBuffs.megapolisProduction : 0;
   const bull = num("productionBull") === 2 ? seasonDatabase.territoryBuffs.mightyBullProduction : 0;
-
   const premiumPass = num("productionPremiumPass") || 1;
   const weeklyPass = num("productionWeeklyPass") || 1;
 
-  const secondaryPerHour = base.secondary *
-    (1 + labBonus + seasonBonus + village + megapolis + bull) *
-    premiumPass;
+  const secondaryPerHour = base.secondary * (1 + labBonus + seasonBonus + village + megapolis + bull) * premiumPass;
+  const primaryPerHour = base.primary * (1 + labBonus + seasonBonus + factory + megapolis + bull) * weeklyPass;
 
-  const primaryPerHour = base.primary *
-    (1 + labBonus + seasonBonus + factory + megapolis + bull) *
-    weeklyPass;
-
-  return {
-    secondaryPerHour,
-    primaryPerHour
-  };
+  return { secondaryPerHour, primaryPerHour };
 }
 
 function updateProduction() {
   const production = calculateProductionPerHour();
   const hours = num("productionHours");
-
   const secondaryTotal = production.secondaryPerHour * hours;
   const primaryTotal = production.primaryPerHour * hours;
-
   const needSecondary = num("productionNeedSecondary");
   const needPrimary = num("productionNeedPrimary");
-
   const secondaryHours = production.secondaryPerHour > 0 ? needSecondary / production.secondaryPerHour : 0;
   const primaryHours = production.primaryPerHour > 0 ? needPrimary / production.primaryPerHour : 0;
   const needHours = Math.round(Math.max(secondaryHours, primaryHours) * 10) / 10;
@@ -427,6 +371,9 @@ function updateProduction() {
 }
 
 function handleCalculatorInput(target) {
+  const buildingRow = target?.closest?.(".season-building-row");
+  if (buildingRow) syncBuildingRow(buildingRow);
+
   if (isRaidNeedInput(target)) {
     isRaidNeedManual = true;
   }
@@ -443,13 +390,8 @@ function bindCalculatorInputs() {
   const inputs = document.querySelectorAll(".season-page input, .season-page select");
 
   inputs.forEach(input => {
-    input.addEventListener("input", event => {
-      handleCalculatorInput(event.target);
-    });
-
-    input.addEventListener("change", event => {
-      handleCalculatorInput(event.target);
-    });
+    input.addEventListener("input", event => handleCalculatorInput(event.target));
+    input.addEventListener("change", event => handleCalculatorInput(event.target));
   });
 }
 
@@ -486,6 +428,7 @@ function setDefaults() {
 
 function updateAll(target = null) {
   normalizeDiscountCans();
+  syncAllBuildingRows();
 
   if (shouldSyncMainBuildingLevel(target)) {
     syncMainBuildingLevel();
@@ -503,7 +446,6 @@ export function init() {
   fillSelect("alphaFarmLevel", seasonDatabase.alphaDrops);
   fillSelect("infectedNeedLevel", seasonDatabase.infectedDrops);
   fillSelect("infectedFarmLevel", seasonDatabase.infectedDrops);
-
   fillSelect("productionBuildingLevel", seasonDatabase.productionByBuildingLevel);
   fillSelect("productionLabLevel", seasonDatabase.labProductionBonus);
   fillSelect("productionSeasonLevel", seasonDatabase.seasonalBuildingProductionBonus);
