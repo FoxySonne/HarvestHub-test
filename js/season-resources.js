@@ -2,6 +2,7 @@ import { seasonDatabase } from "../data/season-database.js";
 import { seasonBuildingsDatabase } from "../data/season-buildings-database.js";
 
 const MAX_DISCOUNT_CANS = 50;
+let isRaidNeedManual = false;
 
 const numberFormat = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 1
@@ -56,6 +57,19 @@ function syncLinkedRaidInputs(target) {
   if (!linkedId) return;
 
   syncValue(target.id, linkedId);
+}
+
+function isRaidNeedInput(target) {
+  return target?.id === "raidNeedPrimary" || target?.id === "raidNeedSecondary";
+}
+
+function isBuildingNeedSource(target) {
+  if (!target) return true;
+
+  return target.id === "buildingOwnedPrimary" ||
+    target.id === "buildingOwnedSecondary" ||
+    target.id === "buildingEfficiencyLevel" ||
+    Boolean(target.closest?.(".season-building-row"));
 }
 
 function shouldSyncMainBuildingLevel(target) {
@@ -235,15 +249,16 @@ function updateBuildingNeeds() {
   const secondary = Math.max(0, secondaryAfterEfficiency - num("buildingOwnedSecondary"));
   const primary = Math.max(0, primaryAfterEfficiency - num("buildingOwnedPrimary"));
 
-  setValue("raidNeedPrimary", primary);
-  setValue("raidNeedSecondary", secondary);
   setValue("productionNeedPrimary", primary);
   setValue("productionNeedSecondary", secondary);
 
+  if (!isRaidNeedManual) {
+    setValue("raidNeedPrimary", primary);
+    setValue("raidNeedSecondary", secondary);
+  }
+
   setText("buildingNeedPrimary", primary);
   setText("buildingNeedSecondary", secondary);
-  setText("raidNeedPrimaryText", primary);
-  setText("raidNeedSecondaryText", secondary);
   setText("productionNeedPrimaryText", primary);
   setText("productionNeedSecondaryText", secondary);
 }
@@ -411,18 +426,29 @@ function updateProduction() {
   setText("productionNeedHours", needHours);
 }
 
+function handleCalculatorInput(target) {
+  if (isRaidNeedInput(target)) {
+    isRaidNeedManual = true;
+  }
+
+  if (isBuildingNeedSource(target)) {
+    isRaidNeedManual = false;
+  }
+
+  syncLinkedRaidInputs(target);
+  updateAll(target);
+}
+
 function bindCalculatorInputs() {
   const inputs = document.querySelectorAll(".season-page input, .season-page select");
 
   inputs.forEach(input => {
     input.addEventListener("input", event => {
-      syncLinkedRaidInputs(event.target);
-      updateAll(event.target);
+      handleCalculatorInput(event.target);
     });
 
     input.addEventListener("change", event => {
-      syncLinkedRaidInputs(event.target);
-      updateAll(event.target);
+      handleCalculatorInput(event.target);
     });
   });
 }
@@ -432,6 +458,8 @@ function setDefaults() {
     buildingEfficiencyLevel: 0,
     buildingOwnedSecondary: 0,
     buildingOwnedPrimary: 0,
+    raidNeedPrimary: 0,
+    raidNeedSecondary: 0,
     alphaNeedLevel: 10,
     alphaFarmLevel: 10,
     infectedNeedLevel: 30,
@@ -469,6 +497,8 @@ function updateAll(target = null) {
 }
 
 export function init() {
+  isRaidNeedManual = false;
+
   fillSelect("alphaNeedLevel", seasonDatabase.alphaDrops);
   fillSelect("alphaFarmLevel", seasonDatabase.alphaDrops);
   fillSelect("infectedNeedLevel", seasonDatabase.infectedDrops);
