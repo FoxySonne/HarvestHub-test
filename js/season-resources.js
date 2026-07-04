@@ -154,7 +154,7 @@ function updateSeasonProfileBlockSummary() {
   const summary = document.getElementById("seasonProfileEndSummary");
   if (!summary) return;
 
-  summary.innerHTML = `Конец сезона по расчёту: <strong>${formatUtcDate(getSeasonEndUtcTime())} UTC</strong>`;
+  summary.innerHTML = `Конец сезона: <strong>${formatUtcDate(getSeasonEndUtcTime())} UTC</strong>`;
 }
 
 function renderSeasonProfileBlock() {
@@ -178,23 +178,10 @@ function renderSeasonProfileBlock() {
 
     <div id="seasonProfileEndSummary" class="profile-block-result"></div>
 
-    <p class="profile-block-note">Конец сезона считается как ближайшая смена дня по UTC после указанного времени.</p>
-
-    <div class="profile-block-grid" id="seasonProfileMainBuildings"></div>
-
     <div class="profile-block-grid" id="seasonProfileFactories"></div>
 
-    <p class="profile-block-note">
-      <span class="tooltip" data-tooltip="Уровни заводов влияют на расчёт производства ресурсов в час. Для двух заводов Воды / Рыбы / Вольфрама берётся производство вторичного ресурса, для двух заводов Бензина / Фруктов / Кварца — производство основного ресурса.">Как работают уровни заводов?</span>
-    </p>
+    <p class="profile-block-note">Укажи уровни заводов в этом блоке, чтобы расчёт производства был точнее. Ниже в блоке «Что нужно построить» выставь уровни зданий, которые у тебя уже есть, и уровни, до которых ты хочешь их поднять — без этого расчёт нужных ресурсов будет неполным.</p>
   `;
-
-  const mainBuildings = container.querySelector("#seasonProfileMainBuildings");
-  mainBuildings.append(
-    createProfileLevelField("seasonProfileShipLevel", "Корабль"),
-    createProfileLevelField("seasonProfileThornLevel", "Острошип"),
-    createProfileLevelField("seasonProfileLighthouseLevel", "Маяк")
-  );
 
   const factories = container.querySelector("#seasonProfileFactories");
   factories.append(
