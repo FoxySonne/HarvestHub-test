@@ -1,7 +1,94 @@
 import { database } from "../data/database.js";
 
+const TURBO_WEEK_STATE_PREFIX = "harvesthub_turbo_vs_week_state:";
+
 let isSyncingControls = false;
 let isDaySelectedManually = false;
+let currentDayId = "";
+
+/* ==========================================================
+ХРАНЕНИЕ ДАННЫХ НЕДЕЛИ
+========================================================== */
+
+function getTurboWeekScope() {
+  const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
+  return profile?.id ? `profile:${profile.id}` : "local";
+}
+
+function getTurboWeekStateKey() {
+  return `${TURBO_WEEK_STATE_PREFIX}${getTurboWeekScope()}`;
+}
+
+function readTurboWeekState() {
+  try {
+    return JSON.parse(localStorage.getItem(getTurboWeekStateKey()) || "{}");
+  } catch (error) {
+    console.warn("Не удалось прочитать недельные данные Турбо/VS", error);
+    return {};
+  }
+}
+
+function writeTurboWeekState(state) {
+  localStorage.setItem(getTurboWeekStateKey(), JSON.stringify(state));
+}
+
+function getRowActionId(row) {
+  return row?.querySelector("[data-action-id]")?.dataset.actionId ||
+    row?.querySelector("[data-level-action-id]")?.dataset.levelActionId ||
+    "";
+}
+
+function getRowState(row) {
+  const quantityControl = row.querySelector("input[data-action-id], select[data-action-id]");
+  const levelSelect = row.querySelector(".action-level-select");
+
+  return {
+    value: quantityControl?.value || "0",
+    level: levelSelect?.value || null
+  };
+}
+
+function setRowState(row, state) {
+  const quantityControl = row.querySelector("input[data-action-id], select[data-action-id]");
+  const levelSelect = row.querySelector(".action-level-select");
+
+  if (quantityControl) quantityControl.value = String(state?.value ?? "0");
+  if (levelSelect && state?.level != null) levelSelect.value = String(state.level);
+}
+
+function saveCurrentDayState() {
+  if (!currentDayId) return;
+
+  const state = readTurboWeekState();
+  state[currentDayId] = { turtle: {}, vs: {} };
+
+  document.querySelectorAll(".action-row").forEach(row => {
+    const actionId = getRowActionId(row);
+    const eventType = row.querySelector("[data-event-type]")?.dataset.eventType;
+
+    if (!actionId || !eventType) return;
+
+    state[currentDayId][eventType][actionId] = getRowState(row);
+  });
+
+  writeTurboWeekState(state);
+}
+
+function restoreDayState(dayId) {
+  const state = readTurboWeekState();
+  const dayState = state[dayId];
+
+  if (!dayState) return;
+
+  document.querySelectorAll(".action-row").forEach(row => {
+    const actionId = getRowActionId(row);
+    const eventType = row.querySelector("[data-event-type]")?.dataset.eventType;
+
+    if (!actionId || !eventType) return;
+
+    setRowState(row, dayState[eventType]?.[actionId]);
+  });
+}
 
 /* ==========================================================
 РАЗВОРАЧИВАЕМ СПИСОК ДНЯ
@@ -140,6 +227,8 @@ function syncActionControls(actionId, sourceControl) {
 function handleControlChange(actionId, sourceControl) {
   syncActionControls(actionId, sourceControl);
   updateTotals();
+  saveCurrentDayState();
+  updateWeeklyTotals();
 }
 
 /* ==========================================================
@@ -174,6 +263,8 @@ function createActionRow(action, eventType) {
     const levelSelect = document.createElement("select");
     levelSelect.className = "action-level-select";
     levelSelect.dataset.levelActionId = action.id;
+    levelSelect.dataset.eventType = eventType;
+    levelSelect.dataset.noPersist = "true";
 
     action.options.forEach(optionData => {
       const option = document.createElement("option");
@@ -191,6 +282,7 @@ function createActionRow(action, eventType) {
     quantityInput.dataset.actionId = action.id;
     quantityInput.dataset.eventType = eventType;
     quantityInput.dataset.hasLevel = "true";
+    quantityInput.dataset.noPersist = "true";
 
     levelSelect.addEventListener("change", () => {
       handleControlChange(action.id, levelSelect);
@@ -224,6 +316,7 @@ function createActionRow(action, eventType) {
 
     quantitySelect.dataset.actionId = action.id;
     quantitySelect.dataset.eventType = eventType;
+    quantitySelect.dataset.noPersist = "true";
 
     quantitySelect.addEventListener("change", () => {
       handleControlChange(action.id, quantitySelect);
@@ -242,6 +335,7 @@ function createActionRow(action, eventType) {
 
   input.dataset.actionId = action.id;
   input.dataset.eventType = eventType;
+  input.dataset.noPersist = "true";
 
   input.addEventListener("input", () => {
     handleControlChange(action.id, input);
@@ -273,6 +367,13 @@ function getPoints(actionId, eventType, level = null) {
   }
 
   return Number(points) || 0;
+}
+
+function calculateSavedItemTotal(actionId, eventType, itemState = {}) {
+  const value = Number(itemState.value) || 0;
+  const points = getPoints(actionId, eventType, itemState.level ?? null);
+
+  return value * points;
 }
 
 /* ==========================================================
@@ -319,6 +420,71 @@ function updateTotals() {
   }
 }
 
+function calculateWeeklyTotals() {
+  saveCurrentDayState();
+
+  const state = readTurboWeekState();
+  let turtleTotal = 0;
+  let vsTotal = 0;
+
+  database.dayOrder.forEach(dayId => {
+    const dayState = state[dayId];
+    if (!dayState) return;
+
+    Object.entries(dayState.turtle || {}).forEach(([actionId, itemState]) => {
+      turtleTotal += calculateSavedItemTotal(actionId, "turtle", itemState);
+    });
+
+    Object.entries(dayState.vs || {}).forEach(([actionId, itemState]) => {
+      vsTotal += calculateSavedItemTotal(actionId, "vs", itemState);
+    });
+  });
+
+  return { turtleTotal, vsTotal };
+}
+
+function updateWeeklyTotals() {
+  const turtleWeekTotalElement = document.getElementById("turboProfileTurtleWeekTotal");
+  const vsWeekTotalElement = document.getElementById("turboProfileVsWeekTotal");
+
+  if (!turtleWeekTotalElement || !vsWeekTotalElement) return;
+
+  const totals = calculateWeeklyTotals();
+
+  turtleWeekTotalElement.textContent = totals.turtleTotal.toLocaleString("ru-RU");
+  vsWeekTotalElement.textContent = totals.vsTotal.toLocaleString("ru-RU");
+}
+
+function renderTurboProfileBlock() {
+  if (typeof window.setProfileBlockContent !== "function") return;
+
+  const container = document.createElement("div");
+  container.className = "turbo-profile-block";
+
+  container.innerHTML = `
+    <div class="profile-block-grid">
+      <div class="profile-block-result">
+        <span>Всего Турбочерепашка за неделю</span><br>
+        <strong id="turboProfileTurtleWeekTotal">0</strong>
+      </div>
+
+      <div class="profile-block-result">
+        <span>Всего VS Дуэль союза за неделю</span><br>
+        <strong id="turboProfileVsWeekTotal">0</strong>
+      </div>
+    </div>
+
+    <p class="profile-block-note">Заполни значения по каждому дню недели. Калькулятор сохранит введённые данные отдельно по дням и покажет общую сумму очков за неделю.</p>
+  `;
+
+  window.setProfileBlockContent({
+    description: "Сумма очков по всем заполненным дням недели.",
+    content: container
+  });
+
+  updateWeeklyTotals();
+}
+
 /* ==========================================================
 РИСУЕМ СПИСОК
 ========================================================== */
@@ -345,9 +511,13 @@ function renderList(container, items, eventType) {
 ========================================================== */
 
 function renderDay(dayId) {
+  saveCurrentDayState();
+
   const day = database.days[dayId];
 
   if (!day) return;
+
+  currentDayId = dayId;
 
   const turtleList = document.getElementById("turtleList");
   const vsList = document.getElementById("vsList");
@@ -365,8 +535,10 @@ function renderDay(dayId) {
 
   renderList(turtleList, turtleItems, "turtle");
   renderList(vsList, vsItems, "vs");
+  restoreDayState(dayId);
 
   updateTotals();
+  updateWeeklyTotals();
 }
 
 /* ==========================================================
@@ -378,6 +550,7 @@ export function init() {
 
   if (!daySelector) return;
 
+  currentDayId = "";
   daySelector.innerHTML = "";
 
   database.dayOrder.forEach(dayId => {
@@ -392,6 +565,7 @@ export function init() {
     daySelector.appendChild(option);
   });
 
+  renderTurboProfileBlock();
   daySelector.value = getCurrentUtcDayId();
 
   daySelector.addEventListener("change", () => {
@@ -408,6 +582,11 @@ export function init() {
 
     daySelector.value = dayId;
     renderDay(dayId);
+  });
+
+  window.addEventListener("harvesthub:profile-change", () => {
+    renderTurboProfileBlock();
+    renderDay(daySelector.value);
   });
 
   renderDay(daySelector.value);
