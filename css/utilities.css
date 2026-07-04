@@ -110,6 +110,50 @@ ADVANCED MODE
 }
 
 /* ==========================================================
+MOBILE COLLAPSIBLE CARDS
+========================================================== */
+.collapsible-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.collapsible-card-header > :first-child {
+  min-width: 0;
+}
+
+.collapsible-card-toggle {
+  display: none;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 899px) {
+  .collapsible-card-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .collapsible-card.is-collapsed > :not(.collapsible-card-header) {
+    display: none !important;
+  }
+
+  .collapsible-card.is-collapsed {
+    padding-bottom: 18px;
+  }
+}
+
+/* ==========================================================
 BADGES 
 ========================================================== */
 
