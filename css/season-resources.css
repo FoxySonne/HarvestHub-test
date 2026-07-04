@@ -144,24 +144,60 @@ SEASON RESOURCES — compact calculator layout
   font-weight: 700;
 }
 
-.season-tooltip-label {
+.season-tooltip-row {
   position: relative;
-  display: inline-flex;
-  width: fit-content;
-  cursor: help;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
-  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.season-tooltip-label::after {
-  content: attr(data-tooltip);
+.season-tooltip-label {
+  min-width: 0;
+  cursor: default;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.season-tooltip-details {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.season-tooltip-details summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  list-style: none;
+}
+
+.season-tooltip-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.season-tooltip-details[open] summary {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.season-tooltip-details div {
   position: absolute;
-  left: 0;
+  right: 0;
   bottom: calc(100% + 8px);
   z-index: 50;
-  width: max-content;
-  max-width: min(270px, calc(100vw - 48px));
+  width: 270px;
+  max-width: calc(100vw - 48px);
   padding: 8px 10px;
   background: var(--card);
   border: 1px solid var(--border);
@@ -171,22 +207,6 @@ SEASON RESOURCES — compact calculator layout
   font-size: 12px;
   font-weight: 500;
   line-height: 1.35;
-  white-space: normal;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: var(--transition);
-}
-
-.season-tooltip-label:hover::after,
-.season-tooltip-label:focus::after,
-.season-tooltip-label:focus-visible::after {
-  opacity: 1;
-  visibility: visible;
-}
-
-.season-tooltip-label:focus-visible {
-  color: var(--accent);
 }
 
 .season-efficiency-field select {
