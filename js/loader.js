@@ -1,6 +1,8 @@
 const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
 const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
 const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
+const PROFILES_STORAGE_KEY = "harvesthub_profiles";
+const ACTIVE_PROFILE_STORAGE_KEY = "harvesthub_active_profile";
 const MAX_QUICK_LINKS = 5;
 
 let currentLoadedPage = localStorage.getItem("currentPage") || "";
@@ -18,6 +20,176 @@ const pagesDatabase = [
     { title: "Турбочерепашка & VS", path: "calculator/turbo-vs.html", group: "Калькуляторы" },
     { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" }
 ];
+
+function readJsonStorage(key, fallback = {}) {
+    try {
+        return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+    } catch (e) {
+        console.warn(`Не удалось прочитать данные из localStorage: ${key}`, e);
+        return fallback;
+    }
+}
+
+function writeJsonStorage(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+        console.warn(`Не удалось сохранить данные в localStorage: ${key}`, e);
+    }
+}
+
+function normalizeProfileNickname(nickname) {
+    return String(nickname || "").trim();
+}
+
+function normalizeProfileState(state) {
+    return String(state || "").trim();
+}
+
+function normalizeProfilePin(pin) {
+    return String(pin || "").trim();
+}
+
+function getProfileId(nickname, state) {
+    return `${normalizeProfileNickname(nickname).toLowerCase()}::${normalizeProfileState(state)}`;
+}
+
+function readProfiles() {
+    return readJsonStorage(PROFILES_STORAGE_KEY, {});
+}
+
+function saveProfiles(profiles) {
+    writeJsonStorage(PROFILES_STORAGE_KEY, profiles);
+}
+
+function getActiveProfileId() {
+    return localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY) || "";
+}
+
+function getActiveProfile() {
+    const activeProfileId = getActiveProfileId();
+    const profiles = readProfiles();
+
+    return activeProfileId ? profiles[activeProfileId] || null : null;
+}
+
+function validateProfileData(nickname, state, pin) {
+    const cleanNickname = normalizeProfileNickname(nickname);
+    const cleanState = normalizeProfileState(state);
+    const cleanPin = normalizeProfilePin(pin);
+
+    if (!cleanNickname || !cleanState || !cleanPin) {
+        return {
+            ok: false,
+            message: "Заполни никнейм, номер штата и код"
+        };
+    }
+
+    if (!/^\d{4}$/.test(cleanPin)) {
+        return {
+            ok: false,
+            message: "Код должен состоять из 4 цифр"
+        };
+    }
+
+    return {
+        ok: true,
+        nickname: cleanNickname,
+        state: cleanState,
+        pin: cleanPin
+    };
+}
+
+function createUserProfile(nickname, state, pin) {
+    const validation = validateProfileData(nickname, state, pin);
+
+    if (!validation.ok) return validation;
+
+    const profiles = readProfiles();
+    const profileId = getProfileId(validation.nickname, validation.state);
+
+    if (profiles[profileId]) {
+        return {
+            ok: false,
+            message: "Такой профиль уже есть на этом устройстве"
+        };
+    }
+
+    profiles[profileId] = {
+        id: profileId,
+        nickname: validation.nickname,
+        state: validation.state,
+        pin: validation.pin,
+        createdAt: new Date().toISOString()
+    };
+
+    saveProfiles(profiles);
+    localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+    applyActiveProfileSetting();
+
+    return {
+        ok: true,
+        profile: profiles[profileId],
+        message: "Профиль создан"
+    };
+}
+
+function loginUserProfile(nickname, state, pin) {
+    const validation = validateProfileData(nickname, state, pin);
+
+    if (!validation.ok) return validation;
+
+    const profiles = readProfiles();
+    const profileId = getProfileId(validation.nickname, validation.state);
+    const profile = profiles[profileId];
+
+    if (!profile || profile.pin !== validation.pin) {
+        return {
+            ok: false,
+            message: "Профиль не найден или код неверный"
+        };
+    }
+
+    savePageFormState(currentLoadedPage);
+    localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+    applyActiveProfileSetting();
+
+    return {
+        ok: true,
+        profile,
+        message: "Профиль выбран"
+    };
+}
+
+function logoutUserProfile() {
+    savePageFormState(currentLoadedPage);
+    localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
+    applyActiveProfileSetting();
+
+    return {
+        ok: true,
+        message: "Профиль отключён"
+    };
+}
+
+function applyActiveProfileSetting() {
+    const profile = getActiveProfile();
+    const hasProfile = Boolean(profile);
+
+    document.documentElement.classList.toggle("has-profile", hasProfile);
+    document.documentElement.dataset.profile = hasProfile ? "on" : "off";
+
+    if (document.body) {
+        document.body.classList.toggle("has-profile", hasProfile);
+        document.body.dataset.profile = hasProfile ? "on" : "off";
+    }
+
+    window.dispatchEvent(new CustomEvent("harvesthub:profile-change", {
+        detail: { profile }
+    }));
+
+    return profile;
+}
 
 function isAdvancedModeEnabled() {
     return localStorage.getItem(ADVANCED_MODE_STORAGE_KEY) === "1";
@@ -49,24 +221,10 @@ function setAdvancedMode(enabled) {
 }
 
 function getPageFormStateKey(pageName) {
-    return `${PAGE_FORM_STATE_PREFIX}${pageName}`;
-}
+    const activeProfileId = getActiveProfileId();
+    const scope = activeProfileId ? `profile:${activeProfileId}` : "local";
 
-function readJsonStorage(key, fallback = {}) {
-    try {
-        return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
-    } catch (e) {
-        console.warn(`Не удалось прочитать данные из localStorage: ${key}`, e);
-        return fallback;
-    }
-}
-
-function writeJsonStorage(key, value) {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-        console.warn(`Не удалось сохранить данные в localStorage: ${key}`, e);
-    }
+    return `${PAGE_FORM_STATE_PREFIX}${scope}:${pageName}`;
 }
 
 function getPersistableFields(container) {
@@ -343,6 +501,7 @@ async function loadPage(pageName) {
     savePageFormState(pageName);
 
     applyAdvancedModeSetting();
+    applyActiveProfileSetting();
     trackPageVisit(pageName);
     renderQuickLinks(pageName);
 
@@ -357,6 +516,7 @@ window.addEventListener("beforeunload", () => {
 });
 
 applyAdvancedModeSetting();
+applyActiveProfileSetting();
 
 window.loadPage = loadPage;
 window.loadBlock = loadBlock;
@@ -365,3 +525,9 @@ window.savePageFormState = savePageFormState;
 window.getAdvancedMode = isAdvancedModeEnabled;
 window.setAdvancedMode = setAdvancedMode;
 window.applyAdvancedModeSetting = applyAdvancedModeSetting;
+window.getActiveProfile = getActiveProfile;
+window.getProfiles = readProfiles;
+window.createUserProfile = createUserProfile;
+window.loginUserProfile = loginUserProfile;
+window.logoutUserProfile = logoutUserProfile;
+window.applyActiveProfileSetting = applyActiveProfileSetting;
