@@ -129,6 +129,25 @@ SEASON RESOURCES — compact calculator layout
   font-size: 16px;
 }
 
+.season-efficiency-field {
+  padding: 8px 9px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.season-efficiency-field span {
+  min-height: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.season-efficiency-field select {
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
 .season-building-list {
   display: flex;
   flex-direction: column;
@@ -298,6 +317,30 @@ SEASON RESOURCES — compact calculator layout
 
 .season-building-totals-card .season-total-card {
   padding: 10px 12px;
+}
+
+.season-resource-total-card {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.season-resource-total-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.season-owned-resource-field span {
+  min-height: 0;
+  font-size: 12px;
+}
+
+.season-owned-resource-field input {
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 14px;
 }
 
 .season-building-totals-card .season-total-card span {
