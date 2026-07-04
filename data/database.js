@@ -33,8 +33,8 @@ export const database = {
     {name: "Клетки титана", id: "titan_cells", categoryId: "titan", points: {turtle: 20000, vs: 12000, ipk: 2800}},
     {name: "1 ед. биогенного белка", id: "biogenic_protein", categoryId: "titan", points: {turtle: 12000, vs: 10000, ipk: 0}},
 
-    {name: "Чертежи", id: "blueprints", categoryId: "chief_collection", points: {turtle: 150000, vs: 0, ipk: 630}},
-    {name: "Шестеренки", id: "gears", categoryId: "chief_collection", points: {turtle: 3000, vs: 0, ipk: 29000}},
+    {name: "Чертежи", id: "blueprints", categoryId: "chief_collection", points: {turtle: 150000, vs: 0, ipk: 29000}},
+    {name: "Шестеренки", id: "gears", categoryId: "chief_collection", points: {turtle: 3000, vs: 0, ipk: 630}},
 
     {
       name: "Улучшение войск",
