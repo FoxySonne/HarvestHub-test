@@ -1,4 +1,6 @@
 const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
+const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
+const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
 const MAX_QUICK_LINKS = 5;
 
 const pagesDatabase = [
@@ -15,21 +17,166 @@ const pagesDatabase = [
     { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" }
 ];
 
-function readPageVisits() {
+function isAdvancedModeEnabled() {
+    return localStorage.getItem(ADVANCED_MODE_STORAGE_KEY) === "1";
+}
+
+function applyAdvancedModeSetting() {
+    const enabled = isAdvancedModeEnabled();
+
+    document.documentElement.classList.toggle("advanced-mode", enabled);
+    document.documentElement.dataset.advancedMode = enabled ? "on" : "off";
+
+    if (document.body) {
+        document.body.classList.toggle("advanced-mode", enabled);
+        document.body.dataset.advancedMode = enabled ? "on" : "off";
+    }
+
+    return enabled;
+}
+
+function setAdvancedMode(enabled) {
+    localStorage.setItem(ADVANCED_MODE_STORAGE_KEY, enabled ? "1" : "0");
+    const applied = applyAdvancedModeSetting();
+
+    window.dispatchEvent(new CustomEvent("harvesthub:advanced-mode-change", {
+        detail: { enabled: applied }
+    }));
+
+    return applied;
+}
+
+function getPageFormStateKey(pageName) {
+    return `${PAGE_FORM_STATE_PREFIX}${pageName}`;
+}
+
+function readJsonStorage(key, fallback = {}) {
     try {
-        return JSON.parse(localStorage.getItem(QUICK_LINKS_STORAGE_KEY) || "{}");
+        return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
     } catch (e) {
-        console.warn("Не удалось прочитать статистику быстрых ссылок:", e);
-        return {};
+        console.warn(`Не удалось прочитать данные из localStorage: ${key}`, e);
+        return fallback;
     }
 }
 
-function savePageVisits(visits) {
+function writeJsonStorage(key, value) {
     try {
-        localStorage.setItem(QUICK_LINKS_STORAGE_KEY, JSON.stringify(visits));
+        localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {
-        console.warn("Не удалось сохранить статистику быстрых ссылок:", e);
+        console.warn(`Не удалось сохранить данные в localStorage: ${key}`, e);
     }
+}
+
+function getPersistableFields(container) {
+    if (!container) return [];
+
+    return Array.from(container.querySelectorAll("input, select, textarea"))
+        .filter(field => {
+            const type = (field.type || "").toLowerCase();
+            return !["button", "submit", "reset", "hidden", "file"].includes(type);
+        });
+}
+
+function getFieldKey(field, index) {
+    const buildingRow = field.closest?.(".season-building-row");
+
+    if (buildingRow?.dataset?.buildingId) {
+        if (field.classList.contains("season-building-enabled")) {
+            return `building:${buildingRow.dataset.buildingId}:enabled`;
+        }
+
+        if (field.classList.contains("season-building-current")) {
+            return `building:${buildingRow.dataset.buildingId}:current`;
+        }
+
+        if (field.classList.contains("season-building-target")) {
+            return `building:${buildingRow.dataset.buildingId}:target`;
+        }
+    }
+
+    if (field.id) return `id:${field.id}`;
+    if (field.name) return `name:${field.name}`;
+
+    return `field:${field.tagName.toLowerCase()}:${field.type || "value"}:${index}`;
+}
+
+function getFieldValue(field) {
+    const type = (field.type || "").toLowerCase();
+
+    if (type === "checkbox" || type === "radio") {
+        return field.checked;
+    }
+
+    return field.value;
+}
+
+function setFieldValue(field, value) {
+    const type = (field.type || "").toLowerCase();
+
+    if (type === "checkbox" || type === "radio") {
+        field.checked = Boolean(value);
+        return;
+    }
+
+    field.value = String(value ?? "");
+}
+
+function savePageFormState(pageName) {
+    const container = document.getElementById("page-content");
+    const fields = getPersistableFields(container);
+    const state = {};
+
+    fields.forEach((field, index) => {
+        state[getFieldKey(field, index)] = getFieldValue(field);
+    });
+
+    writeJsonStorage(getPageFormStateKey(pageName), state);
+}
+
+function restorePageFormState(pageName) {
+    const container = document.getElementById("page-content");
+    const fields = getPersistableFields(container);
+    const state = readJsonStorage(getPageFormStateKey(pageName), null);
+
+    if (!state || typeof state !== "object") return;
+
+    const restoredFields = [];
+
+    fields.forEach((field, index) => {
+        const key = getFieldKey(field, index);
+
+        if (!Object.prototype.hasOwnProperty.call(state, key)) return;
+
+        setFieldValue(field, state[key]);
+        restoredFields.push(field);
+    });
+
+    restoredFields.forEach(field => {
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        field.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+}
+
+function bindPageFormPersistence(pageName) {
+    const container = document.getElementById("page-content");
+    const fields = getPersistableFields(container);
+
+    fields.forEach(field => {
+        if (field.dataset.formPersistenceBound === pageName) return;
+
+        field.dataset.formPersistenceBound = pageName;
+
+        field.addEventListener("input", () => savePageFormState(pageName));
+        field.addEventListener("change", () => savePageFormState(pageName));
+    });
+}
+
+function readPageVisits() {
+    return readJsonStorage(QUICK_LINKS_STORAGE_KEY, {});
+}
+
+function savePageVisits(visits) {
+    writeJsonStorage(QUICK_LINKS_STORAGE_KEY, visits);
 }
 
 function getPageByPath(pagePath) {
@@ -160,9 +307,14 @@ async function loadPage(pageName) {
 
     if (!isLoaded) return;
 
+    restorePageFormState(pageName);
+    bindPageFormPersistence(pageName);
+    savePageFormState(pageName);
+
     // Запоминаем последнюю открытую страницу
     localStorage.setItem("currentPage", pageName);
 
+    applyAdvancedModeSetting();
     trackPageVisit(pageName);
     renderQuickLinks(pageName);
 
@@ -172,6 +324,11 @@ async function loadPage(pageName) {
 
 }
 
+applyAdvancedModeSetting();
+
 window.loadPage = loadPage;
 window.loadBlock = loadBlock;
 window.renderQuickLinks = renderQuickLinks;
+window.getAdvancedMode = isAdvancedModeEnabled;
+window.setAdvancedMode = setAdvancedMode;
+window.applyAdvancedModeSetting = applyAdvancedModeSetting;
