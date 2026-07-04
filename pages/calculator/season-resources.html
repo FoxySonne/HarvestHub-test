@@ -12,6 +12,16 @@
         </div>
       </div>
 
+      <label class="season-field season-efficiency-field">
+        <span>Навык инженерная эффективность в сезонной постройке</span>
+        <select id="buildingEfficiencyLevel">
+          <option value="0">0 уровень — 0%</option>
+          <option value="1">1 уровень — −1%</option>
+          <option value="2">2 уровень — −2%</option>
+          <option value="3">3 уровень — −3%</option>
+        </select>
+      </label>
+
       <div class="season-building-list" id="seasonBuildingList"></div>
     </section>
 
@@ -23,14 +33,28 @@
       </div>
 
       <div class="season-total-grid">
-        <div class="season-total-card">
-          <span>Нужно Вода / Рыба / Вольфрам</span>
-          <strong id="buildingNeedSecondary">0</strong>
+        <div class="season-total-card season-resource-total-card">
+          <div class="season-resource-total-main">
+            <span>Осталось Вода / Рыба / Вольфрам</span>
+            <strong id="buildingNeedSecondary">0</strong>
+          </div>
+
+          <label class="season-field season-owned-resource-field">
+            <span>Уже есть</span>
+            <input id="buildingOwnedSecondary" type="number" min="0" value="0">
+          </label>
         </div>
 
-        <div class="season-total-card">
-          <span>Нужно Бензин / Фрукты / Кварц</span>
-          <strong id="buildingNeedPrimary">0</strong>
+        <div class="season-total-card season-resource-total-card">
+          <div class="season-resource-total-main">
+            <span>Осталось Бензин / Фрукты / Кварц</span>
+            <strong id="buildingNeedPrimary">0</strong>
+          </div>
+
+          <label class="season-field season-owned-resource-field">
+            <span>Уже есть</span>
+            <input id="buildingOwnedPrimary" type="number" min="0" value="0">
+          </label>
         </div>
       </div>
     </section>
@@ -138,8 +162,8 @@
           <input id="productionNeedPrimary" type="hidden" value="0">
 
           <div class="season-results season-results-compact">
-            <div><span>Нужно Вода / Рыба / Вольфрам</span><strong id="productionNeedSecondaryText">0</strong></div>
-            <div><span>Нужно Бензин / Фрукты / Кварц</span><strong id="productionNeedPrimaryText">0</strong></div>
+            <div><span>Осталось Вода / Рыба / Вольфрам</span><strong id="productionNeedSecondaryText">0</strong></div>
+            <div><span>Осталось Бензин / Фрукты / Кварц</span><strong id="productionNeedPrimaryText">0</strong></div>
             <div><span>Потребуется часов</span><strong id="productionNeedHours">0</strong></div>
           </div>
         </section>
@@ -161,8 +185,8 @@
         <input id="raidNeedSecondary" type="hidden" value="0">
 
         <div class="season-results season-results-compact season-build-total-mobile">
-          <div><span>Нужно Бензин / Фрукты / Кварц</span><strong id="raidNeedPrimaryText">0</strong></div>
-          <div><span>Нужно Вода / Рыба / Вольфрам</span><strong id="raidNeedSecondaryText">0</strong></div>
+          <div><span>Осталось Бензин / Фрукты / Кварц</span><strong id="raidNeedPrimaryText">0</strong></div>
+          <div><span>Осталось Вода / Рыба / Вольфрам</span><strong id="raidNeedSecondaryText">0</strong></div>
         </div>
 
         <div class="season-form-grid season-form-grid-compact">
