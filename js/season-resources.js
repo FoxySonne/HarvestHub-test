@@ -194,9 +194,18 @@ function sumRequirementsForBuilding(type, currentLevel, targetLevel) {
   return { secondary, primary };
 }
 
+function getEngineeringReduction() {
+  const level = Math.min(3, Math.max(0, num("buildingEfficiencyLevel")));
+  return level / 100;
+}
+
+function applyEngineeringReduction(value) {
+  return Math.ceil(value * (1 - getEngineeringReduction()));
+}
+
 function updateBuildingNeeds() {
-  let secondary = 0;
-  let primary = 0;
+  let secondaryTotal = 0;
+  let primaryTotal = 0;
 
   const rows = document.querySelectorAll(".season-building-row");
 
@@ -216,9 +225,15 @@ function updateBuildingNeeds() {
       targetLevel
     );
 
-    secondary += requirement.secondary;
-    primary += requirement.primary;
+    secondaryTotal += requirement.secondary;
+    primaryTotal += requirement.primary;
   });
+
+  const secondaryAfterEfficiency = applyEngineeringReduction(secondaryTotal);
+  const primaryAfterEfficiency = applyEngineeringReduction(primaryTotal);
+
+  const secondary = Math.max(0, secondaryAfterEfficiency - num("buildingOwnedSecondary"));
+  const primary = Math.max(0, primaryAfterEfficiency - num("buildingOwnedPrimary"));
 
   setValue("raidNeedPrimary", primary);
   setValue("raidNeedSecondary", secondary);
@@ -414,6 +429,9 @@ function bindCalculatorInputs() {
 
 function setDefaults() {
   const defaults = {
+    buildingEfficiencyLevel: 0,
+    buildingOwnedSecondary: 0,
+    buildingOwnedPrimary: 0,
     alphaNeedLevel: 10,
     alphaFarmLevel: 10,
     infectedNeedLevel: 30,
