@@ -2,11 +2,11 @@
 
 <div class="card">
 
-    <h3>Кэш сайта</h3>
+    <h3>Данные сайта</h3>
 
-    <button class="button" onclick="clearSiteCache()">
+    <button class="button" onclick="resetAllSiteData()">
 
-        Очистить кэш и обновить страницу
+        Сбросить все данные
 
     </button>
 
@@ -52,8 +52,8 @@
         </label>
 
         <div class="button-group">
-            <button type="button" onclick="createProfileFromSettings()">Создать профиль</button>
-            <button type="button" onclick="loginProfileFromSettings()">Выбрать профиль</button>
+            <button type="button" onclick="confirmLocalDataStorage() && createProfileFromSettings()">Создать профиль</button>
+            <button type="button" onclick="confirmLocalDataStorage() && loginProfileFromSettings()">Выбрать профиль</button>
             <button type="button" onclick="logoutProfileFromSettings()">Отключить профиль</button>
         </div>
 
