@@ -91,10 +91,9 @@ function fillSelect(id, list, defaultValue = null) {
   }
 }
 
-function createLevelSelect(className, defaultValue, id = "") {
+function createLevelSelect(className, defaultValue) {
   const select = document.createElement("select");
   select.className = className;
-  if (id) select.id = id;
 
   for (let level = 0; level <= 30; level++) {
     const option = document.createElement("option");
@@ -107,17 +106,6 @@ function createLevelSelect(className, defaultValue, id = "") {
   return select;
 }
 
-function createProfileLevelField(id, label, defaultValue = 0) {
-  const field = document.createElement("label");
-  field.className = "profile-block-field";
-
-  const title = document.createElement("span");
-  title.textContent = label;
-
-  field.append(title, createLevelSelect("", defaultValue, id));
-  return field;
-}
-
 function getSeasonEndUtcTime() {
   const now = typeof window.getHarvestHubUtcTime === "function"
     ? window.getHarvestHubUtcTime().date
@@ -127,7 +115,7 @@ function getSeasonEndUtcTime() {
   const hours = Math.max(0, num("seasonProfileHoursLeft"));
   const rawEnd = new Date(now.getTime() + (days * 24 + hours) * 60 * 60 * 1000);
 
-  const nextUtcDayChange = new Date(Date.UTC(
+  return new Date(Date.UTC(
     rawEnd.getUTCFullYear(),
     rawEnd.getUTCMonth(),
     rawEnd.getUTCDate() + 1,
@@ -135,8 +123,6 @@ function getSeasonEndUtcTime() {
     0,
     0
   ));
-
-  return nextUtcDayChange;
 }
 
 function formatUtcDate(date) {
@@ -178,18 +164,8 @@ function renderSeasonProfileBlock() {
 
     <div id="seasonProfileEndSummary" class="profile-block-result"></div>
 
-    <div class="profile-block-grid" id="seasonProfileFactories"></div>
-
-    <p class="profile-block-note">Укажи уровни заводов в этом блоке, чтобы расчёт производства был точнее. Ниже в блоке «Что нужно построить» выставь уровни зданий, которые у тебя уже есть, и уровни, до которых ты хочешь их поднять — без этого расчёт нужных ресурсов будет неполным.</p>
+    <p class="profile-block-note">Чтобы расчёты работали точнее, ниже в блоке «Что нужно построить» укажи уровни зданий, которые у тебя уже есть, и уровни, до которых ты хочешь их поднять. По текущим уровням заводов калькулятор рассчитает производство ресурсов, а по целевым уровням — сколько ресурсов нужно на строительство.</p>
   `;
-
-  const factories = container.querySelector("#seasonProfileFactories");
-  factories.append(
-    createProfileLevelField("seasonProfileSecondaryFactory1", "Завод Воды / Рыбы / Вольфрама 1"),
-    createProfileLevelField("seasonProfileSecondaryFactory2", "Завод Воды / Рыбы / Вольфрама 2"),
-    createProfileLevelField("seasonProfilePrimaryFactory1", "Завод Бензина / Фруктов / Кварца 1"),
-    createProfileLevelField("seasonProfilePrimaryFactory2", "Завод Бензина / Фруктов / Кварца 2")
-  );
 
   window.setProfileBlockContent({
     description: "Данные продвинутого режима для сезонных расчётов.",
@@ -202,20 +178,29 @@ function renderSeasonProfileBlock() {
   container.addEventListener("change", event => handleCalculatorInput(event.target));
 }
 
-function getProfileFactoryProduction() {
-  const secondaryFactory1 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfileSecondaryFactory1"));
-  const secondaryFactory2 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfileSecondaryFactory2"));
-  const primaryFactory1 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfilePrimaryFactory1"));
-  const primaryFactory2 = getByLevel(seasonDatabase.productionByBuildingLevel, num("seasonProfilePrimaryFactory2"));
+function getBuildingCurrentLevel(buildingId) {
+  const row = document.querySelector(`.season-building-row[data-building-id="${buildingId}"]`);
+  return Number(row?.querySelector(".season-building-current")?.value) || 0;
+}
 
-  const hasProfileFactoryLevels = [
-    "seasonProfileSecondaryFactory1",
-    "seasonProfileSecondaryFactory2",
-    "seasonProfilePrimaryFactory1",
-    "seasonProfilePrimaryFactory2"
-  ].some(id => document.getElementById(id));
+function getBuildingProductionByCurrentLevel(buildingId) {
+  return getByLevel(seasonDatabase.productionByBuildingLevel, getBuildingCurrentLevel(buildingId));
+}
 
-  if (!hasProfileFactoryLevels) return null;
+function getFactoryProductionFromBuildingRows() {
+  const secondaryFactory1 = getBuildingProductionByCurrentLevel("secondary_factory_1");
+  const secondaryFactory2 = getBuildingProductionByCurrentLevel("secondary_factory_2");
+  const primaryFactory1 = getBuildingProductionByCurrentLevel("primary_factory_1");
+  const primaryFactory2 = getBuildingProductionByCurrentLevel("primary_factory_2");
+
+  const hasBuildingRows = [
+    "secondary_factory_1",
+    "secondary_factory_2",
+    "primary_factory_1",
+    "primary_factory_2"
+  ].every(buildingId => document.querySelector(`.season-building-row[data-building-id="${buildingId}"]`));
+
+  if (!hasBuildingRows) return null;
 
   return {
     secondary: (Number(secondaryFactory1?.secondary) || 0) + (Number(secondaryFactory2?.secondary) || 0),
@@ -453,8 +438,8 @@ function getBonus(list, level) {
 }
 
 function calculateProductionPerHour() {
-  const profileFactoryProduction = getProfileFactoryProduction();
-  const base = profileFactoryProduction || getByLevel(seasonDatabase.productionByBuildingLevel, num("productionBuildingLevel"));
+  const factoryProduction = getFactoryProductionFromBuildingRows();
+  const base = factoryProduction || getByLevel(seasonDatabase.productionByBuildingLevel, num("productionBuildingLevel"));
   const labBonus = getBonus(seasonDatabase.labProductionBonus, num("productionLabLevel"));
   const seasonBonus = getBonus(seasonDatabase.seasonalBuildingProductionBonus, num("productionSeasonLevel"));
   const village = num("productionVillage") === 2 ? seasonDatabase.territoryBuffs.villageProduction : 0;
