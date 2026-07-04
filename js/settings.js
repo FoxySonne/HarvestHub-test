@@ -66,4 +66,4 @@ function initSettingsPage() {
 
 }
 
-window.initSettingsPage = initSettingsPage;
+window.settingsInit = initSettingsPage;
