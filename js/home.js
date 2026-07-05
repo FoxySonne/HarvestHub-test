@@ -8,6 +8,12 @@ function setText(id, value) {
   element.textContent = value;
 }
 
+function removeDuplicateHomeHero() {
+  document.querySelectorAll("#page-content .home-hero").forEach(element => {
+    element.remove();
+  });
+}
+
 function getUtcNow() {
   return typeof window.getHarvestHubUtcTime === "function"
     ? window.getHarvestHubUtcTime().date
@@ -87,7 +93,6 @@ function getHorrorFaction(now) {
 
 function getHorrorStatus(now) {
   const attackStarts = [0, 6, 12, 18];
-  const hour = now.getUTCHours();
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 
   for (const startHour of attackStarts) {
@@ -134,6 +139,7 @@ function updateHomeStatus() {
 let homeTimerId = null;
 
 export function init() {
+  removeDuplicateHomeHero();
   updateHomeStatus();
 
   if (homeTimerId) window.clearInterval(homeTimerId);
