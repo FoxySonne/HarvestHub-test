@@ -72,23 +72,13 @@ export const database = {
     {name: "Собрать 20 ед. металла", id: "metal_20", categoryId: "resource_gathering", points: {turtle: 2, vs: 1, ipk: 0}},
     {name: "Собрать 5 ед. топлива", id: "fuel_5", categoryId: "resource_gathering", points: {turtle: 2, vs: 1, ipk: 0}},
 
-    {
-      name: "Уничтожайте зараженных",
-      id: "infected",
-      categoryId: "infected",
-      options: [
-        {value: 1, label: "Зараженные 1–6 ур"},
-        {value: 2, label: "Зараженные 7-12 ур"},
-        {value: 3, label: "Зараженные 13–18 ур"},
-        {value: 4, label: "Зараженные 19–24 ур"},
-        {value: 5, label: "Зараженные 25-30 ур"},
-      ],
-      points: {
-        turtle: {1: 10000, 2: 10500, 3: 11000, 4: 11500, 5: 12000},
-        vs: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
-        ipk: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
-      },
-    },
+    {name: "Уничтожайте зараженных", id: "infected", categoryId: "infected", options: [
+      {value: 1, label: "Зараженные 1–6 ур"},
+      {value: 2, label: "Зараженные 7-12 ур"},
+      {value: 3, label: "Зараженные 13–18 ур"},
+      {value: 4, label: "Зараженные 19–24 ур"},
+      {value: 5, label: "Зараженные 25-30 ур"},
+    ], points: {turtle: {1: 10000, 2: 10500, 3: 11000, 4: 11500, 5: 12000}, vs: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}, ipk: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}}},
 
     {name: "1 рейд на нечестивого зараженного", id: "unholy_raid", categoryId: "misc", points: {turtle: 30000, vs: 0, ipk: 0}},
     {name: "Зараженный в разведмиссиях", id: "infected_recon", categoryId: "misc", points: {turtle: 60000, vs: 0, ipk: 0}},
@@ -102,220 +92,37 @@ export const database = {
   ],
 
   categoryIpk: [
-    {
-      id: "building",
-      name: "Строительство поселения",
-      target: 250000,
-      actions: [
-        {id: "building_power"},
-        {id: "building_1m"},
-        {id: "purchases", label: "Получайте алмазы x1"},
-      ],
-    },
-    {
-      id: "research",
-      name: "Исследование технологий",
-      target: 200000,
-      actions: [
-        {id: "research_power"},
-        {id: "research_1m"},
-        {id: "purchases", label: "Получайте алмазы x1"},
-      ],
-    },
-    {
-      id: "equipment",
-      name: "Усиление снаряжения",
-      target: 200000,
-      actions: [
-        {id: "blue_bolt"},
-        {id: "purple_bolt"},
-        {id: "gold_bolt"},
-        {id: "unknown_bolt"},
-        {id: "purchases", label: "Получайте алмазы x1"},
-      ],
-    },
-    {
-      id: "titan",
-      name: "Развитие титана",
-      target: 200000,
-      actions: [
-        {id: "titan_cells"},
-        {id: "titan_exp_100"},
-        {id: "purchases", label: "Получайте алмазы x1"},
-      ],
-    },
-    {
-      id: "heroes",
-      name: "Улучшение героя",
-      target: 300000,
-      actions: [
-        {id: "gold_hero_card"},
-        {id: "purple_hero_card"},
-        {id: "blue_hero_card"},
-        {id: "hero_books"},
-        {id: "purchases", label: "Получайте алмазы x1"},
-      ],
-    },
-    {
-      id: "chief",
-      name: "Шеф коллекция",
-      target: 300000,
-      actions: [
-        {id: "gears"},
-        {id: "blueprints"},
-        {id: "purchases", label: "Получайте алмазы x1"},
-      ],
-    },
-    {
-      id: "troops",
-      name: "Улучшение войск",
-      target: 300000,
-      actions: [
-        {id: "training_1m"},
-        {id: "troop_upgrade", option: 1, label: "Обучить солдат 1 ур."},
-        {id: "troop_upgrade", option: 2, label: "Обучить солдат 2 ур."},
-        {id: "troop_upgrade", option: 3, label: "Обучить солдат 3 ур."},
-        {id: "troop_upgrade", option: 4, label: "Обучить солдат 4 ур."},
-        {id: "troop_upgrade", option: 5, label: "Обучить солдат 5 ур."},
-        {id: "troop_upgrade", option: 6, label: "Обучить солдат 6 ур."},
-        {id: "troop_upgrade", option: 7, label: "Обучить солдат 7 ур."},
-        {id: "troop_upgrade", option: 8, label: "Обучить солдат 8 ур."},
-        {id: "troop_upgrade", option: 9, label: "Обучить солдат 9 ур."},
-        {id: "troop_upgrade", option: 10, label: "Обучить солдат 10 ур."},
-        {id: "purchases", label: "Получайте алмазы x1"},
-      ],
-    },
+    {id: "building", name: "Строительство поселения", target: 250000, actions: [{id: "building_power"}, {id: "building_1m"}, {id: "purchases", label: "Получайте алмазы x1"}]},
+    {id: "research", name: "Исследование технологий", target: 200000, actions: [{id: "research_power"}, {id: "research_1m"}, {id: "purchases", label: "Получайте алмазы x1"}]},
+    {id: "equipment", name: "Усиление снаряжения", target: 200000, actions: [{id: "blue_bolt"}, {id: "purple_bolt"}, {id: "gold_bolt"}, {id: "unknown_bolt"}, {id: "purchases", label: "Получайте алмазы x1"}]},
+    {id: "titan", name: "Развитие титана", target: 200000, actions: [{id: "titan_cells"}, {id: "titan_exp_100"}, {id: "purchases", label: "Получайте алмазы x1"}]},
+    {id: "heroes", name: "Улучшение героя", target: 300000, actions: [{id: "gold_hero_card"}, {id: "purple_hero_card"}, {id: "blue_hero_card"}, {id: "hero_books"}, {id: "purchases", label: "Получайте алмазы x1"}]},
+    {id: "chief", name: "Шеф коллекция", target: 300000, actions: [{id: "gears"}, {id: "blueprints"}, {id: "purchases", label: "Получайте алмазы x1"}]},
+    {id: "troops", name: "Улучшение войск", target: 300000, actions: [
+      {id: "training_1m"},
+      {id: "troop_upgrade", option: 1, label: "Обучить солдат 1 ур."},
+      {id: "troop_upgrade", option: 2, label: "Обучить солдат 2 ур."},
+      {id: "troop_upgrade", option: 3, label: "Обучить солдат 3 ур."},
+      {id: "troop_upgrade", option: 4, label: "Обучить солдат 4 ур."},
+      {id: "troop_upgrade", option: 5, label: "Обучить солдат 5 ур."},
+      {id: "troop_upgrade", option: 6, label: "Обучить солдат 6 ур."},
+      {id: "troop_upgrade", option: 7, label: "Обучить солдат 7 ур."},
+      {id: "troop_upgrade", option: 8, label: "Обучить солдат 8 ур."},
+      {id: "troop_upgrade", option: 9, label: "Обучить солдат 9 ур."},
+      {id: "troop_upgrade", option: 10, label: "Обучить солдат 10 ур."},
+      {id: "purchases", label: "Получайте алмазы x1"},
+    ]},
   ],
 
   dayOrder: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
 
   days: {
-    mon: {
-      name: "понедельник",
-      turtle: [
-        {type: "category", id: "equipment"},
-        {type: "action", id: "troop_upgrade"},
-        {type: "action", id: "research_1m"},
-        {type: "action", id: "purchases"},
-      ],
-      vs: [
-        {type: "category", id: "resource_gathering"},
-        {type: "action", id: "purchases"},
-        {type: "action", id: "recon_mon_fri"},
-        {type: "action", id: "stamina_points"},
-        {type: "action", id: "blue_bolt"},
-        {type: "action", id: "purple_bolt"},
-        {type: "action", id: "gold_bolt"},
-        {type: "action", id: "unknown_bolt"},
-      ],
-    },
-
-    tue: {
-      name: "вторник",
-      turtle: [
-        {type: "category", id: "equipment"},
-        {type: "action", id: "building_1m"},
-        {type: "action", id: "purchases"},
-      ],
-      vs: [
-        {type: "action", id: "truck_a"},
-        {type: "action", id: "dispatch_s"},
-        {type: "action", id: "building_1m"},
-        {type: "action", id: "building_power"},
-        {type: "action", id: "purchases"},
-      ],
-    },
-
-    wed: {
-      name: "среда",
-      turtle: [
-        {type: "category", id: "titan"},
-        {type: "action", id: "research_1m"},
-        {type: "action", id: "purchases"},
-      ],
-      vs: [
-        {type: "category", id: "titan"},
-        {type: "action", id: "vs_points"},
-        {type: "action", id: "research_1m"},
-        {type: "action", id: "research_power"},
-        {type: "action", id: "recon_wed"},
-        {type: "action", id: "purchases"},
-      ],
-    },
-
-    thu: {
-      name: "четверг",
-      turtle: [
-        {type: "category", id: "heroes"},
-        {type: "action", id: "purchases"},
-      ],
-      vs: [
-        {type: "category", id: "heroes"},
-        {type: "action", id: "purchases"},
-      ],
-    },
-
-    fri: {
-      name: "пятница",
-      turtle: [
-        {type: "category", id: "equipment"},
-        {type: "category", id: "chief_collection"},
-        {type: "action", id: "purchases"},
-      ],
-      vs: [
-        {type: "action", id: "troop_upgrade"},
-        {type: "category", id: "power"},
-        {type: "action", id: "research_1m"},
-        {type: "action", id: "building_1m"},
-        {type: "action", id: "training_1m"},
-        {type: "action", id: "recon_mon_fri"},
-        {type: "action", id: "purchases"},
-      ],
-    },
-
-    sat: {
-      name: "суббота",
-      turtle: [
-        {type: "category", id: "titan"},
-        {type: "action", id: "blue_hero_card"},
-        {type: "action", id: "purple_hero_card"},
-        {type: "action", id: "gold_hero_card"},
-        {type: "action", id: "hero_books"},
-        {type: "action", id: "research_1m"},
-        {type: "action", id: "building_1m"},
-        {type: "action", id: "purchases"},
-      ],
-      vs: [
-        {type: "category", id: "titan"},
-        {type: "category", id: "speedups"},
-        {type: "action", id: "blue_hero_card"},
-        {type: "action", id: "purple_hero_card"},
-        {type: "action", id: "gold_hero_card"},
-        {type: "action", id: "hero_books"},
-        {type: "action", id: "dispatch_s"},
-        {type: "action", id: "truck_a"},
-        {type: "action", id: "purchases"},
-      ],
-    },
-
-    sun: {
-      name: "воскресенье",
-      turtle: [
-        {type: "category", id: "heroes"},
-        {type: "category", id: "titan"},
-        {type: "category", id: "chief_collection"},
-        {type: "category", id: "resource_gathering"},
-        {type: "category", id: "equipment"},
-        {type: "action", id: "research_1m"},
-        {type: "action", id: "building_1m"},
-        {type: "action", id: "unholy_raid"},
-        {type: "action", id: "infected_recon"},
-        {type: "action", id: "infected"},
-        {type: "action", id: "purchases"},
-      ],
-      vs: [
-        {type: "text", text: "Отдыхаем, кайфуем, собираем воду в резервуаре!"},
-      ],
-    },
+    mon: {name: "понедельник", turtle: [{type: "category", id: "equipment"}, {type: "action", id: "troop_upgrade"}, {type: "action", id: "research_1m"}, {type: "action", id: "purchases"}], vs: [{type: "category", id: "resource_gathering"}, {type: "action", id: "purchases"}, {type: "action", id: "recon_mon_fri"}, {type: "action", id: "stamina_points"}, {type: "action", id: "blue_bolt"}, {type: "action", id: "purple_bolt"}, {type: "action", id: "gold_bolt"}, {type: "action", id: "unknown_bolt"}]},
+    tue: {name: "вторник", turtle: [{type: "category", id: "equipment"}, {type: "action", id: "building_1m"}, {type: "action", id: "purchases"}], vs: [{type: "action", id: "truck_a"}, {type: "action", id: "dispatch_s"}, {type: "action", id: "building_1m"}, {type: "action", id: "building_power"}, {type: "action", id: "purchases"}]},
+    wed: {name: "среда", turtle: [{type: "category", id: "titan"}, {type: "action", id: "research_1m"}, {type: "action", id: "purchases"}], vs: [{type: "category", id: "titan"}, {type: "action", id: "vs_points"}, {type: "action", id: "research_1m"}, {type: "action", id: "research_power"}, {type: "action", id: "recon_wed"}, {type: "action", id: "purchases"}]},
+    thu: {name: "четверг", turtle: [{type: "category", id: "heroes"}, {type: "action", id: "purchases"}], vs: [{type: "category", id: "heroes"}, {type: "action", id: "purchases"}]},
+    fri: {name: "пятница", turtle: [{type: "category", id: "equipment"}, {type: "category", id: "chief_collection"}, {type: "action", id: "purchases"}], vs: [{type: "action", id: "troop_upgrade"}, {type: "category", id: "power"}, {type: "action", id: "research_1m"}, {type: "action", id: "building_1m"}, {type: "action", id: "training_1m"}, {type: "action", id: "recon_mon_fri"}, {type: "action", id: "purchases"}]},
+    sat: {name: "суббота", turtle: [{type: "category", id: "titan"}, {type: "action", id: "blue_hero_card"}, {type: "action", id: "purple_hero_card"}, {type: "action", id: "gold_hero_card"}, {type: "action", id: "hero_books"}, {type: "action", id: "research_1m"}, {type: "action", id: "building_1m"}, {type: "action", id: "purchases"}], vs: [ {type: "category", id: "speedups"},  {type: "action", id: "dispatch_s"}, {type: "action", id: "truck_a"}, {type: "action", id: "purchases"}]},
+    sun: {name: "воскресенье", turtle: [{type: "category", id: "heroes"}, {type: "category", id: "titan"}, {type: "category", id: "chief_collection"}, {type: "category", id: "resource_gathering"}, {type: "category", id: "equipment"}, {type: "action", id: "research_1m"}, {type: "action", id: "building_1m"}, {type: "action", id: "unholy_raid"}, {type: "action", id: "infected_recon"}, {type: "action", id: "infected"}, {type: "action", id: "purchases"}], vs: [{type: "text", text: "Отдыхаем, кайфуем, собираем воду в резервуаре!"}]},
   },
 };
