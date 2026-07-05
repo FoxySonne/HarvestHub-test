@@ -1,4 +1,4 @@
-const SITE_ASSET_VERSION = "20260704-4";
+const SITE_ASSET_VERSION = "20260705-4";
 const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
 const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
 const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
@@ -32,7 +32,8 @@ const pagesDatabase = [
     { title: "Настройки", path: "settings.html", group: "Основное" },
     { title: "Игра по-крупному", path: "calculator/ipk.html", group: "Калькуляторы" },
     { title: "Турбочерепашка & VS", path: "calculator/turbo-vs.html", group: "Калькуляторы" },
-    { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" }
+    { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" },
+    { title: "Обучение войск", path: "calculator/troop-training.html", group: "Калькуляторы" }
 ];
 
 function padTimePart(value) {
@@ -412,8 +413,8 @@ function getDefaultQuickLinks() {
         "calculator/ipk.html",
         "calculator/turbo-vs.html",
         "calculator/season-resources.html",
-        "calculator.html",
-        "events.html"
+        "calculator/troop-training.html",
+        "calculator.html"
     ].map(getPageByPath).filter(Boolean);
 }
 
