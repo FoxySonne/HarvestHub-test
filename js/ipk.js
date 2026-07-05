@@ -1,6 +1,9 @@
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
 const { database } = await import(`../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
 
+const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
+const TROOP_TRANSFER_APPLIED_KEY = "harvesthub_troop_training_transfer_applied_ipk";
+
 let selectedCategoryIds = new Set();
 const ipkValues = new Map();
 const ipkResultOverrides = new Map();
@@ -12,6 +15,15 @@ function formatNumber(value) {
 function parseNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : 0;
+}
+
+function readTroopTransferPreset() {
+  try {
+    return JSON.parse(localStorage.getItem(TROOP_TRANSFER_STORAGE_KEY) || "null");
+  } catch (error) {
+    console.warn("Не удалось прочитать заготовку обучения войск для ИПК", error);
+    return null;
+  }
 }
 
 function getActionById(actionId) {
@@ -266,6 +278,33 @@ function updateIpkResults() {
   }
 }
 
+function applyTroopTransferPreset() {
+  const preset = readTroopTransferPreset();
+  const presetId = preset?.id || preset?.createdAt || "";
+
+  if (!preset || !presetId || localStorage.getItem(TROOP_TRANSFER_APPLIED_KEY) === presetId) return;
+
+  const shouldApplyIpk = preset.targets?.ipk || preset.target === "turtle-ipk" || preset.target === "vs-ipk";
+  if (!shouldApplyIpk) return;
+
+  const stages = Array.isArray(preset.stages) ? preset.stages : [];
+
+  stages.forEach(stage => {
+    const level = Number(stage.level) || 0;
+    const troops = Number(stage.troops) || 0;
+
+    if (level <= 0 || troops <= 0) return;
+
+    ipkValues.set(`troops:troop_upgrade:${level}`, String(troops));
+  });
+
+  selectedCategoryIds.add("troops");
+  localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
+  renderCategoryList(document.getElementById("ipkDesktopCategoriesList"));
+  renderCategoryList(document.getElementById("ipkMobileCategoriesList"));
+  renderSelectedCards();
+}
+
 function renderIpk() {
   const desktopCategories = document.getElementById("ipkDesktopCategoriesList");
   const mobileCategories = document.getElementById("ipkMobileCategoriesList");
@@ -282,4 +321,5 @@ function renderIpk() {
 
 export function init() {
   renderIpk();
+  window.setTimeout(applyTroopTransferPreset, 0);
 }
