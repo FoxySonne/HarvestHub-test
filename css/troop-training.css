@@ -1,0 +1,289 @@
+/* TROOP TRAINING CALCULATOR */
+.troop-page {
+  gap: 18px;
+}
+
+.troop-page-header p {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.troop-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 18px;
+  align-items: start;
+}
+
+.troop-workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, .95fr) minmax(360px, 1.05fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.troop-available-card {
+  grid-row: span 3;
+}
+
+.troop-results-card {
+  position: sticky;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.troop-help-text {
+  margin: 0 0 10px;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.troop-form-list,
+.troop-stage-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.troop-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.troop-stage-grid .troop-field:first-child {
+  grid-column: 1 / -1;
+  max-width: 180px;
+}
+
+.troop-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.troop-field span {
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.troop-field input,
+.troop-field select {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 15px;
+}
+
+.troop-field-with-unit {
+  grid-template-columns: minmax(0, 1fr) 86px;
+  align-items: end;
+}
+
+.troop-field-with-unit > span:first-child,
+.troop-field-with-unit > input {
+  grid-column: 1;
+}
+
+.troop-field-with-unit .troop-unit-toggle {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.troop-unit-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--panel);
+}
+
+.troop-unit-toggle button {
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.troop-unit-toggle button.is-active {
+  background: var(--button);
+  color: #fff;
+}
+
+.troop-field-with-tooltip .tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 5px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-soft);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.troop-results-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.troop-results-main span {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.troop-results-main strong {
+  color: var(--accent);
+  font-size: 34px;
+  line-height: 1;
+}
+
+.troop-result-list,
+.troop-resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.troop-result-list div,
+.troop-resource-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.troop-result-list strong,
+.troop-resource-list strong {
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.troop-result-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.troop-result-section h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.troop-result-section.advanced-only h4 {
+  color: var(--accent);
+}
+
+.troop-result-section p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.troop-transfer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.troop-transfer-buttons button {
+  min-height: 38px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--button);
+  box-shadow: none;
+}
+
+.troop-transfer-buttons button:hover {
+  background: rgba(112, 220, 86, .12);
+}
+
+@media (max-width: 1240px) {
+  .troop-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-results-card {
+    position: static;
+    order: -1;
+  }
+
+  .troop-results-card .troop-transfer-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .troop-page h1 {
+    font-size: 28px;
+  }
+
+  .troop-layout,
+  .troop-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-available-card {
+    grid-row: auto;
+  }
+
+  .troop-results-card {
+    order: -1;
+  }
+
+  .troop-stage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .troop-stage-grid .troop-field:first-child {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+
+  .troop-results-main strong {
+    font-size: 30px;
+  }
+
+  .troop-results-card .troop-transfer-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-field-with-unit {
+    grid-template-columns: minmax(0, 1fr) 76px;
+  }
+}
