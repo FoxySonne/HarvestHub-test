@@ -31,6 +31,8 @@ async function resetAllSiteData() {
         localStorage.clear();
         sessionStorage.clear();
 
+        localStorage.setItem("currentPage", "settings.html");
+
         const pageContent = document.getElementById("page-content");
 
         if (pageContent) {
