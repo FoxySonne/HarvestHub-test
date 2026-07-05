@@ -1,0 +1,135 @@
+<section class="page-section troop-page">
+  <header class="troop-page-header">
+    <div>
+      <h1>Обучение войск</h1>
+      <p>Расчет возможного количества войск и ресурсов для обучения</p>
+    </div>
+  </header>
+
+  <div class="troop-layout">
+    <section class="card troop-results-card">
+      <div class="card-header">
+        <h3>Результаты</h3>
+      </div>
+
+      <div class="troop-results-main">
+        <span>Возможное количество войск:</span>
+        <strong id="troopPossibleTotal">0</strong>
+      </div>
+
+      <div id="troopStageResults" class="troop-result-list"></div>
+
+      <div class="troop-result-section">
+        <h4>Остатки ресурсов</h4>
+        <div class="troop-resource-list" id="troopRemainders"></div>
+      </div>
+
+      <div class="troop-result-section advanced-only">
+        <h4 id="troopExtraTitle">Еще можно обучить: 0 войск</h4>
+        <p>Не хватает:</p>
+        <div class="troop-resource-list" id="troopShortages"></div>
+      </div>
+
+      <div class="troop-transfer-buttons advanced-only">
+        <button type="button" data-transfer-target="turtle">В Турбочерепашку</button>
+        <button type="button" data-transfer-target="vs">В VS</button>
+        <button type="button" data-transfer-target="turtle-ipk">В Турбочерепашку и ИПК</button>
+        <button type="button" data-transfer-target="vs-ipk">В VS и ИПК</button>
+      </div>
+    </section>
+
+    <div class="troop-workspace">
+      <section class="card troop-available-card">
+        <div class="card-header">
+          <h3>Что есть в наличии</h3>
+        </div>
+
+        <p class="troop-help-text">Можно ввести ресурсы и время, чтобы узнать максимум войск, или указать желаемое количество войск, чтобы посчитать, сколько ресурсов понадобится.</p>
+
+        <div class="troop-form-list">
+          <label class="troop-field troop-field-with-unit">
+            <span>Еда в наличии</span>
+            <input id="troopAvailableFood" type="text" inputmode="decimal" autocomplete="off">
+            <span class="troop-unit-toggle" data-unit-for="troopAvailableFood">
+              <button type="button" class="is-active" data-unit="m">М</button>
+              <button type="button" data-unit="raw">-</button>
+            </span>
+          </label>
+
+          <label class="troop-field troop-field-with-unit">
+            <span>Дерево в наличии</span>
+            <input id="troopAvailableWood" type="text" inputmode="decimal" autocomplete="off">
+            <span class="troop-unit-toggle" data-unit-for="troopAvailableWood">
+              <button type="button" class="is-active" data-unit="m">М</button>
+              <button type="button" data-unit="raw">-</button>
+            </span>
+          </label>
+
+          <label class="troop-field troop-field-with-unit">
+            <span>Металл в наличии</span>
+            <input id="troopAvailableMetal" type="text" inputmode="decimal" autocomplete="off">
+            <span class="troop-unit-toggle" data-unit-for="troopAvailableMetal">
+              <button type="button" data-unit="m">М</button>
+              <button type="button" class="is-active" data-unit="raw">-</button>
+            </span>
+          </label>
+
+          <label class="troop-field troop-field-with-unit">
+            <span>Топливо в наличии</span>
+            <input id="troopAvailableFuel" type="text" inputmode="decimal" autocomplete="off">
+            <span class="troop-unit-toggle" data-unit-for="troopAvailableFuel">
+              <button type="button" data-unit="m">М</button>
+              <button type="button" class="is-active" data-unit="raw">-</button>
+            </span>
+          </label>
+
+          <label class="troop-field">
+            <span>Время в наличии</span>
+            <input id="troopAvailableTime" type="text" placeholder="00д 00:00:00" inputmode="numeric" autocomplete="off">
+          </label>
+
+          <label class="troop-field troop-field-with-tooltip">
+            <span>Вместимость гарнизона <span class="tooltip" data-tooltip="Сколько всего войск можно обучить, если сейчас войск нет.">?</span></span>
+            <input id="troopGarrisonCapacity" type="text" inputmode="numeric" autocomplete="off">
+          </label>
+
+          <label class="troop-field troop-field-with-tooltip">
+            <span>Хочу обучить войск <span class="tooltip" data-tooltip="Если поле пустое, калькулятор считает максимум из того, что есть. Если заполнено — считает ресурсы на это количество войск.">?</span></span>
+            <input id="troopDesiredAmount" type="text" inputmode="numeric" autocomplete="off">
+          </label>
+
+          <label class="troop-field">
+            <span>Количество войск сейчас</span>
+            <input id="troopCurrentAmount" type="text" inputmode="numeric" autocomplete="off">
+          </label>
+
+          <label class="troop-field advanced-only">
+            <span>Уровень текущих войск</span>
+            <select id="troopCurrentLevel"></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="card troop-stage-card" data-stage="1">
+        <div class="card-header">
+          <h3>Этап 1 — Обучение</h3>
+        </div>
+        <div class="troop-stage-grid"></div>
+      </section>
+
+      <section class="card troop-stage-card advanced-only" data-stage="2">
+        <div class="card-header">
+          <h3>Этап 2 — Улучшение</h3>
+        </div>
+        <div class="troop-stage-grid"></div>
+      </section>
+
+      <section class="card troop-stage-card advanced-only" data-stage="3">
+        <div class="card-header">
+          <h3>Этап 3 — Улучшение</h3>
+        </div>
+        <div class="troop-stage-grid"></div>
+      </section>
+    </div>
+  </div>
+</section>
