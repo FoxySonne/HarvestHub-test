@@ -362,24 +362,40 @@ function bindInputs() {
   });
 }
 
+function setTransferStatus(message) {
+  const status = getElement("troopTransferStatus");
+  if (!status) return;
+  status.textContent = message;
+}
+
+function getTransferTargets(target) {
+  return {
+    turtle: target === "turtle" || target === "turtle-ipk",
+    vs: target === "vs" || target === "vs-ipk",
+    ipk: target === "turtle-ipk" || target === "vs-ipk"
+  };
+}
+
 function bindTransferButtons() {
   document.querySelectorAll("[data-transfer-target]").forEach(button => {
     button.addEventListener("click", () => {
       const calculation = renderResults();
+      const target = button.dataset.transferTarget;
+      const targets = getTransferTargets(target);
       const payload = {
-        target: button.dataset.transferTarget,
+        target,
+        targets,
         troops: calculation.possibleTroops,
-        stages: calculation.stages.map(stage => ({ stage: stage.stage, level: stage.level, troops: calculation.possibleTroops })),
+        stages: calculation.stages.map(stage => ({
+          stage: stage.stage,
+          level: Number(stage.level) || 0,
+          troops: calculation.possibleTroops
+        })).filter(stage => stage.level > 0 && stage.troops > 0),
         createdAt: new Date().toISOString()
       };
 
       localStorage.setItem(TRANSFER_STORAGE_KEY, JSON.stringify(payload));
-
-      if (button.dataset.transferTarget.includes("ipk")) {
-        loadPage("calculator/ipk.html");
-      } else {
-        loadPage("calculator/turbo-vs.html");
-      }
+      setTransferStatus("Готово: количество войск сохранено. Теперь открой нужный калькулятор — данные подставятся автоматически.");
     });
   });
 }
