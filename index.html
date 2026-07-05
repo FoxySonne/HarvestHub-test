@@ -4,60 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>HarvestHub</title>
-    <link rel="stylesheet" href="css/style.css?v=20260705-2">
-    <script type="importmap">
-        {
-            "imports": {
-                "../data/database.js": "./data/database.js?v=20260705-2",
-                "./data/database.js": "./data/database.js?v=20260705-2",
-                "/data/database.js": "./data/database.js?v=20260705-2"
-            }
-        }
-    </script>
-    <style>
-        @media (max-width: 899px) {
-            .collapsible-card {
-                position: relative;
-            }
-
-            .collapsible-card-header {
-                display: grid !important;
-                grid-template-columns: minmax(0, 1fr) 32px;
-                align-items: start !important;
-                column-gap: 12px;
-            }
-
-            .collapsible-card-header > :first-child {
-                min-width: 0;
-            }
-
-            button.collapsible-card-toggle {
-                display: inline-flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                grid-column: 2;
-                grid-row: 1;
-                justify-self: end;
-                align-self: start;
-                width: 32px !important;
-                height: 32px !important;
-                min-width: 32px !important;
-                max-width: 32px !important;
-                padding: 0 !important;
-                margin: -4px 0 0 !important;
-                background: transparent !important;
-                border: 0 !important;
-                color: var(--text) !important;
-                font-size: 24px !important;
-                line-height: 1 !important;
-                box-shadow: none !important;
-            }
-
-            button.collapsible-card-toggle:hover {
-                background: transparent !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="overlay" id="overlay"></div>
@@ -78,10 +25,10 @@
         </aside>
     </div>
     <script src="js/menu.js"></script>
-    <script src="js/loader.js?v=20260705-2"></script>
-    <script src="js/profile-block.js?v=20260704-2"></script>
-    <script src="js/collapsible-cards.js?v=20260704-5"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/profile-block.js"></script>
+    <script src="js/collapsible-cards.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/settings.js?v=20260704-5"></script>
+    <script src="js/settings.js"></script>
 </body>
 </html>
