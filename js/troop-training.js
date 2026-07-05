@@ -16,17 +16,20 @@ function getAdvancedMode() {
   return typeof window.getAdvancedMode === "function" ? window.getAdvancedMode() : document.body.classList.contains("advanced-mode");
 }
 
-function normalizeNumberText(value) {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, "")
-    .replace(/,/g, ".")
-    .replace(/[кk]$/i, "000")
-    .replace(/[мm]$/i, "000000");
-}
-
 function parseNumber(value) {
-  const number = Number(normalizeNumberText(value));
+  const text = String(value || "").trim().replace(/\s+/g, "").replace(/,/g, ".");
+  const match = text.match(/^(\d+(?:\.\d+)?)([кkmм])?$/i);
+
+  if (!match) {
+    const fallback = Number(text);
+    return Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
+  }
+
+  const base = Number(match[1]);
+  const suffix = (match[2] || "").toLowerCase();
+  const multiplier = suffix === "к" || suffix === "k" ? 1000 : suffix === "м" || suffix === "m" ? 1000000 : 1;
+  const number = base * multiplier;
+
   return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
@@ -45,7 +48,7 @@ function parseTimeToSeconds(value, allowDays = false) {
 
   let days = 0;
   let timeText = text;
-  const dayMatch = text.match(/^(\d+)\s*д\s*(.*)$/);
+  const dayMatch = text.match(/^(\d+)\s*д\.?\s*(.*)$/);
 
   if (allowDays && dayMatch) {
     days = Number(dayMatch[1]) || 0;
@@ -53,11 +56,9 @@ function parseTimeToSeconds(value, allowDays = false) {
   }
 
   const parts = timeText.split(":").map(part => Number(part) || 0);
-
   while (parts.length < 3) parts.unshift(0);
 
   const [hours, minutes, seconds] = parts.slice(-3);
-
   return days * 86400 + hours * 3600 + minutes * 60 + seconds;
 }
 
@@ -232,7 +233,7 @@ function buildCalculation() {
   const stages = getActiveStages();
   const maxTroops = getMaxTroopsByAvailable(stages, available);
   const desired = available.desired;
-  const possibleTroops = desired > 0 ? Math.min(desired, maxTroops || desired) : maxTroops;
+  const possibleTroops = desired > 0 ? Math.min(desired, maxTroops) : maxTroops;
   const targetTroops = desired > 0 ? desired : possibleTroops;
   const required = getCostForTroops(stages, targetTroops);
   const spent = getCostForTroops(stages, possibleTroops);
