@@ -1,7 +1,9 @@
-import { database } from "../data/database.js";
+const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
+const { database } = await import(`../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
 
 let selectedCategoryIds = new Set();
 const ipkValues = new Map();
+const ipkResultOverrides = new Map();
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("ru-RU");
@@ -62,16 +64,35 @@ function saveCardValues(card) {
   });
 }
 
+function saveCardResultOverride(card) {
+  const categoryId = card.dataset.categoryId;
+  const resultInput = card.querySelector("[data-ipk-result]");
+
+  if (!categoryId || !resultInput) return;
+
+  if (card.dataset.resultManual === "true" && resultInput.value !== "") {
+    ipkResultOverrides.set(categoryId, resultInput.value);
+  } else {
+    ipkResultOverrides.delete(categoryId);
+  }
+}
+
 function saveAllValues() {
-  document.querySelectorAll(".ipk-card").forEach(card => saveCardValues(card));
+  document.querySelectorAll(".ipk-card").forEach(card => {
+    saveCardValues(card);
+    saveCardResultOverride(card);
+  });
 }
 
 function createCard(category) {
   const rows = createRows(category);
   const card = document.createElement("article");
+  const manualResult = ipkResultOverrides.get(category.id);
+
   card.className = "ipk-card card";
   card.dataset.categoryId = category.id;
   card.dataset.target = category.target;
+  card.dataset.resultManual = manualResult != null ? "true" : "false";
 
   card.innerHTML = `
     <header class="ipk-card-header">
@@ -83,7 +104,7 @@ function createCard(category) {
       <div class="ipk-stats">
         <div><span>Очков нужно:</span><strong data-ipk-target>${formatNumber(category.target)}</strong></div>
         <div><span>Не хватает:</span><strong data-ipk-missing>${formatNumber(category.target)}</strong></div>
-        <div><span>Получу:</span><strong data-ipk-result>0</strong></div>
+        <div><span>Получу:</span><input class="ipk-result-input" type="number" min="0" value="${manualResult ?? 0}" inputmode="numeric" data-ipk-result data-no-persist="true"></div>
       </div>
 
       <div class="ipk-rows">
@@ -104,8 +125,16 @@ function createCard(category) {
     toggleButton.textContent = card.classList.contains("is-collapsed") ? "›" : "⌄";
   });
 
-  card.addEventListener("input", () => {
-    saveCardValues(card);
+  card.addEventListener("input", event => {
+    if (event.target.matches("[data-ipk-result]")) {
+      card.dataset.resultManual = "true";
+      saveCardResultOverride(card);
+    } else {
+      card.dataset.resultManual = "false";
+      ipkResultOverrides.delete(category.id);
+      saveCardValues(card);
+    }
+
     updateIpkResults();
   });
 
@@ -189,7 +218,7 @@ function setupMobileCategoryCollapse() {
 
 function calculateCard(card) {
   const target = Number(card.dataset.target || 0);
-  let result = 0;
+  let autoResult = 0;
 
   const rows = Array.from(card.querySelectorAll(".ipk-row"));
 
@@ -198,10 +227,17 @@ function calculateCard(card) {
     const quantity = parseNumber(input?.value);
     const points = Number(row.dataset.points || 0);
 
-    result += quantity * points;
+    autoResult += quantity * points;
   });
 
+  const resultInput = card.querySelector("[data-ipk-result]");
+  const isManual = card.dataset.resultManual === "true";
+  const result = isManual ? parseNumber(resultInput?.value) : autoResult;
   const missing = Math.max(target - result, 0);
+
+  if (resultInput && !isManual) {
+    resultInput.value = String(autoResult);
+  }
 
   rows.forEach(row => {
     const need = row.querySelector(".ipk-need");
@@ -212,7 +248,6 @@ function calculateCard(card) {
     }
   });
 
-  card.querySelector("[data-ipk-result]").textContent = formatNumber(result);
   card.querySelector("[data-ipk-missing]").textContent = formatNumber(missing);
 
   return result;
