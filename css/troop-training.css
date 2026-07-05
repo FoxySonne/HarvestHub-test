@@ -1,6 +1,8 @@
 /* TROOP TRAINING CALCULATOR */
 .troop-page {
   gap: 18px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .troop-page-header p {
@@ -12,28 +14,41 @@
 
 .troop-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 330px);
   gap: 18px;
   align-items: start;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .troop-workspace {
+  grid-column: 1;
+  grid-row: 1;
   display: grid;
-  grid-template-columns: minmax(320px, .95fr) minmax(360px, 1.05fr);
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
   gap: 18px;
   align-items: start;
+  min-width: 0;
 }
 
 .troop-available-card {
   grid-row: span 3;
+  min-width: 0;
+}
+
+.troop-stage-card {
+  min-width: 0;
 }
 
 .troop-results-card {
+  grid-column: 2;
+  grid-row: 1;
   position: sticky;
   top: 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .troop-help-text {
@@ -53,7 +68,7 @@
 .troop-stage-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   align-items: end;
 }
 
@@ -82,6 +97,17 @@
   min-height: 40px;
   padding: 8px 10px;
   font-size: 15px;
+}
+
+.troop-stage-grid .troop-field span {
+  min-height: 36px;
+}
+
+.troop-stage-grid .troop-field input,
+.troop-stage-grid .troop-field select {
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 14px;
 }
 
 .troop-field-with-unit {
@@ -232,9 +258,15 @@
   background: rgba(112, 220, 86, .12);
 }
 
-@media (max-width: 1240px) {
+@media (max-width: 1440px) {
   .troop-layout {
     grid-template-columns: 1fr;
+  }
+
+  .troop-workspace,
+  .troop-results-card {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .troop-results-card {
@@ -245,6 +277,16 @@
   .troop-results-card .troop-transfer-buttons {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  .troop-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-available-card {
+    grid-row: auto;
   }
 }
 
