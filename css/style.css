@@ -1,11 +1,11 @@
 @import url("variables.css");
 @import url("base.css");
 @import url("layout.css");
-@import url("forms.css?v=20260704-1");
+@import url("forms.css");
 @import url("buttons.css");
-@import url("components.css?v=20260704-3");
-@import url("season-resources.css?v=20260704-6");
-@import url("utilities.css?v=20260704-5");
+@import url("components.css");
+@import url("season-resources.css");
+@import url("utilities.css");
 @import url("mobile.css");
-@import url("ipk.css?v=20260703-1");
-@import url("desktop.css?v=20260703-1");
+@import url("ipk.css");
+@import url("desktop.css");
