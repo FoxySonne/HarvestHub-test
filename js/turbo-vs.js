@@ -2,6 +2,8 @@ const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
 const { database } = await import(`../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
 
 const TURBO_WEEK_STATE_PREFIX = "harvesthub_turbo_vs_week_state:";
+const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
+const TROOP_TRANSFER_APPLIED_KEY = "harvesthub_troop_training_transfer_applied_turbo_vs";
 
 let isSyncingControls = false;
 let currentDayId = "";
@@ -28,6 +30,15 @@ function readWeekState() {
 
 function writeWeekState(state) {
   localStorage.setItem(getWeekStateKey(), JSON.stringify(state));
+}
+
+function readTroopTransferPreset() {
+  try {
+    return JSON.parse(localStorage.getItem(TROOP_TRANSFER_STORAGE_KEY) || "null");
+  } catch (error) {
+    console.warn("Не удалось прочитать заготовку обучения войск", error);
+    return null;
+  }
 }
 
 function formatNumber(value) {
@@ -335,6 +346,46 @@ function updateWeeklyTotals() {
   }
 }
 
+function applyTroopTransferPreset() {
+  const preset = readTroopTransferPreset();
+  const presetId = preset?.id || preset?.createdAt || "";
+
+  if (!preset || !presetId || localStorage.getItem(TROOP_TRANSFER_APPLIED_KEY) === presetId) return;
+
+  const shouldApplyTurtle = preset.targets?.turtle || preset.target === "turtle" || preset.target === "turtle-ipk";
+  const shouldApplyVs = preset.targets?.vs || preset.target === "vs" || preset.target === "vs-ipk";
+  const stages = Array.isArray(preset.stages) ? preset.stages.filter(stage => Number(stage.level) > 0 && Number(stage.troops) > 0) : [];
+  const lastStage = stages[stages.length - 1];
+
+  if (!lastStage || (!shouldApplyTurtle && !shouldApplyVs)) return;
+
+  const state = readWeekState();
+  const itemState = {
+    value: String(Number(lastStage.troops) || 0),
+    level: String(lastStage.level)
+  };
+
+  database.dayOrder.forEach(dayId => {
+    const day = database.days[dayId];
+    if (!day) return;
+
+    [
+      ["turtle", shouldApplyTurtle],
+      ["vs", shouldApplyVs]
+    ].forEach(([eventType, shouldApply]) => {
+      if (!shouldApply) return;
+      if (!resolveDayList(day[eventType]).includes("troop_upgrade")) return;
+
+      state[dayId] = state[dayId] || { turtle: {}, vs: {} };
+      state[dayId][eventType] = state[dayId][eventType] || {};
+      state[dayId][eventType].troop_upgrade = itemState;
+    });
+  });
+
+  writeWeekState(state);
+  localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
+}
+
 function handleControlChange(actionId, sourceControl) {
   syncActionControls(actionId, sourceControl);
   updateTotals();
@@ -407,6 +458,7 @@ function selectCurrentUtcDay() {
 export function init() {
   if (timerId) window.clearInterval(timerId);
 
+  applyTroopTransferPreset();
   fillDaySelector();
   selectCurrentUtcDay();
 
