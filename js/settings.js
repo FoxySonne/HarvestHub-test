@@ -31,7 +31,13 @@ async function resetAllSiteData() {
         localStorage.clear();
         sessionStorage.clear();
 
-        window.location.reload();
+        const pageContent = document.getElementById("page-content");
+
+        if (pageContent) {
+            pageContent.innerHTML = "";
+        }
+
+        window.location.replace(`${window.location.pathname}?reset=${Date.now()}`);
 
     } catch (error) {
 
