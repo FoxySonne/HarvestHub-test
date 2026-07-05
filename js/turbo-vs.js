@@ -1,160 +1,58 @@
-import { database } from "../data/database.js";
+const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
+const { database } = await import(`../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
 
 const TURBO_WEEK_STATE_PREFIX = "harvesthub_turbo_vs_week_state:";
 
 let isSyncingControls = false;
-let isDaySelectedManually = false;
 let currentDayId = "";
+let selectedManually = false;
+let timerId = null;
 
-/* ==========================================================
-ХРАНЕНИЕ ДАННЫХ НЕДЕЛИ
-========================================================== */
-
-function getTurboWeekScope() {
+function getWeekScope() {
   const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
   return profile?.id ? `profile:${profile.id}` : "local";
 }
 
-function getTurboWeekStateKey() {
-  return `${TURBO_WEEK_STATE_PREFIX}${getTurboWeekScope()}`;
+function getWeekStateKey() {
+  return `${TURBO_WEEK_STATE_PREFIX}${getWeekScope()}`;
 }
 
-function readTurboWeekState() {
+function readWeekState() {
   try {
-    return JSON.parse(localStorage.getItem(getTurboWeekStateKey()) || "{}");
+    return JSON.parse(localStorage.getItem(getWeekStateKey()) || "{}");
   } catch (error) {
     console.warn("Не удалось прочитать недельные данные Турбо/VS", error);
     return {};
   }
 }
 
-function writeTurboWeekState(state) {
-  localStorage.setItem(getTurboWeekStateKey(), JSON.stringify(state));
+function writeWeekState(state) {
+  localStorage.setItem(getWeekStateKey(), JSON.stringify(state));
 }
 
-function getRowActionId(row) {
-  return row?.querySelector("[data-action-id]")?.dataset.actionId ||
-    row?.querySelector("[data-level-action-id]")?.dataset.levelActionId ||
-    "";
+function formatNumber(value) {
+  return Math.round(Number(value) || 0).toLocaleString("ru-RU");
 }
-
-function getRowState(row) {
-  const quantityControl = row.querySelector("input[data-action-id], select[data-action-id]");
-  const levelSelect = row.querySelector(".action-level-select");
-
-  return {
-    value: quantityControl?.value || "0",
-    level: levelSelect?.value || null
-  };
-}
-
-function setRowState(row, state) {
-  const quantityControl = row.querySelector("input[data-action-id], select[data-action-id]");
-  const levelSelect = row.querySelector(".action-level-select");
-
-  if (quantityControl) quantityControl.value = String(state?.value ?? "0");
-  if (levelSelect && state?.level != null) levelSelect.value = String(state.level);
-}
-
-function saveCurrentDayState() {
-  if (!currentDayId) return;
-
-  const state = readTurboWeekState();
-  state[currentDayId] = { turtle: {}, vs: {} };
-
-  document.querySelectorAll(".action-row").forEach(row => {
-    const actionId = getRowActionId(row);
-    const eventType = row.querySelector("[data-event-type]")?.dataset.eventType;
-
-    if (!actionId || !eventType) return;
-
-    state[currentDayId][eventType][actionId] = getRowState(row);
-  });
-
-  writeTurboWeekState(state);
-}
-
-function restoreDayState(dayId) {
-  const state = readTurboWeekState();
-  const dayState = state[dayId];
-
-  if (!dayState) return;
-
-  document.querySelectorAll(".action-row").forEach(row => {
-    const actionId = getRowActionId(row);
-    const eventType = row.querySelector("[data-event-type]")?.dataset.eventType;
-
-    if (!actionId || !eventType) return;
-
-    setRowState(row, dayState[eventType]?.[actionId]);
-  });
-}
-
-/* ==========================================================
-РАЗВОРАЧИВАЕМ СПИСОК ДНЯ
-Поддерживает:
-- "blue_bolt"
-- { type: "action", id: "blue_bolt" }
-- { type: "category", id: "equipment" }
-- { type: "text", text: "..." }
-========================================================== */
-
-function resolveDayList(list = []) {
-  return list.flatMap(item => {
-    if (typeof item === "string") {
-      return item;
-    }
-
-    if (item.type === "action") {
-      return item.id;
-    }
-
-    if (item.type === "category") {
-      return database.action
-        .filter(action => action.categoryId === item.id)
-        .map(action => action.id);
-    }
-
-    if (item.type === "text") {
-      return item;
-    }
-
-    return [];
-  });
-}
-
-/* ==========================================================
-ПОЛУЧАЕМ ТЕКУЩИЙ ДЕНЬ ПО ГРИНВИЧУ
-========================================================== */
-
-function getCurrentUtcDayId() {
-  const utcDayId = typeof window.getHarvestHubUtcDayId === "function"
-    ? window.getHarvestHubUtcDayId()
-    : null;
-
-  if (utcDayId && database.days[utcDayId]) {
-    return utcDayId;
-  }
-
-  return database.dayOrder[0];
-}
-
-/* ==========================================================
-ПОЛУЧАЕМ ДЕЙСТВИЕ ПО ID
-========================================================== */
 
 function getActionById(actionId) {
   return database.action.find(action => action.id === actionId);
 }
 
-/* ==========================================================
-СОРТИРУЕМ ДЕЙСТВИЯ ПО ПОРЯДКУ В DATABASE.JS
-Сначала порядок категорий из database.category,
-внутри категории — порядок действий из database.action.
-Текстовые строки оставляем после действий.
-========================================================== */
+function resolveDayList(list = []) {
+  return list.flatMap(item => {
+    if (typeof item === "string") return item;
+    if (item.type === "action") return item.id;
+    if (item.type === "category") {
+      return database.action
+        .filter(action => action.categoryId === item.id)
+        .map(action => action.id);
+    }
+    if (item.type === "text") return item;
+    return [];
+  });
+}
 
-function sortDayItemsByDatabaseOrder(items) {
+function sortDayItems(items) {
   return [...items].sort((firstItem, secondItem) => {
     if (typeof firstItem !== "string" && typeof secondItem !== "string") return 0;
     if (typeof firstItem !== "string") return 1;
@@ -172,80 +70,129 @@ function sortDayItemsByDatabaseOrder(items) {
       return firstCategoryIndex - secondCategoryIndex;
     }
 
-    const firstActionIndex = database.action.findIndex(action => action.id === firstItem);
-    const secondActionIndex = database.action.findIndex(action => action.id === secondItem);
-
-    return firstActionIndex - secondActionIndex;
+    return database.action.findIndex(action => action.id === firstItem) -
+      database.action.findIndex(action => action.id === secondItem);
   });
 }
 
-/* ==========================================================
-СИНХРОНИЗИРУЕМ ОДИНАКОВЫЕ ДЕЙСТВИЯ
-Если действие есть и в Черепашке, и в VS, значение дублируется.
-========================================================== */
+function getCurrentUtcDayId() {
+  const utcDayId = typeof window.getHarvestHubUtcDayId === "function"
+    ? window.getHarvestHubUtcDayId()
+    : null;
+
+  return utcDayId && database.days[utcDayId] ? utcDayId : database.dayOrder[0];
+}
+
+function getPoints(actionId, eventType, level = null) {
+  const action = getActionById(actionId);
+  const points = action?.points?.[eventType];
+
+  if (points == null) return 0;
+  if (typeof points === "object") return Number(points[level]) || 0;
+
+  return Number(points) || 0;
+}
 
 function getQuantityControl(row) {
   return row.querySelector("input[data-action-id], select[data-action-id]");
 }
 
-function syncActionControls(actionId, sourceControl) {
-  if (isSyncingControls) return;
+function getRowActionId(row) {
+  return getQuantityControl(row)?.dataset.actionId ||
+    row.querySelector(".action-level-select")?.dataset.levelActionId ||
+    "";
+}
 
-  isSyncingControls = true;
+function getRowState(row) {
+  const quantityControl = getQuantityControl(row);
+  const levelSelect = row.querySelector(".action-level-select");
 
-  const sourceRow = sourceControl.closest(".action-row");
-  const sourceQuantityControl = sourceControl.matches("input[data-action-id], select[data-action-id]")
-    ? sourceControl
-    : null;
-  const sourceLevelSelect = sourceControl.classList.contains("action-level-select")
-    ? sourceControl
-    : null;
+  return {
+    value: quantityControl?.value || "0",
+    level: levelSelect?.value || null
+  };
+}
 
-  const rows = document.querySelectorAll(".action-row");
+function setRowState(row, state) {
+  const quantityControl = getQuantityControl(row);
+  const levelSelect = row.querySelector(".action-level-select");
 
-  rows.forEach(row => {
-    if (row === sourceRow) return;
+  if (quantityControl) quantityControl.value = String(state?.value ?? "0");
+  if (levelSelect && state?.level != null) levelSelect.value = String(state.level);
+}
 
-    const rowQuantityControl = getQuantityControl(row);
-    const rowLevelSelect = row.querySelector(".action-level-select");
-    const rowActionId = rowQuantityControl?.dataset.actionId || rowLevelSelect?.dataset.levelActionId;
+function saveCurrentDayState() {
+  if (!currentDayId) return;
 
-    if (rowActionId !== actionId) return;
+  const state = readWeekState();
+  state[currentDayId] = { turtle: {}, vs: {} };
 
-    if (sourceQuantityControl && rowQuantityControl) {
-      rowQuantityControl.value = sourceQuantityControl.value;
-    }
+  document.querySelectorAll(".action-row").forEach(row => {
+    const actionId = getRowActionId(row);
+    const eventType = row.querySelector("[data-event-type]")?.dataset.eventType;
 
-    if (sourceLevelSelect && rowLevelSelect) {
-      rowLevelSelect.value = sourceLevelSelect.value;
-    }
+    if (!actionId || !eventType) return;
+
+    state[currentDayId][eventType][actionId] = getRowState(row);
   });
 
-  isSyncingControls = false;
+  writeWeekState(state);
 }
 
-function handleControlChange(actionId, sourceControl) {
-  syncActionControls(actionId, sourceControl);
-  updateTotals();
-  saveCurrentDayState();
-  updateWeeklyTotals();
-}
+function restoreDayState(dayId) {
+  const dayState = readWeekState()[dayId];
 
-/* ==========================================================
-СОЗДАЁМ ТЕКСТОВУЮ СТРОКУ
-========================================================== */
+  if (!dayState) return;
+
+  document.querySelectorAll(".action-row").forEach(row => {
+    const actionId = getRowActionId(row);
+    const eventType = row.querySelector("[data-event-type]")?.dataset.eventType;
+
+    if (!actionId || !eventType) return;
+
+    setRowState(row, dayState[eventType]?.[actionId]);
+  });
+}
 
 function createTextRow(text) {
   const row = document.createElement("div");
   row.className = "action-row action-row-text";
   row.textContent = text;
-
   return row;
 }
 
-/* ==========================================================
-СОЗДАЁМ СТРОКУ ДЕЙСТВИЯ
-========================================================== */
+function createQuantitySelect(action, eventType) {
+  const select = document.createElement("select");
+  select.className = "action-quantity-select";
+  select.dataset.actionId = action.id;
+  select.dataset.eventType = eventType;
+  select.dataset.noPersist = "true";
+
+  const zeroOption = document.createElement("option");
+  zeroOption.value = "0";
+  zeroOption.textContent = "0";
+  select.appendChild(zeroOption);
+
+  for (let value = action.quantityOptions.min; value <= action.quantityOptions.max; value++) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  }
+
+  return select;
+}
+
+function createNumberInput(action, eventType) {
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = "0";
+  input.value = "0";
+  input.dataset.actionId = action.id;
+  input.dataset.eventType = eventType;
+  input.dataset.noPersist = "true";
+  return input;
+}
 
 function createActionRow(action, eventType) {
   const row = document.createElement("div");
@@ -273,229 +220,134 @@ function createActionRow(action, eventType) {
       levelSelect.appendChild(option);
     });
 
-    const quantityInput = document.createElement("input");
-    quantityInput.type = "number";
-    quantityInput.min = "0";
-    quantityInput.value = "0";
+    const quantityInput = createNumberInput(action, eventType);
     quantityInput.className = "action-quantity-input";
-
-    quantityInput.dataset.actionId = action.id;
-    quantityInput.dataset.eventType = eventType;
     quantityInput.dataset.hasLevel = "true";
-    quantityInput.dataset.noPersist = "true";
-
-    levelSelect.addEventListener("change", () => {
-      handleControlChange(action.id, levelSelect);
-    });
-
-    quantityInput.addEventListener("input", () => {
-      handleControlChange(action.id, quantityInput);
-    });
 
     controls.append(levelSelect, quantityInput);
-    row.append(label, controls);
+  } else {
+    const quantityControl = action.quantityOptions
+      ? createQuantitySelect(action, eventType)
+      : createNumberInput(action, eventType);
 
-    return row;
+    controls.appendChild(quantityControl);
   }
 
-  if (action.quantityOptions) {
-    const quantitySelect = document.createElement("select");
-    quantitySelect.className = "action-quantity-select";
-
-    const zeroOption = document.createElement("option");
-    zeroOption.value = "0";
-    zeroOption.textContent = "0";
-    quantitySelect.appendChild(zeroOption);
-
-    for (let i = action.quantityOptions.min; i <= action.quantityOptions.max; i++) {
-      const option = document.createElement("option");
-      option.value = i;
-      option.textContent = i;
-      quantitySelect.appendChild(option);
-    }
-
-    quantitySelect.dataset.actionId = action.id;
-    quantitySelect.dataset.eventType = eventType;
-    quantitySelect.dataset.noPersist = "true";
-
-    quantitySelect.addEventListener("change", () => {
-      handleControlChange(action.id, quantitySelect);
-    });
-
-    controls.appendChild(quantitySelect);
-    row.append(label, controls);
-
-    return row;
-  }
-
-  const input = document.createElement("input");
-  input.type = "number";
-  input.min = "0";
-  input.value = "0";
-
-  input.dataset.actionId = action.id;
-  input.dataset.eventType = eventType;
-  input.dataset.noPersist = "true";
-
-  input.addEventListener("input", () => {
-    handleControlChange(action.id, input);
-  });
-
-  controls.appendChild(input);
   row.append(label, controls);
+
+  row.querySelectorAll("input, select").forEach(control => {
+    const actionId = control.dataset.actionId || control.dataset.levelActionId;
+    control.addEventListener(control.tagName === "SELECT" ? "change" : "input", () => {
+      handleControlChange(actionId, control);
+    });
+  });
 
   return row;
 }
 
-/* ==========================================================
-ПОЛУЧАЕМ ОЧКИ ЗА ДЕЙСТВИЕ
-Берём очки из самого действия: action.points.
-Для действий с уровнями берём action.points[eventType][level].
-========================================================== */
+function syncActionControls(actionId, sourceControl) {
+  if (isSyncingControls) return;
 
-function getPoints(actionId, eventType, level = null) {
-  const action = getActionById(actionId);
+  isSyncingControls = true;
 
-  if (!action || !action.points) return 0;
+  const sourceRow = sourceControl.closest(".action-row");
+  const isQuantitySource = sourceControl.matches("input[data-action-id], select[data-action-id]");
+  const isLevelSource = sourceControl.classList.contains("action-level-select");
 
-  const points = action.points[eventType];
+  document.querySelectorAll(".action-row").forEach(row => {
+    if (row === sourceRow) return;
 
-  if (points == null) return 0;
+    const quantityControl = getQuantityControl(row);
+    const levelSelect = row.querySelector(".action-level-select");
+    const rowActionId = quantityControl?.dataset.actionId || levelSelect?.dataset.levelActionId;
 
-  if (typeof points === "object") {
-    return Number(points[level]) || 0;
-  }
+    if (rowActionId !== actionId) return;
 
-  return Number(points) || 0;
+    if (isQuantitySource && quantityControl) quantityControl.value = sourceControl.value;
+    if (isLevelSource && levelSelect) levelSelect.value = sourceControl.value;
+  });
+
+  isSyncingControls = false;
 }
 
-function calculateSavedItemTotal(actionId, eventType, itemState = {}) {
-  const value = Number(itemState.value) || 0;
-  const points = getPoints(actionId, eventType, itemState.level ?? null);
+function calculateRowTotal(row) {
+  const quantityControl = getQuantityControl(row);
+  const eventType = quantityControl?.dataset.eventType;
+  const actionId = quantityControl?.dataset.actionId;
+  const level = row.querySelector(".action-level-select")?.value || null;
 
-  return value * points;
+  return (Number(quantityControl?.value) || 0) * getPoints(actionId, eventType, level);
 }
-
-/* ==========================================================
-ОБНОВЛЯЕМ ИТОГИ
-========================================================== */
 
 function updateTotals() {
   let turtleTotal = 0;
   let vsTotal = 0;
 
-  const controls = document.querySelectorAll(
-    ".action-row input[data-action-id], .action-row select[data-action-id]"
-  );
+  document.querySelectorAll(".action-row").forEach(row => {
+    const eventType = getQuantityControl(row)?.dataset.eventType;
+    const total = calculateRowTotal(row);
 
-  controls.forEach(control => {
-    const value = Number(control.value) || 0;
-    const actionId = control.dataset.actionId;
-    const eventType = control.dataset.eventType;
-    const row = control.closest(".action-row");
-    const levelSelect = row?.querySelector(".action-level-select");
-    const level = levelSelect ? levelSelect.value : null;
-
-    const points = getPoints(actionId, eventType, level);
-    const total = value * points;
-
-    if (eventType === "turtle") {
-      turtleTotal += total;
-    }
-
-    if (eventType === "vs") {
-      vsTotal += total;
-    }
+    if (eventType === "turtle") turtleTotal += total;
+    if (eventType === "vs") vsTotal += total;
   });
 
   const turtleTotalElement = document.getElementById("turtleTotal");
   const vsTotalElement = document.getElementById("vsTotal");
 
-  if (turtleTotalElement) {
-    turtleTotalElement.textContent = turtleTotal.toLocaleString("ru-RU");
-  }
-
-  if (vsTotalElement) {
-    vsTotalElement.textContent = vsTotal.toLocaleString("ru-RU");
-  }
+  if (turtleTotalElement) turtleTotalElement.textContent = formatNumber(turtleTotal);
+  if (vsTotalElement) vsTotalElement.textContent = formatNumber(vsTotal);
 }
 
-function calculateWeeklyTotals() {
-  saveCurrentDayState();
+function calculateSavedItemTotal(actionId, eventType, itemState = {}) {
+  const value = Number(itemState.value) || 0;
+  return value * getPoints(actionId, eventType, itemState.level ?? null);
+}
 
-  const state = readTurboWeekState();
+function updateWeeklyTotals() {
+  const state = readWeekState();
   let turtleTotal = 0;
   let vsTotal = 0;
 
-  database.dayOrder.forEach(dayId => {
-    const dayState = state[dayId];
-    if (!dayState) return;
-
-    Object.entries(dayState.turtle || {}).forEach(([actionId, itemState]) => {
+  Object.values(state).forEach(dayState => {
+    Object.entries(dayState?.turtle || {}).forEach(([actionId, itemState]) => {
       turtleTotal += calculateSavedItemTotal(actionId, "turtle", itemState);
     });
 
-    Object.entries(dayState.vs || {}).forEach(([actionId, itemState]) => {
+    Object.entries(dayState?.vs || {}).forEach(([actionId, itemState]) => {
       vsTotal += calculateSavedItemTotal(actionId, "vs", itemState);
     });
   });
 
-  return { turtleTotal, vsTotal };
+  if (typeof window.setProfileBlockContent === "function") {
+    window.setProfileBlockContent({
+      description: "Недельные итоги Турбочерепашки и VS сохраняются для текущего профиля или этого устройства.",
+      content: `
+        <div class="result-block">
+          <h4>Всего Турбочерепашка за неделю:</h4>
+          <div>${formatNumber(turtleTotal)}</div>
+        </div>
+        <div class="result-block">
+          <h4>Всего VS Дуэль союза за неделю:</h4>
+          <div>${formatNumber(vsTotal)}</div>
+        </div>
+      `
+    });
+  }
 }
 
-function updateWeeklyTotals() {
-  const turtleWeekTotalElement = document.getElementById("turboProfileTurtleWeekTotal");
-  const vsWeekTotalElement = document.getElementById("turboProfileVsWeekTotal");
-
-  if (!turtleWeekTotalElement || !vsWeekTotalElement) return;
-
-  const totals = calculateWeeklyTotals();
-
-  turtleWeekTotalElement.textContent = totals.turtleTotal.toLocaleString("ru-RU");
-  vsWeekTotalElement.textContent = totals.vsTotal.toLocaleString("ru-RU");
-}
-
-function renderTurboProfileBlock() {
-  if (typeof window.setProfileBlockContent !== "function") return;
-
-  const container = document.createElement("div");
-  container.className = "turbo-profile-block";
-
-  container.innerHTML = `
-    <div class="profile-block-grid">
-      <div class="profile-block-result">
-        <span>Всего Турбочерепашка за неделю</span><br>
-        <strong id="turboProfileTurtleWeekTotal">0</strong>
-      </div>
-
-      <div class="profile-block-result">
-        <span>Всего VS Дуэль союза за неделю</span><br>
-        <strong id="turboProfileVsWeekTotal">0</strong>
-      </div>
-    </div>
-
-    <p class="profile-block-note">Заполни значения по каждому дню недели. Калькулятор сохранит введённые данные отдельно по дням и покажет общую сумму очков за неделю.</p>
-  `;
-
-  window.setProfileBlockContent({
-    description: "Сумма очков по всем заполненным дням недели.",
-    content: container
-  });
-
+function handleControlChange(actionId, sourceControl) {
+  syncActionControls(actionId, sourceControl);
+  updateTotals();
+  saveCurrentDayState();
   updateWeeklyTotals();
 }
 
-/* ==========================================================
-РИСУЕМ СПИСОК
-========================================================== */
+function renderEventList(container, list, eventType) {
+  container.innerHTML = "";
 
-function renderList(container, items, eventType) {
-  items.forEach(item => {
+  sortDayItems(resolveDayList(list)).forEach(item => {
     if (typeof item !== "string") {
-      if (item.type === "text") {
-        container.appendChild(createTextRow(item.text));
-      }
-
+      container.appendChild(createTextRow(item.text));
       return;
     }
 
@@ -506,88 +358,65 @@ function renderList(container, items, eventType) {
   });
 }
 
-/* ==========================================================
-РИСУЕМ ДЕНЬ
-========================================================== */
-
 function renderDay(dayId) {
-  saveCurrentDayState();
-
   const day = database.days[dayId];
-
-  if (!day) return;
-
-  currentDayId = dayId;
-
   const turtleList = document.getElementById("turtleList");
   const vsList = document.getElementById("vsList");
 
-  if (!turtleList || !vsList) {
-    console.error("Не найдены контейнеры turtleList или vsList");
-    return;
-  }
+  if (!day || !turtleList || !vsList) return;
 
-  turtleList.innerHTML = "";
-  vsList.innerHTML = "";
+  saveCurrentDayState();
+  currentDayId = dayId;
 
-  const turtleItems = sortDayItemsByDatabaseOrder(resolveDayList(day.turtle || []));
-  const vsItems = sortDayItemsByDatabaseOrder(resolveDayList(day.vs || []));
+  renderEventList(turtleList, day.turtle, "turtle");
+  renderEventList(vsList, day.vs, "vs");
 
-  renderList(turtleList, turtleItems, "turtle");
-  renderList(vsList, vsItems, "vs");
   restoreDayState(dayId);
-
   updateTotals();
   updateWeeklyTotals();
 }
 
-/* ==========================================================
-ЗАПУСК КАЛЬКУЛЯТОРА
-========================================================== */
-
-export function init() {
+function fillDaySelector() {
   const daySelector = document.getElementById("daySelector");
-
   if (!daySelector) return;
 
-  currentDayId = "";
   daySelector.innerHTML = "";
 
   database.dayOrder.forEach(dayId => {
-    const day = database.days[dayId];
-
-    if (!day) return;
-
     const option = document.createElement("option");
     option.value = dayId;
-    option.textContent = day.name;
-
+    option.textContent = database.days[dayId].name;
     daySelector.appendChild(option);
   });
 
-  renderTurboProfileBlock();
-  daySelector.value = getCurrentUtcDayId();
-
   daySelector.addEventListener("change", () => {
-    isDaySelectedManually = true;
+    selectedManually = true;
     renderDay(daySelector.value);
   });
+}
 
-  window.addEventListener("harvesthub:utc-day-change", event => {
-    if (isDaySelectedManually) return;
+function selectCurrentUtcDay() {
+  const daySelector = document.getElementById("daySelector");
+  if (!daySelector) return;
 
-    const dayId = event.detail?.dayId;
+  const dayId = getCurrentUtcDayId();
+  daySelector.value = dayId;
+  renderDay(dayId);
+}
 
-    if (!dayId || !database.days[dayId]) return;
+export function init() {
+  if (timerId) window.clearInterval(timerId);
 
-    daySelector.value = dayId;
-    renderDay(dayId);
+  fillDaySelector();
+  selectCurrentUtcDay();
+
+  window.addEventListener("harvesthub:utc-day-change", () => {
+    if (!selectedManually) selectCurrentUtcDay();
   });
 
   window.addEventListener("harvesthub:profile-change", () => {
-    renderTurboProfileBlock();
-    renderDay(daySelector.value);
+    renderDay(currentDayId || getCurrentUtcDayId());
   });
 
-  renderDay(daySelector.value);
+  timerId = window.setInterval(updateWeeklyTotals, 30000);
 }
