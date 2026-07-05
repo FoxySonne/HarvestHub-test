@@ -125,7 +125,7 @@
   grid-row: 2;
 }
 
-.troop-unit-toggle {
+.troop-field .troop-unit-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
@@ -139,21 +139,29 @@
 }
 
 .troop-unit-toggle button {
-  min-height: 0;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--text-soft);
-  font-size: 14px;
-  font-weight: 700;
-  box-shadow: none;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  box-shadow: none !important;
 }
 
 .troop-unit-toggle button.is-active {
-  background: var(--button);
-  color: #fff;
+  background: var(--button) !important;
+  color: #fff !important;
 }
 
 .troop-field-with-tooltip .tooltip {
