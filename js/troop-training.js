@@ -555,6 +555,47 @@ function getTransferTargetName(target) {
   return "выбранного калькулятора";
 }
 
+function getTransferStatusHtml(target, calculation, directSaveResult) {
+  const troops = formatNumber(calculation.possibleTroops);
+  const stages = calculation.stages
+    .map(stage => `${stage.level || stage.stage} ур. — ${troops}`)
+    .join("<br>");
+
+  if (target === "turtle") {
+    return `
+      <strong>Данные сохранены для Турбочерепашки.</strong><br>
+      Записано в день: понедельник.<br>
+      Действие: Улучшение войск.<br>
+      Уровень и количество:<br>${stages || "нет активных этапов"}<br>
+      Статус прямой записи: ${directSaveResult ? "успешно" : "не выполнено"}.<br>
+      При открытии калькулятора Турбочерепашки данные дополнительно проверятся и подставятся повторно, если это нужно.
+    `;
+  }
+
+  if (target === "vs") {
+    return `
+      <strong>Данные сохранены для VS.</strong><br>
+      Записано в день: пятница.<br>
+      Действие: Улучшение войск.<br>
+      Уровень и количество:<br>${stages || "нет активных этапов"}<br>
+      Статус прямой записи: ${directSaveResult ? "успешно" : "не выполнено"}.<br>
+      При открытии калькулятора Турбочерепашки & VS данные дополнительно проверятся и подставятся повторно, если это нужно.
+    `;
+  }
+
+  if (target === "ipk") {
+    return `
+      <strong>Данные сохранены для ИПК.</strong><br>
+      Раздел: Улучшение войск.<br>
+      Уровень и количество:<br>${stages || "нет активных этапов"}<br>
+      Открой страницу ИПК — данные будут подставлены в строки обучения войск по соответствующим уровням.<br>
+      Старые значения по уровням войск будут перезаписаны.
+    `;
+  }
+
+  return `Данные сохранены для ${getTransferTargetName(target)}.`;
+}
+
 function bindTransferButtons() {
   document.querySelectorAll("[data-transfer-target]").forEach(button => {
     button.addEventListener("click", () => {
@@ -571,10 +612,10 @@ function bindTransferButtons() {
       };
 
       localStorage.setItem(TRANSFER_STORAGE_KEY, JSON.stringify(payload));
-      saveTurboVsTransfer(target, payload);
+      const directSaveResult = saveTurboVsTransfer(target, payload);
 
       const status = getElement("troopTransferStatus");
-      if (status) status.textContent = `Данные сохранены для ${getTransferTargetName(target)}.`;
+      if (status) status.innerHTML = getTransferStatusHtml(target, calculation, directSaveResult);
     });
   });
 }
