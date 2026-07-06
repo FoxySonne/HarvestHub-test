@@ -185,12 +185,13 @@ function renderCategoryList(container) {
   });
 }
 
-function renderSelectedCards() {
+function renderSelectedCards({ preserveDomValues = true } = {}) {
   const cardsContainer = document.getElementById("ipkCards");
 
   if (!cardsContainer) return;
 
-  saveAllValues();
+  if (preserveDomValues) saveAllValues();
+
   cardsContainer.innerHTML = "";
 
   database.categoryIpk
@@ -311,7 +312,7 @@ function applyTroopTransferPreset() {
   localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
   renderCategoryList(document.getElementById("ipkDesktopCategoriesList"));
   renderCategoryList(document.getElementById("ipkMobileCategoriesList"));
-  renderSelectedCards();
+  renderSelectedCards({ preserveDomValues: false });
 
   if (typeof window.savePageFormState === "function") window.savePageFormState();
 }
