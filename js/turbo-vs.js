@@ -348,6 +348,14 @@ function updateWeeklyTotals() {
   }
 }
 
+function findTransferDay(eventType, preferredDay) {
+  if (preferredDay && database.days[preferredDay] && resolveDayList(database.days[preferredDay][eventType]).includes("troop_upgrade")) {
+    return preferredDay;
+  }
+
+  return database.dayOrder.find(dayId => resolveDayList(database.days[dayId]?.[eventType]).includes("troop_upgrade")) || "";
+}
+
 function applyTroopTransferPreset() {
   const preset = readTroopTransferPreset();
   const presetId = preset?.id || preset?.createdAt || "";
@@ -366,30 +374,36 @@ function applyTroopTransferPreset() {
     value: String(Number(lastStage.troops) || 0),
     level: String(lastStage.level)
   };
-  let preferredDay = preset.preferredDay || "";
+  let openedDay = "";
 
   database.dayOrder.forEach(dayId => {
-    const day = database.days[dayId];
-    if (!day) return;
-
-    [
-      ["turtle", shouldApplyTurtle],
-      ["vs", shouldApplyVs]
-    ].forEach(([eventType, shouldApply]) => {
-      if (!shouldApply) return;
-      if (!resolveDayList(day[eventType]).includes("troop_upgrade")) return;
-
-      state[dayId] = state[dayId] || { turtle: {}, vs: {} };
-      state[dayId][eventType] = state[dayId][eventType] || {};
-      state[dayId][eventType].troop_upgrade = itemState;
-
-      if (!preferredDay) preferredDay = dayId;
-    });
+    if (shouldApplyTurtle && state[dayId]?.turtle?.troop_upgrade) delete state[dayId].turtle.troop_upgrade;
+    if (shouldApplyVs && state[dayId]?.vs?.troop_upgrade) delete state[dayId].vs.troop_upgrade;
   });
+
+  if (shouldApplyTurtle) {
+    const dayId = findTransferDay("turtle", preset.preferredDay || "mon");
+    if (dayId) {
+      state[dayId] = state[dayId] || { turtle: {}, vs: {} };
+      state[dayId].turtle = state[dayId].turtle || {};
+      state[dayId].turtle.troop_upgrade = itemState;
+      openedDay = openedDay || dayId;
+    }
+  }
+
+  if (shouldApplyVs) {
+    const dayId = findTransferDay("vs", preset.preferredDay || "fri");
+    if (dayId) {
+      state[dayId] = state[dayId] || { turtle: {}, vs: {} };
+      state[dayId].vs = state[dayId].vs || {};
+      state[dayId].vs.troop_upgrade = itemState;
+      openedDay = openedDay || dayId;
+    }
+  }
 
   writeWeekState(state);
   localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
-  return preferredDay;
+  return openedDay;
 }
 
 function handleControlChange(actionId, sourceControl) {
