@@ -9,6 +9,7 @@ let isSyncingControls = false;
 let currentDayId = "";
 let selectedManually = false;
 let timerId = null;
+let transferTimerId = null;
 
 function getWeekScope() {
   const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
@@ -429,14 +430,14 @@ function renderEventList(container, list, eventType) {
   });
 }
 
-function renderDay(dayId) {
+function renderDay(dayId, { skipSave = false } = {}) {
   const day = database.days[dayId];
   const turtleList = document.getElementById("turtleList");
   const vsList = document.getElementById("vsList");
 
   if (!day || !turtleList || !vsList) return;
 
-  saveCurrentDayState();
+  if (!skipSave) saveCurrentDayState();
   currentDayId = dayId;
 
   renderEventList(turtleList, day.turtle, "turtle");
@@ -475,25 +476,35 @@ function selectCurrentUtcDay() {
   renderDay(dayId);
 }
 
-function selectDay(dayId) {
+function selectDay(dayId, options = {}) {
   const daySelector = document.getElementById("daySelector");
   if (!daySelector || !database.days[dayId]) return false;
 
   selectedManually = true;
   daySelector.value = dayId;
-  renderDay(dayId);
+  renderDay(dayId, options);
   return true;
+}
+
+function applyPendingTroopTransferAfterRestore() {
+  const transferDay = applyTroopTransferPreset();
+  if (!transferDay) return;
+
+  selectDay(transferDay, { skipSave: true });
+
+  if (typeof window.savePageFormState === "function") {
+    window.savePageFormState("calculator/turbo-vs.html");
+  }
 }
 
 export function init() {
   if (timerId) window.clearInterval(timerId);
+  if (transferTimerId) window.clearTimeout(transferTimerId);
 
-  const transferDay = applyTroopTransferPreset();
   fillDaySelector();
+  selectCurrentUtcDay();
 
-  if (!transferDay || !selectDay(transferDay)) {
-    selectCurrentUtcDay();
-  }
+  transferTimerId = window.setTimeout(applyPendingTroopTransferAfterRestore, 300);
 
   window.addEventListener("harvesthub:utc-day-change", () => {
     if (!selectedManually) selectCurrentUtcDay();
@@ -501,6 +512,7 @@ export function init() {
 
   window.addEventListener("harvesthub:profile-change", () => {
     renderDay(currentDayId || getCurrentUtcDayId());
+    window.setTimeout(applyPendingTroopTransferAfterRestore, 50);
   });
 
   timerId = window.setInterval(updateWeeklyTotals, 30000);
