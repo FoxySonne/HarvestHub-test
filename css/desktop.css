@@ -39,6 +39,7 @@ DESKTOP: 900px+
     position: sticky;
     top: 20px;
     height: fit-content;
+    min-width: 0;
   }
 
   .adaptive-grid {
@@ -81,10 +82,75 @@ DESKTOP: 900px+
 }
 
 /* ==========================================================
-DESKTOP: 900–1599px
+MEDIUM DESKTOP: 900–1199px
 ========================================================== */
 
-@media (min-width: 900px) and (max-width: 1599px) {
+@media (min-width: 900px) and (max-width: 1199px) {
+
+  :root {
+    --sidebar-width: 210px;
+  }
+
+  .container {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    gap: 18px;
+    padding: 14px;
+  }
+
+  .right {
+    grid-column: 2;
+    grid-row: 2;
+    position: static;
+  }
+
+  #rightbar-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .main {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .page-header .button-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .page-header .button-group .button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .turbo-content {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .results {
+    grid-column: auto;
+    grid-row: auto;
+    order: -1;
+  }
+
+  .action-row {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 170px);
+  }
+
+  .home-status-grid,
+  .home-calculator-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================
+DESKTOP: 1200–1599px
+========================================================== */
+
+@media (min-width: 1200px) and (max-width: 1599px) {
 
   :root {
     --sidebar-width: 220px;
@@ -98,6 +164,15 @@ DESKTOP: 900–1599px
 
   .adaptive-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  .turbo-content {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
+
+  .results {
+    grid-column: 1 / -1;
+    grid-row: auto;
   }
 }
 
