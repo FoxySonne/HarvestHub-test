@@ -81,10 +81,7 @@ function ensureProfileBlock() {
   block.dataset.profileBlockReady = "false";
   block.innerHTML = `
     <div class="card-header profile-block-header">
-      <div>
-        <h3>Проф.блок</h3>
-        <p id="profileBlockDescription"></p>
-      </div>
+      <p id="profileBlockDescription"></p>
     </div>
     <div id="profileBlockContent" class="profile-block-content"></div>
   `;
