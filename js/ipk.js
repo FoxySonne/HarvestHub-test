@@ -3,6 +3,7 @@ const { database } = await import(`../data/database.js?v=${encodeURIComponent(mo
 
 const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
 const TROOP_TRANSFER_APPLIED_KEY = "harvesthub_troop_training_transfer_applied_ipk";
+const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 let selectedCategoryIds = new Set();
 const ipkValues = new Map();
