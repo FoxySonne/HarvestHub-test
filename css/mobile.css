@@ -14,7 +14,19 @@ MOBILE: до 899px
     display: flex;
     width: calc(100% - 32px);
     margin: 0 auto 16px;
+    min-height: 46px;
+    padding: 8px 14px;
     border-radius: 0 0 var(--radius-large) var(--radius-large);
+  }
+
+  .menu-button {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .topbar-title {
+    font-size: 18px;
+    line-height: 1.1;
   }
 
   .main {
