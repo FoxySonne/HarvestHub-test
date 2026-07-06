@@ -93,16 +93,10 @@ function ensureProfileBlock() {
 }
 
 function clearProfileBlock() {
-  const block = ensureProfileBlock();
+  const block = document.getElementById("profileBlock");
   if (!block) return;
 
-  const description = document.getElementById("profileBlockDescription");
-  const content = document.getElementById("profileBlockContent");
-
-  if (description) description.textContent = "";
-  if (content) content.innerHTML = "";
-
-  block.dataset.profileBlockReady = "false";
+  block.remove();
 }
 
 function setProfileBlockContent({ description = "", content = "" } = {}) {
@@ -131,20 +125,6 @@ function setProfileBlockContent({ description = "", content = "" } = {}) {
     detail: { block }
   }));
 }
-
-const observer = new MutationObserver(() => {
-  const pageContent = document.getElementById("page-content");
-  if (!pageContent || !pageContent.children.length) return;
-
-  ensureProfileBlock();
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-  const pageContent = document.getElementById("page-content");
-  if (pageContent) {
-    observer.observe(pageContent, { childList: true });
-  }
-});
 
 window.addEventListener("harvesthub:profile-change", () => {
   restoreProfileBlockState();
