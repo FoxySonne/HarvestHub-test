@@ -1,0 +1,39 @@
+/* TURBO VS CALCULATOR */
+.action-row-multi-level {
+  align-items: start;
+}
+
+.action-row-multi-level > label {
+  padding-top: 10px;
+}
+
+.action-row-multi-level .action-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.action-multi-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.action-multi-line select,
+.action-multi-line input {
+  min-width: 0;
+  width: 100%;
+  text-align: center;
+}
+
+@media (max-width: 899px) {
+  .action-row-multi-level {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .action-row-multi-level > label {
+    padding-top: 0;
+  }
+}
