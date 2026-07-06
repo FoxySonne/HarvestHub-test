@@ -45,19 +45,33 @@ function getTimeDigits(value) {
   return String(value || "").replace(/\D/g, "");
 }
 
-function formatClockDigits(digits) {
-  const padded = digits.padStart(6, "0");
-  const seconds = padded.slice(-2);
-  const minutes = padded.slice(-4, -2);
-  const hours = padded.slice(0, -4) || "00";
+function clampTimePart(value) {
+  return Math.min(Math.max(Number(value) || 0, 0), 59);
+}
 
-  return `${hours.padStart(2, "0")}:${minutes}:${seconds}`;
+function normalizeClockParts(digits) {
+  const padded = digits.padStart(6, "0");
+
+  return {
+    hours: Math.max(Number(padded.slice(0, -4)) || 0, 0),
+    minutes: clampTimePart(padded.slice(-4, -2)),
+    seconds: clampTimePart(padded.slice(-2))
+  };
+}
+
+function formatClockParts({ hours, minutes, seconds }) {
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatClockDigits(digits) {
+  return formatClockParts(normalizeClockParts(digits));
 }
 
 function formatAvailableTimeInput(value) {
   const digits = getTimeDigits(value);
   if (!digits) return "";
 
+  if (digits.length <= 3) return `${Number(digits) || 0}д 00:00:00`;
   if (digits.length <= 6) return `00д ${formatClockDigits(digits)}`;
 
   const dayDigits = digits.slice(0, -6);
@@ -70,8 +84,7 @@ function formatStageTimeInput(value) {
   if (!digits) return "";
 
   return formatClockDigits(digits.slice(-6));
-}
-
+}\n
 function parseTimeToSeconds(value, allowDays = false) {
   const text = String(value || "").trim().toLowerCase();
 
@@ -94,7 +107,11 @@ function parseTimeToSeconds(value, allowDays = false) {
   const parts = timeText.split(":").map(part => Number(part) || 0);
   while (parts.length < 3) parts.unshift(0);
 
-  const [hours, minutes, seconds] = parts.slice(-3);
+  const [rawHours, rawMinutes, rawSeconds] = parts.slice(-3);
+  const hours = Math.max(rawHours, 0);
+  const minutes = clampTimePart(rawMinutes);
+  const seconds = clampTimePart(rawSeconds);
+
   return days * 86400 + hours * 3600 + minutes * 60 + seconds;
 }
 
@@ -225,8 +242,7 @@ function getActiveStages() {
     .filter(card => isAdvanced || Number(card.dataset.stage) === 1)
     .map(getStageData)
     .filter(stage => stage.isActive);
-}
-
+}\n
 function getCostForTroops(stages, troops) {
   const multiplier = troops / 1000;
   const resources = { food: 0, wood: 0, metal: 0, fuel: 0 };
