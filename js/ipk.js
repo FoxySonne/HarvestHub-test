@@ -108,9 +108,8 @@ function createCard(category) {
   card.dataset.resultManual = manualResult != null ? "true" : "false";
 
   card.innerHTML = `
-    <header class="ipk-card-header">
+    <header class="card-header">
       <h3>${category.name}</h3>
-      <button class="ipk-card-toggle" type="button" aria-label="Свернуть категорию">⌄</button>
     </header>
 
     <div class="ipk-card-body">
@@ -131,12 +130,6 @@ function createCard(category) {
       </div>
     </div>
   `;
-
-  const toggleButton = card.querySelector(".ipk-card-toggle");
-  toggleButton.addEventListener("click", () => {
-    card.classList.toggle("is-collapsed");
-    toggleButton.textContent = card.classList.contains("is-collapsed") ? "›" : "⌄";
-  });
 
   card.addEventListener("input", event => {
     if (event.target.matches("[data-ipk-result]")) {
@@ -202,6 +195,7 @@ function renderSelectedCards({ preserveDomValues = true } = {}) {
     });
 
   updateIpkResults();
+  if (typeof window.bindCollapsibleCards === "function") window.bindCollapsibleCards();
 }
 
 function setCategoryEnabled(categoryId, isEnabled) {
@@ -216,19 +210,6 @@ function setCategoryEnabled(categoryId, isEnabled) {
   });
 
   renderSelectedCards();
-}
-
-function setupMobileCategoryCollapse() {
-  const button = document.getElementById("ipkToggleCategories");
-  const icon = document.getElementById("ipkToggleIcon");
-  const list = document.getElementById("ipkMobileCategoriesList");
-
-  if (!button || !icon || !list) return;
-
-  button.addEventListener("click", () => {
-    list.classList.toggle("is-collapsed");
-    icon.textContent = list.classList.contains("is-collapsed") ? "Показать" : "Свернуть";
-  });
 }
 
 function calculateCard(card) {
@@ -330,8 +311,9 @@ function renderIpk() {
 
   renderCategoryList(desktopCategories);
   renderCategoryList(mobileCategories);
-  setupMobileCategoryCollapse();
   renderSelectedCards();
+
+  if (typeof window.bindCollapsibleCards === "function") window.bindCollapsibleCards();
 }
 
 export function init() {
