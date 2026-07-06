@@ -1,0 +1,52 @@
+/* COLLAPSIBLE CARDS */
+.collapsible-card-header {
+  align-items: center;
+  cursor: default;
+}
+
+.collapsible-card-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--text-soft);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: none;
+}
+
+.collapsible-card-toggle:hover {
+  color: var(--accent);
+  border-color: var(--button);
+  background: rgba(112, 220, 86, .1);
+}
+
+.collapsible-card.is-collapsed > :not(.collapsible-card-header) {
+  display: none !important;
+}
+
+.collapsible-card.is-collapsed .collapsible-card-header {
+  margin-bottom: 0;
+}
+
+.collapsible-card.is-collapsed {
+  padding-bottom: 20px;
+}
+
+@media (max-width: 899px) {
+  .collapsible-card-toggle {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    font-size: 18px;
+  }
+}
