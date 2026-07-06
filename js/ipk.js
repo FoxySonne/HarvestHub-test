@@ -286,7 +286,7 @@ function applyTroopTransferPreset() {
 
   if (!preset || !presetId || localStorage.getItem(TROOP_TRANSFER_APPLIED_KEY) === presetId) return;
 
-  const shouldApplyIpk = preset.targets?.ipk || preset.target === "turtle-ipk" || preset.target === "vs-ipk";
+  const shouldApplyIpk = preset.targets?.ipk || preset.target === "ipk" || preset.target === "turtle-ipk" || preset.target === "vs-ipk";
   if (!shouldApplyIpk) return;
 
   const stages = Array.isArray(preset.stages) ? preset.stages : [];
