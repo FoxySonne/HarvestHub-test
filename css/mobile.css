@@ -12,11 +12,14 @@ MOBILE: до 899px
 
   .topbar {
     display: flex;
+    width: calc(100% - 32px);
+    margin: 0 auto 16px;
+    border-radius: 0 0 var(--radius-large) var(--radius-large);
   }
 
   .main {
     width: 100%;
-    padding: 16px;
+    padding: 0 16px 16px;
   }
 
   .left {
@@ -76,6 +79,42 @@ MOBILE: до 899px
     order: -1;
   }
 
+  .home-status-grid,
+  .home-calculator-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  .home-status-card,
+  .home-calculator-card {
+    min-height: 0 !important;
+    padding: 16px !important;
+  }
+
+  .home-status-card h3,
+  .home-calculator-card h3 {
+    font-size: 20px !important;
+    line-height: 1.15;
+  }
+
+  .home-status-card p,
+  .home-calculator-card p {
+    font-size: 14px !important;
+    line-height: 1.35;
+  }
+
+  .home-calculator-card {
+    gap: 14px !important;
+  }
+
+  .home-calculator-card button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 15px;
+  }
+
   .button,
   button,
   input[type=submit],
@@ -108,5 +147,25 @@ MOBILE: до 899px
   #rightbar-container .quick-link-item span,
   #rightbar-container .quick-links-empty {
     font-size: 13px;
+  }
+
+  .home-status-grid,
+  .home-calculator-grid {
+    gap: 12px !important;
+  }
+
+  .home-status-card,
+  .home-calculator-card {
+    padding: 14px !important;
+  }
+
+  .home-status-card h3,
+  .home-calculator-card h3 {
+    font-size: 18px !important;
+  }
+
+  .home-status-card p,
+  .home-calculator-card p {
+    font-size: 13px !important;
   }
 }
