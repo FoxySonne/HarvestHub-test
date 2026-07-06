@@ -4,30 +4,64 @@
   cursor: default;
 }
 
-.collapsible-card-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--panel);
-  color: var(--text-soft);
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-  transition: var(--transition);
-  box-shadow: none;
+.collapsible-card-toggle,
+.ipk-card-toggle,
+.ipk-collapse-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 50% !important;
+  background: var(--panel) !important;
+  color: var(--text-soft) !important;
+  font-family: inherit !important;
+  font-size: 0 !important;
+  font-weight: 800 !important;
+  line-height: 0 !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  box-shadow: none !important;
+  appearance: none !important;
 }
 
-.collapsible-card-toggle:hover {
-  color: var(--accent);
-  border-color: var(--button);
-  background: rgba(112, 220, 86, .1);
+.collapsible-card-toggle::before,
+.ipk-card-toggle::before,
+.ipk-collapse-button::before {
+  content: "⌄";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.collapsible-card.is-collapsed .collapsible-card-toggle::before,
+.ipk-card.is-collapsed .ipk-card-toggle::before,
+.ipk-collapse-button[aria-expanded="false"]::before,
+.ipk-collapse-button.is-collapsed::before,
+.ipk-category-list.is-collapsed + .ipk-collapse-button::before {
+  content: "›";
+  transform: translateX(1px);
+}
+
+.collapsible-card-toggle:hover,
+.ipk-card-toggle:hover,
+.ipk-collapse-button:hover {
+  color: var(--accent) !important;
+  border-color: var(--button) !important;
+  background: rgba(112, 220, 86, .1) !important;
 }
 
 .collapsible-card.is-collapsed > :not(.collapsible-card-header) {
@@ -42,11 +76,35 @@
   padding-bottom: 20px;
 }
 
+.ipk-card-toggle,
+.collapsible-card-toggle {
+  flex: 0 0 28px !important;
+}
+
+.ipk-collapse-button {
+  flex: 0 0 28px !important;
+}
+
+.ipk-mobile-categories .ipk-collapse-button,
+.ipk-desktop-categories .ipk-collapse-button {
+  margin-left: auto !important;
+}
+
 @media (max-width: 899px) {
-  .collapsible-card-toggle {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    font-size: 18px;
+  .collapsible-card-toggle,
+  .ipk-card-toggle,
+  .ipk-collapse-button {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+  }
+
+  .collapsible-card-toggle::before,
+  .ipk-card-toggle::before,
+  .ipk-collapse-button::before {
+    font-size: 15px;
   }
 }
