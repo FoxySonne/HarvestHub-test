@@ -84,7 +84,8 @@ function formatStageTimeInput(value) {
   if (!digits) return "";
 
   return formatClockDigits(digits.slice(-6));
-}\n
+}
+
 function parseTimeToSeconds(value, allowDays = false) {
   const text = String(value || "").trim().toLowerCase();
 
@@ -242,7 +243,8 @@ function getActiveStages() {
     .filter(card => isAdvanced || Number(card.dataset.stage) === 1)
     .map(getStageData)
     .filter(stage => stage.isActive);
-}\n
+}
+
 function getCostForTroops(stages, troops) {
   const multiplier = troops / 1000;
   const resources = { food: 0, wood: 0, metal: 0, fuel: 0 };
