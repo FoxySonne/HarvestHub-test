@@ -40,6 +40,57 @@
   min-width: 0;
 }
 
+.troop-stage-card.is-disabled {
+  opacity: .58;
+}
+
+.troop-stage-card.is-disabled .troop-stage-grid {
+  pointer-events: none;
+}
+
+.troop-stage-header {
+  align-items: center;
+}
+
+.troop-stage-enabled {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.troop-stage-enabled input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.troop-stage-enabled span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: transparent;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  transition: var(--transition);
+}
+
+.troop-stage-enabled input:checked + span {
+  background: var(--button);
+  border-color: var(--button);
+  color: #fff;
+}
+
 .troop-results-card {
   grid-column: 2;
   grid-row: 1;
