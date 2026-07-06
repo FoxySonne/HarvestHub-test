@@ -18,18 +18,26 @@ IPK CALCULATOR — mobile overflow fixes
 }
 
 .ipk-layout {
-  grid-template-columns: 1fr !important;
-}
-
-.ipk-desktop-categories {
-  position: static !important;
-  top: auto !important;
-  width: 100%;
-  max-width: 420px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) !important;
+  gap: 18px;
+  align-items: start;
+  max-width: 100%;
 }
 
 .ipk-cards {
+  grid-column: 1;
+  grid-row: 1;
   grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)) !important;
+}
+
+.ipk-desktop-categories {
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky !important;
+  top: 18px !important;
+  width: 100%;
+  max-width: 320px;
 }
 
 .ipk-result-input {
@@ -49,6 +57,25 @@ IPK CALCULATOR — mobile overflow fixes
   color: var(--accent) !important;
   border: 1px solid var(--border) !important;
   background: var(--panel) !important;
+}
+
+@media (max-width: 1240px) {
+  .ipk-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ipk-desktop-categories {
+    grid-column: 1;
+    grid-row: 1;
+    position: static !important;
+    top: auto !important;
+    max-width: 420px;
+  }
+
+  .ipk-cards {
+    grid-column: 1;
+    grid-row: 2;
+  }
 }
 
 @media (max-width: 899px) {
@@ -87,10 +114,15 @@ IPK CALCULATOR — mobile overflow fixes
     padding: 14px;
   }
 
+  .ipk-desktop-categories {
+    display: none !important;
+  }
+
   .ipk-cards {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    grid-row: auto;
   }
 
   .ipk-card {
