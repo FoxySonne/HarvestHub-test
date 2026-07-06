@@ -11,22 +11,32 @@ MOBILE: до 899px
   }
 
   .topbar {
-    display: flex;
-    width: calc(100% - 32px);
-    margin: 0 auto 16px;
-    min-height: 46px;
-    padding: 8px 14px;
+    display: flex !important;
+    align-items: center !important;
+    width: calc(100% - 32px) !important;
+    min-height: 0 !important;
+    height: 44px !important;
+    margin: 0 auto 14px !important;
+    padding: 4px 14px !important;
+    gap: 12px !important;
     border-radius: 0 0 var(--radius-large) var(--radius-large);
+    box-sizing: border-box !important;
   }
 
   .menu-button {
-    font-size: 24px;
-    line-height: 1;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
   }
 
   .topbar-title {
-    font-size: 18px;
-    line-height: 1.1;
+    font-size: 18px !important;
+    line-height: 1 !important;
   }
 
   .main {
@@ -143,6 +153,24 @@ MOBILE: до 899px
 }
 
 @media (max-width: 420px) {
+  .topbar {
+    height: 40px !important;
+    margin-bottom: 12px !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+  }
+
+  .menu-button {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    font-size: 21px !important;
+  }
+
+  .topbar-title {
+    font-size: 17px !important;
+  }
+
   #rightbar-container {
     gap: 12px;
   }
