@@ -4,9 +4,7 @@
   cursor: default;
 }
 
-.collapsible-card-toggle,
-.ipk-card-toggle,
-.ipk-collapse-button {
+.collapsible-card-toggle {
   position: relative !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -31,11 +29,10 @@
   box-shadow: none !important;
   appearance: none !important;
   overflow: hidden !important;
+  flex: 0 0 28px !important;
 }
 
-.collapsible-card-toggle::before,
-.ipk-card-toggle::before,
-.ipk-collapse-button::before {
+.collapsible-card-toggle::before {
   content: "";
   position: absolute;
   left: 50%;
@@ -49,16 +46,11 @@
   box-sizing: border-box;
 }
 
-.collapsible-card.is-collapsed .collapsible-card-toggle::before,
-.ipk-card.is-collapsed .ipk-card-toggle::before,
-.ipk-collapse-button[aria-expanded="false"]::before,
-.ipk-collapse-button.is-collapsed::before {
+.collapsible-card.is-collapsed .collapsible-card-toggle::before {
   transform: translate(-62%, -50%) rotate(-45deg);
 }
 
-.collapsible-card-toggle:hover,
-.ipk-card-toggle:hover,
-.ipk-collapse-button:hover {
+.collapsible-card-toggle:hover {
   color: var(--accent) !important;
   border-color: var(--button) !important;
   background: rgba(112, 220, 86, .1) !important;
@@ -76,35 +68,18 @@
   padding-bottom: 20px;
 }
 
-.ipk-card-toggle,
-.collapsible-card-toggle {
-  flex: 0 0 28px !important;
-}
-
-.ipk-collapse-button {
-  flex: 0 0 28px !important;
-}
-
-.ipk-mobile-categories .ipk-collapse-button,
-.ipk-desktop-categories .ipk-collapse-button {
-  margin-left: auto !important;
-}
-
 @media (max-width: 899px) {
-  .collapsible-card-toggle,
-  .ipk-card-toggle,
-  .ipk-collapse-button {
+  .collapsible-card-toggle {
     width: 26px !important;
     height: 26px !important;
     min-width: 26px !important;
     max-width: 26px !important;
     min-height: 26px !important;
     max-height: 26px !important;
+    flex-basis: 26px !important;
   }
 
-  .collapsible-card-toggle::before,
-  .ipk-card-toggle::before,
-  .ipk-collapse-button::before {
+  .collapsible-card-toggle::before {
     width: 6px;
     height: 6px;
   }
