@@ -305,6 +305,15 @@
     ];
   }
 
+  function setShortageTitle(text) {
+    const shortagesContainer = getElement("troopShortages");
+    const title = shortagesContainer?.previousElementSibling;
+
+    if (title && title.tagName === "P") {
+      title.textContent = text;
+    }
+  }
+
   function patchTroopTrainingResults() {
     if (!document.querySelector(".troop-page")) return;
 
@@ -314,11 +323,13 @@
 
     if (calculation.desiredMode) {
       if (extraTitle) extraTitle.textContent = `Цель: ${formatNumber(calculation.targetTroops)} войск`;
+      setShortageTitle(`Не хватает для цели ${formatNumber(calculation.targetTroops)} войск:`);
       renderResourceList(getElement("troopShortages"), buildShortageItems(calculation.missing));
       return;
     }
 
     if (extraTitle) extraTitle.textContent = `Ещё можно обучить: ${formatNumber(extra.extraTroops)} войск`;
+    setShortageTitle(`Не хватает, чтобы обучить ещё ${formatNumber(extra.nextBatchTroops)} войск:`);
     renderResourceList(getElement("troopShortages"), buildShortageItems(extra.shortages));
   }
 
