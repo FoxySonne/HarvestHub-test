@@ -108,6 +108,13 @@ RIGHT SIDEBAR
   min-width: 0;
 }
 
+#rightbar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
 /* ==========================================================
 ADAPTIVE GRIDS
 ========================================================== */
