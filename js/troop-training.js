@@ -488,15 +488,17 @@ function getTransferTargets(target) {
   };
 }
 
-function getTransferPage(target) {
-  if (target === "ipk") return "calculator/ipk.html";
-  return "calculator/turbo-vs.html";
-}
-
 function getPreferredDay(target) {
   if (target === "turtle") return "mon";
   if (target === "vs") return "fri";
   return "";
+}
+
+function getTransferTargetName(target) {
+  if (target === "turtle") return "Турбочерепашки";
+  if (target === "vs") return "VS";
+  if (target === "ipk") return "ИПК";
+  return "выбранного калькулятора";
 }
 
 function bindTransferButtons() {
@@ -517,9 +519,7 @@ function bindTransferButtons() {
       localStorage.setItem(TRANSFER_STORAGE_KEY, JSON.stringify(payload));
 
       const status = getElement("troopTransferStatus");
-      if (status) status.textContent = "Результат сохранён и будет перенесён на выбранную страницу.";
-
-      loadPage(getTransferPage(target));
+      if (status) status.textContent = `Данные сохранены для ${getTransferTargetName(target)}. Открой этот калькулятор, чтобы они подставились.`;
     });
   });
 }
