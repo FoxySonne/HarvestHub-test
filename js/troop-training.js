@@ -8,6 +8,18 @@ const RESOURCE_CONFIG = [
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
 
+const TROOP_COST_PRESETS = {
+  training: {
+    8: { food: 194000, wood: 194000, metal: 38800, fuel: 9700, time: "02:42:37" },
+    9: { food: 485000, wood: 485000, metal: 97000, fuel: 24250, time: "02:58:52" },
+    10: { food: 970000, wood: 970000, metal: 194000, fuel: 48500, time: "05:25:13" }
+  },
+  upgrade: {
+    9: { food: 291000, wood: 291000, metal: 58200, fuel: 14550, time: "00:16:16" },
+    10: { food: 485000, wood: 485000, metal: 97000, fuel: 24250, time: "02:26:21" }
+  }
+};
+
 function getElement(id) {
   return document.getElementById(id);
 }
@@ -161,6 +173,32 @@ function fillLevelSelect(select, defaultLevel) {
   select.value = String(defaultLevel);
 }
 
+function getStagePreset(stage, level) {
+  return stage === 1
+    ? TROOP_COST_PRESETS.training[level]
+    : TROOP_COST_PRESETS.upgrade[level];
+}
+
+function applyStagePreset(stage) {
+  const level = Number(getElement(`troopStage${stage}Level`)?.value) || 0;
+  const preset = getStagePreset(stage, level);
+
+  if (!preset) return;
+
+  const fieldValues = {
+    Food: preset.food,
+    Wood: preset.wood,
+    Metal: preset.metal,
+    Fuel: preset.fuel,
+    Time: preset.time
+  };
+
+  Object.entries(fieldValues).forEach(([suffix, value]) => {
+    const field = getElement(`troopStage${stage}${suffix}`);
+    if (field) field.value = String(value);
+  });
+}
+
 function createStageFields(stageCard) {
   const stage = Number(stageCard.dataset.stage);
   const container = stageCard.querySelector(".troop-stage-grid");
@@ -195,6 +233,7 @@ function createStageFields(stageCard) {
   `;
 
   fillLevelSelect(getElement(`troopStage${stage}Level`), stage === 1 ? 8 : stage === 2 ? 9 : 10);
+  applyStagePreset(stage);
 }
 
 function getAvailableData() {
@@ -419,6 +458,21 @@ function bindTimeFormatting() {
   });
 }
 
+function bindStagePresets() {
+  document.querySelectorAll(".troop-stage-card").forEach(card => {
+    const stage = Number(card.dataset.stage);
+    const select = getElement(`troopStage${stage}Level`);
+
+    if (!select) return;
+
+    select.addEventListener("change", () => {
+      applyStagePreset(stage);
+      renderResults();
+      if (typeof window.savePageFormState === "function") window.savePageFormState();
+    });
+  });
+}
+
 function bindInputs() {
   document.querySelectorAll(".troop-page input, .troop-page select").forEach(field => {
     field.addEventListener("input", renderResults);
@@ -428,21 +482,20 @@ function bindInputs() {
 
 function getTransferTargets(target) {
   return {
-    turtle: target === "turtle" || target === "turtle-ipk",
-    vs: target === "vs" || target === "vs-ipk",
-    ipk: target === "turtle-ipk" || target === "vs-ipk"
+    turtle: target === "turtle",
+    vs: target === "vs",
+    ipk: target === "ipk"
   };
 }
 
 function getTransferPage(target) {
-  if (target === "turtle") return "calculator/turbo-vs.html";
-  if (target === "vs") return "calculator/turbo-vs.html";
-  return "calculator/ipk.html";
+  if (target === "ipk") return "calculator/ipk.html";
+  return "calculator/turbo-vs.html";
 }
 
 function getPreferredDay(target) {
-  if (target === "turtle" || target === "turtle-ipk") return "mon";
-  if (target === "vs" || target === "vs-ipk") return "fri";
+  if (target === "turtle") return "mon";
+  if (target === "vs") return "fri";
   return "";
 }
 
@@ -489,6 +542,7 @@ export function init() {
   initStages();
   bindUnitToggles();
   bindTimeFormatting();
+  bindStagePresets();
   bindInputs();
   bindTransferButtons();
   syncAdvancedMode();
