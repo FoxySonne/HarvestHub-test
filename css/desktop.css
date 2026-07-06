@@ -131,8 +131,8 @@ MEDIUM DESKTOP: 900–1199px
   }
 
   .results {
-    grid-column: auto;
-    grid-row: auto;
+    grid-column: 1;
+    grid-row: 1;
     order: -1;
   }
 
@@ -172,7 +172,8 @@ DESKTOP: 1200–1599px
 
   .results {
     grid-column: 1 / -1;
-    grid-row: auto;
+    grid-row: 1;
+    order: -1;
   }
 }
 
