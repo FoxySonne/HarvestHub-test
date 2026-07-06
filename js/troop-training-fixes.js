@@ -266,20 +266,21 @@
     if (calculation.available.garrisonCapacity > 0) limits.push(freeGarrison);
 
     const extraTroops = limits.length ? roundTroops(Math.min(...limits)) : 0;
-    const extraRequired = getCostForTroops(calculation.stages, extraTroops);
+    const nextBatchTroops = calculation.stages.length > 0 ? extraTroops + 1000 : 0;
+    const nextBatchRequired = getCostForTroops(calculation.stages, nextBatchTroops);
     const shortages = { resources: {}, time: 0, garrison: 0 };
 
     RESOURCE_CONFIG.forEach(resource => {
       shortages.resources[resource.key] = Math.max(
-        extraRequired.resources[resource.key] - calculation.remainders.resources[resource.key],
+        nextBatchRequired.resources[resource.key] - calculation.remainders.resources[resource.key],
         0
       );
     });
 
-    shortages.time = Math.max(extraRequired.time - calculation.remainders.time, 0);
-    shortages.garrison = Math.max(extraTroops - freeGarrison, 0);
+    shortages.time = Math.max(nextBatchRequired.time - calculation.remainders.time, 0);
+    shortages.garrison = Math.max(nextBatchTroops - freeGarrison, 0);
 
-    return { extraTroops, shortages };
+    return { extraTroops, nextBatchTroops, shortages };
   }
 
   function renderResourceList(container, items) {
