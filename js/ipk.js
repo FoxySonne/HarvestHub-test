@@ -288,10 +288,12 @@ function applyTroopTransferPreset() {
   const shouldApplyIpk = preset.targets?.ipk || preset.target === "turtle-ipk" || preset.target === "vs-ipk";
   if (!shouldApplyIpk) return;
 
-  saveAllValues();
-
   const stages = Array.isArray(preset.stages) ? preset.stages : [];
   let applied = false;
+
+  LEVELS.forEach(level => {
+    ipkValues.delete(`troops:troop_upgrade:${level}`);
+  });
 
   stages.forEach(stage => {
     const level = Number(stage.level) || 0;
@@ -299,9 +301,7 @@ function applyTroopTransferPreset() {
 
     if (level <= 0 || troops <= 0) return;
 
-    const key = `troops:troop_upgrade:${level}`;
-    const current = parseNumber(ipkValues.get(key));
-    ipkValues.set(key, String(current + troops));
+    ipkValues.set(`troops:troop_upgrade:${level}`, String(troops));
     applied = true;
   });
 
@@ -322,7 +322,7 @@ function renderIpk() {
 
   if (!desktopCategories || !mobileCategories) return;
 
-  if (typeof window.clearProfileBlock === "function") window.clearProfileBlock();
+  document.getElementById("profileBlock")?.remove();
 
   selectedCategoryIds = new Set(database.categoryIpk.map(category => category.id));
 
