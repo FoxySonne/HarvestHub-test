@@ -315,6 +315,8 @@ function calculateSavedItemTotal(actionId, eventType, itemState = {}) {
 }
 
 function updateWeeklyTotals() {
+  if (localStorage.getItem("currentPage") !== "calculator/turbo-vs.html") return;
+
   const state = readWeekState();
   let turtleTotal = 0;
   let vsTotal = 0;
@@ -350,20 +352,21 @@ function applyTroopTransferPreset() {
   const preset = readTroopTransferPreset();
   const presetId = preset?.id || preset?.createdAt || "";
 
-  if (!preset || !presetId || localStorage.getItem(TROOP_TRANSFER_APPLIED_KEY) === presetId) return;
+  if (!preset || !presetId || localStorage.getItem(TROOP_TRANSFER_APPLIED_KEY) === presetId) return "";
 
   const shouldApplyTurtle = preset.targets?.turtle || preset.target === "turtle" || preset.target === "turtle-ipk";
   const shouldApplyVs = preset.targets?.vs || preset.target === "vs" || preset.target === "vs-ipk";
   const stages = Array.isArray(preset.stages) ? preset.stages.filter(stage => Number(stage.level) > 0 && Number(stage.troops) > 0) : [];
   const lastStage = stages[stages.length - 1];
 
-  if (!lastStage || (!shouldApplyTurtle && !shouldApplyVs)) return;
+  if (!lastStage || (!shouldApplyTurtle && !shouldApplyVs)) return "";
 
   const state = readWeekState();
   const itemState = {
     value: String(Number(lastStage.troops) || 0),
     level: String(lastStage.level)
   };
+  let preferredDay = preset.preferredDay || "";
 
   database.dayOrder.forEach(dayId => {
     const day = database.days[dayId];
@@ -379,11 +382,14 @@ function applyTroopTransferPreset() {
       state[dayId] = state[dayId] || { turtle: {}, vs: {} };
       state[dayId][eventType] = state[dayId][eventType] || {};
       state[dayId][eventType].troop_upgrade = itemState;
+
+      if (!preferredDay) preferredDay = dayId;
     });
   });
 
   writeWeekState(state);
   localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
+  return preferredDay;
 }
 
 function handleControlChange(actionId, sourceControl) {
@@ -455,12 +461,25 @@ function selectCurrentUtcDay() {
   renderDay(dayId);
 }
 
+function selectDay(dayId) {
+  const daySelector = document.getElementById("daySelector");
+  if (!daySelector || !database.days[dayId]) return false;
+
+  selectedManually = true;
+  daySelector.value = dayId;
+  renderDay(dayId);
+  return true;
+}
+
 export function init() {
   if (timerId) window.clearInterval(timerId);
 
-  applyTroopTransferPreset();
+  const transferDay = applyTroopTransferPreset();
   fillDaySelector();
-  selectCurrentUtcDay();
+
+  if (!transferDay || !selectDay(transferDay)) {
+    selectCurrentUtcDay();
+  }
 
   window.addEventListener("harvesthub:utc-day-change", () => {
     if (!selectedManually) selectCurrentUtcDay();
