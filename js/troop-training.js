@@ -7,6 +7,7 @@ const RESOURCE_CONFIG = [
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
+const TURBO_WEEK_STATE_PREFIX = "harvesthub_turbo_vs_week_state:";
 
 const TROOP_COST_PRESETS = {
   training: {
@@ -26,6 +27,59 @@ function getElement(id) {
 
 function getAdvancedMode() {
   return typeof window.getAdvancedMode === "function" ? window.getAdvancedMode() : document.body.classList.contains("advanced-mode");
+}
+
+function getTransferScope() {
+  const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
+  return profile?.id ? `profile:${profile.id}` : "local";
+}
+
+function getTurboWeekStateKey() {
+  return `${TURBO_WEEK_STATE_PREFIX}${getTransferScope()}`;
+}
+
+function readTurboWeekState() {
+  try {
+    return JSON.parse(localStorage.getItem(getTurboWeekStateKey()) || "{}");
+  } catch (error) {
+    console.warn("Не удалось прочитать данные Турбочерепашки/VS", error);
+    return {};
+  }
+}
+
+function writeTurboWeekState(state) {
+  localStorage.setItem(getTurboWeekStateKey(), JSON.stringify(state));
+}
+
+function saveTurboVsTransfer(target, payload) {
+  if (target !== "turtle" && target !== "vs") return false;
+
+  const stages = Array.isArray(payload.stages)
+    ? payload.stages.filter(stage => Number(stage.level) > 0 && Number(stage.troops) > 0)
+    : [];
+  const lastStage = stages[stages.length - 1];
+
+  if (!lastStage) return false;
+
+  const dayId = target === "turtle" ? "mon" : "fri";
+  const eventType = target === "turtle" ? "turtle" : "vs";
+  const state = readTurboWeekState();
+
+  Object.keys(state).forEach(savedDayId => {
+    if (state[savedDayId]?.[eventType]?.troop_upgrade) {
+      delete state[savedDayId][eventType].troop_upgrade;
+    }
+  });
+
+  state[dayId] = state[dayId] || { turtle: {}, vs: {} };
+  state[dayId][eventType] = state[dayId][eventType] || {};
+  state[dayId][eventType].troop_upgrade = {
+    value: String(Number(lastStage.troops) || 0),
+    level: String(lastStage.level)
+  };
+
+  writeTurboWeekState(state);
+  return true;
 }
 
 function parseNumber(value) {
@@ -130,8 +184,7 @@ function parseTimeToSeconds(value, allowDays = false) {
 
 function formatNumber(value) {
   return Math.max(0, Math.floor(Number(value) || 0)).toLocaleString("ru-RU");
-}
-
+}\n
 function formatResource(value) {
   const number = Math.max(0, Math.ceil(Number(value) || 0));
 
@@ -517,9 +570,10 @@ function bindTransferButtons() {
       };
 
       localStorage.setItem(TRANSFER_STORAGE_KEY, JSON.stringify(payload));
+      saveTurboVsTransfer(target, payload);
 
       const status = getElement("troopTransferStatus");
-      if (status) status.textContent = `Данные сохранены для ${getTransferTargetName(target)}. Открой этот калькулятор, чтобы они подставились.`;
+      if (status) status.textContent = `Данные сохранены для ${getTransferTargetName(target)}.`;
     });
   });
 }
