@@ -20,9 +20,7 @@ function findDirectTitle(card) {
 }
 
 function shouldSkipCard(card) {
-  return card.dataset.noCollapse === "true" ||
-    card.classList.contains("ipk-card") ||
-    Boolean(card.querySelector(":scope > .ipk-card-header, :scope .ipk-card-toggle"));
+  return card.dataset.noCollapse === "true";
 }
 
 function ensureCardHeader(card) {
@@ -54,7 +52,6 @@ function setCardCollapsed(card, collapsed) {
   card.dataset.collapsed = collapsed ? "true" : "false";
 
   if (button) {
-    button.textContent = collapsed ? "›" : "⌄";
     button.setAttribute("aria-expanded", collapsed ? "false" : "true");
     button.setAttribute("aria-label", collapsed ? "Развернуть блок" : "Свернуть блок");
   }
