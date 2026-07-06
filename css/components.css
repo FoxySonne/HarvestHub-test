@@ -1,6 +1,9 @@
 /* Визуальные блоки сайта: карточки, секции, шапки страниц, информационные блоки и футер. */
 
 .page-header{background:var(--card);padding:12px;border-radius:var(--radius);margin-bottom:24px;box-shadow:var(--shadow)}
+.home-title-link{display:block;width:fit-content;max-width:100%;color:var(--text);text-decoration:none;cursor:pointer;border-radius:var(--radius);transition:var(--transition)}
+.home-title-link:hover{opacity:.86}
+.home-title-link h1{margin:0}
 .page-subtitle{font-size:20px;color:var(--text-soft);margin-top:12px}
 .section{background:var(--card);border-radius:var(--radius-large);padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
 .section-title{margin-bottom:20px}
@@ -215,25 +218,4 @@
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-}
-
-@media (min-width: 1600px) {
-  .season-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
-  }
-}
-
-@media (max-width: 899px) {
-  .season-form-grid,
-  .season-subgrid,
-  .season-subgrid-production {
-    grid-template-columns: 1fr;
-  }
-
-  .season-results div,
-  .season-summary {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }
