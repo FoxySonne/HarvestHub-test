@@ -7,6 +7,7 @@
 .collapsible-card-toggle,
 .ipk-card-toggle,
 .ipk-collapse-button {
+  position: relative !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -22,38 +23,37 @@
   border-radius: 50% !important;
   background: var(--panel) !important;
   color: var(--text-soft) !important;
-  font-family: inherit !important;
   font-size: 0 !important;
-  font-weight: 800 !important;
   line-height: 0 !important;
   text-align: center !important;
   cursor: pointer !important;
   transition: var(--transition) !important;
   box-shadow: none !important;
   appearance: none !important;
+  overflow: hidden !important;
 }
 
 .collapsible-card-toggle::before,
 .ipk-card-toggle::before,
 .ipk-collapse-button::before {
-  content: "⌄";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: 16px;
-  line-height: 1;
-  transform: translateY(-1px);
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translate(-50%, -62%) rotate(45deg);
+  transform-origin: center;
+  box-sizing: border-box;
 }
 
 .collapsible-card.is-collapsed .collapsible-card-toggle::before,
 .ipk-card.is-collapsed .ipk-card-toggle::before,
 .ipk-collapse-button[aria-expanded="false"]::before,
-.ipk-collapse-button.is-collapsed::before,
-.ipk-category-list.is-collapsed + .ipk-collapse-button::before {
-  content: "›";
-  transform: translateX(1px);
+.ipk-collapse-button.is-collapsed::before {
+  transform: translate(-62%, -50%) rotate(-45deg);
 }
 
 .collapsible-card-toggle:hover,
@@ -105,6 +105,7 @@
   .collapsible-card-toggle::before,
   .ipk-card-toggle::before,
   .ipk-collapse-button::before {
-    font-size: 15px;
+    width: 6px;
+    height: 6px;
   }
 }
