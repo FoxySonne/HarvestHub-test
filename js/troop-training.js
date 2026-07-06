@@ -41,10 +41,46 @@ function parseAvailableResource(inputId) {
   return activeUnit === "m" ? value * 1000000 : value;
 }
 
+function getTimeDigits(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function formatClockDigits(digits) {
+  const padded = digits.padStart(6, "0");
+  const seconds = padded.slice(-2);
+  const minutes = padded.slice(-4, -2);
+  const hours = padded.slice(0, -4) || "00";
+
+  return `${hours.padStart(2, "0")}:${minutes}:${seconds}`;
+}
+
+function formatAvailableTimeInput(value) {
+  const digits = getTimeDigits(value);
+  if (!digits) return "";
+
+  if (digits.length <= 6) return `00д ${formatClockDigits(digits)}`;
+
+  const dayDigits = digits.slice(0, -6);
+  const timeDigits = digits.slice(-6);
+  return `${Number(dayDigits) || 0}д ${formatClockDigits(timeDigits)}`;
+}
+
+function formatStageTimeInput(value) {
+  const digits = getTimeDigits(value);
+  if (!digits) return "";
+
+  return formatClockDigits(digits.slice(-6));
+}
+
 function parseTimeToSeconds(value, allowDays = false) {
   const text = String(value || "").trim().toLowerCase();
 
   if (!text) return 0;
+
+  const digits = getTimeDigits(text);
+  if (digits && !text.includes(":")) {
+    return parseTimeToSeconds(allowDays ? formatAvailableTimeInput(digits) : formatStageTimeInput(digits), allowDays);
+  }
 
   let days = 0;
   let timeText = text;
@@ -136,7 +172,7 @@ function createStageFields(stageCard) {
     </label>
     <label class="troop-field">
       <span>Время на 1000</span>
-      <input id="troopStage${stage}Time" type="text" placeholder="00:00:00" inputmode="numeric" autocomplete="off">
+      <input id="troopStage${stage}Time" type="text" placeholder="00:00:00" inputmode="numeric" autocomplete="off" data-time-format="stage">
     </label>
   `;
 
@@ -355,17 +391,21 @@ function bindUnitToggles() {
   });
 }
 
+function bindTimeFormatting() {
+  document.querySelectorAll("#troopAvailableTime, [data-time-format='stage']").forEach(input => {
+    input.addEventListener("blur", () => {
+      input.value = input.id === "troopAvailableTime" ? formatAvailableTimeInput(input.value) : formatStageTimeInput(input.value);
+      renderResults();
+      if (typeof window.savePageFormState === "function") window.savePageFormState();
+    });
+  });
+}
+
 function bindInputs() {
   document.querySelectorAll(".troop-page input, .troop-page select").forEach(field => {
     field.addEventListener("input", renderResults);
     field.addEventListener("change", renderResults);
   });
-}
-
-function setTransferStatus(message) {
-  const status = getElement("troopTransferStatus");
-  if (!status) return;
-  status.textContent = message;
 }
 
 function getTransferTargets(target) {
@@ -376,26 +416,39 @@ function getTransferTargets(target) {
   };
 }
 
+function getTransferPage(target) {
+  if (target === "turtle") return "calculator/turbo-vs.html";
+  if (target === "vs") return "calculator/turbo-vs.html";
+  return "calculator/ipk.html";
+}
+
+function getPreferredDay(target) {
+  if (target === "turtle" || target === "turtle-ipk") return "mon";
+  if (target === "vs" || target === "vs-ipk") return "fri";
+  return "";
+}
+
 function bindTransferButtons() {
   document.querySelectorAll("[data-transfer-target]").forEach(button => {
     button.addEventListener("click", () => {
       const calculation = renderResults();
       const target = button.dataset.transferTarget;
-      const targets = getTransferTargets(target);
       const payload = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         target,
-        targets,
+        targets: getTransferTargets(target),
+        preferredDay: getPreferredDay(target),
         troops: calculation.possibleTroops,
-        stages: calculation.stages.map(stage => ({
-          stage: stage.stage,
-          level: Number(stage.level) || 0,
-          troops: calculation.possibleTroops
-        })).filter(stage => stage.level > 0 && stage.troops > 0),
+        stages: calculation.stages.map(stage => ({ stage: stage.stage, level: stage.level, troops: calculation.possibleTroops })),
         createdAt: new Date().toISOString()
       };
 
       localStorage.setItem(TRANSFER_STORAGE_KEY, JSON.stringify(payload));
-      setTransferStatus("Готово: количество войск сохранено. Теперь открой нужный калькулятор — данные подставятся автоматически.");
+
+      const status = getElement("troopTransferStatus");
+      if (status) status.textContent = "Результат сохранён и будет перенесён на выбранную страницу.";
+
+      loadPage(getTransferPage(target));
     });
   });
 }
@@ -417,6 +470,7 @@ function initStages() {
 export function init() {
   initStages();
   bindUnitToggles();
+  bindTimeFormatting();
   bindInputs();
   bindTransferButtons();
   syncAdvancedMode();
