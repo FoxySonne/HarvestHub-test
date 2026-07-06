@@ -32,10 +32,19 @@ MOBILE: до 899px
   }
 
   .right {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
     padding: 0 16px 16px;
+  }
+
+  #rightbar-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  #rightbar-container .box {
+    min-width: 0;
+    height: 100%;
   }
 
   .adaptive-grid,
@@ -79,5 +88,25 @@ MOBILE: до 899px
   .input-medium,
   .input-large {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  #rightbar-container {
+    gap: 12px;
+  }
+
+  #rightbar-container .box {
+    padding: 14px;
+  }
+
+  #rightbar-container .box h4 {
+    font-size: 14px;
+  }
+
+  #rightbar-container .box p,
+  #rightbar-container .quick-link-item span,
+  #rightbar-container .quick-links-empty {
+    font-size: 13px;
   }
 }
