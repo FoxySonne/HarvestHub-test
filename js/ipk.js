@@ -13,7 +13,7 @@ function formatNumber(value) {
 }
 
 function parseNumber(value) {
-  const number = Number(value);
+  const number = Number(String(value || "").replace(/\s+/g, ""));
   return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
@@ -177,6 +177,7 @@ function createCategoryCheckbox(category) {
 }
 
 function renderCategoryList(container) {
+  if (!container) return;
   container.innerHTML = "";
 
   database.categoryIpk.forEach(category => {
@@ -287,7 +288,10 @@ function applyTroopTransferPreset() {
   const shouldApplyIpk = preset.targets?.ipk || preset.target === "turtle-ipk" || preset.target === "vs-ipk";
   if (!shouldApplyIpk) return;
 
+  saveAllValues();
+
   const stages = Array.isArray(preset.stages) ? preset.stages : [];
+  let applied = false;
 
   stages.forEach(stage => {
     const level = Number(stage.level) || 0;
@@ -295,14 +299,21 @@ function applyTroopTransferPreset() {
 
     if (level <= 0 || troops <= 0) return;
 
-    ipkValues.set(`troops:troop_upgrade:${level}`, String(troops));
+    const key = `troops:troop_upgrade:${level}`;
+    const current = parseNumber(ipkValues.get(key));
+    ipkValues.set(key, String(current + troops));
+    applied = true;
   });
+
+  if (!applied) return;
 
   selectedCategoryIds.add("troops");
   localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
   renderCategoryList(document.getElementById("ipkDesktopCategoriesList"));
   renderCategoryList(document.getElementById("ipkMobileCategoriesList"));
   renderSelectedCards();
+
+  if (typeof window.savePageFormState === "function") window.savePageFormState();
 }
 
 function renderIpk() {
@@ -310,6 +321,8 @@ function renderIpk() {
   const mobileCategories = document.getElementById("ipkMobileCategoriesList");
 
   if (!desktopCategories || !mobileCategories) return;
+
+  if (typeof window.clearProfileBlock === "function") window.clearProfileBlock();
 
   selectedCategoryIds = new Set(database.categoryIpk.map(category => category.id));
 
@@ -321,5 +334,5 @@ function renderIpk() {
 
 export function init() {
   renderIpk();
-  window.setTimeout(applyTroopTransferPreset, 0);
+  window.setTimeout(applyTroopTransferPreset, 250);
 }
