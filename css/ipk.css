@@ -17,6 +17,21 @@ IPK CALCULATOR — mobile overflow fixes
   overflow-x: hidden;
 }
 
+.ipk-layout {
+  grid-template-columns: 1fr !important;
+}
+
+.ipk-desktop-categories {
+  position: static !important;
+  top: auto !important;
+  width: 100%;
+  max-width: 420px;
+}
+
+.ipk-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)) !important;
+}
+
 .ipk-result-input {
   grid-column: 2 / 4;
   justify-self: end;
@@ -34,21 +49,6 @@ IPK CALCULATOR — mobile overflow fixes
   color: var(--accent) !important;
   border: 1px solid var(--border) !important;
   background: var(--panel) !important;
-}
-
-@media (max-width: 1240px) {
-  .ipk-layout {
-    grid-template-columns: 1fr !important;
-  }
-
-  .ipk-desktop-categories {
-    position: static !important;
-    top: auto !important;
-  }
-
-  .ipk-cards {
-    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)) !important;
-  }
 }
 
 @media (max-width: 899px) {
