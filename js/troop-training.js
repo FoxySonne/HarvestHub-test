@@ -54,12 +54,13 @@ function writeTurboWeekState(state) {
 function saveTurboVsTransfer(target, payload) {
   if (target !== "turtle" && target !== "vs") return false;
 
-  const stages = Array.isArray(payload.stages)
-    ? payload.stages.filter(stage => Number(stage.level) > 0 && Number(stage.troops) > 0)
+  const rows = Array.isArray(payload.stages)
+    ? payload.stages
+      .filter(stage => Number(stage.level) > 0 && Number(stage.troops) > 0)
+      .map(stage => ({ level: String(stage.level), value: String(Number(stage.troops) || 0) }))
     : [];
-  const lastStage = stages[stages.length - 1];
 
-  if (!lastStage) return false;
+  if (!rows.length) return false;
 
   const dayId = target === "turtle" ? "mon" : "fri";
   const eventType = target === "turtle" ? "turtle" : "vs";
@@ -74,8 +75,9 @@ function saveTurboVsTransfer(target, payload) {
   state[dayId] = state[dayId] || { turtle: {}, vs: {} };
   state[dayId][eventType] = state[dayId][eventType] || {};
   state[dayId][eventType].troop_upgrade = {
-    value: String(Number(lastStage.troops) || 0),
-    level: String(lastStage.level)
+    value: String(Math.max(...rows.map(row => Number(row.value) || 0))),
+    level: rows[rows.length - 1].level,
+    rows
   };
 
   writeTurboWeekState(state);
@@ -253,6 +255,18 @@ function applyStagePreset(stage) {
   });
 }
 
+function isStageEnabled(stage) {
+  const checkbox = getElement(`troopStage${stage}Enabled`);
+  return checkbox ? checkbox.checked : true;
+}
+
+function syncStageEnabledState(stage) {
+  const card = document.querySelector(`.troop-stage-card[data-stage="${stage}"]`);
+  if (!card) return;
+
+  card.classList.toggle("is-disabled", !isStageEnabled(stage));
+}
+
 function createStageFields(stageCard) {
   const stage = Number(stageCard.dataset.stage);
   const container = stageCard.querySelector(".troop-stage-grid");
@@ -288,6 +302,7 @@ function createStageFields(stageCard) {
 
   fillLevelSelect(getElement(`troopStage${stage}Level`), stage === 1 ? 8 : stage === 2 ? 9 : 10);
   applyStagePreset(stage);
+  syncStageEnabledState(stage);
 }
 
 function getAvailableData() {
@@ -317,15 +332,17 @@ function getStageData(stageCard) {
   };
   const time = parseTimeToSeconds(getElement(`troopStage${stage}Time`)?.value, false);
   const level = getElement(`troopStage${stage}Level`)?.value || "";
+  const enabled = isStageEnabled(stage);
   const hasCost = Object.values(costs).some(value => value > 0) || time > 0;
 
   return {
     stage,
+    type: stage === 1 ? "training" : "upgrade",
     level,
     title: stage === 1 ? "Обучение" : "Улучшение",
     costs,
     time,
-    isActive: stage === 1 || hasCost
+    isActive: enabled && (stage === 1 || hasCost)
   };
 }
 
@@ -527,6 +544,17 @@ function bindStagePresets() {
   });
 }
 
+function bindStageEnabled() {
+  document.querySelectorAll("[data-stage-enabled]").forEach(checkbox => {
+    checkbox.addEventListener("change", () => {
+      const stage = Number(checkbox.dataset.stageEnabled);
+      syncStageEnabledState(stage);
+      renderResults();
+      if (typeof window.savePageFormState === "function") window.savePageFormState();
+    });
+  });
+}
+
 function bindInputs() {
   document.querySelectorAll(".troop-page input, .troop-page select").forEach(field => {
     field.addEventListener("input", renderResults);
@@ -607,7 +635,7 @@ function bindTransferButtons() {
         targets: getTransferTargets(target),
         preferredDay: getPreferredDay(target),
         troops: calculation.possibleTroops,
-        stages: calculation.stages.map(stage => ({ stage: stage.stage, level: stage.level, troops: calculation.possibleTroops })),
+        stages: calculation.stages.map(stage => ({ stage: stage.stage, type: stage.type, level: stage.level, troops: calculation.possibleTroops })),
         createdAt: new Date().toISOString()
       };
 
@@ -626,6 +654,7 @@ function syncAdvancedMode() {
     card.hidden = !advanced;
   });
 
+  document.querySelectorAll(".troop-stage-card").forEach(card => syncStageEnabledState(Number(card.dataset.stage)));
   renderResults();
 }
 
@@ -639,6 +668,7 @@ export function init() {
   bindUnitToggles();
   bindTimeFormatting();
   bindStagePresets();
+  bindStageEnabled();
   bindInputs();
   bindTransferButtons();
   syncAdvancedMode();
