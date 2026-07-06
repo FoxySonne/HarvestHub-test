@@ -184,7 +184,8 @@ function parseTimeToSeconds(value, allowDays = false) {
 
 function formatNumber(value) {
   return Math.max(0, Math.floor(Number(value) || 0)).toLocaleString("ru-RU");
-}\n
+}
+
 function formatResource(value) {
   const number = Math.max(0, Math.ceil(Number(value) || 0));
 
