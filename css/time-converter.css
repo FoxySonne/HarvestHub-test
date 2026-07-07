@@ -1,0 +1,72 @@
+.time-converter-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.time-converter-box h4 {
+  margin: 0;
+}
+
+.time-converter-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.time-converter-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.time-converter-field span {
+  min-width: 0;
+}
+
+.time-converter-field input {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: var(--radius-small);
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.time-converter-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.time-converter-result div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.time-converter-result span {
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.time-converter-result strong {
+  color: var(--accent);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+  .time-converter-field {
+    grid-template-columns: minmax(0, 1fr) 112px;
+  }
+}
