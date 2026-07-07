@@ -5,6 +5,43 @@
     </div>
 </div>
 
+<div class="box time-converter-box">
+    <h4>Перевод времени</h4>
+
+    <div class="time-converter-fields">
+        <label class="time-converter-field">
+            <span>Дни</span>
+            <input id="timeConverterDays" type="number" min="0" inputmode="numeric" value="0">
+        </label>
+
+        <label class="time-converter-field">
+            <span>Часы</span>
+            <input id="timeConverterHours" type="number" min="0" inputmode="numeric" value="0">
+        </label>
+
+        <label class="time-converter-field">
+            <span>Минуты</span>
+            <input id="timeConverterMinutes" type="number" min="0" inputmode="numeric" value="0">
+        </label>
+
+        <label class="time-converter-field">
+            <span>Секунды</span>
+            <input id="timeConverterSeconds" type="number" min="0" inputmode="numeric" value="0">
+        </label>
+    </div>
+
+    <div class="time-converter-result" aria-live="polite">
+        <div>
+            <span>Итого в минутах:</span>
+            <strong id="timeConverterTotalMinutes">0</strong>
+        </div>
+        <div>
+            <span>Формат:</span>
+            <strong id="timeConverterFormatted">00д 00:00:00</strong>
+        </div>
+    </div>
+</div>
+
 <div class="box">
     <h4>Совет дня</h4>
     <p>Бей крокодила!</p>
