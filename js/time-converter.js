@@ -11,7 +11,8 @@
   }
 
   function readNumber(id) {
-    const value = Number(getElement(id)?.value || 0);
+    const field = getElement(id);
+    const value = Number(String(field?.value || "0").replace(",", "."));
     return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
   }
 
@@ -66,6 +67,7 @@
       field.dataset.timeConverterBound = "true";
       field.addEventListener("input", renderTimeConverter);
       field.addEventListener("change", renderTimeConverter);
+      field.addEventListener("keyup", renderTimeConverter);
     });
 
     renderTimeConverter();
@@ -75,11 +77,18 @@
     window.setTimeout(bindTimeConverter, 0);
   }
 
+  document.addEventListener("input", event => {
+    if (event.target.closest?.(".time-converter-box")) renderTimeConverter();
+  });
+
+  document.addEventListener("change", event => {
+    if (event.target.closest?.(".time-converter-box")) renderTimeConverter();
+  });
+
   const observer = new MutationObserver(scheduleBind);
 
   function start() {
-    const rightbar = document.getElementById("rightbar-container") || document.body;
-    observer.observe(rightbar, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
     scheduleBind();
   }
 
@@ -90,4 +99,5 @@
   }
 
   window.harvestHubInitTimeConverter = bindTimeConverter;
+  window.harvestHubUpdateTimeConverter = renderTimeConverter;
 })();
