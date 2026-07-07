@@ -431,30 +431,36 @@ function buildCalculation() {
 function calculateExtraTraining(calculation) {
   const stages = calculation.stages;
   const perThousand = getCostForTroops(stages, 1000);
-  const capacities = [];
+  const limits = [];
 
   RESOURCE_CONFIG.forEach(resource => {
     const cost = perThousand.resources[resource.key];
-    if (cost > 0) capacities.push((calculation.remainders.resources[resource.key] / cost) * 1000);
+    if (cost > 0) limits.push((calculation.remainders.resources[resource.key] / cost) * 1000);
   });
 
-  if (perThousand.time > 0) capacities.push((calculation.remainders.time / perThousand.time) * 1000);
+  if (perThousand.time > 0) limits.push((calculation.remainders.time / perThousand.time) * 1000);
 
-  const freeGarrison = Math.max(calculation.available.garrisonCapacity - calculation.available.currentAmount - calculation.possibleTroops, 0);
-  const rawExtra = capacities.length > 0 ? Math.max(...capacities) : 0;
-  const extraTroops = roundTroops(rawExtra);
-  const extraRequired = getCostForTroops(stages, extraTroops);
+  const freeGarrison = Math.max(
+    calculation.available.garrisonCapacity - calculation.available.currentAmount - calculation.possibleTroops,
+    0
+  );
+
+  if (calculation.available.garrisonCapacity > 0) limits.push(freeGarrison);
+
+  const extraTroops = limits.length ? roundTroops(Math.min(...limits)) : 0;
+  const nextBatchTroops = stages.length > 0 ? extraTroops + 1000 : 0;
+  const nextBatchRequired = getCostForTroops(stages, nextBatchTroops);
   const shortages = { resources: {}, time: 0, garrison: 0 };
 
   RESOURCE_CONFIG.forEach(resource => {
     const key = resource.key;
-    shortages.resources[key] = Math.max(extraRequired.resources[key] - calculation.remainders.resources[key], 0);
+    shortages.resources[key] = Math.max(nextBatchRequired.resources[key] - calculation.remainders.resources[key], 0);
   });
 
-  shortages.time = Math.max(extraRequired.time - calculation.remainders.time, 0);
-  shortages.garrison = Math.max(extraTroops - freeGarrison, 0);
+  shortages.time = Math.max(nextBatchRequired.time - calculation.remainders.time, 0);
+  shortages.garrison = Math.max(nextBatchTroops - freeGarrison, 0);
 
-  return { extraTroops, shortages };
+  return { extraTroops, nextBatchTroops, shortages };
 }
 
 function renderResourceList(container, items) {
@@ -466,6 +472,26 @@ function renderResourceList(container, items) {
       <strong>${item.value}</strong>
     </div>
   `).join("");
+}
+
+function buildShortageItems(shortages) {
+  return [
+    { label: "Еды", value: formatResource(shortages.resources.food) },
+    { label: "Дерева", value: formatResource(shortages.resources.wood) },
+    { label: "Металла", value: formatResource(shortages.resources.metal) },
+    { label: "Топлива", value: formatResource(shortages.resources.fuel) },
+    { label: "Ускорений", value: formatDuration(shortages.time, { showDays: false }) },
+    { label: "Вместимости гарнизона", value: formatNumber(shortages.garrison) }
+  ];
+}
+
+function setShortageSubtitle(text) {
+  const shortages = getElement("troopShortages");
+  const subtitle = shortages?.previousElementSibling;
+
+  if (subtitle && subtitle.tagName === "P") {
+    subtitle.textContent = text;
+  }
 }
 
 function renderResults() {
@@ -494,16 +520,22 @@ function renderResults() {
   ]);
 
   const extraTitle = getElement("troopExtraTitle");
-  if (extraTitle) extraTitle.textContent = `Еще можно обучить: ${formatNumber(extra.extraTroops)} войск`;
 
-  renderResourceList(getElement("troopShortages"), [
-    { label: "Еды", value: formatResource(extra.shortages.resources.food) },
-    { label: "Дерева", value: formatResource(extra.shortages.resources.wood) },
-    { label: "Металла", value: formatResource(extra.shortages.resources.metal) },
-    { label: "Топлива", value: formatResource(extra.shortages.resources.fuel) },
-    { label: "Ускорений", value: formatDuration(extra.shortages.time, { showDays: false }) },
-    { label: "Вместимости гарнизона", value: formatNumber(extra.shortages.garrison) }
-  ]);
+  if (calculation.desiredMode) {
+    if (extraTitle) extraTitle.textContent = `Цель: ${formatNumber(calculation.targetTroops)} войск`;
+    setShortageSubtitle(`Не хватает для цели ${formatNumber(calculation.targetTroops)} войск:`);
+    renderResourceList(getElement("troopShortages"), buildShortageItems(calculation.missing));
+    return calculation;
+  }
+
+  if (extraTitle) {
+    extraTitle.textContent = extra.extraTroops > 0
+      ? `Ещё можно обучить: ${formatNumber(extra.extraTroops)} войск`
+      : `До следующих ${formatNumber(extra.nextBatchTroops)} войск не хватает:`;
+  }
+
+  setShortageSubtitle(extra.extraTroops > 0 ? "Не хватает для следующей партии:" : "Нужно добавить:");
+  renderResourceList(getElement("troopShortages"), buildShortageItems(extra.shortages));
 
   return calculation;
 }
