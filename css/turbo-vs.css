@@ -1,4 +1,8 @@
 /* TURBO VS CALCULATOR */
+.turbo-mobile-switch {
+  display: none;
+}
+
 .action-row-multi-level {
   align-items: start;
 }
@@ -28,6 +32,47 @@
 }
 
 @media (max-width: 899px) {
+  .turbo-mobile-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    order: 0;
+    padding: 4px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow);
+  }
+
+  .turbo-mobile-switch button {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-soft);
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: none;
+  }
+
+  .turbo-mobile-switch button.is-active {
+    background: var(--button);
+    color: #fff;
+  }
+
+  .turbo-content[data-active-event="turtle"] [data-turbo-panel="vs"],
+  .turbo-content[data-active-event="vs"] [data-turbo-panel="turtle"] {
+    display: none;
+  }
+
+  .turbo-content[data-active-event="turtle"] [data-turbo-panel="turtle"],
+  .turbo-content[data-active-event="vs"] [data-turbo-panel="vs"] {
+    display: flex;
+  }
+
   .action-row-multi-level {
     grid-template-columns: 1fr;
     gap: 8px;
