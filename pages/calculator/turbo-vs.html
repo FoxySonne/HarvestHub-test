@@ -5,9 +5,14 @@
   <label for="daySelector">День недели:</label>
   <select id="daySelector" data-no-persist="true"></select>
 
-  <div class="turbo-content">
+  <div class="turbo-content" data-active-event="turtle">
 
-    <section class="card turbo-card">
+    <div class="turbo-mobile-switch" role="tablist" aria-label="Переключатель события">
+      <button type="button" class="is-active" data-turbo-mobile-tab="turtle" role="tab" aria-selected="true">Черепашка</button>
+      <button type="button" data-turbo-mobile-tab="vs" role="tab" aria-selected="false">VS</button>
+    </div>
+
+    <section class="card turbo-card" data-turbo-panel="turtle">
       <div class="card-header">
         <h3>Черепашка</h3>
       </div>
@@ -15,7 +20,7 @@
       <div id="turtleList" class="action-list"></div>
     </section>
 
-    <section class="card turbo-card">
+    <section class="card turbo-card" data-turbo-panel="vs">
       <div class="card-header">
         <h3>Дуэль союза</h3>
       </div>
