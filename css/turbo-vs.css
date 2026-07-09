@@ -70,7 +70,15 @@
 
   .turbo-content[data-active-event="turtle"] [data-turbo-panel="turtle"],
   .turbo-content[data-active-event="vs"] [data-turbo-panel="vs"] {
-    display: flex;
+    display: block;
+  }
+
+  .turbo-content [data-turbo-panel] > .card-header {
+    display: none !important;
+  }
+
+  .turbo-content [data-turbo-panel] {
+    padding-top: 16px;
   }
 
   .action-row-multi-level {
