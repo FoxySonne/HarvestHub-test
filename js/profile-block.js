@@ -67,6 +67,13 @@ function bindProfileBlockPersistence() {
   block.addEventListener("change", () => saveProfileBlockState());
 }
 
+function getProfileBlockInsertTarget(pageContent) {
+  return pageContent.querySelector(":scope > .page-section > h1") ||
+    pageContent.querySelector(":scope > h1") ||
+    pageContent.querySelector(":scope > .page-section > header") ||
+    pageContent.querySelector(":scope > header");
+}
+
 function ensureProfileBlock() {
   const pageContent = document.getElementById("page-content");
   if (!pageContent) return null;
@@ -86,7 +93,14 @@ function ensureProfileBlock() {
     <div id="profileBlockContent" class="profile-block-content"></div>
   `;
 
-  pageContent.prepend(block);
+  const insertTarget = getProfileBlockInsertTarget(pageContent);
+
+  if (insertTarget) {
+    insertTarget.insertAdjacentElement("afterend", block);
+  } else {
+    pageContent.prepend(block);
+  }
+
   bindProfileBlockPersistence();
 
   return block;
