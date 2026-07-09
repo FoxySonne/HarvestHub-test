@@ -1,6 +1,6 @@
 /* TURBO VS CALCULATOR */
 .turbo-mobile-switch {
-  display: none;
+  display: none !important;
 }
 
 .action-row-multi-level {
@@ -31,9 +31,26 @@
   text-align: center;
 }
 
+@media (min-width: 900px) {
+  .turbo-content > [data-turbo-panel="turtle"] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .turbo-content > [data-turbo-panel="vs"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .turbo-content > .results {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
 @media (max-width: 899px) {
   .turbo-mobile-switch {
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px;
     order: 0;
