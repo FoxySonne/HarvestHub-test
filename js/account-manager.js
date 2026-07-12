@@ -46,34 +46,32 @@
     });
   }
 
-  async function sendEmailCode(email, nickname, state) {
+  function getAuthRedirectUrl() {
+    return new URL("./", window.location.href).toString().split("#")[0].split("?")[0];
+  }
+
+  async function sendMagicLink(email, nickname, state) {
     const cleanEmail = String(email || "").trim();
     const cleanNickname = String(nickname || "").trim();
     const cleanState = String(state || "").trim();
     if (!cleanEmail || !cleanNickname || !cleanState) throw new Error("Заполни никнейм, номер штата и email.");
     if (!window.harvestHubSupabase) throw new Error("Supabase пока недоступен.");
 
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ nickname: cleanNickname, state: cleanState, email: cleanEmail }));
+    const pendingProfile = { nickname: cleanNickname, state: cleanState, email: cleanEmail };
+    localStorage.setItem(PENDING_KEY, JSON.stringify(pendingProfile));
+
     const { error } = await window.harvestHubSupabase.auth.signInWithOtp({
       email: cleanEmail,
-      options: { shouldCreateUser: true }
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: getAuthRedirectUrl(),
+        data: {
+          nickname: cleanNickname,
+          state: cleanState
+        }
+      }
     });
     if (error) throw error;
-  }
-
-  async function verifyEmailCode(email, token) {
-    const cleanEmail = String(email || "").trim();
-    const cleanToken = String(token || "").trim();
-    if (!cleanEmail || !cleanToken) throw new Error("Укажи email и код из письма.");
-
-    const { data, error } = await window.harvestHubSupabase.auth.verifyOtp({
-      email: cleanEmail,
-      token: cleanToken,
-      type: "email"
-    });
-    if (error) throw error;
-    await syncCloudProfile(data.user);
-    return data.user;
   }
 
   async function syncCloudProfile(user) {
@@ -213,12 +211,7 @@
                 <label class="form-group"><span>Никнейм</span><input id="cloudProfileNickname" required></label>
                 <label class="form-group"><span>Номер штата</span><input id="cloudProfileState" inputmode="numeric" required></label>
                 <label class="form-group"><span>Email</span><input id="cloudProfileEmail" type="email" required autocomplete="email"></label>
-                <button type="submit">Получить код</button>
-              </div>
-              <div id="cloudProfileCodeStep" hidden>
-                <label class="form-group"><span>Код из письма</span><input id="cloudProfileCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>
-                <button type="button" id="verifyCloudProfileCode">Подтвердить</button>
-                <button type="button" class="secondary-button" id="resendCloudProfileCode">Отправить код повторно</button>
+                <button type="submit" id="sendCloudProfileLink">Отправить ссылку для входа</button>
               </div>
             </form>
           </div>
@@ -241,36 +234,26 @@
     document.getElementById("cloudProfileForm")?.addEventListener("submit", async event => {
       event.preventDefault();
       showMessage("");
+      const submitButton = document.getElementById("sendCloudProfileLink");
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Отправляем ссылку…";
+      }
+
       try {
-        await sendEmailCode(
+        await sendMagicLink(
           document.getElementById("cloudProfileEmail").value,
           document.getElementById("cloudProfileNickname").value,
           document.getElementById("cloudProfileState").value
         );
-        document.getElementById("cloudProfileDetails").hidden = true;
-        document.getElementById("cloudProfileCodeStep").hidden = false;
-        showMessage("Код отправлен на почту.", "success");
-      } catch (error) { showMessage(error.message, "error"); }
-    });
-
-    document.getElementById("verifyCloudProfileCode")?.addEventListener("click", async () => {
-      showMessage("");
-      try {
-        await verifyEmailCode(document.getElementById("cloudProfileEmail").value, document.getElementById("cloudProfileCode").value);
-        closeAccountModal();
-        window.loadPage?.("profile.html");
-      } catch (error) { showMessage(error.message, "error"); }
-    });
-
-    document.getElementById("resendCloudProfileCode")?.addEventListener("click", async () => {
-      try {
-        await sendEmailCode(
-          document.getElementById("cloudProfileEmail").value,
-          document.getElementById("cloudProfileNickname").value,
-          document.getElementById("cloudProfileState").value
-        );
-        showMessage("Новый код отправлен.", "success");
-      } catch (error) { showMessage(error.message, "error"); }
+        showMessage("Ссылка для входа отправлена на почту. Открой письмо и нажми «Sign in», чтобы завершить создание профиля.", "success");
+        if (submitButton) submitButton.textContent = "Отправить ссылку повторно";
+      } catch (error) {
+        showMessage(error.message, "error");
+        if (submitButton) submitButton.textContent = "Отправить ссылку для входа";
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
     });
   }
 
