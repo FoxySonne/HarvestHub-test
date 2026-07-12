@@ -1,21 +1,12 @@
 <h2>Настройки</h2>
 
 <div class="card">
-
     <h3>Данные сайта</h3>
-
-    <button class="button" onclick="resetAllSiteData()">
-
-        Сбросить все данные
-
-    </button>
-
+    <button class="button" onclick="resetAllSiteData()">Сбросить все данные</button>
 </div>
 
 <div class="card">
-
     <h3>Продвинутый режим</h3>
-
     <label class="ipk-category-item">
         <span>Включить продвинутый режим</span>
         <span class="ipk-switch">
@@ -25,40 +16,10 @@
             </span>
         </span>
     </label>
-
 </div>
 
-<div class="card advanced-only">
-
+<div class="card">
     <h3>Профиль</h3>
-
-    <p id="profileStatus" class="card-text">Профиль не выбран</p>
-
-    <div class="form">
-
-        <label class="form-group">
-            <span>Никнейм</span>
-            <input id="profileNickname" type="text" autocomplete="username">
-        </label>
-
-        <label class="form-group">
-            <span>Номер штата</span>
-            <input id="profileState" type="number" min="1" inputmode="numeric">
-        </label>
-
-        <label class="form-group">
-            <span>Код из 4 цифр</span>
-            <input id="profilePin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password">
-        </label>
-
-        <div class="button-group">
-            <button type="button" onclick="confirmLocalDataStorage() && createProfileFromSettings()">Создать профиль</button>
-            <button type="button" onclick="confirmLocalDataStorage() && loginProfileFromSettings()">Выбрать профиль</button>
-            <button type="button" onclick="logoutProfileFromSettings()">Отключить профиль</button>
-        </div>
-
-    </div>
-
-    <p id="profileMessage" class="card-text"></p>
-
+    <p class="card-text">Профиль теперь открывается через единую кнопку «Профиль» в меню сайта.</p>
+    <button type="button" data-account-button>Открыть профиль</button>
 </div>
