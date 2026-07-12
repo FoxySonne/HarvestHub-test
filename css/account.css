@@ -3,6 +3,10 @@
 .desktop-profile-box{display:block}
 .desktop-profile-box h4{margin-bottom:10px}
 .desktop-profile-text{margin:0 0 14px;color:var(--text-soft);font-size:13px;line-height:1.45}
+.desktop-profile-user{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.desktop-profile-user strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;color:var(--text)}
+.desktop-profile-user span{font-size:12px;color:var(--text-soft)}
+.desktop-profile-status{margin:0 0 12px;font-size:12px;color:var(--accent)}
 .desktop-profile-button{width:100%;min-height:38px;padding:8px 10px;font-size:13px}
 .account-modal{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
 .account-modal.is-open{display:flex}
