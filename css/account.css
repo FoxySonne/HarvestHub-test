@@ -36,5 +36,20 @@
   .account-tabs{position:sticky;top:0;z-index:2;background:var(--card);padding-top:4px}
 }
 @media (min-width:900px){
+  #sidebar-container{display:flex;flex-direction:column;min-height:100%}
+  .sidebar-account-trigger{
+    justify-content:flex-start;
+    width:100%;
+    min-height:0;
+    margin-top:auto;
+    padding:14px 0 0;
+    border:0;
+    border-top:1px solid var(--border);
+    border-radius:0;
+    background:transparent;
+    color:var(--text-soft);
+    text-align:left;
+  }
+  .sidebar-account-trigger:hover{color:var(--accent)}
   .account-tabs{display:none}
 }
