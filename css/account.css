@@ -64,7 +64,7 @@
   #verifyCloudProfileCode,
   #resendCloudProfileCode{min-height:36px;margin-top:1px;padding:7px 10px;border-radius:9px;font-size:13px;line-height:1.15}
   #resendCloudProfileCode{margin-top:7px}
-  .account-warning{margin:0 0 9px;padding:7px 9px;font-size:10.5px;line-height:1.32}
+  .account-warning{margin:0 0 9px;padding:9px 10px;font-size:16px;line-height:1.45}
   .account-message{min-height:18px;margin:9px 0 0;font-size:12px}
 }
 @media (max-width:420px){
