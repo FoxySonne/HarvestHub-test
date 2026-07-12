@@ -187,6 +187,35 @@
     element.dataset.type = type;
   }
 
+  function startMagicLinkCooldown(button, seconds = 60) {
+    if (!button) return;
+    let remaining = seconds;
+    button.disabled = true;
+    button.textContent = `Повторная отправка через ${remaining} сек.`;
+
+    const timer = window.setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        window.clearInterval(timer);
+        button.disabled = false;
+        button.textContent = "Отправить ссылку повторно";
+        return;
+      }
+      button.textContent = `Повторная отправка через ${remaining} сек.`;
+    }, 1000);
+  }
+
+  function getFriendlyAuthError(error) {
+    const rawMessage = String(error?.message || error || "").toLowerCase();
+    if (rawMessage.includes("rate limit") || rawMessage.includes("too many requests")) {
+      return "Лимит отправки писем временно исчерпан. Подожди до часа и попробуй снова.";
+    }
+    if (rawMessage.includes("email address not authorized")) {
+      return "Этот email пока не разрешён для встроенной почты Supabase.";
+    }
+    return error?.message || "Не удалось отправить ссылку. Попробуй позже.";
+  }
+
   function injectModal() {
     if (document.getElementById("accountModal")) return;
     document.body.insertAdjacentHTML("beforeend", `
@@ -247,12 +276,10 @@
           document.getElementById("cloudProfileState").value
         );
         showMessage("Ссылка для входа отправлена на почту. Открой письмо и нажми «Sign in», чтобы завершить создание профиля.", "success");
-        if (submitButton) submitButton.textContent = "Отправить ссылку повторно";
+        startMagicLinkCooldown(submitButton, 60);
       } catch (error) {
-        showMessage(error.message, "error");
-        if (submitButton) submitButton.textContent = "Отправить ссылку для входа";
-      } finally {
-        if (submitButton) submitButton.disabled = false;
+        showMessage(getFriendlyAuthError(error), "error");
+        startMagicLinkCooldown(submitButton, 60);
       }
     });
   }
