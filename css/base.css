@@ -43,7 +43,7 @@ h3   { font-size: 1.22rem; }                    /* ~22px */
 h4   { font-size: 0.89rem; margin-bottom: 10px; }
 
 h1, h2, h3 { margin: 0 0 12px; }
-p    { margin: 0 0 16px; color: var(--text-soft); }
+p    { margin: 0 0 10px; color: var(--text-soft); }
 small{ font-size: 0.83rem; color: var(--text-muted); } /* ~15px */
 strong { color: white; }
 
