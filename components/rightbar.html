@@ -5,12 +5,14 @@
     </div>
 </div>
 
-<div class="box desktop-profile-box">
+<div class="box desktop-profile-box" id="desktopProfileBox">
     <h4>Профиль</h4>
-    <p class="desktop-profile-text">Сохраняйте данные и используйте их на разных устройствах.</p>
-    <button type="button" class="account-trigger desktop-profile-button" data-account-button>
-        Войти или создать профиль
-    </button>
+    <div id="desktopProfileContent">
+        <p class="desktop-profile-text">Сохраняйте данные и используйте их на разных устройствах.</p>
+        <button type="button" class="account-trigger desktop-profile-button" data-account-button>
+            Войти или создать профиль
+        </button>
+    </div>
 </div>
 
 <div class="box time-converter-box" oninput="window.harvestHubUpdateTimeConverter && window.harvestHubUpdateTimeConverter()" onchange="window.harvestHubUpdateTimeConverter && window.harvestHubUpdateTimeConverter()">
