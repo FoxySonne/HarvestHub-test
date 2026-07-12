@@ -1,0 +1,290 @@
+/* СОЮЗНЫЙ ШТАБ */
+.alliance-page-intro {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.alliance-message {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.alliance-message[data-type="success"] {
+  border-color: var(--success);
+}
+
+.alliance-message[data-type="error"] {
+  border-color: var(--danger);
+}
+
+.alliance-auth-card,
+.alliance-setup-card,
+.alliance-editor-card,
+.alliance-list-card,
+.alliance-toolbar-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.alliance-auth-card .card-header p,
+.alliance-setup-card .card-header p,
+.alliance-editor-card .card-header p,
+.alliance-list-card .card-header p {
+  margin: 6px 0 0;
+  color: var(--text-soft);
+}
+
+.alliance-auth-grid,
+.alliance-setup-grid,
+.participant-form {
+  display: grid;
+  gap: 14px;
+}
+
+.alliance-auth-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.alliance-setup-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.alliance-auth-grid label,
+.alliance-form-block label,
+.participant-form label,
+.alliance-toolbar-card > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alliance-auth-grid label > span,
+.alliance-form-block label > span,
+.participant-form label > span,
+.alliance-toolbar-card label > span,
+.alliance-invite-box > span {
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.alliance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.alliance-actions button,
+.alliance-session-card button,
+.alliance-invite-box button,
+.participant-row-actions button {
+  width: auto;
+}
+
+.secondary-button {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.secondary-button:hover {
+  background: var(--card-hover);
+}
+
+.danger-button {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.danger-button:hover {
+  background: rgba(214, 79, 79, .12);
+}
+
+.alliance-workspace,
+.alliance-data-area {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.alliance-session-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.alliance-session-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alliance-session-card span {
+  color: var(--accent);
+}
+
+.alliance-form-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.alliance-form-block h4 {
+  margin: 0;
+}
+
+.alliance-form-block button {
+  align-self: flex-start;
+  width: auto;
+}
+
+.alliance-toolbar-card {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  align-items: end;
+}
+
+.alliance-invite-box {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.alliance-invite-box > span {
+  grid-column: 1 / -1;
+}
+
+.alliance-invite-box strong {
+  color: var(--accent);
+  letter-spacing: .08em;
+}
+
+.participant-form {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.participant-comment-field,
+.participant-form-actions {
+  grid-column: 1 / -1;
+}
+
+.participant-comment-field textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.alliance-table-wrap {
+  overflow-x: auto;
+}
+
+.alliance-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+}
+
+.alliance-table th,
+.alliance-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.alliance-table th {
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.alliance-table td {
+  color: var(--text);
+}
+
+.participant-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.participant-status-active {
+  background: rgba(61, 138, 82, .18);
+  color: var(--accent);
+}
+
+.participant-status-reserve {
+  background: rgba(217, 164, 61, .16);
+  color: var(--warning);
+}
+
+.participant-status-inactive {
+  background: rgba(143, 152, 168, .16);
+  color: var(--text-muted);
+}
+
+.participant-row-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.participant-row-actions button {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.alliance-empty-state {
+  padding: 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 899px) {
+  .alliance-auth-grid,
+  .alliance-setup-grid,
+  .participant-form,
+  .alliance-toolbar-card {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-session-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .alliance-session-card button,
+  .alliance-actions button,
+  .alliance-form-block button,
+  .alliance-invite-box button {
+    width: 100%;
+  }
+
+  .alliance-invite-box {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-invite-box > span,
+  .participant-comment-field,
+  .participant-form-actions {
+    grid-column: auto;
+  }
+}
