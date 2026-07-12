@@ -124,10 +124,49 @@
     document.body.classList.remove("account-modal-open");
   }
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderDesktopProfileCard(profile) {
+    const content = document.getElementById("desktopProfileContent");
+    if (!content) return;
+
+    if (!profile) {
+      content.innerHTML = `
+        <p class="desktop-profile-text">Сохраняйте данные и используйте их на разных устройствах.</p>
+        <button type="button" class="account-trigger desktop-profile-button" data-account-button>Войти или создать профиль</button>`;
+      return;
+    }
+
+    const status = profile.type === "quick"
+      ? "Быстрый профиль"
+      : "Данные синхронизируются";
+
+    content.innerHTML = `
+      <div class="desktop-profile-user">
+        <strong>${escapeHtml(profile.nickname)}</strong>
+        <span>Штат ${escapeHtml(profile.state)}</span>
+      </div>
+      <p class="desktop-profile-status">${status}</p>
+      <button type="button" class="account-trigger desktop-profile-button" data-account-button>Открыть профиль</button>`;
+  }
+
   function renderAccountButtons() {
     const profile = getActiveProfile();
+    renderDesktopProfileCard(profile);
+
     document.querySelectorAll("[data-account-button]").forEach(button => {
-      button.textContent = profile ? profile.nickname : "Профиль";
+      if (button.classList.contains("desktop-profile-button")) {
+        button.textContent = profile ? "Открыть профиль" : "Войти или создать профиль";
+      } else {
+        button.textContent = profile ? profile.nickname : "Профиль";
+      }
       button.title = profile ? `Открыть профиль ${profile.nickname}` : "Войти или создать профиль";
     });
   }
@@ -238,6 +277,9 @@
   async function init() {
     injectModal();
     renderAccountButtons();
+    window.setTimeout(renderAccountButtons, 250);
+    window.setTimeout(renderAccountButtons, 1000);
+
     document.addEventListener("click", event => {
       const button = event.target.closest("[data-account-button]");
       if (!button) return;
@@ -260,7 +302,8 @@
     close: closeAccountModal,
     setTab,
     signOut: signOutAccount,
-    syncCloudProfile
+    syncCloudProfile,
+    render: renderAccountButtons
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
