@@ -38,7 +38,7 @@
 @media (min-width:900px){
   #sidebar-container{display:flex;flex-direction:column;min-height:100%}
   .sidebar-account-trigger{
-    justify-content:flex-start;
+    justify-content:center;
     width:100%;
     min-height:0;
     margin-top:auto;
@@ -48,7 +48,7 @@
     border-radius:0;
     background:transparent;
     color:var(--text-soft);
-    text-align:left;
+    text-align:center;
   }
   .sidebar-account-trigger:hover{color:var(--accent)}
   .account-tabs{display:none}
