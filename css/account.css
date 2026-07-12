@@ -1,6 +1,9 @@
 .account-trigger{display:flex;align-items:center;justify-content:center;min-height:42px;padding:10px 14px;border-radius:12px;background:rgba(139,234,99,.1);border:1px solid rgba(139,234,99,.28);color:var(--text);font:inherit;cursor:pointer}
-.sidebar-account-trigger{width:100%;margin-top:18px}
 .topbar-account-trigger{display:none}
+.desktop-profile-box{display:block}
+.desktop-profile-box h4{margin-bottom:10px}
+.desktop-profile-text{margin:0 0 14px;color:var(--text-soft);font-size:13px;line-height:1.45}
+.desktop-profile-button{width:100%;min-height:38px;padding:8px 10px;font-size:13px}
 .account-modal{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
 .account-modal.is-open{display:flex}
 .account-modal-backdrop{position:absolute;inset:0;background:rgba(4,10,16,.78);backdrop-filter:blur(5px)}
@@ -26,7 +29,7 @@
 .profile-sync-status{color:var(--muted)}
 @media (max-width:899px){
   .topbar-account-trigger{display:inline-flex;margin-left:auto;min-height:36px;padding:7px 10px}
-  .sidebar-account-trigger{display:none}
+  .desktop-profile-box{display:none}
   .account-modal{align-items:flex-end;padding:0}
   .account-dialog{width:100%;max-height:92vh;border-radius:18px 18px 0 0;padding:20px 16px 24px}
   .account-panels{display:block}
@@ -36,20 +39,5 @@
   .account-tabs{position:sticky;top:0;z-index:2;background:var(--card);padding-top:4px}
 }
 @media (min-width:900px){
-  #sidebar-container{display:flex;flex-direction:column;min-height:100%}
-  .sidebar-account-trigger{
-    justify-content:center;
-    width:100%;
-    min-height:0;
-    margin-top:auto;
-    padding:14px 0 0;
-    border:0;
-    border-top:1px solid var(--border);
-    border-radius:0;
-    background:transparent;
-    color:var(--text-soft);
-    text-align:center;
-  }
-  .sidebar-account-trigger:hover{color:var(--accent)}
   .account-tabs{display:none}
 }
