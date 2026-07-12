@@ -12,7 +12,7 @@
 .account-modal.is-open{display:flex}
 .account-modal-backdrop{position:absolute;inset:0;background:rgba(4,10,16,.78);backdrop-filter:blur(5px)}
 .account-dialog{position:relative;z-index:1;width:min(560px,100%);max-height:90vh;overflow:auto;padding:24px;border-radius:var(--radius-large);background:var(--card);box-shadow:var(--shadow);overscroll-behavior:contain}
-.account-close{position:absolute;top:10px;right:12px;width:38px;height:38px;padding:0;border:0;background:transparent;font-size:28px;line-height:1;color:var(--text);cursor:pointer}
+.account-close{position:absolute;top:10px;right:12px;width:38px;height:38px;min-width:38px;max-width:38px;min-height:38px;margin:0;padding:0;border:0;background:transparent;box-shadow:none;font-size:28px;line-height:1;color:var(--text);cursor:pointer}
 .account-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin:18px 0;padding:4px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-large);box-shadow:var(--shadow)}
 .account-tabs button{width:100%;min-width:0;min-height:38px;padding:8px 10px;border:0;border-radius:var(--radius);background:transparent;color:var(--text-soft);font-size:15px;font-weight:700;box-shadow:none}
 .account-tabs button.is-active{background:var(--button);color:#fff}
@@ -46,26 +46,34 @@
 .profile-warning{margin-top:18px}
 .profile-sync-status{color:var(--muted)}
 @media (max-width:899px){
-  .topbar-account-trigger{display:inline-flex;margin-left:auto;min-height:36px;padding:7px 10px}
+  .topbar-account-trigger{display:inline-flex;flex:0 0 34px;width:34px;height:34px;min-width:34px;max-width:34px;min-height:34px;margin-left:auto;padding:0;border:1px solid rgba(139,234,99,.38);border-radius:50%;background:transparent;box-shadow:none;color:var(--text-soft);font-size:0;line-height:0}
+  .topbar-account-trigger::before{content:"";display:block;width:17px;height:17px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat}
+  .topbar-account-trigger:hover,.topbar-account-trigger:focus-visible{border-color:var(--accent);color:var(--accent);background:rgba(139,234,99,.08)}
   .desktop-profile-box{display:none}
   .account-modal{align-items:flex-end;justify-content:center;padding:0;padding-top:env(safe-area-inset-top)}
-  .account-dialog{width:100%;max-width:none;max-height:100dvh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-padding-top:76px;scroll-padding-bottom:140px}
-  .account-dialog h2{margin:0;padding:2px 44px 0 2px;font-size:21px;line-height:1.25}
-  .account-close{top:8px;right:8px;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--card);z-index:4}
-  .account-tabs{position:sticky;top:-18px;z-index:3;margin:16px -2px 12px;padding:4px;background:var(--card);box-shadow:0 8px 14px rgba(0,0,0,.18)}
-  .account-tabs button{min-height:40px;padding:8px 6px;font-size:14px}
-  .account-panel{padding:8px 0 0;border:0;background:transparent}
-  .account-panel .form-group{margin-bottom:12px}
-  .account-warning{margin:0 0 12px;padding:8px 10px;font-size:11.5px;line-height:1.38}
-  .account-message{margin-bottom:0}
+  .account-dialog{width:100%;max-width:none;max-height:100dvh;padding:16px 12px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-padding-top:66px;scroll-padding-bottom:110px}
+  .account-dialog h2{margin:0;padding:1px 42px 0 0;font-size:19px;line-height:1.2}
+  .account-close{top:7px;right:7px;display:flex;align-items:center;justify-content:center;width:32px;height:32px;min-width:32px;max-width:32px;min-height:32px;margin:0!important;padding:0!important;border:1px solid var(--border);border-radius:50%;background:var(--panel)!important;box-shadow:none!important;font-size:23px;z-index:4}
+  .account-tabs{position:sticky;top:-16px;z-index:3;margin:13px -1px 10px;padding:3px;background:var(--card);border-radius:12px;box-shadow:0 6px 12px rgba(0,0,0,.16)}
+  .account-tabs button{min-height:32px;padding:5px 6px;border-radius:9px;font-size:12px;line-height:1.15}
+  .account-panel{padding:6px 0 0;border:0;background:transparent}
+  .account-panel .form-group{gap:5px;margin-bottom:9px}
+  .account-panel .form-group span{font-size:12px}
+  .account-panel input{height:38px;min-height:38px;padding:0 10px;border-radius:9px;font-size:14px}
+  .account-panel button[type="submit"],
+  #verifyCloudProfileCode,
+  #resendCloudProfileCode{min-height:36px;margin-top:1px;padding:7px 10px;border-radius:9px;font-size:13px;line-height:1.15}
+  #resendCloudProfileCode{margin-top:7px}
+  .account-warning{margin:0 0 9px;padding:7px 9px;font-size:10.5px;line-height:1.32}
+  .account-message{min-height:18px;margin:9px 0 0;font-size:12px}
 }
 @media (max-width:420px){
-  .account-dialog{padding-left:12px;padding-right:12px}
-  .account-dialog h2{font-size:19px}
-  .account-tabs button{font-size:13px}
+  .account-dialog{padding-left:10px;padding-right:10px}
+  .account-dialog h2{font-size:18px}
+  .account-tabs button{font-size:11.5px}
 }
 @media (max-height:560px) and (max-width:899px){
   .account-modal{align-items:stretch}
-  .account-dialog{height:100dvh;max-height:100dvh;border-radius:0;padding-top:12px}
-  .account-tabs{top:-12px;margin-top:12px}
+  .account-dialog{height:100dvh;max-height:100dvh;border-radius:0;padding-top:10px}
+  .account-tabs{top:-10px;margin-top:10px}
 }
