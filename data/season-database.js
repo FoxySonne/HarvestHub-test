@@ -101,6 +101,12 @@ export const seasonDatabase = {
     { level: 3, bonus: 0.1 }
   ],
 
+  oceanAbundanceProductionBonus: [
+    { level: 0, bonus: 0 },
+    { level: 1, bonus: 0.04 },
+    { level: 2, bonus: 0.08 }
+  ],
+
   seasonalBuildingBuildReduction: [
     { level: 0, bonus: 0 },
     { level: 1, bonus: -0.01 },
@@ -143,7 +149,6 @@ export const seasonDatabase = {
 
   territoryBuffs: {
     villageProduction: 0.05,
-    factoryProduction: 0.05,
     megapolisProduction: 0.2,
     mightyBullProduction: 0.8
   }
