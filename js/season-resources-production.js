@@ -25,7 +25,9 @@ function getBuildingCurrentLevel(buildingId) {
 }
 
 function getBuildingProduction(buildingId) {
-  return getByLevel(seasonDatabase.productionByBuildingLevel, getBuildingCurrentLevel(buildingId));
+  const level = getBuildingCurrentLevel(buildingId);
+  if (level <= 0) return { secondary: 0, primary: 0 };
+  return getByLevel(seasonDatabase.productionByBuildingLevel, level);
 }
 
 function getFactoryProduction() {
