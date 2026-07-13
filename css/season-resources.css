@@ -417,6 +417,23 @@ SEASON RESOURCES — compact calculator layout
     gap: 10px;
   }
 
+  .season-card-header.collapsible-card-header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .season-card-header.collapsible-card-header > :first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .season-card-header.collapsible-card-header .collapsible-card-toggle {
+    margin-left: auto;
+    align-self: flex-start;
+  }
+
   .season-summary-pill {
     width: 100%;
     align-items: flex-start;
