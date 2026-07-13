@@ -83,4 +83,17 @@
     width: 6px;
     height: 6px;
   }
+
+  .season-compact-card > .season-card-header.collapsible-card-header {
+    position: relative !important;
+    display: block !important;
+    padding-right: 42px !important;
+  }
+
+  .season-compact-card > .season-card-header.collapsible-card-header > .collapsible-card-toggle {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+  }
 }
