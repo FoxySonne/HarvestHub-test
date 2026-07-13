@@ -85,7 +85,7 @@ export const seasonBuildingsDatabase = {
         { level: 8, secondary: 20493, primary: 0 },
         { level: 9, secondary: 24696, primary: 0 },
         { level: 10, secondary: 29106, primary: 0 },
-        { level: 11, secondary: 0, primary: 0 },
+        { level: 11, secondary: 33516, primary: 0 },
         { level: 12, secondary: 37926, primary: 0 },
         { level: 13, secondary: 42336, primary: 0 },
         { level: 14, secondary: 51156, primary: 0 },
