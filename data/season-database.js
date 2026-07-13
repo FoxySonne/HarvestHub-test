@@ -108,10 +108,10 @@ export const seasonDatabase = {
   ],
 
   seasonalBuildingBuildReduction: [
-    { level: 0, bonus: 0 },
-    { level: 1, bonus: -0.01 },
-    { level: 2, bonus: -0.02 },
-    { level: 3, bonus: -0.03 }
+    { level: 0, reduction: 0, label: "0 уровень" },
+    { level: 1, reduction: 0.01, label: "1 уровень" },
+    { level: 2, reduction: 0.02, label: "2 уровень" },
+    { level: 3, reduction: 0.03, label: "3 уровень" }
   ],
 
   buildingRequirements: [
