@@ -24,40 +24,36 @@ function getBuildingCurrentLevel(buildingId) {
   return Number(row?.querySelector(".season-building-current")?.value) || 0;
 }
 
-function getBuildingProduction(buildingId) {
-  const level = getBuildingCurrentLevel(buildingId);
-
-  if (level <= 0) {
-    return { secondary: 0, primary: 0 };
-  }
-
+function getProductionForLevel(level) {
+  if (level <= 0) return { secondary: 0, primary: 0 };
   return getByLevel(seasonDatabase.productionByBuildingLevel, level) || { secondary: 0, primary: 0 };
 }
 
 function getFactoryProduction() {
-  const ids = [
-    "secondary_factory_1",
-    "secondary_factory_2",
-    "primary_factory_1",
-    "primary_factory_2"
+  const fallback = getProductionForLevel(num("productionBuildingLevel"));
+
+  const secondaryLevels = [
+    getBuildingCurrentLevel("secondary_factory_1"),
+    getBuildingCurrentLevel("secondary_factory_2")
   ];
 
-  const hasAllRows = ids.every(id => document.querySelector(`.season-building-row[data-building-id="${id}"]`));
+  const primaryLevels = [
+    getBuildingCurrentLevel("primary_factory_1"),
+    getBuildingCurrentLevel("primary_factory_2")
+  ];
 
-  if (!hasAllRows) {
-    const level = num("productionBuildingLevel");
-    return getByLevel(seasonDatabase.productionByBuildingLevel, level) || { secondary: 0, primary: 0 };
-  }
+  const hasSecondaryFactoryLevels = secondaryLevels.some(level => level > 0);
+  const hasPrimaryFactoryLevels = primaryLevels.some(level => level > 0);
 
-  const secondary1 = getBuildingProduction("secondary_factory_1");
-  const secondary2 = getBuildingProduction("secondary_factory_2");
-  const primary1 = getBuildingProduction("primary_factory_1");
-  const primary2 = getBuildingProduction("primary_factory_2");
+  const secondary = hasSecondaryFactoryLevels
+    ? secondaryLevels.reduce((total, level) => total + (Number(getProductionForLevel(level).secondary) || 0), 0)
+    : Number(fallback.secondary) || 0;
 
-  return {
-    secondary: (Number(secondary1.secondary) || 0) + (Number(secondary2.secondary) || 0),
-    primary: (Number(primary1.primary) || 0) + (Number(primary2.primary) || 0)
-  };
+  const primary = hasPrimaryFactoryLevels
+    ? primaryLevels.reduce((total, level) => total + (Number(getProductionForLevel(level).primary) || 0), 0)
+    : Number(fallback.primary) || 0;
+
+  return { secondary, primary };
 }
 
 function getBonus(list, level) {
@@ -97,8 +93,8 @@ function calculateProductionPerHour() {
   const totalBonus = 1 + labBonus + seasonBonus + villageBonus + megapolisBonus + oceanBonus + bullBonus;
 
   return {
-    secondaryPerHour: (Number(base.secondary) || 0) * totalBonus * premiumPass,
-    primaryPerHour: (Number(base.primary) || 0) * totalBonus * weeklyPass
+    secondaryPerHour: base.secondary * totalBonus * premiumPass,
+    primaryPerHour: base.primary * totalBonus * weeklyPass
   };
 }
 
