@@ -24,33 +24,53 @@ function getBuildingCurrentLevel(buildingId) {
   return Number(row?.querySelector(".season-building-current")?.value) || 0;
 }
 
-function getProductionForLevel(level) {
-  if (level <= 0) return { secondary: 0, primary: 0 };
+function getBuildingProduction(buildingId) {
+  const level = getBuildingCurrentLevel(buildingId);
+
+  if (level <= 0) {
+    return { secondary: 0, primary: 0 };
+  }
+
+  return getByLevel(seasonDatabase.productionByBuildingLevel, level) || { secondary: 0, primary: 0 };
+}
+
+function getSelectedBuildingProduction() {
+  const level = num("productionBuildingLevel");
   return getByLevel(seasonDatabase.productionByBuildingLevel, level) || { secondary: 0, primary: 0 };
 }
 
 function getFactoryProduction() {
-  const fallback = getProductionForLevel(num("productionBuildingLevel"));
+  const ids = [
+    "secondary_factory_1",
+    "secondary_factory_2",
+    "primary_factory_1",
+    "primary_factory_2"
+  ];
+
+  const hasAllRows = ids.every(id => document.querySelector(`.season-building-row[data-building-id="${id}"]`));
+  const fallback = getSelectedBuildingProduction();
+
+  if (!hasAllRows) {
+    return fallback;
+  }
 
   const secondaryLevels = [
     getBuildingCurrentLevel("secondary_factory_1"),
     getBuildingCurrentLevel("secondary_factory_2")
   ];
-
   const primaryLevels = [
     getBuildingCurrentLevel("primary_factory_1"),
     getBuildingCurrentLevel("primary_factory_2")
   ];
 
-  const hasSecondaryFactoryLevels = secondaryLevels.some(level => level > 0);
-  const hasPrimaryFactoryLevels = primaryLevels.some(level => level > 0);
-
-  const secondary = hasSecondaryFactoryLevels
-    ? secondaryLevels.reduce((total, level) => total + (Number(getProductionForLevel(level).secondary) || 0), 0)
+  const secondary = secondaryLevels.some(level => level > 0)
+    ? (Number(getBuildingProduction("secondary_factory_1").secondary) || 0) +
+      (Number(getBuildingProduction("secondary_factory_2").secondary) || 0)
     : Number(fallback.secondary) || 0;
 
-  const primary = hasPrimaryFactoryLevels
-    ? primaryLevels.reduce((total, level) => total + (Number(getProductionForLevel(level).primary) || 0), 0)
+  const primary = primaryLevels.some(level => level > 0)
+    ? (Number(getBuildingProduction("primary_factory_1").primary) || 0) +
+      (Number(getBuildingProduction("primary_factory_2").primary) || 0)
     : Number(fallback.primary) || 0;
 
   return { secondary, primary };
@@ -58,26 +78,6 @@ function getFactoryProduction() {
 
 function getBonus(list, level) {
   return Number(getByLevel(list, level)?.bonus) || 0;
-}
-
-function ensureOceanAbundanceField() {
-  if (!document.querySelector(".season-page") || document.getElementById("productionOceanAbundance")) return;
-
-  const grid = document.querySelector(".season-production-card .season-form-grid");
-  if (!grid) return;
-
-  const label = document.createElement("label");
-  label.className = "season-field";
-  label.innerHTML = `
-    <span class="tooltip" data-tooltip="Бафф производства за качество воды: менее 80 — 0%, от 80 до 99 — 4%, качество 100 — 8%">Океаническое изобилие</span>
-    <select id="productionOceanAbundance">
-      <option value="0">Нет — 0%</option>
-      <option value="1">1 уровень — 4%</option>
-      <option value="2">2 уровень — 8%</option>
-    </select>
-  `;
-
-  grid.appendChild(label);
 }
 
 function calculateProductionPerHour() {
@@ -93,15 +93,13 @@ function calculateProductionPerHour() {
   const totalBonus = 1 + labBonus + seasonBonus + villageBonus + megapolisBonus + oceanBonus + bullBonus;
 
   return {
-    secondaryPerHour: base.secondary * totalBonus * premiumPass,
-    primaryPerHour: base.primary * totalBonus * weeklyPass
+    secondaryPerHour: (Number(base.secondary) || 0) * totalBonus * premiumPass,
+    primaryPerHour: (Number(base.primary) || 0) * totalBonus * weeklyPass
   };
 }
 
 function updateProduction() {
   if (!document.querySelector(".season-page")) return;
-
-  ensureOceanAbundanceField();
 
   const production = calculateProductionPerHour();
   const hours = num("productionHours");
