@@ -1,0 +1,42 @@
+/* Seasonal building level constraints and automatic corrections */
+
+.season-production-efficiency-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.season-production-efficiency-field > span {
+  min-height: 34px;
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.season-production-efficiency-field select {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  font-size: 16px;
+}
+
+.season-building-row,
+.season-building-row select {
+  transition: border-color .25s ease, box-shadow .25s ease, background-color .25s ease;
+}
+
+.season-row-auto-adjusted {
+  border-color: var(--button) !important;
+  background: rgba(112, 220, 86, .08) !important;
+}
+
+.season-level-auto-adjusted {
+  border-color: var(--button) !important;
+  box-shadow: 0 0 0 3px rgba(112, 220, 86, .16) !important;
+}
