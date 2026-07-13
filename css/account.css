@@ -20,20 +20,23 @@
 .account-tabs button.is-active,.cloud-mode-switch button.is-active{background:var(--button);color:#fff}
 .account-panels{display:block}
 .account-panel{display:none;padding:18px;border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.02)}
-.account-modal:not([data-active-tab]) [data-account-panel="quick"],
-.account-modal[data-active-tab="quick"] [data-account-panel="quick"],
-.account-modal[data-active-tab="account"] [data-account-panel="account"]{display:block}
+.account-modal:not([data-active-tab]) [data-account-panel="quick"],.account-modal[data-active-tab="quick"] [data-account-panel="quick"],.account-modal[data-active-tab="account"] [data-account-panel="account"]{display:block}
 [data-cloud-mode-panel]{display:none}
-[data-account-panel="account"][data-cloud-mode="signup"] [data-cloud-mode-panel="signup"],
-[data-account-panel="account"][data-cloud-mode="login"] [data-cloud-mode-panel="login"]{display:block}
-.account-panel .form-group{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
-.account-panel .form-group span{font-size:14px;color:var(--text-soft)}
-.account-panel input{width:100%;height:44px;min-height:44px;padding:0 13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);color:var(--text);font:inherit;outline:none;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
-.account-panel input:hover{border-color:rgba(139,234,99,.45)}
-.account-panel input:focus{border-color:var(--accent);background:rgba(255,255,255,.035);box-shadow:0 0 0 3px rgba(139,234,99,.12)}
-.account-panel input::placeholder{color:var(--muted)}
-.account-panel button[type="submit"]{width:100%;min-height:42px;margin-top:2px}
+[data-account-panel="account"][data-cloud-mode="signup"] [data-cloud-mode-panel="signup"],[data-account-panel="account"][data-cloud-mode="login"] [data-cloud-mode-panel="login"]{display:block}
+.account-panel .form-group,.password-recovery-form .form-group{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.account-panel .form-group>span:first-child,.password-recovery-form .form-group>span:first-child{font-size:14px;color:var(--text-soft)}
+.account-panel input,.password-recovery-form input{width:100%;height:44px;min-height:44px;padding:0 13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);color:var(--text);font:inherit;outline:none;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
+.account-panel input:hover,.password-recovery-form input:hover{border-color:rgba(139,234,99,.45)}
+.account-panel input:focus,.password-recovery-form input:focus{border-color:var(--accent);background:rgba(255,255,255,.035);box-shadow:0 0 0 3px rgba(139,234,99,.12)}
+.password-field{position:relative;display:block}
+.password-field input{padding-right:86px}
+.password-field button{position:absolute;top:50%;right:8px;transform:translateY(-50%);min-width:0;min-height:30px;padding:4px 8px;border:0;background:transparent;box-shadow:none;color:var(--accent);font-size:12px;cursor:pointer}
+.account-panel button[type="submit"],.password-recovery-form button[type="submit"]{width:100%;min-height:42px;margin-top:2px}
+.account-link-button{display:block;margin:10px auto 0;padding:4px 6px;border:0;background:none;box-shadow:none;color:var(--accent);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
 .cloud-login-note{margin:0 0 14px;color:var(--text-soft);font-size:13px;line-height:1.45}
+.password-recovery-form{display:none;padding:18px;margin-top:18px;border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.02)}
+.account-modal.is-recovery .account-standard-content{display:none}
+.account-modal.is-recovery .password-recovery-form{display:block}
 .account-warning{margin:2px 0 14px;padding:9px 11px;border-left:2px solid var(--accent);border-radius:8px;background:rgba(139,234,99,.07);font-size:12px;line-height:1.4;color:var(--text-soft);overflow-wrap:anywhere}
 .account-message{min-height:24px;margin:14px 0 0}
 .account-message[data-type="error"]{color:#ff8c8c}
@@ -59,22 +62,16 @@
   .account-tabs{position:sticky;top:-16px;z-index:3;margin:13px -1px 10px;padding:3px;background:var(--card);border-radius:12px;box-shadow:0 6px 12px rgba(0,0,0,.16)}
   .cloud-mode-switch{margin:0 0 10px;padding:3px;border-radius:11px}
   .account-tabs button,.cloud-mode-switch button{min-height:32px;padding:5px 6px;border-radius:9px;font-size:12px;line-height:1.15}
-  .account-panel{padding:6px 0 0;border:0;background:transparent}
-  .account-panel .form-group{gap:5px;margin-bottom:9px}
-  .account-panel .form-group span{font-size:12px}
-  .account-panel input{height:38px;min-height:38px;padding:0 10px;border-radius:9px;font-size:14px}
-  .account-panel button[type="submit"]{min-height:36px;margin-top:1px;padding:7px 10px;border-radius:9px;font-size:13px;line-height:1.15}
+  .account-panel,.password-recovery-form{padding:6px 0 0;border:0;background:transparent}
+  .account-panel .form-group,.password-recovery-form .form-group{gap:5px;margin-bottom:9px}
+  .account-panel .form-group>span:first-child,.password-recovery-form .form-group>span:first-child{font-size:12px}
+  .account-panel input,.password-recovery-form input{height:38px;min-height:38px;padding:0 10px;border-radius:9px;font-size:14px}
+  .password-field input{padding-right:78px}
+  .password-field button{right:5px;font-size:11px}
+  .account-panel button[type="submit"],.password-recovery-form button[type="submit"]{min-height:36px;margin-top:1px;padding:7px 10px;border-radius:9px;font-size:13px;line-height:1.15}
   .cloud-login-note{margin-bottom:10px;font-size:13px;line-height:1.4}
   .account-warning{margin:0 0 9px;padding:9px 10px;font-size:16px;line-height:1.45}
   .account-message{min-height:18px;margin:9px 0 0;font-size:12px}
 }
-@media (max-width:420px){
-  .account-dialog{padding-left:10px;padding-right:10px}
-  .account-dialog h2{font-size:18px}
-  .account-tabs button,.cloud-mode-switch button{font-size:11.5px}
-}
-@media (max-height:560px) and (max-width:899px){
-  .account-modal{align-items:stretch}
-  .account-dialog{height:100dvh;max-height:100dvh;border-radius:0;padding-top:10px}
-  .account-tabs{top:-10px;margin-top:10px}
-}
+@media (max-width:420px){.account-dialog{padding-left:10px;padding-right:10px}.account-dialog h2{font-size:18px}.account-tabs button,.cloud-mode-switch button{font-size:11.5px}}
+@media (max-height:560px) and (max-width:899px){.account-modal{align-items:stretch}.account-dialog{height:100dvh;max-height:100dvh;border-radius:0;padding-top:10px}.account-tabs{top:-10px;margin-top:10px}}
