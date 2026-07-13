@@ -80,6 +80,15 @@ function getBonus(list, level) {
   return Number(getByLevel(list, level)?.bonus) || 0;
 }
 
+function positionOceanAbundanceField() {
+  const oceanField = document.getElementById("productionOceanAbundance")?.closest(".season-field");
+  const bullField = document.getElementById("productionBull")?.closest(".season-field");
+
+  if (!oceanField || !bullField || oceanField.previousElementSibling === bullField) return;
+
+  bullField.insertAdjacentElement("afterend", oceanField);
+}
+
 function calculateProductionPerHour() {
   const base = getFactoryProduction();
   const labBonus = getBonus(seasonDatabase.labProductionBonus, num("productionLabLevel"));
@@ -100,6 +109,8 @@ function calculateProductionPerHour() {
 
 function updateProduction() {
   if (!document.querySelector(".season-page")) return;
+
+  positionOceanAbundanceField();
 
   const production = calculateProductionPerHour();
   const hours = num("productionHours");
