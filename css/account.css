@@ -23,11 +23,11 @@
 .account-modal:not([data-active-tab]) [data-account-panel="quick"],.account-modal[data-active-tab="quick"] [data-account-panel="quick"],.account-modal[data-active-tab="account"] [data-account-panel="account"]{display:block}
 [data-cloud-mode-panel]{display:none}
 [data-account-panel="account"][data-cloud-mode="signup"] [data-cloud-mode-panel="signup"],[data-account-panel="account"][data-cloud-mode="login"] [data-cloud-mode-panel="login"]{display:block}
-.account-panel .form-group,.password-recovery-form .form-group{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
-.account-panel .form-group>span:first-child,.password-recovery-form .form-group>span:first-child{font-size:14px;color:var(--text-soft)}
-.account-panel input,.password-recovery-form input{width:100%;height:44px;min-height:44px;padding:0 13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);color:var(--text);font:inherit;outline:none;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
-.account-panel input:hover,.password-recovery-form input:hover{border-color:rgba(139,234,99,.45)}
-.account-panel input:focus,.password-recovery-form input:focus{border-color:var(--accent);background:rgba(255,255,255,.035);box-shadow:0 0 0 3px rgba(139,234,99,.12)}
+.account-panel .form-group,.password-recovery-form .form-group,.settings-account-form .form-group,.profile-edit-form .form-group{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.account-panel .form-group>span:first-child,.password-recovery-form .form-group>span:first-child,.settings-account-form .form-group>span:first-child,.profile-edit-form .form-group>span:first-child{font-size:14px;color:var(--text-soft)}
+.account-panel input,.password-recovery-form input,.settings-account-form input,.profile-edit-form input{width:100%;height:44px;min-height:44px;padding:0 13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);color:var(--text);font:inherit;outline:none;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
+.account-panel input:hover,.password-recovery-form input:hover,.settings-account-form input:hover,.profile-edit-form input:hover{border-color:rgba(139,234,99,.45)}
+.account-panel input:focus,.password-recovery-form input:focus,.settings-account-form input:focus,.profile-edit-form input:focus{border-color:var(--accent);background:rgba(255,255,255,.035);box-shadow:0 0 0 3px rgba(139,234,99,.12)}
 .password-field{position:relative;display:block}
 .password-field input{padding-right:86px}
 .password-field button{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:auto!important;min-width:0!important;max-width:none!important;min-height:30px;padding:4px 8px;border:0;background:transparent;box-shadow:none;color:var(--accent);font-size:12px;cursor:pointer}
@@ -39,15 +39,54 @@
 .account-modal.is-recovery .password-recovery-form{display:block}
 .account-warning{margin:2px 0 14px;padding:9px 11px;border-left:2px solid var(--accent);border-radius:8px;background:rgba(139,234,99,.07);font-size:12px;line-height:1.4;color:var(--text-soft);overflow-wrap:anywhere}
 .account-message{min-height:24px;margin:14px 0 0}
-.account-message[data-type="error"]{color:#ff8c8c}
-.account-message[data-type="success"]{color:var(--accent)}
+.account-message[data-type="error"],.settings-form-message[data-type="error"]{color:#ff8c8c}
+.account-message[data-type="success"],.settings-form-message[data-type="success"]{color:var(--accent)}
 .account-inline-action{display:inline;padding:0;border:0;background:none;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
-.profile-page-card{max-width:760px}
-.profile-page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-.profile-page-heading h2{margin:0 0 4px}
-.profile-page-heading p{margin:0}
-.profile-kind{font-weight:700;color:var(--accent)}
-.profile-sync-status{color:var(--muted)}
+.advanced-mode-setting-row>span:first-child{display:flex;flex-direction:column;gap:4px}
+.advanced-mode-setting-row small{max-width:620px;color:var(--text-soft);font-size:12px;line-height:1.4}
+.advanced-mode-setting-row input:disabled+.ipk-switch-track{opacity:.45;cursor:not-allowed}
+#advancedModeAccountButton{margin-top:14px}
+.account-security-card h4{margin:0 0 14px}
+.settings-account-form{max-width:560px}
+.settings-form-message{min-height:20px;margin:10px 0 0;font-size:13px}
+.settings-danger-zone{max-width:720px;margin-top:28px;padding-top:24px;border-top:1px solid var(--border)}
+.settings-danger-zone p{max-width:650px;color:var(--text-soft);line-height:1.5}
+.danger-button{background:#8b3030!important;border-color:#b94b4b!important;color:#fff!important}
+.account-delete-modal[hidden]{display:none}
+.account-delete-modal{position:fixed;inset:0;z-index:3200;display:flex;align-items:center;justify-content:center;padding:20px}
+.account-delete-backdrop{position:absolute;inset:0;background:rgba(4,10,16,.82);backdrop-filter:blur(5px)}
+.account-delete-dialog{position:relative;z-index:1;width:min(520px,100%);padding:24px;border-radius:var(--radius-large);background:var(--card);box-shadow:var(--shadow)}
+.account-delete-close{position:absolute;top:10px;right:12px;width:36px;height:36px;min-width:36px;min-height:36px;padding:0;border:0;background:transparent;box-shadow:none;color:var(--text);font-size:27px}
+.account-delete-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.account-delete-actions button{width:auto}
+.account-delete-open{overflow:hidden}
+.profile-page-content{max-width:860px;padding:4px 0 28px}
+.profile-hero{padding:8px 0 28px;border-bottom:1px solid var(--border)}
+.profile-eyebrow{margin:0 0 10px;color:var(--accent);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.profile-title-row{display:flex;align-items:center;gap:10px}
+.profile-title-row h1,.profile-hero>h1{margin:0;font-size:clamp(34px,5vw,54px);line-height:1.05}
+.profile-state{margin:10px 0 0;font-size:20px;color:var(--text-soft)}
+.profile-email{margin:8px 0 0;color:var(--muted)}
+.profile-sync-status{display:flex;align-items:center;gap:8px;margin:18px 0 0;color:var(--text-soft)}
+.profile-sync-status span{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(139,234,99,.45)}
+.profile-edit-button{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;min-width:34px;min-height:34px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--text-soft);font-size:17px}
+.profile-edit-button:hover{border-color:var(--accent);color:var(--accent)}
+.profile-edit-form{max-width:560px;margin:24px 0;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.02)}
+.profile-edit-form[hidden]{display:none}
+.profile-edit-actions{display:flex;justify-content:flex-end;gap:10px}
+.profile-edit-actions button{width:auto}
+.game-profiles-section{padding:30px 0;border-bottom:1px solid var(--border)}
+.game-profiles-heading{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+.game-profiles-heading h2{margin:0 0 5px}
+.game-profiles-heading p{margin:0;color:var(--muted);font-size:13px}
+.game-profile-item{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0}
+.game-profile-item>div{display:flex;flex-direction:column;gap:5px}
+.game-profile-item strong{font-size:18px}
+.game-profile-item span{color:var(--text-soft)}
+.game-profile-active-label{padding:5px 9px;border-radius:999px;background:rgba(139,234,99,.1);color:var(--accent)!important;font-size:12px;font-weight:700}
+.profile-page-actions{padding-top:24px}
+.profile-page-actions button{width:auto;min-width:140px}
+.profile-warning{max-width:760px;margin-top:24px}
 @media (max-width:899px){
   .topbar-account-trigger{display:inline-flex;flex:0 0 34px;width:34px;height:34px;min-width:34px;max-width:34px;min-height:34px;margin-left:auto;padding:0;border:1px solid rgba(139,234,99,.38);border-radius:50%;background:transparent;box-shadow:none;color:var(--text-soft);font-size:0;line-height:0}
   .topbar-account-trigger::before{content:"";display:block;width:17px;height:17px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat}
@@ -61,15 +100,22 @@
   .cloud-mode-switch{margin:0 0 10px;padding:3px;border-radius:11px}
   .account-tabs button,.cloud-mode-switch button{min-height:32px;padding:5px 6px;border-radius:9px;font-size:12px;line-height:1.15}
   .account-panel,.password-recovery-form{padding:6px 0 0;border:0;background:transparent}
-  .account-panel .form-group,.password-recovery-form .form-group{gap:5px;margin-bottom:9px}
-  .account-panel .form-group>span:first-child,.password-recovery-form .form-group>span:first-child{font-size:12px}
-  .account-panel input,.password-recovery-form input{height:38px;min-height:38px;padding:0 10px;border-radius:9px;font-size:14px}
+  .account-panel .form-group,.password-recovery-form .form-group,.settings-account-form .form-group,.profile-edit-form .form-group{gap:5px;margin-bottom:9px}
+  .account-panel .form-group>span:first-child,.password-recovery-form .form-group>span:first-child,.settings-account-form .form-group>span:first-child,.profile-edit-form .form-group>span:first-child{font-size:12px}
+  .account-panel input,.password-recovery-form input,.settings-account-form input,.profile-edit-form input{height:38px;min-height:38px;padding:0 10px;border-radius:9px;font-size:14px}
   .password-field input{padding-right:78px}
   .password-field button{right:5px;width:auto!important;min-width:0!important;max-width:none!important;font-size:11px}
   .account-panel button[type="submit"],.password-recovery-form button[type="submit"]{min-height:36px;margin-top:1px;padding:7px 10px;border-radius:9px;font-size:13px;line-height:1.15}
   .cloud-login-note{margin-bottom:10px;font-size:13px;line-height:1.4}
   .account-warning{margin:0 0 9px;padding:9px 10px;font-size:16px;line-height:1.45}
   .account-message{min-height:18px;margin:9px 0 0;font-size:12px}
+  .account-delete-modal{align-items:flex-end;padding:0}
+  .account-delete-dialog{width:100%;padding:18px 12px calc(16px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
+  .profile-page-content{padding-top:0}
+  .profile-hero{padding-top:0}
+  .profile-title-row h1,.profile-hero>h1{font-size:36px}
+  .profile-state{font-size:17px}
+  .game-profile-item{align-items:flex-start}
 }
-@media (max-width:420px){.account-dialog{padding-left:10px;padding-right:10px}.account-dialog h2{font-size:18px}.account-tabs button,.cloud-mode-switch button{font-size:11.5px}}
+@media (max-width:420px){.account-dialog{padding-left:10px;padding-right:10px}.account-dialog h2{font-size:18px}.account-tabs button,.cloud-mode-switch button{font-size:11.5px}.profile-title-row h1,.profile-hero>h1{font-size:31px}.profile-edit-actions,.account-delete-actions{display:grid;grid-template-columns:1fr 1fr}.profile-edit-actions button,.account-delete-actions button{width:100%}}
 @media (max-height:560px) and (max-width:899px){.account-modal{align-items:stretch}.account-dialog{height:100dvh;max-height:100dvh;border-radius:0;padding-top:10px}.account-tabs{top:-10px;margin-top:10px}}
