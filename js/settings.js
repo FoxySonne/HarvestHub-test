@@ -158,11 +158,8 @@ async function initAccountSecurity() {
     document.getElementById("deleteAccountForm")?.addEventListener("submit", async event => {
         event.preventDefault();
         const password = document.getElementById("deleteAccountPassword").value;
-        const confirmation = document.getElementById("deleteAccountConfirmation").value.trim();
         const button = document.getElementById("confirmDeleteAccount");
         const email = session.user.email || "";
-
-        if (confirmation !== "УДАЛИТЬ") return setSettingsMessage("deleteAccountMessage", "Введите слово УДАЛИТЬ без изменений.", "error");
 
         button.disabled = true;
         button.textContent = "Проверяем…";
@@ -182,7 +179,7 @@ async function initAccountSecurity() {
         if (deleteError) {
             button.disabled = false;
             button.textContent = "Удалить аккаунт";
-            return setSettingsMessage("deleteAccountMessage", "Клиентская часть готова. Для окончательного удаления нужно подключить функцию delete-account в Supabase.", "error");
+            return setSettingsMessage("deleteAccountMessage", "Не удалось удалить аккаунт. Попробуйте ещё раз позже.", "error");
         }
 
         await window.harvestHubSupabase.auth.signOut();
