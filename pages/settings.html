@@ -60,7 +60,7 @@
     <section class="account-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteAccountTitle">
         <button type="button" class="account-delete-close" data-delete-close aria-label="Закрыть">×</button>
         <h3 id="deleteAccountTitle">Удалить аккаунт</h3>
-        <p>Введите текущий пароль и слово <strong>УДАЛИТЬ</strong>.</p>
+        <p>Для подтверждения удаления введите текущий пароль.</p>
         <form id="deleteAccountForm" class="settings-account-form">
             <label class="form-group">
                 <span>Текущий пароль</span>
@@ -68,10 +68,6 @@
                     <input id="deleteAccountPassword" type="password" required autocomplete="current-password">
                     <button type="button" data-settings-password-toggle="deleteAccountPassword">Показать</button>
                 </span>
-            </label>
-            <label class="form-group">
-                <span>Подтверждение</span>
-                <input id="deleteAccountConfirmation" required autocomplete="off" placeholder="УДАЛИТЬ">
             </label>
             <div class="account-delete-actions">
                 <button type="button" data-delete-close>Отмена</button>
