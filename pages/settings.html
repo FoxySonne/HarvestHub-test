@@ -5,10 +5,13 @@
     <button class="button" onclick="resetAllSiteData()">Сбросить все данные</button>
 </div>
 
-<div class="card">
+<div class="card" id="advancedModeSettingsCard">
     <h3>Продвинутый режим</h3>
-    <label class="ipk-category-item">
-        <span>Включить продвинутый режим</span>
+    <label class="ipk-category-item advanced-mode-setting-row">
+        <span>
+            <strong>Включить продвинутый режим</strong>
+            <small id="advancedModeAccessMessage"></small>
+        </span>
         <span class="ipk-switch">
             <input id="advancedModeToggle" type="checkbox">
             <span class="ipk-switch-track">
@@ -16,10 +19,62 @@
             </span>
         </span>
     </label>
+    <button type="button" id="advancedModeAccountButton" data-account-button hidden>Войти или создать профиль</button>
 </div>
 
-<div class="card">
-    <h3>Профиль</h3>
-    <p class="card-text">Профиль теперь открывается через единую кнопку «Профиль» в меню сайта.</p>
-    <button type="button" data-account-button>Открыть профиль</button>
+<div class="card account-security-card" id="accountSecurityCard" hidden>
+    <h3>Безопасность аккаунта</h3>
+
+    <form id="changePasswordForm" class="settings-account-form">
+        <h4>Установить или изменить пароль</h4>
+        <label class="form-group">
+            <span>Новый пароль</span>
+            <span class="password-field">
+                <input id="settingsNewPassword" type="password" minlength="8" required autocomplete="new-password">
+                <button type="button" data-settings-password-toggle="settingsNewPassword">Показать</button>
+            </span>
+        </label>
+        <label class="form-group">
+            <span>Повторите новый пароль</span>
+            <span class="password-field">
+                <input id="settingsNewPasswordConfirm" type="password" minlength="8" required autocomplete="new-password">
+                <button type="button" data-settings-password-toggle="settingsNewPasswordConfirm">Показать</button>
+            </span>
+        </label>
+        <button type="submit" id="saveSettingsPassword">Сохранить новый пароль</button>
+        <p id="passwordSettingsMessage" class="settings-form-message"></p>
+    </form>
+
+    <div class="settings-danger-zone">
+        <h4>Удаление аккаунта</h4>
+        <p>Будут удалены аккаунт HarvestHub, игровые профили и связанные облачные данные. Восстановить их будет невозможно.</p>
+        <button type="button" class="danger-button" id="openDeleteAccountDialog">Удалить аккаунт</button>
+    </div>
+</div>
+
+<div class="account-delete-modal" id="deleteAccountModal" hidden>
+    <div class="account-delete-backdrop" data-delete-close></div>
+    <section class="account-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteAccountTitle">
+        <button type="button" class="account-delete-close" data-delete-close aria-label="Закрыть">×</button>
+        <h3 id="deleteAccountTitle">Удалить аккаунт</h3>
+        <p>Введите текущий пароль и слово <strong>УДАЛИТЬ</strong>.</p>
+        <form id="deleteAccountForm" class="settings-account-form">
+            <label class="form-group">
+                <span>Текущий пароль</span>
+                <span class="password-field">
+                    <input id="deleteAccountPassword" type="password" required autocomplete="current-password">
+                    <button type="button" data-settings-password-toggle="deleteAccountPassword">Показать</button>
+                </span>
+            </label>
+            <label class="form-group">
+                <span>Подтверждение</span>
+                <input id="deleteAccountConfirmation" required autocomplete="off" placeholder="УДАЛИТЬ">
+            </label>
+            <div class="account-delete-actions">
+                <button type="button" data-delete-close>Отмена</button>
+                <button type="submit" class="danger-button" id="confirmDeleteAccount">Удалить аккаунт</button>
+            </div>
+            <p id="deleteAccountMessage" class="settings-form-message"></p>
+        </form>
+    </section>
 </div>
