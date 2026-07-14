@@ -33,6 +33,31 @@ function setSettingsMessage(id, message, type = "") {
     element.dataset.type = type;
 }
 
+function getSettingsAuthError(error, fallback = "Не удалось выполнить действие.") {
+    const raw = String(error?.message || error || "").toLowerCase();
+
+    if (raw.includes("new password should be different from the old password") || raw.includes("same password")) {
+        return "Новый пароль должен отличаться от текущего.";
+    }
+    if (raw.includes("password should be at least") || raw.includes("password should be")) {
+        return "Пароль должен содержать не менее 8 символов.";
+    }
+    if (raw.includes("invalid login credentials")) {
+        return "Текущий пароль введён неверно.";
+    }
+    if (raw.includes("email not confirmed")) {
+        return "Сначала подтвердите email по ссылке из письма.";
+    }
+    if (raw.includes("rate limit") || raw.includes("too many requests")) {
+        return "Слишком много попыток. Подождите и попробуйте снова.";
+    }
+    if (raw.includes("weak password")) {
+        return "Пароль слишком простой. Используйте более надёжный пароль.";
+    }
+
+    return fallback;
+}
+
 function toggleSettingsPassword(inputId, button) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -104,7 +129,14 @@ async function initAccountSecurity() {
         button.disabled = false;
         button.textContent = "Сохранить новый пароль";
 
-        if (error) return setSettingsMessage("passwordSettingsMessage", error.message || "Не удалось изменить пароль.", "error");
+        if (error) {
+            return setSettingsMessage(
+                "passwordSettingsMessage",
+                getSettingsAuthError(error, "Не удалось изменить пароль."),
+                "error"
+            );
+        }
+
         event.currentTarget.reset();
         setSettingsMessage("passwordSettingsMessage", "Новый пароль сохранён.", "success");
     });
@@ -138,7 +170,11 @@ async function initAccountSecurity() {
         if (loginError) {
             button.disabled = false;
             button.textContent = "Удалить аккаунт";
-            return setSettingsMessage("deleteAccountMessage", "Текущий пароль введён неверно.", "error");
+            return setSettingsMessage(
+                "deleteAccountMessage",
+                getSettingsAuthError(loginError, "Не удалось проверить текущий пароль."),
+                "error"
+            );
         }
 
         button.textContent = "Удаляем…";
