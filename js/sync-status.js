@@ -16,6 +16,8 @@
   let verifyTimer = null;
   let realtimeChannel = null;
   let applyingRemoteUpdate = false;
+  let observer = null;
+  let ensureScheduled = false;
 
   function currentPage() {
     return localStorage.getItem("currentPage") || "";
@@ -29,44 +31,60 @@
     return `<span class="sync-state-icon" aria-hidden="true"><span></span><span></span></span><span class="sync-state-text"></span>`;
   }
 
-  function ensureStatusElements() {
-    document.querySelectorAll(".profile-sync-status").forEach(element => {
-      if (!element.classList.contains("sync-state")) {
-        element.classList.add("sync-state");
-        element.innerHTML = statusMarkup();
-      }
-    });
-
-    const page = currentPage();
-    const container = document.getElementById("page-content");
-    if (container && CALCULATOR_PAGES.has(page) && !container.querySelector("[data-calculator-sync-status]")) {
-      const element = document.createElement("p");
-      element.className = "sync-state calculator-sync-state";
-      element.dataset.calculatorSyncStatus = "";
-      element.innerHTML = statusMarkup();
-      container.prepend(element);
-    }
-
-    render();
-  }
-
   function render() {
     const labels = {
       synced: "Данные синхронизированы",
       syncing: "Данные синхронизируются",
       error: "Ошибка синхронизации"
     };
+    const label = labels[state];
+
     document.querySelectorAll(".sync-state").forEach(element => {
-      element.dataset.syncState = state;
+      if (element.dataset.syncState !== state) element.dataset.syncState = state;
       const text = element.querySelector(".sync-state-text");
-      if (text) text.textContent = labels[state];
-      element.setAttribute("aria-label", labels[state]);
+      if (text && text.textContent !== label) text.textContent = label;
+      if (element.getAttribute("aria-label") !== label) element.setAttribute("aria-label", label);
     });
   }
 
+  function ensureStatusElements() {
+    ensureScheduled = false;
+    observer?.disconnect();
+
+    try {
+      document.querySelectorAll(".profile-sync-status").forEach(element => {
+        if (!element.classList.contains("sync-state")) {
+          element.classList.add("sync-state");
+          element.innerHTML = statusMarkup();
+        }
+      });
+
+      const page = currentPage();
+      const container = document.getElementById("page-content");
+      if (container && CALCULATOR_PAGES.has(page) && !container.querySelector("[data-calculator-sync-status]")) {
+        const element = document.createElement("p");
+        element.className = "sync-state calculator-sync-state";
+        element.dataset.calculatorSyncStatus = "";
+        element.innerHTML = statusMarkup();
+        container.prepend(element);
+      }
+
+      render();
+    } finally {
+      observer?.observe(document.body || document.documentElement, { childList: true, subtree: true });
+    }
+  }
+
+  function scheduleEnsureStatusElements() {
+    if (ensureScheduled) return;
+    ensureScheduled = true;
+    window.requestAnimationFrame(ensureStatusElements);
+  }
+
   function setState(nextState) {
+    if (!["synced", "syncing", "error"].includes(nextState)) return;
     state = nextState;
-    ensureStatusElements();
+    scheduleEnsureStatusElements();
   }
 
   async function getActiveProfileRow() {
@@ -193,8 +211,8 @@
     if (!document.hidden) subscribeRealtime();
   });
 
-  const observer = new MutationObserver(ensureStatusElements);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer = new MutationObserver(scheduleEnsureStatusElements);
+  observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
 
   window.harvestHubSyncStatus = {
     setState,
@@ -204,6 +222,6 @@
     reconnect: subscribeRealtime
   };
 
-  ensureStatusElements();
+  scheduleEnsureStatusElements();
   window.setTimeout(subscribeRealtime, 300);
 })();
