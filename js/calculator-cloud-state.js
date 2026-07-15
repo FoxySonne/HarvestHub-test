@@ -1,379 +1,260 @@
 (() => {
-  const CALCULATOR_PAGES = new Set([
+  const PAGES = new Set([
     "calculator/ipk.html",
     "calculator/turbo-vs.html",
     "calculator/season-resources.html",
     "calculator/troop-training.html"
   ]);
-  const CLOUD_SAVE_DELAY = 650;
-  const MIN_SYNC_VISIBLE_MS = 450;
-  const REMOTE_DEBOUNCE_MS = 250;
+  const SAVE_DELAY = 700;
 
-  let currentPageName = "";
-  let activeProfileId = "";
-  let activeProfileData = {};
-  let currentUserId = "";
+  let pageName = "";
+  let profileId = "";
+  let profileData = {};
   let saveTimer = null;
-  let remoteTimer = null;
-  let realtimeChannel = null;
   let controller = null;
-  let applyingCloudState = false;
-  let localWriteUntil = 0;
-  let lastAppliedSavedAt = "";
-  let pageReloadInProgress = false;
+  let channel = null;
+  let applying = false;
+  let localWriteAt = 0;
+  let lastSavedAt = "";
 
-  function getAccountProfile() {
+  function account() {
     return window.harvestHubAccount?.getProfile?.() || null;
   }
 
-  function isFullAccount() {
-    return getAccountProfile()?.type === "account";
-  }
-
-  function getContainer() {
+  function container() {
     return document.getElementById("page-content");
   }
 
-  function getPersistableFields(container = getContainer()) {
-    if (!container) return [];
-    return Array.from(container.querySelectorAll("input, select, textarea")).filter(field => {
+  function fields() {
+    const root = container();
+    if (!root) return [];
+    return Array.from(root.querySelectorAll("input, select, textarea")).filter(field => {
       const type = String(field.type || "").toLowerCase();
-      if (field.dataset.noPersist === "true") return false;
-      return !["button", "submit", "reset", "hidden", "file"].includes(type);
+      return field.dataset.noPersist !== "true" && !["button", "submit", "reset", "hidden", "file"].includes(type);
     });
   }
 
-  function getFieldKey(field, index) {
-    const buildingRow = field.closest?.(".season-building-row");
-    if (buildingRow?.dataset?.buildingId) {
-      if (field.classList.contains("season-building-enabled")) return `building:${buildingRow.dataset.buildingId}:enabled`;
-      if (field.classList.contains("season-building-current")) return `building:${buildingRow.dataset.buildingId}:current`;
-      if (field.classList.contains("season-building-target")) return `building:${buildingRow.dataset.buildingId}:target`;
+  function key(field, index) {
+    const row = field.closest?.(".season-building-row");
+    if (row?.dataset?.buildingId) {
+      if (field.classList.contains("season-building-enabled")) return `building:${row.dataset.buildingId}:enabled`;
+      if (field.classList.contains("season-building-current")) return `building:${row.dataset.buildingId}:current`;
+      if (field.classList.contains("season-building-target")) return `building:${row.dataset.buildingId}:target`;
     }
     if (field.id) return `id:${field.id}`;
     if (field.name) return `name:${field.name}`;
-    return `field:${field.tagName.toLowerCase()}:${field.type || "value"}:${index}`;
+    return `field:${index}`;
   }
 
-  function getFieldValue(field) {
+  function value(field) {
     const type = String(field.type || "").toLowerCase();
-    if (type === "checkbox" || type === "radio") return Boolean(field.checked);
-    return field.value;
+    return type === "checkbox" || type === "radio" ? Boolean(field.checked) : field.value;
   }
 
-  function setFieldValue(field, value) {
+  function setValue(field, next) {
     const type = String(field.type || "").toLowerCase();
-    if (type === "checkbox" || type === "radio") field.checked = Boolean(value);
-    else field.value = String(value ?? "");
+    if (type === "checkbox" || type === "radio") field.checked = Boolean(next);
+    else field.value = String(next ?? "");
   }
 
-  function setFieldsToDefaults(container = getContainer()) {
-    getPersistableFields(container).forEach(field => {
+  function resetFields() {
+    fields().forEach(field => {
       const type = String(field.type || "").toLowerCase();
       if (type === "checkbox" || type === "radio") field.checked = field.defaultChecked;
-      else if (field.tagName === "SELECT") {
-        const defaultOption = Array.from(field.options).find(option => option.defaultSelected);
-        field.value = defaultOption ? defaultOption.value : (field.options[0]?.value ?? "");
-      } else field.value = field.defaultValue ?? "";
+      else if (field.tagName === "SELECT") field.selectedIndex = 0;
+      else field.value = field.defaultValue || "";
     });
   }
 
-  function serializeFields(container = getContainer()) {
-    const state = {};
-    getPersistableFields(container).forEach((field, index) => {
-      state[getFieldKey(field, index)] = getFieldValue(field);
-    });
-    return state;
+  function serialize() {
+    const result = {};
+    fields().forEach((field, index) => { result[key(field, index)] = value(field); });
+    return result;
   }
 
-  function applyFields(state, container = getContainer()) {
-    applyingCloudState = true;
+  function apply(savedFields) {
+    applying = true;
     try {
-      setFieldsToDefaults(container);
-      if (state && typeof state === "object") {
-        getPersistableFields(container).forEach((field, index) => {
-          const key = getFieldKey(field, index);
-          if (Object.prototype.hasOwnProperty.call(state, key)) setFieldValue(field, state[key]);
+      resetFields();
+      if (savedFields && typeof savedFields === "object") {
+        fields().forEach((field, index) => {
+          const fieldKey = key(field, index);
+          if (Object.prototype.hasOwnProperty.call(savedFields, fieldKey)) setValue(field, savedFields[fieldKey]);
         });
       }
-      getPersistableFields(container).forEach(field => {
-        field.dispatchEvent(new Event("input", { bubbles: true }));
-        field.dispatchEvent(new Event("change", { bubbles: true }));
-      });
+      fields().forEach(field => field.dispatchEvent(new Event("input", { bubbles: true })));
     } finally {
-      applyingCloudState = false;
+      window.setTimeout(() => { applying = false; }, 0);
     }
   }
 
-  async function getSessionUser() {
-    if (!window.harvestHubSupabase) return null;
-    const { data, error } = await window.harvestHubSupabase.auth.getSession();
-    if (error) throw error;
-    return data.session?.user || null;
+  function clearOldLocalState(currentPage) {
+    const suffix = `:${currentPage}`;
+    Object.keys(localStorage).forEach(storageKey => {
+      if (storageKey.startsWith("harvesthub_page_form_state:") && storageKey.endsWith(suffix)) localStorage.removeItem(storageKey);
+    });
   }
 
-  async function fetchActiveProfile() {
-    const user = await getSessionUser();
-    if (!user || !isFullAccount()) return null;
-    currentUserId = user.id;
+  async function fetchPrimaryProfile() {
+    if (account()?.type !== "account" || !window.harvestHubSupabase) return null;
+    const { data: sessionData, error: sessionError } = await window.harvestHubSupabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    const user = sessionData.session?.user;
+    if (!user) return null;
 
     const { data, error } = await window.harvestHubSupabase
       .from("game_profiles")
-      .select("id,data,is_active,updated_at")
+      .select("id,data,updated_at")
       .eq("user_id", user.id)
-      .eq("is_active", true)
+      .eq("is_primary", true)
       .maybeSingle();
-
     if (error) throw error;
     if (!data?.id) return null;
 
-    activeProfileId = data.id;
-    activeProfileData = data.data && typeof data.data === "object" ? data.data : {};
+    profileId = data.id;
+    profileData = data.data && typeof data.data === "object" ? data.data : {};
     return data;
   }
 
-  function getSavedPageState(pageName = currentPageName, data = activeProfileData) {
+  function savedPage(data = profileData) {
     return data?.calculators?.[pageName] || null;
   }
 
-  async function saveCurrentPageNow() {
-    if (!activeProfileId || !currentPageName || currentPageName === "calculator/ipk.html") return;
-    const container = getContainer();
-    if (!container) return;
-
-    const startedAt = Date.now();
+  async function saveNow() {
+    if (!profileId || !pageName || pageName === "calculator/ipk.html") return;
     window.harvestHubSyncStatus?.markSaving?.();
-
     try {
-      const { data: freshRow, error: freshError } = await window.harvestHubSupabase
-        .from("game_profiles")
-        .select("data")
-        .eq("id", activeProfileId)
-        .maybeSingle();
-      if (freshError) throw freshError;
-
-      const freshData = freshRow?.data && typeof freshRow.data === "object" ? freshRow.data : {};
-      const calculators = freshData.calculators && typeof freshData.calculators === "object" ? freshData.calculators : {};
+      const { data: freshRow, error: readError } = await window.harvestHubSupabase
+        .from("game_profiles").select("data").eq("id", profileId).maybeSingle();
+      if (readError) throw readError;
+      const fresh = freshRow?.data && typeof freshRow.data === "object" ? freshRow.data : {};
+      const calculators = fresh.calculators && typeof fresh.calculators === "object" ? fresh.calculators : {};
       const savedAt = new Date().toISOString();
-      const nextData = {
-        ...freshData,
+      const next = {
+        ...fresh,
         calculators: {
           ...calculators,
-          [currentPageName]: {
-            fields: serializeFields(container),
-            savedAt
-          }
+          [pageName]: { fields: serialize(), savedAt }
         }
       };
-
-      localWriteUntil = Date.now() + 1800;
-      const { error } = await window.harvestHubSupabase
-        .from("game_profiles")
-        .update({ data: nextData })
-        .eq("id", activeProfileId);
+      localWriteAt = Date.now();
+      const { error } = await window.harvestHubSupabase.from("game_profiles").update({ data: next }).eq("id", profileId);
       if (error) throw error;
-
-      activeProfileData = nextData;
-      lastAppliedSavedAt = savedAt;
-
-      const wait = Math.max(0, MIN_SYNC_VISIBLE_MS - (Date.now() - startedAt));
-      window.setTimeout(() => window.harvestHubSyncStatus?.markSynced?.(), wait);
+      profileData = next;
+      lastSavedAt = savedAt;
+      window.setTimeout(() => window.harvestHubSyncStatus?.markSynced?.(), 450);
     } catch (error) {
-      console.warn("Не удалось сохранить данные калькулятора:", error);
+      console.warn("Не удалось сохранить калькулятор:", error);
       window.harvestHubSyncStatus?.markError?.();
     }
   }
 
   function scheduleSave(event) {
-    if (!event?.isTrusted || applyingCloudState || !activeProfileId || currentPageName === "calculator/ipk.html") return;
+    if (!event.isTrusted || applying || pageName === "calculator/ipk.html" || !profileId) return;
     window.clearTimeout(saveTimer);
     window.harvestHubSyncStatus?.markSaving?.();
-    saveTimer = window.setTimeout(saveCurrentPageNow, CLOUD_SAVE_DELAY);
+    saveTimer = window.setTimeout(saveNow, SAVE_DELAY);
   }
 
-  async function applyCurrentProfileData() {
-    const page = localStorage.getItem("currentPage") || currentPageName;
-    if (!CALCULATOR_PAGES.has(page)) return;
-
-    const previousId = activeProfileId;
-    const row = await fetchActiveProfile();
-    if (!row?.id) return;
-
-    const profileChanged = Boolean(previousId && previousId !== row.id);
-    if (profileChanged && !pageReloadInProgress) {
-      pageReloadInProgress = true;
-      try {
-        await originalLoadPage(page);
-        await init(page);
-      } finally {
-        pageReloadInProgress = false;
-      }
-      return;
-    }
-
-    if (page === "calculator/ipk.html") return;
-
-    const saved = getSavedPageState(page, activeProfileData);
-    const savedAt = saved?.savedAt || "";
-    if (savedAt === lastAppliedSavedAt) return;
-
-    applyFields(saved?.fields || null);
-    lastAppliedSavedAt = savedAt;
-    window.harvestHubSyncStatus?.markSynced?.();
-  }
-
-  function scheduleRemoteRefresh() {
-    window.clearTimeout(remoteTimer);
-    remoteTimer = window.setTimeout(async () => {
-      if (Date.now() < localWriteUntil || applyingCloudState || pageReloadInProgress) return;
-      try {
-        await applyCurrentProfileData();
-      } catch (error) {
-        console.warn("Не удалось применить изменения с другого устройства:", error);
-        window.harvestHubSyncStatus?.markError?.();
-      }
-    }, REMOTE_DEBOUNCE_MS);
-  }
-
-  async function ensureRealtimeSubscription() {
-    if (!window.harvestHubSupabase || !currentUserId) return;
-    if (realtimeChannel) await window.harvestHubSupabase.removeChannel(realtimeChannel);
-
-    realtimeChannel = window.harvestHubSupabase
-      .channel(`calculator-sync-${currentUserId}`)
+  async function subscribe() {
+    if (!profileId || !window.harvestHubSupabase) return;
+    if (channel) await window.harvestHubSupabase.removeChannel(channel);
+    channel = window.harvestHubSupabase
+      .channel(`primary-calculator-${profileId}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "game_profiles",
-        filter: `user_id=eq.${currentUserId}`
-      }, scheduleRemoteRefresh)
-      .on("postgres_changes", {
-        event: "DELETE",
-        schema: "public",
-        table: "game_profiles",
-        filter: `user_id=eq.${currentUserId}`
-      }, scheduleRemoteRefresh)
+        filter: `id=eq.${profileId}`
+      }, payload => {
+        const incoming = payload.new?.data && typeof payload.new.data === "object" ? payload.new.data : {};
+        profileData = incoming;
+        if (Date.now() - localWriteAt < 1800 || pageName === "calculator/ipk.html") return;
+        const saved = incoming.calculators?.[pageName];
+        const savedAt = saved?.savedAt || "";
+        if (savedAt === lastSavedAt) return;
+        apply(saved?.fields || null);
+        lastSavedAt = savedAt;
+        window.harvestHubSyncStatus?.markSynced?.();
+      })
       .subscribe(status => {
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") window.harvestHubSyncStatus?.markError?.();
       });
   }
 
-  async function resetPageData(pageName) {
-    const label = pageName === "calculator/ipk.html" ? "ИПК" : "этого калькулятора";
-    if (!confirm(`Сбросить все сохранённые данные ${label}? Это действие нельзя отменить.`)) return;
-
+  async function resetPageData(targetPage) {
+    if (!confirm("Сбросить все сохранённые данные этого калькулятора? Это действие нельзя отменить.")) return;
     window.clearTimeout(saveTimer);
     window.harvestHubSyncStatus?.markSaving?.();
-
     try {
-      const row = await fetchActiveProfile();
-      if (!row?.id) throw new Error("Активный игровой профиль не найден.");
-
-      const nextData = { ...activeProfileData };
-      if (pageName === "calculator/ipk.html") {
-        delete nextData.ipk;
-      } else {
-        const calculators = nextData.calculators && typeof nextData.calculators === "object" ? { ...nextData.calculators } : {};
-        delete calculators[pageName];
-        nextData.calculators = calculators;
+      await fetchPrimaryProfile();
+      const next = { ...profileData };
+      if (targetPage === "calculator/ipk.html") delete next.ipk;
+      else {
+        const calculators = next.calculators && typeof next.calculators === "object" ? { ...next.calculators } : {};
+        delete calculators[targetPage];
+        next.calculators = calculators;
       }
-
-      localWriteUntil = Date.now() + 1800;
-      const { error } = await window.harvestHubSupabase
-        .from("game_profiles")
-        .update({ data: nextData })
-        .eq("id", row.id);
+      localWriteAt = Date.now();
+      const { error } = await window.harvestHubSupabase.from("game_profiles").update({ data: next }).eq("id", profileId);
       if (error) throw error;
-
-      activeProfileData = nextData;
-      lastAppliedSavedAt = "";
+      profileData = next;
+      lastSavedAt = "";
+      if (targetPage !== "calculator/ipk.html") apply(null);
       window.harvestHubSyncStatus?.markSynced?.();
-
-      pageReloadInProgress = true;
-      try {
-        await originalLoadPage(pageName);
-        await init(pageName);
-      } finally {
-        pageReloadInProgress = false;
-      }
     } catch (error) {
-      console.warn("Не удалось сбросить данные калькулятора:", error);
+      console.warn("Не удалось сбросить данные:", error);
       window.harvestHubSyncStatus?.markError?.();
       alert(error.message || "Не удалось сбросить сохранённые данные.");
     }
   }
 
-  function injectResetButton(pageName) {
-    const container = getContainer();
-    if (!container || container.querySelector("[data-calculator-reset]")) return;
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "calculator-reset-section";
-    wrapper.innerHTML = `
-      <button type="button" class="calculator-reset-button" data-calculator-reset>Сбросить сохранённые данные</button>
-      <p>Будут удалены данные только активного игрового профиля для этой страницы.</p>`;
-    container.appendChild(wrapper);
-    wrapper.querySelector("[data-calculator-reset]")?.addEventListener("click", () => resetPageData(pageName));
+  function addResetButton(targetPage) {
+    const root = container();
+    if (!root || root.querySelector("[data-calculator-reset]")) return;
+    const section = document.createElement("div");
+    section.className = "calculator-reset-section";
+    section.innerHTML = `<button type="button" class="calculator-reset-button" data-calculator-reset>Сбросить сохранённые данные</button><p>Будут удалены сохранённые данные этой страницы.</p>`;
+    root.appendChild(section);
+    section.querySelector("button").addEventListener("click", () => resetPageData(targetPage));
   }
 
-  async function init(pageName) {
-    if (!CALCULATOR_PAGES.has(pageName)) return;
-    currentPageName = pageName;
+  async function init(targetPage) {
+    if (!PAGES.has(targetPage)) return;
+    pageName = targetPage;
     window.clearTimeout(saveTimer);
     controller?.abort();
     controller = new AbortController();
+    clearOldLocalState(targetPage);
+    addResetButton(targetPage);
 
     try {
-      const row = await fetchActiveProfile();
-      if (!row?.id) return;
-
-      await ensureRealtimeSubscription();
-      injectResetButton(pageName);
-
-      if (pageName !== "calculator/ipk.html") {
-        const saved = getSavedPageState(pageName, activeProfileData);
-        applyFields(saved?.fields || null);
-        lastAppliedSavedAt = saved?.savedAt || "";
-
-        const container = getContainer();
-        container?.addEventListener("input", scheduleSave, { signal: controller.signal, capture: true });
-        container?.addEventListener("change", scheduleSave, { signal: controller.signal, capture: true });
+      const row = await fetchPrimaryProfile();
+      if (!row) return;
+      if (targetPage !== "calculator/ipk.html") {
+        const saved = savedPage();
+        apply(saved?.fields || null);
+        lastSavedAt = saved?.savedAt || "";
+        const root = container();
+        root?.addEventListener("input", scheduleSave, { capture: true, signal: controller.signal });
+        root?.addEventListener("change", scheduleSave, { capture: true, signal: controller.signal });
       }
-
+      await subscribe();
       window.harvestHubSyncStatus?.markSynced?.();
     } catch (error) {
-      console.warn("Не удалось загрузить данные калькулятора:", error);
-      injectResetButton(pageName);
+      console.warn("Не удалось загрузить синхронизацию:", error);
       window.harvestHubSyncStatus?.markError?.();
     }
   }
 
   const originalLoadPage = window.loadPage;
   if (typeof originalLoadPage === "function") {
-    window.loadPage = async function(pageName) {
-      const result = await originalLoadPage(pageName);
-      await init(pageName);
+    window.loadPage = async function(targetPage) {
+      const result = await originalLoadPage(targetPage);
+      await init(targetPage);
       return result;
     };
   }
 
-  window.addEventListener("harvesthub:profile-change", () => {
-    const page = localStorage.getItem("currentPage") || "";
-    if (!CALCULATOR_PAGES.has(page)) return;
-    window.setTimeout(scheduleRemoteRefresh, 200);
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && CALCULATOR_PAGES.has(localStorage.getItem("currentPage") || "")) scheduleRemoteRefresh();
-  });
-
-  window.harvestHubCalculatorCloud = {
-    init,
-    resetPageData,
-    refresh: scheduleRemoteRefresh,
-    noteLocalWrite() {
-      localWriteUntil = Date.now() + 1800;
-      window.harvestHubSyncStatus?.markSaving?.();
-    }
-  };
+  window.harvestHubCalculatorCloud = { init, resetPageData };
 })();
