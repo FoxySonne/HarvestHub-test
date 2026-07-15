@@ -20,7 +20,6 @@
   let applyingCloudState = false;
   let localWriteUntil = 0;
   let lastAppliedSavedAt = "";
-  let lastActiveProfileId = "";
   let pageReloadInProgress = false;
 
   function getAccountProfile() {
@@ -68,24 +67,15 @@
     else field.value = String(value ?? "");
   }
 
-  function resetFieldsToDefaults(container = getContainer()) {
-    applyingCloudState = true;
-    try {
-      getPersistableFields(container).forEach(field => {
-        const type = String(field.type || "").toLowerCase();
-        if (type === "checkbox" || type === "radio") field.checked = field.defaultChecked;
-        else if (field.tagName === "SELECT") {
-          const defaultOption = Array.from(field.options).find(option => option.defaultSelected);
-          field.value = defaultOption ? defaultOption.value : (field.options[0]?.value ?? "");
-        } else field.value = field.defaultValue ?? "";
-      });
-      getPersistableFields(container).forEach(field => {
-        field.dispatchEvent(new Event("input", { bubbles: true }));
-        field.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-    } finally {
-      applyingCloudState = false;
-    }
+  function setFieldsToDefaults(container = getContainer()) {
+    getPersistableFields(container).forEach(field => {
+      const type = String(field.type || "").toLowerCase();
+      if (type === "checkbox" || type === "radio") field.checked = field.defaultChecked;
+      else if (field.tagName === "SELECT") {
+        const defaultOption = Array.from(field.options).find(option => option.defaultSelected);
+        field.value = defaultOption ? defaultOption.value : (field.options[0]?.value ?? "");
+      } else field.value = field.defaultValue ?? "";
+    });
   }
 
   function serializeFields(container = getContainer()) {
@@ -99,7 +89,7 @@
   function applyFields(state, container = getContainer()) {
     applyingCloudState = true;
     try {
-      resetFieldsToDefaults(container);
+      setFieldsToDefaults(container);
       if (state && typeof state === "object") {
         getPersistableFields(container).forEach((field, index) => {
           const key = getFieldKey(field, index);
@@ -201,7 +191,7 @@
     saveTimer = window.setTimeout(saveCurrentPageNow, CLOUD_SAVE_DELAY);
   }
 
-  async function applyCurrentProfileData({ forceReload = false } = {}) {
+  async function applyCurrentProfileData() {
     const page = localStorage.getItem("currentPage") || currentPageName;
     if (!CALCULATOR_PAGES.has(page)) return;
 
@@ -209,8 +199,8 @@
     const row = await fetchActiveProfile();
     if (!row?.id) return;
 
-    const profileChanged = previousId && previousId !== row.id;
-    if ((profileChanged || forceReload) && !pageReloadInProgress) {
+    const profileChanged = Boolean(previousId && previousId !== row.id);
+    if (profileChanged && !pageReloadInProgress) {
       pageReloadInProgress = true;
       try {
         await originalLoadPage(page);
@@ -225,7 +215,7 @@
 
     const saved = getSavedPageState(page, activeProfileData);
     const savedAt = saved?.savedAt || "";
-    if (savedAt && savedAt === lastAppliedSavedAt) return;
+    if (savedAt === lastAppliedSavedAt) return;
 
     applyFields(saved?.fields || null);
     lastAppliedSavedAt = savedAt;
@@ -334,7 +324,6 @@
     controller = new AbortController();
 
     try {
-      const previousId = activeProfileId;
       const row = await fetchActiveProfile();
       if (!row?.id) return;
 
@@ -351,8 +340,6 @@
         container?.addEventListener("change", scheduleSave, { signal: controller.signal, capture: true });
       }
 
-      if (previousId && previousId !== row.id) lastAppliedSavedAt = getSavedPageState(pageName, activeProfileData)?.savedAt || "";
-      lastActiveProfileId = row.id;
       window.harvestHubSyncStatus?.markSynced?.();
     } catch (error) {
       console.warn("Не удалось загрузить данные калькулятора:", error);
@@ -373,7 +360,7 @@
   window.addEventListener("harvesthub:profile-change", () => {
     const page = localStorage.getItem("currentPage") || "";
     if (!CALCULATOR_PAGES.has(page)) return;
-    window.setTimeout(() => applyCurrentProfileData({ forceReload: true }), 200);
+    window.setTimeout(scheduleRemoteRefresh, 200);
   });
 
   document.addEventListener("visibilitychange", () => {
