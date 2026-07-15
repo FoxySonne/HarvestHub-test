@@ -7,15 +7,12 @@
   ]);
   const VERIFY_DELAY = 1300;
   const VERIFY_RETRIES = 3;
-  const LOCAL_EVENT_IGNORE_MS = 2200;
 
   let state = "synced";
   let activeProfileId = "";
   let lastKnownUpdatedAt = "";
-  let localEditAt = 0;
   let verifyTimer = null;
   let realtimeChannel = null;
-  let applyingRemoteUpdate = false;
   let renderingStatus = false;
 
   function currentPage() {
@@ -43,7 +40,6 @@
   function ensureStatusElements() {
     if (renderingStatus) return;
     renderingStatus = true;
-
     try {
       if (isAccountProfile()) {
         document.querySelectorAll(".profile-sync-status, .desktop-profile-status").forEach(prepareStatusElement);
@@ -62,7 +58,6 @@
         element.innerHTML = statusMarkup();
         container.prepend(element);
       }
-
       render();
     } finally {
       renderingStatus = false;
@@ -75,7 +70,6 @@
       syncing: "Данные синхронизируются",
       error: "Ошибка синхронизации"
     };
-
     document.querySelectorAll(".sync-state").forEach(element => {
       element.dataset.syncState = state;
       const text = element.querySelector(".sync-state-text");
@@ -91,7 +85,6 @@
 
   async function getActiveProfileRow() {
     if (!window.harvestHubSupabase || !isAccountProfile()) return null;
-
     const { data: sessionData, error: sessionError } = await window.harvestHubSupabase.auth.getSession();
     const user = sessionData?.session?.user;
     if (sessionError || !user) return null;
@@ -102,7 +95,6 @@
       .eq("user_id", user.id)
       .eq("is_active", true)
       .maybeSingle();
-
     if (error) throw error;
     return data || null;
   }
@@ -126,8 +118,7 @@
   }
 
   function markLocalEdit() {
-    if (!isCalculatorPage() || applyingRemoteUpdate || !isAccountProfile()) return;
-    localEditAt = Date.now();
+    if (!isCalculatorPage() || !isAccountProfile()) return;
     setState("syncing");
     window.clearTimeout(verifyTimer);
     verifyTimer = window.setTimeout(() => verifySaved(0), VERIFY_DELAY);
@@ -148,38 +139,16 @@
       }
 
       realtimeChannel = window.harvestHubSupabase
-        .channel(`game-profile-sync-${activeProfileId}`)
+        .channel(`game-profile-sync-status-${activeProfileId}`)
         .on("postgres_changes", {
           event: "UPDATE",
           schema: "public",
           table: "game_profiles",
           filter: `id=eq.${activeProfileId}`
-        }, async payload => {
+        }, payload => {
           const updatedAt = payload.new?.updated_at || "";
           if (updatedAt) lastKnownUpdatedAt = updatedAt;
-
-          if (Date.now() - localEditAt < LOCAL_EVENT_IGNORE_MS) {
-            setState("synced");
-            return;
-          }
-
-          const page = currentPage();
-          if (!CALCULATOR_PAGES.has(page)) {
-            setState("synced");
-            return;
-          }
-
-          applyingRemoteUpdate = true;
-          setState("syncing");
-          try {
-            await window.loadPage?.(page);
-            setState("synced");
-          } catch (error) {
-            console.warn("Не удалось применить изменения с другого устройства:", error);
-            setState("error");
-          } finally {
-            window.setTimeout(() => { applyingRemoteUpdate = false; }, 200);
-          }
+          setState("synced");
         })
         .subscribe(status => {
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") setState("error");
