@@ -291,6 +291,7 @@
 
     document.getElementById("cloudSignupForm")?.addEventListener("submit", async event => {
       event.preventDefault();
+      const form = event.currentTarget;
       showMessage("");
       const button = document.getElementById("createCloudProfile");
       setButtonBusy(button, true, "Создаём профиль…", "Создать профиль");
@@ -303,7 +304,7 @@
           document.getElementById("cloudProfileState").value
         );
         showMessage("Профиль создан. Проверьте почту и подтвердите email по ссылке из письма.", "success");
-        event.currentTarget.reset();
+        form?.reset();
       } catch (error) { showMessage(getFriendlyAuthError(error), "error"); }
       finally { setButtonBusy(button, false, "", "Создать профиль"); }
     });
