@@ -7,8 +7,8 @@
   const PULL_INTERVAL_MS = 60000;
 
   let uploadTimer = null;
-  let pullTimer = null;
   let activeUserId = "";
+  let activeLocalKey = "";
   let remoteRevision = 0;
   let isApplyingRemote = false;
   let isUploading = false;
@@ -25,14 +25,6 @@
     return window.harvestHubSupabase || null;
   }
 
-  function getLocalKey(userId = activeUserId) {
-    return userId ? `${LOCAL_PREFIX}profile:account:${userId}` : "";
-  }
-
-  function getMetaKey(userId = activeUserId) {
-    return userId ? `${META_PREFIX}${userId}` : "";
-  }
-
   function readJson(key, fallback) {
     if (!key) return fallback;
     try {
@@ -40,6 +32,20 @@
     } catch {
       return fallback;
     }
+  }
+
+  function resolveLocalKey(userId = activeUserId) {
+    const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
+    if (profile?.id) return `${LOCAL_PREFIX}profile:${profile.id}`;
+    return userId ? `${LOCAL_PREFIX}profile:account:${userId}` : "";
+  }
+
+  function getLocalKey() {
+    return activeLocalKey || resolveLocalKey();
+  }
+
+  function getMetaKey(userId = activeUserId) {
+    return userId ? `${META_PREFIX}${userId}` : "";
   }
 
   function writeMeta(values) {
@@ -51,15 +57,6 @@
 
   function readLocalState() {
     return readJson(getLocalKey(), {});
-  }
-
-  function hasMeaningfulState(state) {
-    if (!state || typeof state !== "object") return false;
-    return Object.values(state).some(day => {
-      const turtle = day?.turtle && Object.keys(day.turtle).length > 0;
-      const vs = day?.vs && Object.keys(day.vs).length > 0;
-      return turtle || vs;
-    });
   }
 
   async function getAuthenticatedUser() {
@@ -85,8 +82,25 @@
     return data || null;
   }
 
+  async function upsertState(state, revision) {
+    const client = getClient();
+    const { data, error } = await client
+      .from(TABLE)
+      .upsert({
+        user_id: activeUserId,
+        state_key: STATE_KEY,
+        data: state || {},
+        revision
+      }, { onConflict: "user_id,state_key" })
+      .select("revision, updated_at")
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async function applyRemote(row) {
-    if (!row || !activeUserId) return;
+    if (!row || !activeUserId || !getLocalKey()) return;
 
     isApplyingRemote = true;
     try {
@@ -104,84 +118,94 @@
     }
   }
 
-  async function uploadNow() {
-    if (isApplyingRemote || isUploading || !dirty || !activeUserId) return;
+  async function ensureSession() {
+    if (activeUserId) return true;
+    const user = await getAuthenticatedUser();
+    activeUserId = user?.id || "";
+    activeLocalKey = resolveLocalKey(activeUserId);
+    return Boolean(activeUserId);
+  }
 
-    const client = getClient();
-    if (!client) return;
-
-    isUploading = true;
-    emitStatus("syncing");
+  async function uploadNow({ force = false } = {}) {
+    if (isApplyingRemote || isUploading) return;
+    if (!force && !dirty) return;
 
     try {
+      if (!await ensureSession()) {
+        emitStatus("local");
+        return;
+      }
+
+      isUploading = true;
+      emitStatus("syncing");
+
       const state = readLocalState();
       const nextRevision = Math.max(remoteRevision + 1, 1);
-      const { data, error } = await client
-        .from(TABLE)
-        .upsert({
-          user_id: activeUserId,
-          state_key: STATE_KEY,
-          data: state,
-          revision: nextRevision
-        }, { onConflict: "user_id,state_key" })
-        .select("revision, updated_at")
-        .single();
-
-      if (error) throw error;
+      const data = await upsertState(state, nextRevision);
 
       remoteRevision = Number(data?.revision) || nextRevision;
       dirty = false;
       writeMeta({ revision: remoteRevision, syncedAt: data?.updated_at || new Date().toISOString() });
       emitStatus("synced");
     } catch (error) {
-      console.warn("Не удалось синхронизировать Турбо/VS", error);
+      console.error("Turbo/VS cloud sync upload failed:", error);
       emitStatus("error", error?.message || "Ошибка синхронизации");
     } finally {
       isUploading = false;
     }
   }
 
-  function scheduleUpload() {
-    if (isApplyingRemote || !activeUserId) return;
+  async function scheduleUpload() {
+    if (isApplyingRemote) return;
+
+    try {
+      await ensureSession();
+    } catch (error) {
+      console.error("Turbo/VS cloud sync session failed:", error);
+    }
+
+    if (!activeUserId) return;
+
     dirty = true;
     writeMeta({ changedAt: new Date().toISOString() });
     emitStatus("pending");
     window.clearTimeout(uploadTimer);
-    uploadTimer = window.setTimeout(uploadNow, DEBOUNCE_MS);
+    uploadTimer = window.setTimeout(() => uploadNow(), DEBOUNCE_MS);
   }
 
   async function pullRemote({ initial = false } = {}) {
-    if (isPulling || isUploading || dirty || !activeUserId) return;
+    if (isPulling || isUploading || dirty) return;
 
-    isPulling = true;
     try {
+      if (!await ensureSession()) {
+        emitStatus("local");
+        return;
+      }
+
+      isPulling = true;
       const remote = await fetchRemote();
-      const local = readLocalState();
-      const localHasData = hasMeaningfulState(local);
+      const localState = readLocalState();
+      const metaRevision = Number(readJson(getMetaKey(), {}).revision || 0);
 
       if (!remote) {
-        if (localHasData) {
-          dirty = true;
-          await uploadNow();
-        } else {
-          emitStatus("synced");
-        }
+        dirty = true;
+        await uploadNow({ force: true });
         return;
       }
 
       const nextRemoteRevision = Number(remote.revision) || 0;
-      remoteRevision = Math.max(remoteRevision, nextRemoteRevision);
+      remoteRevision = nextRemoteRevision;
 
-      if (!localHasData || nextRemoteRevision > Number(readJson(getMetaKey(), {}).revision || 0)) {
+      if (nextRemoteRevision > metaRevision) {
         await applyRemote(remote);
-      } else if (initial && localHasData && !Number(readJson(getMetaKey(), {}).revision || 0)) {
+      } else if (initial && metaRevision === 0) {
         dirty = true;
-        await uploadNow();
+        await uploadNow({ force: true });
       } else {
         emitStatus("synced");
       }
     } catch (error) {
-      console.warn("Не удалось загрузить облачные данные Турбо/VS", error);
+      console.error("Turbo/VS cloud sync pull failed:", error);
       emitStatus("error", error?.message || "Ошибка загрузки");
     } finally {
       isPulling = false;
@@ -190,20 +214,19 @@
 
   async function initializeForSession() {
     window.clearTimeout(uploadTimer);
-    dirty = false;
+    activeUserId = "";
+    activeLocalKey = "";
     remoteRevision = 0;
+    dirty = false;
 
     try {
-      const user = await getAuthenticatedUser();
-      activeUserId = user?.id || "";
-      if (!activeUserId) {
+      if (!await ensureSession()) {
         emitStatus("local");
         return;
       }
-
       await pullRemote({ initial: true });
     } catch (error) {
-      console.warn("Не удалось запустить облачную синхронизацию", error);
+      console.error("Turbo/VS cloud sync initialization failed:", error);
       emitStatus("error", error?.message || "Ошибка запуска");
     }
   }
@@ -222,6 +245,9 @@
     if (isTurboControl(event.target)) scheduleUpload();
   }, true);
 
+  window.addEventListener("harvesthub:turbo-vs-state-change", scheduleUpload);
+  window.addEventListener("harvesthub:profile-change", initializeForSession);
+
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") pullRemote();
     else uploadNow();
@@ -231,8 +257,6 @@
     pullRemote();
     if (dirty) scheduleUpload();
   });
-
-  window.addEventListener("harvesthub:profile-change", initializeForSession);
 
   if (getClient()) {
     getClient().auth.onAuthStateChange(() => {
@@ -246,7 +270,7 @@
     initializeForSession();
   }
 
-  pullTimer = window.setInterval(() => {
+  window.setInterval(() => {
     if (document.visibilityState === "visible") pullRemote();
   }, PULL_INTERVAL_MS);
 
