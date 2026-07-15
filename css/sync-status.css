@@ -1,0 +1,19 @@
+.sync-state{display:flex;align-items:center;gap:8px;color:var(--text-soft)}
+.calculator-sync-state{margin:0 0 14px;font-size:13px}
+.sync-state-icon{position:relative;display:inline-block;flex:0 0 18px;width:18px;height:18px}
+.sync-state-icon span{position:absolute;display:block;box-sizing:border-box}
+.sync-state[data-sync-state="syncing"] .sync-state-icon{border:2px solid rgba(139,234,99,.2);border-top-color:var(--accent);border-radius:50%;animation:sync-spin .8s linear infinite}
+.sync-state[data-sync-state="syncing"] .sync-state-icon span{display:none}
+.sync-state[data-sync-state="synced"]{color:var(--text-soft)}
+.sync-state[data-sync-state="synced"] .sync-state-icon span:first-child{left:2px;top:9px;width:6px;height:3px;border-bottom:2px solid var(--accent);transform:rotate(45deg);transform-origin:left center;animation:sync-check-short .18s ease-out both}
+.sync-state[data-sync-state="synced"] .sync-state-icon span:last-child{left:7px;top:10px;width:10px;height:3px;border-bottom:2px solid var(--accent);transform:rotate(-45deg);transform-origin:left center;animation:sync-check-long .28s .14s ease-out both}
+.sync-state[data-sync-state="error"]{color:#ff9b9b}
+.sync-state[data-sync-state="error"] .sync-state-icon span{left:2px;top:8px;width:14px;height:2px;background:#ff6b6b;transform-origin:center}
+.sync-state[data-sync-state="error"] .sync-state-icon span:first-child{transform:rotate(45deg) scaleX(0);animation:sync-cross-first .2s ease-out forwards}
+.sync-state[data-sync-state="error"] .sync-state-icon span:last-child{transform:rotate(-45deg) scaleX(0);animation:sync-cross-second .2s .16s ease-out forwards}
+@keyframes sync-spin{to{transform:rotate(360deg)}}
+@keyframes sync-check-short{from{transform:rotate(45deg) scaleX(0)}to{transform:rotate(45deg) scaleX(1)}}
+@keyframes sync-check-long{from{transform:rotate(-45deg) scaleX(0)}to{transform:rotate(-45deg) scaleX(1)}}
+@keyframes sync-cross-first{to{transform:rotate(45deg) scaleX(1)}}
+@keyframes sync-cross-second{to{transform:rotate(-45deg) scaleX(1)}}
+@media (prefers-reduced-motion:reduce){.sync-state-icon,.sync-state-icon span{animation:none!important}.sync-state[data-sync-state="error"] .sync-state-icon span:first-child{transform:rotate(45deg)}.sync-state[data-sync-state="error"] .sync-state-icon span:last-child{transform:rotate(-45deg)}}
