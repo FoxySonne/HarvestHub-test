@@ -68,7 +68,7 @@
 .profile-state{margin:10px 0 0;font-size:20px;color:var(--text-soft)}
 .profile-email{margin:8px 0 0;color:var(--muted)}
 .profile-sync-status{display:flex;align-items:center;gap:8px;margin:18px 0 0;color:var(--text-soft)}
-.profile-sync-status span{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(139,234,99,.45)}
+.profile-sync-status:not(.sync-state)>span:first-child{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(139,234,99,.45)}
 .profile-edit-button{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;min-width:34px;min-height:34px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--text-soft);font-size:17px}
 .profile-edit-button:hover{border-color:var(--accent);color:var(--accent)}
 .profile-edit-form{max-width:560px;margin:24px 0;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.02)}
@@ -102,20 +102,15 @@
   .account-panel,.password-recovery-form{padding:6px 0 0;border:0;background:transparent}
   .account-panel .form-group,.password-recovery-form .form-group,.settings-account-form .form-group,.profile-edit-form .form-group{gap:5px;margin-bottom:9px}
   .account-panel .form-group>span:first-child,.password-recovery-form .form-group>span:first-child,.settings-account-form .form-group>span:first-child,.profile-edit-form .form-group>span:first-child{font-size:12px}
-  .account-panel input,.password-recovery-form input,.settings-account-form input,.profile-edit-form input{height:38px;min-height:38px;padding:0 10px;border-radius:9px;font-size:14px}
-  .password-field input{padding-right:78px}
-  .password-field button{right:5px;width:auto!important;min-width:0!important;max-width:none!important;font-size:11px}
-  .account-panel button[type="submit"],.password-recovery-form button[type="submit"]{min-height:36px;margin-top:1px;padding:7px 10px;border-radius:9px;font-size:13px;line-height:1.15}
-  .cloud-login-note{margin-bottom:10px;font-size:13px;line-height:1.4}
-  .account-warning{margin:0 0 9px;padding:9px 10px;font-size:16px;line-height:1.45}
-  .account-message{min-height:18px;margin:9px 0 0;font-size:12px}
-  .account-delete-modal{align-items:flex-end;padding:0}
-  .account-delete-dialog{width:100%;padding:18px 12px calc(16px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
-  .profile-page-content{padding-top:0}
-  .profile-hero{padding-top:0}
-  .profile-title-row h1,.profile-hero>h1{font-size:36px}
+  .account-panel input,.password-recovery-form input,.settings-account-form input,.profile-edit-form input{height:40px;min-height:40px;padding:0 11px;font-size:14px}
+  .password-field input{padding-right:72px}
+  .password-field button{right:5px;font-size:11px}
+  .account-panel button[type="submit"],.password-recovery-form button[type="submit"]{min-height:38px;font-size:13px}
+  .account-warning{margin:0 0 10px;padding:8px 9px;font-size:11px;line-height:1.3}
+  .account-message{min-height:18px;margin:8px 0 0;font-size:11px}
+  .profile-title-row h1,.profile-hero>h1{font-size:34px}
   .profile-state{font-size:17px}
   .game-profile-item{align-items:flex-start}
+  .account-delete-actions{flex-direction:column-reverse}
+  .account-delete-actions button{width:100%}
 }
-@media (max-width:420px){.account-dialog{padding-left:10px;padding-right:10px}.account-dialog h2{font-size:18px}.account-tabs button,.cloud-mode-switch button{font-size:11.5px}.profile-title-row h1,.profile-hero>h1{font-size:31px}.profile-edit-actions,.account-delete-actions{display:grid;grid-template-columns:1fr 1fr}.profile-edit-actions button,.account-delete-actions button{width:100%}}
-@media (max-height:560px) and (max-width:899px){.account-modal{align-items:stretch}.account-dialog{height:100dvh;max-height:100dvh;border-radius:0;padding-top:10px}.account-tabs{top:-10px;margin-top:10px}}
