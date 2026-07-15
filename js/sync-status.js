@@ -16,8 +16,7 @@
   let verifyTimer = null;
   let realtimeChannel = null;
   let applyingRemoteUpdate = false;
-  let observer = null;
-  let ensureScheduled = false;
+  let renderingStatus = false;
 
   function currentPage() {
     return localStorage.getItem("currentPage") || "";
@@ -27,41 +26,36 @@
     return CALCULATOR_PAGES.has(currentPage());
   }
 
+  function isAccountProfile() {
+    return window.harvestHubAccount?.getProfile?.()?.type === "account";
+  }
+
   function statusMarkup() {
     return `<span class="sync-state-icon" aria-hidden="true"><span></span><span></span></span><span class="sync-state-text"></span>`;
   }
 
-  function render() {
-    const labels = {
-      synced: "Данные синхронизированы",
-      syncing: "Данные синхронизируются",
-      error: "Ошибка синхронизации"
-    };
-    const label = labels[state];
-
-    document.querySelectorAll(".sync-state").forEach(element => {
-      if (element.dataset.syncState !== state) element.dataset.syncState = state;
-      const text = element.querySelector(".sync-state-text");
-      if (text && text.textContent !== label) text.textContent = label;
-      if (element.getAttribute("aria-label") !== label) element.setAttribute("aria-label", label);
-    });
+  function prepareStatusElement(element) {
+    if (!element || element.classList.contains("sync-state")) return;
+    element.classList.add("sync-state");
+    element.innerHTML = statusMarkup();
   }
 
   function ensureStatusElements() {
-    ensureScheduled = false;
-    observer?.disconnect();
+    if (renderingStatus) return;
+    renderingStatus = true;
 
     try {
-      document.querySelectorAll(".profile-sync-status").forEach(element => {
-        if (!element.classList.contains("sync-state")) {
-          element.classList.add("sync-state");
-          element.innerHTML = statusMarkup();
-        }
-      });
+      if (isAccountProfile()) {
+        document.querySelectorAll(".profile-sync-status, .desktop-profile-status").forEach(prepareStatusElement);
+      }
 
-      const page = currentPage();
       const container = document.getElementById("page-content");
-      if (container && CALCULATOR_PAGES.has(page) && !container.querySelector("[data-calculator-sync-status]")) {
+      const profilePageOpen = Boolean(container?.querySelector("#profilePageContent"));
+      const existingCalculatorStatus = container?.querySelector("[data-calculator-sync-status]");
+
+      if (profilePageOpen || !CALCULATOR_PAGES.has(currentPage())) {
+        existingCalculatorStatus?.remove();
+      } else if (container && !existingCalculatorStatus) {
         const element = document.createElement("p");
         element.className = "sync-state calculator-sync-state";
         element.dataset.calculatorSyncStatus = "";
@@ -71,26 +65,32 @@
 
       render();
     } finally {
-      observer?.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      renderingStatus = false;
     }
   }
 
-  function scheduleEnsureStatusElements() {
-    if (ensureScheduled) return;
-    ensureScheduled = true;
-    window.requestAnimationFrame(ensureStatusElements);
+  function render() {
+    const labels = {
+      synced: "Данные синхронизированы",
+      syncing: "Данные синхронизируются",
+      error: "Ошибка синхронизации"
+    };
+
+    document.querySelectorAll(".sync-state").forEach(element => {
+      element.dataset.syncState = state;
+      const text = element.querySelector(".sync-state-text");
+      if (text && text.textContent !== labels[state]) text.textContent = labels[state];
+      element.setAttribute("aria-label", labels[state]);
+    });
   }
 
   function setState(nextState) {
-    if (!["synced", "syncing", "error"].includes(nextState)) return;
     state = nextState;
-    scheduleEnsureStatusElements();
+    ensureStatusElements();
   }
 
   async function getActiveProfileRow() {
-    if (!window.harvestHubSupabase) return null;
-    const profile = window.harvestHubAccount?.getProfile?.();
-    if (profile?.type !== "account") return null;
+    if (!window.harvestHubSupabase || !isAccountProfile()) return null;
 
     const { data: sessionData, error: sessionError } = await window.harvestHubSupabase.auth.getSession();
     const user = sessionData?.session?.user;
@@ -117,11 +117,8 @@
         setState("synced");
         return;
       }
-      if (retry < VERIFY_RETRIES) {
-        verifyTimer = window.setTimeout(() => verifySaved(retry + 1), 800);
-      } else {
-        setState("error");
-      }
+      if (retry < VERIFY_RETRIES) verifyTimer = window.setTimeout(() => verifySaved(retry + 1), 800);
+      else setState("error");
     } catch (error) {
       console.warn("Не удалось проверить синхронизацию:", error);
       setState("error");
@@ -129,9 +126,7 @@
   }
 
   function markLocalEdit() {
-    if (!isCalculatorPage() || applyingRemoteUpdate) return;
-    const profile = window.harvestHubAccount?.getProfile?.();
-    if (profile?.type !== "account") return;
+    if (!isCalculatorPage() || applyingRemoteUpdate || !isAccountProfile()) return;
     localEditAt = Date.now();
     setState("syncing");
     window.clearTimeout(verifyTimer);
@@ -139,7 +134,7 @@
   }
 
   async function subscribeRealtime() {
-    if (!window.harvestHubSupabase) return;
+    if (!window.harvestHubSupabase || !isAccountProfile()) return;
     try {
       const row = await getActiveProfileRow();
       if (!row?.id) return;
@@ -204,15 +199,18 @@
 
   window.addEventListener("harvesthub:profile-change", () => {
     window.clearTimeout(verifyTimer);
-    window.setTimeout(subscribeRealtime, 100);
+    window.setTimeout(() => {
+      ensureStatusElements();
+      subscribeRealtime();
+    }, 100);
   });
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) subscribeRealtime();
   });
 
-  observer = new MutationObserver(scheduleEnsureStatusElements);
-  observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+  const observer = new MutationObserver(() => window.requestAnimationFrame(ensureStatusElements));
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 
   window.harvestHubSyncStatus = {
     setState,
@@ -222,6 +220,6 @@
     reconnect: subscribeRealtime
   };
 
-  scheduleEnsureStatusElements();
+  ensureStatusElements();
   window.setTimeout(subscribeRealtime, 300);
 })();
