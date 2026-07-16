@@ -273,20 +273,9 @@
     }
   }
 
-  function isCalculatorControl(target) {
-    if (!(target instanceof Element)) return false;
-    const currentPage = localStorage.getItem("currentPage") || "";
-    if (!CALCULATOR_PAGES.has(currentPage)) return false;
-    return Boolean(target.closest("#page-content"));
-  }
-
-  document.addEventListener("input", event => {
-    if (isCalculatorControl(event.target)) scheduleUpload();
-  }, true);
-
-  document.addEventListener("change", event => {
-    if (isCalculatorControl(event.target)) scheduleUpload();
-  }, true);
+  window.addEventListener("harvesthub:page-form-state-change", event => {
+    if (CALCULATOR_PAGES.has(event.detail?.pageName)) scheduleUpload();
+  });
 
   window.addEventListener("harvesthub:profile-change", initializeForSession);
 

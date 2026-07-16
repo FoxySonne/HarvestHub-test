@@ -122,8 +122,10 @@ function readJsonStorage(key, fallback = {}) {
 function writeJsonStorage(key, value) {
     try {
         localStorage.setItem(key, JSON.stringify(value));
+        return true;
     } catch (e) {
         console.warn(`Не удалось сохранить данные в localStorage: ${key}`, e);
+        return false;
     }
 }
 
@@ -354,7 +356,15 @@ function savePageFormState(pageName = currentLoadedPage) {
         state[getFieldKey(field, index)] = getFieldValue(field);
     });
 
-    writeJsonStorage(getPageFormStateKey(pageName), state);
+    const storageKey = getPageFormStateKey(pageName);
+    const serializedState = JSON.stringify(state);
+
+    if (localStorage.getItem(storageKey) === serializedState) return;
+    if (!writeJsonStorage(storageKey, state)) return;
+
+    window.dispatchEvent(new CustomEvent("harvesthub:page-form-state-change", {
+        detail: { pageName, storageKey }
+    }));
 }
 
 function restorePageFormState(pageName) {
