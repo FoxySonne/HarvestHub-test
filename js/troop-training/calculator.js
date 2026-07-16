@@ -6,13 +6,11 @@ export function parseAvailableResource(inputId) {
   const input = getElement(inputId);
   const value = parseNumber(input?.value);
   const activeUnit = document.querySelector(`[data-unit-for="${inputId}"] .is-active`)?.dataset.unit || "raw";
-
   return activeUnit === "m" ? value * 1000000 : value;
 }
 
 export function getAvailableData() {
   const resources = {};
-
   RESOURCE_CONFIG.forEach(resource => {
     resources[resource.key] = parseAvailableResource(resource.availableId);
   });
@@ -58,11 +56,11 @@ export function getStageData(stageCard) {
 
 export function getActiveStages() {
   const isAdvanced = getAdvancedMode();
-
   return Array.from(document.querySelectorAll(".troop-stage-card"))
     .filter(card => isAdvanced || Number(card.dataset.stage) === 1)
     .map(getStageData)
-    .filter(stage => stage.isActive);
+    .filter(stage => stage.isActive)
+    .sort((a, b) => a.stage - b.stage);
 }
 
 export function getCostForTroops(stages, troops) {
@@ -74,50 +72,90 @@ export function getCostForTroops(stages, troops) {
     RESOURCE_CONFIG.forEach(resource => {
       resources[resource.key] += stage.costs[resource.key] * multiplier;
     });
-
     time += stage.time * multiplier;
   });
 
   return { resources, time };
 }
 
-export function getMaxTroopsByAvailable(stages, available) {
-  if (stages.length === 0) return 0;
+function cloneRemaining(available) {
+  return {
+    resources: { ...available.resources },
+    time: available.time
+  };
+}
 
-  const perThousand = getCostForTroops(stages, 1000);
-  const limits = [];
+function getMaxForSingleStage(stage, remaining, cap = Infinity) {
+  const limits = [cap];
 
   RESOURCE_CONFIG.forEach(resource => {
-    const cost = perThousand.resources[resource.key];
-    if (cost > 0) limits.push((available.resources[resource.key] / cost) * 1000);
+    const cost = stage.costs[resource.key];
+    if (cost > 0) limits.push((remaining.resources[resource.key] / cost) * 1000);
   });
 
-  if (perThousand.time > 0) limits.push((available.time / perThousand.time) * 1000);
+  if (stage.time > 0) limits.push((remaining.time / stage.time) * 1000);
+  return roundTroops(Math.max(Math.min(...limits), 0));
+}
 
-  const freeGarrison = Math.max(available.garrisonCapacity - available.currentAmount, 0);
-  if (available.garrisonCapacity > 0) limits.push(freeGarrison);
+function spendStageCost(stage, troops, remaining, spent) {
+  const multiplier = troops / 1000;
 
-  if (limits.length === 0) return 0;
+  RESOURCE_CONFIG.forEach(resource => {
+    const key = resource.key;
+    const value = stage.costs[key] * multiplier;
+    remaining.resources[key] = Math.max(remaining.resources[key] - value, 0);
+    spent.resources[key] += value;
+  });
 
-  return roundTroops(Math.min(...limits));
+  const stageTime = stage.time * multiplier;
+  remaining.time = Math.max(remaining.time - stageTime, 0);
+  spent.time += stageTime;
+}
+
+function buildSequentialStages(stages, available) {
+  const remaining = cloneRemaining(available);
+  const spent = { resources: { food: 0, wood: 0, metal: 0, fuel: 0 }, time: 0 };
+  const freeGarrison = available.garrisonCapacity > 0
+    ? Math.max(available.garrisonCapacity - available.currentAmount, 0)
+    : Infinity;
+  const desiredCap = available.desired > 0 ? available.desired : Infinity;
+  let previousAmount = Math.min(freeGarrison, desiredCap);
+
+  const calculatedStages = stages.map((stage, index) => {
+    const cap = index === 0 ? previousAmount : previousAmount;
+    const processedTroops = getMaxForSingleStage(stage, remaining, cap);
+    spendStageCost(stage, processedTroops, remaining, spent);
+    previousAmount = processedTroops;
+    return { ...stage, processedTroops };
+  });
+
+  return { stages: calculatedStages, remaining, spent };
+}
+
+function buildLevelDistribution(stages) {
+  return stages.map((stage, index) => {
+    const nextAmount = stages[index + 1]?.processedTroops || 0;
+    return {
+      level: stage.level,
+      stage: stage.stage,
+      amount: Math.max(stage.processedTroops - nextAmount, 0),
+      processedTroops: stage.processedTroops
+    };
+  });
 }
 
 export function buildCalculation() {
   const available = getAvailableData();
-  const stages = getActiveStages();
-  const maxTroops = getMaxTroopsByAvailable(stages, available);
-  const desired = available.desired;
-  const possibleTroops = desired > 0 ? Math.min(desired, maxTroops) : maxTroops;
-  const targetTroops = desired > 0 ? desired : possibleTroops;
-  const required = getCostForTroops(stages, targetTroops);
-  const spent = getCostForTroops(stages, possibleTroops);
-  const remainders = { resources: {}, time: Math.max(available.time - spent.time, 0) };
+  const activeStages = getActiveStages();
+  const sequential = buildSequentialStages(activeStages, available);
+  const possibleTroops = sequential.stages[0]?.processedTroops || 0;
+  const targetTroops = available.desired > 0 ? available.desired : possibleTroops;
+  const required = getCostForTroops(activeStages, targetTroops);
   const missing = { resources: {}, time: Math.max(required.time - available.time, 0), garrison: 0 };
   const freeGarrison = Math.max(available.garrisonCapacity - available.currentAmount, 0);
 
   RESOURCE_CONFIG.forEach(resource => {
     const key = resource.key;
-    remainders.resources[key] = Math.max(available.resources[key] - spent.resources[key], 0);
     missing.resources[key] = Math.max(required.resources[key] - available.resources[key], 0);
   });
 
@@ -127,39 +165,34 @@ export function buildCalculation() {
 
   return {
     available,
-    stages,
+    stages: sequential.stages,
+    distribution: buildLevelDistribution(sequential.stages),
     possibleTroops: roundTroops(possibleTroops),
     targetTroops: roundTroops(targetTroops),
     required,
-    spent,
-    remainders,
+    spent: sequential.spent,
+    remainders: sequential.remaining,
     missing,
-    desiredMode: desired > 0
+    desiredMode: available.desired > 0
   };
 }
 
 export function calculateExtraTraining(calculation) {
-  const stages = calculation.stages;
-  const perThousand = getCostForTroops(stages, 1000);
-  const limits = [];
+  const firstStage = calculation.stages[0];
+  if (!firstStage) {
+    return {
+      extraTroops: 0,
+      nextBatchTroops: 0,
+      shortages: { resources: { food: 0, wood: 0, metal: 0, fuel: 0 }, time: 0, garrison: 0 }
+    };
+  }
 
-  RESOURCE_CONFIG.forEach(resource => {
-    const cost = perThousand.resources[resource.key];
-    if (cost > 0) limits.push((calculation.remainders.resources[resource.key] / cost) * 1000);
-  });
-
-  if (perThousand.time > 0) limits.push((calculation.remainders.time / perThousand.time) * 1000);
-
-  const freeGarrison = Math.max(
-    calculation.available.garrisonCapacity - calculation.available.currentAmount - calculation.possibleTroops,
-    0
-  );
-
-  if (calculation.available.garrisonCapacity > 0) limits.push(freeGarrison);
-
-  const extraTroops = limits.length ? roundTroops(Math.min(...limits)) : 0;
-  const nextBatchTroops = stages.length > 0 ? extraTroops + 1000 : 0;
-  const nextBatchRequired = getCostForTroops(stages, nextBatchTroops);
+  const freeGarrison = calculation.available.garrisonCapacity > 0
+    ? Math.max(calculation.available.garrisonCapacity - calculation.available.currentAmount - calculation.possibleTroops, 0)
+    : Infinity;
+  const extraTroops = getMaxForSingleStage(firstStage, calculation.remainders, freeGarrison);
+  const nextBatchTroops = extraTroops + 1000;
+  const nextBatchRequired = getCostForTroops([firstStage], nextBatchTroops);
   const shortages = { resources: {}, time: 0, garrison: 0 };
 
   RESOURCE_CONFIG.forEach(resource => {
@@ -168,7 +201,9 @@ export function calculateExtraTraining(calculation) {
   });
 
   shortages.time = Math.max(nextBatchRequired.time - calculation.remainders.time, 0);
-  shortages.garrison = Math.max(nextBatchTroops - freeGarrison, 0);
+  shortages.garrison = calculation.available.garrisonCapacity > 0
+    ? Math.max(nextBatchTroops - freeGarrison, 0)
+    : 0;
 
   return { extraTroops, nextBatchTroops, shortages };
 }
