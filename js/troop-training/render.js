@@ -155,12 +155,10 @@ export function renderResults() {
   }
 
   if (extraTitle) {
-    extraTitle.textContent = extra.extraTroops > 0
-      ? `Ещё можно обучить: ${formatNumber(extra.extraTroops)} войск`
-      : `До следующих ${formatNumber(extra.nextBatchTroops)} войск не хватает:`;
+    extraTitle.textContent = `Для обучения ещё ${formatNumber(extra.nextBatchTroops)} войск не хватает:`;
   }
 
-  setShortageSubtitle(extra.extraTroops > 0 ? "Не хватает для следующей партии:" : "Нужно добавить:");
+  setShortageSubtitle("Нужно добавить:");
   renderResourceList(getElement("troopShortages"), buildShortageItems(extra.shortages));
 
   return calculation;
