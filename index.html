@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>HarvestHub</title>
-    <link rel="stylesheet" href="css/style.css?v=20260716-2">
+    <link rel="stylesheet" href="css/style.css?v=20260716-3">
     <link rel="stylesheet" href="css/sync-status.css?v=20260716-2">
 </head>
 <body>
@@ -12,7 +12,11 @@
     <header class="topbar">
         <div class="menu-button" id="openMenu">☰</div>
         <div class="topbar-title">HarvestHub</div>
-        <button type="button" class="account-trigger topbar-account-trigger" data-account-button>Профиль</button>
+        <div class="topbar-profile-group" id="topbarProfileGroup">
+            <span class="topbar-sync-status" aria-hidden="true"></span>
+            <span class="topbar-profile-name" id="topbarProfileName"></span>
+            <button type="button" class="account-trigger topbar-account-trigger" data-account-button aria-label="Профиль">Профиль</button>
+        </div>
     </header>
     <div class="container">
         <aside class="left" id="sidebar">
@@ -45,7 +49,7 @@
     <script src="js/app.js?v=20260716-1"></script>
     <script src="js/sync/calculator-forms-cloud-sync.js?v=20260716-7"></script>
     <script src="js/sync/sync-status.js?v=20260716-3"></script>
-    <script src="js/mobile-profile-indicator.js?v=20260716-2"></script>
+    <script src="js/mobile-profile-indicator.js?v=20260716-3"></script>
     <script src="js/settings.js?v=20260714-4"></script>
 </body>
 </html>
