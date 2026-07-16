@@ -121,9 +121,8 @@ function buildSequentialStages(stages, available) {
   const desiredCap = available.desired > 0 ? available.desired : Infinity;
   let previousAmount = Math.min(freeGarrison, desiredCap);
 
-  const calculatedStages = stages.map((stage, index) => {
-    const cap = index === 0 ? previousAmount : previousAmount;
-    const processedTroops = getMaxForSingleStage(stage, remaining, cap);
+  const calculatedStages = stages.map(stage => {
+    const processedTroops = getMaxForSingleStage(stage, remaining, previousAmount);
     spendStageCost(stage, processedTroops, remaining, spent);
     previousAmount = processedTroops;
     return { ...stage, processedTroops };
@@ -187,12 +186,12 @@ export function calculateExtraTraining(calculation) {
     };
   }
 
+  const nextRoundedTotal = (Math.floor(calculation.possibleTroops / 1000) + 1) * 1000;
+  const nextBatchTroops = Math.max(nextRoundedTotal - calculation.possibleTroops, 1);
+  const nextBatchRequired = getCostForTroops([firstStage], nextBatchTroops);
   const freeGarrison = calculation.available.garrisonCapacity > 0
     ? Math.max(calculation.available.garrisonCapacity - calculation.available.currentAmount - calculation.possibleTroops, 0)
     : Infinity;
-  const extraTroops = getMaxForSingleStage(firstStage, calculation.remainders, freeGarrison);
-  const nextBatchTroops = extraTroops + 1000;
-  const nextBatchRequired = getCostForTroops([firstStage], nextBatchTroops);
   const shortages = { resources: {}, time: 0, garrison: 0 };
 
   RESOURCE_CONFIG.forEach(resource => {
@@ -205,5 +204,5 @@ export function calculateExtraTraining(calculation) {
     ? Math.max(nextBatchTroops - freeGarrison, 0)
     : 0;
 
-  return { extraTroops, nextBatchTroops, shortages };
+  return { extraTroops: 0, nextBatchTroops, nextRoundedTotal, shortages };
 }
