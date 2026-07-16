@@ -85,8 +85,15 @@ function cloneRemaining(available) {
   };
 }
 
+function createSpentState() {
+  return {
+    resources: { food: 0, wood: 0, metal: 0, fuel: 0 },
+    time: 0
+  };
+}
+
 function getMaxForSingleStage(stage, remaining, cap = Infinity) {
-  const limits = [cap];
+  const limits = [Math.max(Number(cap) || 0, 0)];
 
   RESOURCE_CONFIG.forEach(resource => {
     const cost = stage.costs[resource.key];
@@ -112,58 +119,101 @@ function spendStageCost(stage, troops, remaining, spent) {
   spent.time += stageTime;
 }
 
-function getExistingTroopsForLevel(available, level) {
-  return String(available.currentLevel) === String(level)
-    ? roundTroops(available.currentAmount)
-    : 0;
+function getLevelAmount(levels, level) {
+  return roundTroops(levels.get(String(level)) || 0);
+}
+
+function setLevelAmount(levels, level, amount) {
+  levels.set(String(level), roundTroops(amount));
+}
+
+function addLevelAmount(levels, level, amount) {
+  setLevelAmount(levels, level, getLevelAmount(levels, level) + amount);
+}
+
+function createInitialLevelState(available) {
+  const levels = new Map();
+  if (available.currentLevel && available.currentAmount > 0) {
+    setLevelAmount(levels, available.currentLevel, available.currentAmount);
+  }
+  return levels;
 }
 
 function buildSequentialStages(stages, available) {
   const remaining = cloneRemaining(available);
-  const spent = { resources: { food: 0, wood: 0, metal: 0, fuel: 0 }, time: 0 };
-  const freeGarrison = available.garrisonCapacity > 0
-    ? Math.max(available.garrisonCapacity - available.currentAmount, 0)
-    : Infinity;
-  const desiredCap = available.desired > 0 ? available.desired : Infinity;
+  const spent = createSpentState();
+  const levels = createInitialLevelState(available);
   const calculatedStages = [];
 
   stages.forEach((stage, index) => {
-    let availableTroops;
-
     if (index === 0) {
-      availableTroops = Math.min(freeGarrison, desiredCap);
-    } else {
-      const previousStage = calculatedStages[index - 1];
-      const existingAtSourceLevel = getExistingTroopsForLevel(available, previousStage.level);
-      availableTroops = previousStage.processedTroops + existingAtSourceLevel;
+      const freeGarrison = available.garrisonCapacity > 0
+        ? Math.max(available.garrisonCapacity - available.currentAmount, 0)
+        : Infinity;
+      const desiredCap = available.desired > 0 ? available.desired : Infinity;
+      const trainingCap = Math.min(freeGarrison, desiredCap);
+      const trainedTroops = getMaxForSingleStage(stage, remaining, trainingCap);
+      const existingAtTarget = getLevelAmount(levels, stage.level);
+
+      spendStageCost(stage, trainedTroops, remaining, spent);
+      addLevelAmount(levels, stage.level, trainedTroops);
+
+      calculatedStages.push({
+        ...stage,
+        sourceLevel: null,
+        targetLevel: stage.level,
+        existing: existingAtTarget,
+        incoming: 0,
+        availableTroops: trainingCap,
+        processedTroops: trainedTroops,
+        remainingAtSource: 0,
+        totalAtTarget: getLevelAmount(levels, stage.level)
+      });
+      return;
     }
 
-    const processedTroops = getMaxForSingleStage(stage, remaining, availableTroops);
-    spendStageCost(stage, processedTroops, remaining, spent);
+    const previousStage = calculatedStages[index - 1];
+    const sourceLevel = previousStage.targetLevel;
+    const targetLevel = stage.level;
+    const sourcePool = getLevelAmount(levels, sourceLevel);
+    const existingAtTarget = getLevelAmount(levels, targetLevel);
+    const upgradedTroops = getMaxForSingleStage(stage, remaining, sourcePool);
+
+    spendStageCost(stage, upgradedTroops, remaining, spent);
+    setLevelAmount(levels, sourceLevel, sourcePool - upgradedTroops);
+    addLevelAmount(levels, targetLevel, upgradedTroops);
+
     calculatedStages.push({
       ...stage,
-      availableTroops: roundTroops(availableTroops),
-      processedTroops
+      sourceLevel,
+      targetLevel,
+      existing: existingAtTarget,
+      incoming: sourcePool,
+      availableTroops: sourcePool,
+      processedTroops: upgradedTroops,
+      remainingAtSource: getLevelAmount(levels, sourceLevel),
+      totalAtTarget: getLevelAmount(levels, targetLevel)
     });
   });
 
-  return { stages: calculatedStages, remaining, spent };
+  return { stages: calculatedStages, levels, remaining, spent };
 }
 
-function buildLevelDistribution(stages, available) {
-  return stages.map((stage, index) => {
-    const nextAmount = stages[index + 1]?.processedTroops || 0;
-    const existingAtLevel = index === 0
-      ? getExistingTroopsForLevel(available, stage.level)
-      : 0;
+function buildLevelDistribution(stages, levels, available) {
+  const orderedLevels = [];
 
-    return {
-      level: stage.level,
-      stage: stage.stage,
-      amount: Math.max(stage.processedTroops + existingAtLevel - nextAmount, 0),
-      processedTroops: stage.processedTroops
-    };
+  if (available.currentLevel) orderedLevels.push(String(available.currentLevel));
+  stages.forEach(stage => {
+    const level = String(stage.targetLevel || stage.level || "");
+    if (level && !orderedLevels.includes(level)) orderedLevels.push(level);
   });
+
+  return orderedLevels.map((level, index) => ({
+    level,
+    stage: index + 1,
+    amount: getLevelAmount(levels, level),
+    processedTroops: stages.find(stage => String(stage.targetLevel) === level)?.processedTroops || 0
+  }));
 }
 
 export function buildCalculation() {
@@ -188,7 +238,7 @@ export function buildCalculation() {
   return {
     available,
     stages: sequential.stages,
-    distribution: buildLevelDistribution(sequential.stages, available),
+    distribution: buildLevelDistribution(sequential.stages, sequential.levels, available),
     possibleTroops: roundTroops(possibleTroops),
     targetTroops: roundTroops(targetTroops),
     required,
