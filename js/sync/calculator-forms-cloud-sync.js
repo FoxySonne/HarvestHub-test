@@ -2,9 +2,9 @@
   const TABLE = "user_app_state";
   const STATE_KEY = "calculator_forms";
   const PAGE_STATE_PREFIX = "harvesthub_page_form_state:";
-  const META_PREFIX = "harvesthub_cloud_meta:calculator_forms:";
   const DEBOUNCE_MS = 1500;
-  const PULL_INTERVAL_MS = 60000;
+  const LOCAL_CHECK_MS = 1000;
+  const PULL_INTERVAL_MS = 10000;
   const CALCULATOR_PAGES = new Set([
     "calculator/ipk.html",
     "calculator/season-resources.html",
@@ -14,11 +14,14 @@
   let activeUserId = "";
   let activeProfileId = "";
   let remoteRevision = 0;
+  let initialized = false;
   let dirty = false;
   let isApplyingRemote = false;
   let isUploading = false;
   let isPulling = false;
   let uploadTimer = null;
+  let lastLocalDigest = "";
+  let lastRemoteDigest = "";
 
   function getClient() {
     return window.harvestHubSupabase || null;
@@ -47,22 +50,8 @@
     return JSON.stringify(value);
   }
 
-  function statesEqual(first, second) {
-    return stableJson(first || {}) === stableJson(second || {});
-  }
-
-  function getMetaKey() {
-    return activeUserId && activeProfileId ? `${META_PREFIX}${activeUserId}:${activeProfileId}` : "";
-  }
-
-  function readMeta() {
-    return readJson(getMetaKey(), {});
-  }
-
-  function writeMeta(values) {
-    const key = getMetaKey();
-    if (!key) return;
-    localStorage.setItem(key, JSON.stringify({ ...readMeta(), ...values }));
+  function digest(value) {
+    return stableJson(value || {});
   }
 
   function getProfileScope() {
@@ -85,20 +74,29 @@
       pages[pageName] = readJson(key, {});
     });
 
-    return { schemaVersion: 1, pages };
+    return { schemaVersion: 2, profileId: activeProfileId, pages };
   }
 
-  function hasMeaningfulState(state) {
-    return Boolean(state?.pages && Object.keys(state.pages).length > 0);
+  function saveOpenPageToLocalStorage() {
+    const currentPage = localStorage.getItem("currentPage") || "";
+    if (!CALCULATOR_PAGES.has(currentPage)) return;
+    if (typeof window.savePageFormState === "function") {
+      window.savePageFormState(currentPage);
+    }
   }
 
   function applyLocalState(state) {
     const pages = state?.pages || {};
 
-    Object.entries(pages).forEach(([pageName, pageState]) => {
-      if (!CALCULATOR_PAGES.has(pageName)) return;
+    CALCULATOR_PAGES.forEach(pageName => {
       const key = getPageStorageKey(pageName);
-      if (key) localStorage.setItem(key, JSON.stringify(pageState || {}));
+      if (!key) return;
+
+      if (Object.prototype.hasOwnProperty.call(pages, pageName)) {
+        localStorage.setItem(key, JSON.stringify(pages[pageName] || {}));
+      } else {
+        localStorage.removeItem(key);
+      }
     });
   }
 
@@ -133,18 +131,19 @@
 
   function applyCurrentPageFields(state) {
     const currentPage = localStorage.getItem("currentPage") || "";
-    if (!CALCULATOR_PAGES.has(currentPage)) return;
+    if (!CALCULATOR_PAGES.has(currentPage)) return false;
 
     const pageState = state?.pages?.[currentPage];
-    if (!pageState || typeof pageState !== "object") return;
+    if (!pageState || typeof pageState !== "object") return false;
 
-    const container = document.getElementById("page-content");
-    const fields = getPersistableFields(container);
+    const fields = getPersistableFields(document.getElementById("page-content"));
+    if (!fields.length) return false;
 
     fields.forEach((field, index) => {
       const key = getFieldKey(field, index);
-      if (!Object.prototype.hasOwnProperty.call(pageState, key)) return;
-      setFieldValue(field, pageState[key]);
+      if (Object.prototype.hasOwnProperty.call(pageState, key)) {
+        setFieldValue(field, pageState[key]);
+      }
     });
 
     fields.forEach(field => {
@@ -152,9 +151,13 @@
       field.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-    if (typeof window.savePageFormState === "function") {
-      window.savePageFormState(currentPage);
-    }
+    return true;
+  }
+
+  function applyCurrentPageRepeatedly(state) {
+    applyCurrentPageFields(state);
+    window.setTimeout(() => applyCurrentPageFields(state), 250);
+    window.setTimeout(() => applyCurrentPageFields(state), 1000);
   }
 
   async function getSessionContext() {
@@ -169,7 +172,7 @@
 
     return {
       userId: user?.id || "",
-      profileId: profile?.id || ""
+      profileId: profile?.id || (user?.id ? `account:${user.id}` : "")
     };
   }
 
@@ -189,6 +192,7 @@
   }
 
   async function uploadNow() {
+    window.clearTimeout(uploadTimer);
     if (isApplyingRemote || isUploading || !dirty || !activeUserId || !activeProfileId) return;
 
     const client = getClient();
@@ -198,13 +202,17 @@
     emitStatus("syncing");
 
     try {
+      saveOpenPageToLocalStorage();
+      const payload = collectLocalState();
+      const payloadDigest = digest(payload);
       const nextRevision = Math.max(remoteRevision + 1, 1);
+
       const { data, error } = await client
         .from(TABLE)
         .upsert({
           user_id: activeUserId,
           state_key: STATE_KEY,
-          data: collectLocalState(),
+          data: payload,
           revision: nextRevision
         }, { onConflict: "user_id,state_key" })
         .select("revision, updated_at")
@@ -213,8 +221,9 @@
       if (error) throw error;
 
       remoteRevision = Number(data?.revision) || nextRevision;
+      lastLocalDigest = payloadDigest;
+      lastRemoteDigest = payloadDigest;
       dirty = false;
-      writeMeta({ revision: remoteRevision, syncedAt: data?.updated_at || new Date().toISOString() });
       emitStatus("synced");
     } catch (error) {
       console.error("Calculator forms cloud sync upload failed:", error);
@@ -225,10 +234,8 @@
   }
 
   function scheduleUpload() {
-    if (isApplyingRemote || !activeUserId || !activeProfileId) return;
-
+    if (!initialized || isApplyingRemote || !activeUserId || !activeProfileId) return;
     dirty = true;
-    writeMeta({ changedAt: new Date().toISOString() });
     emitStatus("pending");
     window.clearTimeout(uploadTimer);
     uploadTimer = window.setTimeout(uploadNow, DEBOUNCE_MS);
@@ -241,15 +248,17 @@
     try {
       const remoteState = row.data || {};
       applyLocalState(remoteState);
-      applyCurrentPageFields(remoteState);
       remoteRevision = Number(row.revision) || 0;
+      lastRemoteDigest = digest(remoteState);
+      lastLocalDigest = digest(collectLocalState());
       dirty = false;
-      writeMeta({ revision: remoteRevision, syncedAt: row.updated_at || new Date().toISOString() });
+      applyCurrentPageRepeatedly(remoteState);
       emitStatus("synced");
     } finally {
       window.setTimeout(() => {
+        lastLocalDigest = digest(collectLocalState());
         isApplyingRemote = false;
-      }, 0);
+      }, 1200);
     }
   }
 
@@ -259,25 +268,22 @@
     isPulling = true;
     try {
       const remote = await fetchRemote();
-      const local = collectLocalState();
-      const localHasData = hasMeaningfulState(local);
-      const metaRevision = Number(readMeta().revision) || 0;
 
       if (!remote) {
-        dirty = true;
-        await uploadNow();
+        if (initial) {
+          lastLocalDigest = digest(collectLocalState());
+          dirty = true;
+          await uploadNow();
+        }
         return;
       }
 
+      const remoteState = remote.data || {};
+      const remoteDigest = digest(remoteState);
       const nextRevision = Number(remote.revision) || 0;
-      remoteRevision = Math.max(remoteRevision, nextRevision);
-      const contentDiffers = !statesEqual(remote.data || {}, local);
 
-      if (!localHasData || contentDiffers || nextRevision > metaRevision) {
+      if (initial || nextRevision > remoteRevision || remoteDigest !== lastRemoteDigest) {
         await applyRemote(remote);
-      } else if (initial && localHasData && metaRevision === 0) {
-        dirty = true;
-        await uploadNow();
       } else {
         emitStatus("synced");
       }
@@ -291,8 +297,11 @@
 
   async function initializeForSession() {
     window.clearTimeout(uploadTimer);
+    initialized = false;
     dirty = false;
     remoteRevision = 0;
+    lastLocalDigest = "";
+    lastRemoteDigest = "";
 
     try {
       const context = await getSessionContext();
@@ -305,26 +314,24 @@
       }
 
       await pullRemote({ initial: true });
+      lastLocalDigest = digest(collectLocalState());
+      initialized = true;
     } catch (error) {
       console.error("Calculator forms cloud sync initialization failed:", error);
       emitStatus("error", error?.message || "Ошибка запуска");
     }
   }
 
-  function isCalculatorField(target) {
-    if (!(target instanceof Element)) return false;
-    const currentPage = localStorage.getItem("currentPage") || "";
-    if (!CALCULATOR_PAGES.has(currentPage)) return false;
-    return Boolean(target.closest("#page-content"));
-  }
+  function checkLocalChanges() {
+    if (!initialized || isApplyingRemote || isUploading || !activeProfileId) return;
+    saveOpenPageToLocalStorage();
+    const currentDigest = digest(collectLocalState());
 
-  function handleFieldChange(event) {
-    if (isApplyingRemote || !isCalculatorField(event.target)) return;
-    window.setTimeout(scheduleUpload, 50);
+    if (currentDigest !== lastLocalDigest) {
+      lastLocalDigest = currentDigest;
+      scheduleUpload();
+    }
   }
-
-  document.addEventListener("input", handleFieldChange, true);
-  document.addEventListener("change", handleFieldChange, true);
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") pullRemote();
@@ -336,9 +343,8 @@
     if (dirty) scheduleUpload();
   });
 
-  window.addEventListener("harvesthub:profile-change", initializeForSession);
-  window.addEventListener("harvesthub:advanced-mode-change", () => {
-    window.setTimeout(scheduleUpload, 100);
+  window.addEventListener("harvesthub:profile-change", () => {
+    window.setTimeout(initializeForSession, 0);
   });
 
   if (getClient()) {
@@ -353,6 +359,7 @@
     initializeForSession();
   }
 
+  window.setInterval(checkLocalChanges, LOCAL_CHECK_MS);
   window.setInterval(() => {
     if (document.visibilityState === "visible") pullRemote();
   }, PULL_INTERVAL_MS);
