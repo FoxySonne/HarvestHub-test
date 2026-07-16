@@ -112,6 +112,12 @@ function spendStageCost(stage, troops, remaining, spent) {
   spent.time += stageTime;
 }
 
+function getExistingTroopsForLevel(available, level) {
+  return String(available.currentLevel) === String(level)
+    ? roundTroops(available.currentAmount)
+    : 0;
+}
+
 function buildSequentialStages(stages, available) {
   const remaining = cloneRemaining(available);
   const spent = { resources: { food: 0, wood: 0, metal: 0, fuel: 0 }, time: 0 };
@@ -119,25 +125,42 @@ function buildSequentialStages(stages, available) {
     ? Math.max(available.garrisonCapacity - available.currentAmount, 0)
     : Infinity;
   const desiredCap = available.desired > 0 ? available.desired : Infinity;
-  let previousAmount = Math.min(freeGarrison, desiredCap);
+  const calculatedStages = [];
 
-  const calculatedStages = stages.map(stage => {
-    const processedTroops = getMaxForSingleStage(stage, remaining, previousAmount);
+  stages.forEach((stage, index) => {
+    let availableTroops;
+
+    if (index === 0) {
+      availableTroops = Math.min(freeGarrison, desiredCap);
+    } else {
+      const previousStage = calculatedStages[index - 1];
+      const existingAtSourceLevel = getExistingTroopsForLevel(available, previousStage.level);
+      availableTroops = previousStage.processedTroops + existingAtSourceLevel;
+    }
+
+    const processedTroops = getMaxForSingleStage(stage, remaining, availableTroops);
     spendStageCost(stage, processedTroops, remaining, spent);
-    previousAmount = processedTroops;
-    return { ...stage, processedTroops };
+    calculatedStages.push({
+      ...stage,
+      availableTroops: roundTroops(availableTroops),
+      processedTroops
+    });
   });
 
   return { stages: calculatedStages, remaining, spent };
 }
 
-function buildLevelDistribution(stages) {
+function buildLevelDistribution(stages, available) {
   return stages.map((stage, index) => {
     const nextAmount = stages[index + 1]?.processedTroops || 0;
+    const existingAtLevel = index === 0
+      ? getExistingTroopsForLevel(available, stage.level)
+      : 0;
+
     return {
       level: stage.level,
       stage: stage.stage,
-      amount: Math.max(stage.processedTroops - nextAmount, 0),
+      amount: Math.max(stage.processedTroops + existingAtLevel - nextAmount, 0),
       processedTroops: stage.processedTroops
     };
   });
@@ -165,7 +188,7 @@ export function buildCalculation() {
   return {
     available,
     stages: sequential.stages,
-    distribution: buildLevelDistribution(sequential.stages),
+    distribution: buildLevelDistribution(sequential.stages, available),
     possibleTroops: roundTroops(possibleTroops),
     targetTroops: roundTroops(targetTroops),
     required,
