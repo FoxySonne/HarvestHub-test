@@ -1,6 +1,8 @@
 (() => {
   const TURBO_LOCAL_PREFIX = "harvesthub_turbo_vs_week_state:";
   const FORM_LOCAL_PREFIX = "harvesthub_page_form_state:";
+  const TRANSFER_LOCAL_KEY = "harvesthub_troop_training_transfer";
+  const ADVANCED_MODE_LOCAL_KEY = "harvesthub_advanced_mode";
   const CALCULATOR_PAGES = new Set([
     "calculator/ipk.html",
     "calculator/season-resources.html",
@@ -73,7 +75,13 @@
         const raw = localStorage.getItem(key);
         if (raw != null) pages[pageName] = readJson(key, {});
       });
-      return { schemaVersion: 1, profileId: context.profileId, pages };
+      return {
+        schemaVersion: 2,
+        profileId: context.profileId,
+        advancedMode: localStorage.getItem(ADVANCED_MODE_LOCAL_KEY) === "1",
+        transfer: readJson(TRANSFER_LOCAL_KEY, null),
+        pages
+      };
     },
 
     applyRemoteState(data, context) {
@@ -85,6 +93,18 @@
           JSON.stringify(pages[pageName] || {})
         );
       });
+
+      if (typeof data?.advancedMode === "boolean" && typeof window.setAdvancedMode === "function") {
+        window.setAdvancedMode(data.advancedMode);
+      }
+
+      if (Object.prototype.hasOwnProperty.call(data || {}, "transfer")) {
+        if (data.transfer && typeof data.transfer === "object") {
+          localStorage.setItem(TRANSFER_LOCAL_KEY, JSON.stringify(data.transfer));
+        } else {
+          localStorage.removeItem(TRANSFER_LOCAL_KEY);
+        }
+      }
     },
 
     async afterRemoteApplied() {
@@ -114,6 +134,8 @@
   window.addEventListener("harvesthub:page-form-state-change", event => {
     if (CALCULATOR_PAGES.has(event.detail?.pageName)) formsEngine.scheduleUpload();
   });
+  window.addEventListener("harvesthub:calculator-transfer-change", () => formsEngine.scheduleUpload());
+  window.addEventListener("harvesthub:advanced-mode-change", () => formsEngine.scheduleUpload());
 
   turboEngine.start();
   formsEngine.start();

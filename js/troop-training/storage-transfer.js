@@ -21,6 +21,7 @@ function readTurboWeekState() {
 
 function writeTurboWeekState(state) {
   localStorage.setItem(getTurboWeekStateKey(), JSON.stringify(state));
+  window.dispatchEvent(new CustomEvent("harvesthub:turbo-vs-state-change"));
 }
 
 export function saveTurboVsTransfer(target, payload) {
@@ -79,6 +80,9 @@ function getTransferTargetName(target) {
 
 export function saveTransferPayload(payload) {
   localStorage.setItem(TRANSFER_STORAGE_KEY, JSON.stringify(payload));
+  window.dispatchEvent(new CustomEvent("harvesthub:calculator-transfer-change", {
+    detail: { target: payload?.target || "", id: payload?.id || "" }
+  }));
 }
 
 export function getTransferStatusHtml(target, calculation, directSaveResult) {
