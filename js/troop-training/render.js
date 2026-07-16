@@ -129,10 +129,10 @@ export function renderResults() {
   if (possibleElement) possibleElement.textContent = formatNumber(calculation.possibleTroops);
 
   if (stageResults) {
-    stageResults.innerHTML = calculation.stages.map(stage => `
+    stageResults.innerHTML = calculation.distribution.map(item => `
       <div>
-        <span>${stage.level || stage.stage} уровень</span>
-        <strong>${formatNumber(calculation.possibleTroops)}</strong>
+        <span>${item.level || item.stage} уровень</span>
+        <strong>${formatNumber(item.amount)}</strong>
       </div>
     `).join("");
   }
