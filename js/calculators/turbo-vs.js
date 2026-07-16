@@ -1,4 +1,4 @@
-import { createTurboVsDataModel, TROOP_LEVEL_DEFAULTS } from "../turbo-vs/data-model.js";
+import { createTurboVsDataModel } from "../turbo-vs/data-model.js";
 import {
   isTroopTransferApplied,
   markTroopTransferApplied,
@@ -6,6 +6,7 @@ import {
   readWeekState,
   writeWeekState
 } from "../turbo-vs/storage.js";
+import { createTurboVsView } from "../turbo-vs/view.js";
 
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
 const { database } = await import(`../../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
@@ -25,6 +26,20 @@ let selectedManually = false;
 let timerId = null;
 let transferTimerId = null;
 
+const {
+  calculateRowTotal,
+  createActionRow,
+  createTextRow,
+  getRowActionId,
+  getRowEventType,
+  getRowState,
+  setRowState
+} = createTurboVsView({
+  getPoints,
+  getTroopRowsFromState,
+  onControlChange: (actionId, control) => handleControlChange(actionId, control)
+});
+
 function formatNumber(value) {
   return Math.round(Number(value) || 0).toLocaleString("ru-RU");
 }
@@ -35,70 +50,6 @@ function getCurrentUtcDayId() {
     : null;
 
   return utcDayId && database.days[utcDayId] ? utcDayId : database.dayOrder[0];
-}
-
-function getQuantityControl(row) {
-  return row.querySelector("input[data-action-id], select[data-action-id]");
-}
-
-function getRowActionId(row) {
-  return row.dataset.actionId ||
-    getQuantityControl(row)?.dataset.actionId ||
-    row.querySelector(".action-level-select")?.dataset.levelActionId ||
-    "";
-}
-
-function getRowEventType(row) {
-  return row.dataset.eventType || row.querySelector("[data-event-type]")?.dataset.eventType || "";
-}
-
-function getRowState(row) {
-  if (row.classList.contains("action-row-multi-level")) {
-    const rows = Array.from(row.querySelectorAll(".action-multi-line")).map(line => ({
-      level: line.querySelector("select")?.value || "",
-      value: line.querySelector("input")?.value || "0"
-    }));
-    const filledRows = rows.filter(item => Number(item.value) > 0);
-    const lastFilled = filledRows[filledRows.length - 1] || rows[rows.length - 1] || { level: "", value: "0" };
-
-    return {
-      value: String(Math.max(0, ...rows.map(item => Number(item.value) || 0))),
-      level: lastFilled.level || null,
-      rows
-    };
-  }
-
-  const quantityControl = getQuantityControl(row);
-  const levelSelect = row.querySelector(".action-level-select");
-
-  return {
-    value: quantityControl?.value || "0",
-    level: levelSelect?.value || null
-  };
-}
-
-function setRowState(row, state = {}) {
-  if (row.classList.contains("action-row-multi-level")) {
-    const savedRows = getTroopRowsFromState(state);
-    const lines = Array.from(row.querySelectorAll(".action-multi-line"));
-
-    lines.forEach((line, index) => {
-      const levelSelect = line.querySelector("select");
-      const quantityInput = line.querySelector("input");
-      const saved = savedRows[index];
-
-      if (levelSelect) levelSelect.value = String(saved?.level ?? TROOP_LEVEL_DEFAULTS[index] ?? 10);
-      if (quantityInput) quantityInput.value = String(saved?.value ?? "0");
-    });
-
-    return;
-  }
-
-  const quantityControl = getQuantityControl(row);
-  const levelSelect = row.querySelector(".action-level-select");
-
-  if (quantityControl) quantityControl.value = String(state?.value ?? "0");
-  if (levelSelect && state?.level != null) levelSelect.value = String(state.level);
 }
 
 function saveCurrentDayState() {
@@ -134,129 +85,6 @@ function restoreDayState(dayId) {
   });
 }
 
-function createTextRow(text) {
-  const row = document.createElement("div");
-  row.className = "action-row action-row-text";
-  row.textContent = text;
-  return row;
-}
-
-function createQuantitySelect(action, eventType) {
-  const select = document.createElement("select");
-  select.className = "action-quantity-select";
-  select.dataset.actionId = action.id;
-  select.dataset.eventType = eventType;
-  select.dataset.noPersist = "true";
-
-  const zeroOption = document.createElement("option");
-  zeroOption.value = "0";
-  zeroOption.textContent = "0";
-  select.appendChild(zeroOption);
-
-  for (let value = action.quantityOptions.min; value <= action.quantityOptions.max; value++) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value;
-    select.appendChild(option);
-  }
-
-  return select;
-}
-
-function createNumberInput(action, eventType) {
-  const input = document.createElement("input");
-  input.type = "number";
-  input.min = "0";
-  input.value = "0";
-  input.dataset.actionId = action.id;
-  input.dataset.eventType = eventType;
-  input.dataset.noPersist = "true";
-  return input;
-}
-
-function createLevelSelect(action, eventType, defaultLevel) {
-  const levelSelect = document.createElement("select");
-  levelSelect.className = "action-level-select";
-  levelSelect.dataset.levelActionId = action.id;
-  levelSelect.dataset.eventType = eventType;
-  levelSelect.dataset.noPersist = "true";
-
-  action.options.forEach(optionData => {
-    const option = document.createElement("option");
-    option.value = optionData.value;
-    option.textContent = optionData.label;
-    levelSelect.appendChild(option);
-  });
-
-  levelSelect.value = String(defaultLevel);
-  return levelSelect;
-}
-
-function createTroopMultiControls(action, eventType) {
-  const controls = document.createElement("div");
-  controls.className = "action-controls action-multi-controls";
-
-  TROOP_LEVEL_DEFAULTS.forEach(defaultLevel => {
-    const line = document.createElement("div");
-    line.className = "action-multi-line";
-
-    const levelSelect = createLevelSelect(action, eventType, defaultLevel);
-    const quantityInput = createNumberInput(action, eventType);
-    quantityInput.className = "action-quantity-input";
-    quantityInput.dataset.hasLevel = "true";
-
-    line.append(levelSelect, quantityInput);
-    controls.appendChild(line);
-  });
-
-  return controls;
-}
-
-function createActionRow(action, eventType) {
-  const row = document.createElement("div");
-  row.className = "action-row";
-  row.dataset.actionId = action.id;
-  row.dataset.eventType = eventType;
-
-  const label = document.createElement("label");
-  label.textContent = action.name;
-
-  let controls;
-
-  if (action.id === "troop_upgrade" && action.options) {
-    row.classList.add("action-row-multi-level");
-    controls = createTroopMultiControls(action, eventType);
-  } else {
-    controls = document.createElement("div");
-    controls.className = "action-controls";
-
-    if (action.options) {
-      row.classList.add("action-row-with-level");
-      const levelSelect = createLevelSelect(action, eventType, action.options[0]?.value ?? 1);
-      const quantityInput = createNumberInput(action, eventType);
-      quantityInput.className = "action-quantity-input";
-      quantityInput.dataset.hasLevel = "true";
-      controls.append(levelSelect, quantityInput);
-    } else {
-      const quantityControl = action.quantityOptions
-        ? createQuantitySelect(action, eventType)
-        : createNumberInput(action, eventType);
-
-      controls.appendChild(quantityControl);
-    }
-  }
-
-  row.append(label, controls);
-
-  row.querySelectorAll("input, select").forEach(control => {
-    control.addEventListener(control.tagName === "SELECT" ? "change" : "input", () => {
-      handleControlChange(action.id, control);
-    });
-  });
-
-  return row;
-}
-
 function syncActionControls(actionId, sourceControl) {
   if (isSyncingControls) return;
 
@@ -273,24 +101,6 @@ function syncActionControls(actionId, sourceControl) {
   });
 
   isSyncingControls = false;
-}
-
-function calculateRowTotal(row) {
-  const eventType = getRowEventType(row);
-  const actionId = getRowActionId(row);
-
-  if (row.classList.contains("action-row-multi-level")) {
-    return Array.from(row.querySelectorAll(".action-multi-line")).reduce((sum, line) => {
-      const level = line.querySelector("select")?.value || null;
-      const quantity = Number(line.querySelector("input")?.value) || 0;
-      return sum + quantity * getPoints(actionId, eventType, level);
-    }, 0);
-  }
-
-  const quantityControl = getQuantityControl(row);
-  const level = row.querySelector(".action-level-select")?.value || null;
-
-  return (Number(quantityControl?.value) || 0) * getPoints(actionId, eventType, level);
 }
 
 function updateTotals() {
