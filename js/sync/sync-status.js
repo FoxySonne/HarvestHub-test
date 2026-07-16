@@ -62,36 +62,52 @@
 
   function updateElements() {
     const profile = getProfile();
-    const elements = document.querySelectorAll(".desktop-profile-status, .profile-sync-status");
+    const elements = document.querySelectorAll(".desktop-profile-status, .profile-sync-status, .topbar-sync-status");
 
     elements.forEach(element => {
+      const compact = element.classList.contains("topbar-sync-status");
+
       if (!profile) {
         element.textContent = "";
         element.dataset.syncStatus = "local";
         element.style.color = "";
+        element.removeAttribute("title");
+        element.removeAttribute("aria-label");
         return;
       }
 
       if (profile.type === "quick") {
-        element.textContent = "Быстрый профиль — данные только на этом устройстве";
+        if (compact) {
+          element.textContent = "";
+        } else {
+          element.textContent = "Быстрый профиль — данные только на этом устройстве";
+        }
         element.dataset.syncStatus = "local";
         element.style.color = "";
+        element.removeAttribute("title");
+        element.removeAttribute("aria-label");
         return;
       }
 
       const statusChanged = element.dataset.renderedSyncStatus !== currentStatus;
       if (statusChanged) {
-        element.innerHTML = `${getIcon(currentStatus)}<span class="sync-status-text"></span>`;
+        element.innerHTML = compact
+          ? getIcon(currentStatus)
+          : `${getIcon(currentStatus)}<span class="sync-status-text"></span>`;
         element.dataset.renderedSyncStatus = currentStatus;
       }
 
-      const textElement = element.querySelector(".sync-status-text");
-      if (textElement) textElement.textContent = getText(currentStatus, currentDetail);
+      if (!compact) {
+        const textElement = element.querySelector(".sync-status-text");
+        if (textElement) textElement.textContent = getText(currentStatus, currentDetail);
+      }
 
+      const accessibleText = getText(currentStatus, currentDetail);
       element.dataset.syncStatus = currentStatus;
       element.style.color = COLORS[currentStatus] || "";
-      element.title = currentStatus === "error" && currentDetail ? currentDetail : "";
-      element.setAttribute("aria-live", "polite");
+      element.title = accessibleText;
+      element.setAttribute("aria-label", accessibleText);
+      if (!compact) element.setAttribute("aria-live", "polite");
     });
   }
 
