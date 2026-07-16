@@ -1,5 +1,8 @@
 import { seasonDatabase } from "../../data/season-database.js";
 import { seasonBuildingsDatabase } from "../../data/season-buildings-database.js";
+import "./season-build-buffs.js";
+import "./season-building-links.js";
+import "./season-production.js";
 
 const MAX_DISCOUNT_CANS = 50;
 let isRaidNeedManual = false;

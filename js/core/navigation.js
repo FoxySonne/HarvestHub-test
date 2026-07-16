@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260716-11";
+  const SITE_ASSET_VERSION = "20260716-17";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
