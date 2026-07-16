@@ -1,6 +1,6 @@
 import { LEVELS, RESOURCE_CONFIG, TROOP_COST_PRESETS } from "./config.js";
 import { getElement } from "./dom.js";
-import { calculateExtraTraining, buildCalculation, isStageEnabled } from "./calculator.js?v=20260716-1";
+import { calculateExtraTraining, buildCalculation, isStageEnabled } from "./calculator.js?v=20260716-2";
 import { formatDuration, formatNumber, formatResource } from "./format.js";
 
 export function fillLevelSelect(select, defaultLevel) {
@@ -122,6 +122,11 @@ function getWarriorWord(value) {
   return "воинов";
 }
 
+function getStageResultLabel(stage) {
+  if (stage.type === "training") return `Обучено, ${stage.targetLevel || stage.level} уровень`;
+  return `Улучшено до ${stage.targetLevel || stage.level} уровня`;
+}
+
 export function setShortageSubtitle(text) {
   const shortages = getElement("troopShortages");
   const subtitle = shortages?.previousElementSibling;
@@ -140,10 +145,10 @@ export function renderResults() {
   if (possibleElement) possibleElement.textContent = formatNumber(calculation.possibleTroops);
 
   if (stageResults) {
-    stageResults.innerHTML = calculation.distribution.map(item => `
+    stageResults.innerHTML = calculation.stages.map(stage => `
       <div>
-        <span>${item.level || item.stage} уровень</span>
-        <strong>${formatNumber(item.amount)}</strong>
+        <span>${getStageResultLabel(stage)}</span>
+        <strong>${formatNumber(stage.processedTroops)}</strong>
       </div>
     `).join("");
   }
