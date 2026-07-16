@@ -1,5 +1,0 @@
-.calculator-reset-section{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:34px;padding-top:24px;border-top:1px solid var(--border)}
-.calculator-reset-section p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
-.calculator-reset-button{width:auto;min-width:0;background:rgba(139,48,48,.38)!important;border-color:#b94b4b!important;color:#fff!important;box-shadow:none!important;transition:background .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
-.calculator-reset-button:hover,.calculator-reset-button:focus-visible{background:rgba(185,75,75,.18)!important;border-color:#d96b6b!important;color:#ffb6b6!important;box-shadow:0 0 0 3px rgba(185,75,75,.1)!important}
-@media (max-width:640px){.calculator-reset-section{margin-top:26px}.calculator-reset-button{width:100%}}
