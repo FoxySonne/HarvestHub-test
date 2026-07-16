@@ -40,12 +40,14 @@
   }
 
   function resolveProfileId(userId = activeUserId) {
-    const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
-    if (profile?.id) return profile.id;
-
     const storedId = localStorage.getItem("harvesthub_active_profile") || "";
     if (storedId) return storedId;
 
+    const profile = typeof window.getActiveProfile === "function"
+      ? window.getActiveProfile()
+      : null;
+
+    if (profile?.id) return profile.id;
     return userId ? `account:${userId}` : "";
   }
 
@@ -94,6 +96,7 @@
   async function getAuthenticatedUser() {
     const client = getClient();
     if (!client) return null;
+
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
     return data.session?.user || null;
@@ -126,6 +129,8 @@
 
   async function upsertState(state, revision) {
     const client = getClient();
+    if (!client) throw new Error("Supabase недоступен");
+
     const { data, error } = await client
       .from(TABLE)
       .upsert({
@@ -154,6 +159,8 @@
 
       const currentPage = localStorage.getItem("currentPage") || "";
       if (CALCULATOR_PAGES.has(currentPage) && typeof window.loadPage === "function") {
+        const container = document.getElementById("page-content");
+        if (container) container.innerHTML = "";
         await window.loadPage(currentPage);
       }
     } finally {
@@ -266,29 +273,21 @@
     }
   }
 
-  function installSaveHook() {
-    const originalSave = window.savePageFormState;
-    if (typeof originalSave !== "function" || originalSave.__cloudSyncWrapped) return;
-
-    function savePageFormStateWithCloudSignal(pageName, ...args) {
-      const result = originalSave.call(this, pageName, ...args);
-      const resolvedPage = pageName || localStorage.getItem("currentPage") || "";
-
-      if (!isApplyingRemote && CALCULATOR_PAGES.has(resolvedPage)) {
-        window.dispatchEvent(new CustomEvent("harvesthub:page-form-state-change", {
-          detail: { pageName: resolvedPage }
-        }));
-      }
-
-      return result;
-    }
-
-    savePageFormStateWithCloudSignal.__cloudSyncWrapped = true;
-    window.savePageFormState = savePageFormStateWithCloudSignal;
+  function isCalculatorControl(target) {
+    if (!(target instanceof Element)) return false;
+    const currentPage = localStorage.getItem("currentPage") || "";
+    if (!CALCULATOR_PAGES.has(currentPage)) return false;
+    return Boolean(target.closest("#page-content"));
   }
 
-  installSaveHook();
-  window.addEventListener("harvesthub:page-form-state-change", scheduleUpload);
+  document.addEventListener("input", event => {
+    if (isCalculatorControl(event.target)) scheduleUpload();
+  }, true);
+
+  document.addEventListener("change", event => {
+    if (isCalculatorControl(event.target)) scheduleUpload();
+  }, true);
+
   window.addEventListener("harvesthub:profile-change", initializeForSession);
 
   document.addEventListener("visibilitychange", () => {
@@ -308,10 +307,7 @@
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      installSaveHook();
-      initializeForSession();
-    }, { once: true });
+    document.addEventListener("DOMContentLoaded", initializeForSession, { once: true });
   } else {
     initializeForSession();
   }
@@ -324,6 +320,20 @@
     scheduleUpload,
     uploadNow,
     pullRemote,
-    get isApplyingRemote() { return isApplyingRemote; }
+    forceUpload: () => {
+      dirty = true;
+      return uploadNow({ force: true });
+    },
+    getState: () => ({
+      activeUserId,
+      activeProfileId,
+      remoteRevision,
+      dirty,
+      isApplyingRemote,
+      isUploading,
+      isPulling,
+      currentPage: localStorage.getItem("currentPage") || "",
+      localState: collectLocalState()
+    })
   };
 })();
