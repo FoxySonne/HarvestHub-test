@@ -1,160 +1,9 @@
 (() => {
-  const PROFILES_KEY = "harvesthub_profiles";
-  const ACTIVE_KEY = "harvesthub_active_profile";
-
-  function readProfiles() {
-    try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || "{}"); }
-    catch { return {}; }
-  }
-
-  function writeProfiles(profiles) { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); }
-
-  function getActiveProfile() {
-    const id = localStorage.getItem(ACTIVE_KEY) || "";
-    return readProfiles()[id] || null;
-  }
-
-  function dispatchChange(profile = getActiveProfile()) {
-    window.dispatchEvent(new CustomEvent("harvesthub:profile-change", { detail: { profile } }));
-    renderAccountButtons();
-  }
-
-  function saveProfile(profile) {
-    const profiles = readProfiles();
-    profiles[profile.id] = profile;
-    writeProfiles(profiles);
-    localStorage.setItem(ACTIVE_KEY, profile.id);
-    dispatchChange(profile);
-    return profile;
-  }
-
-  function createQuickProfile(nickname, state) {
-    const cleanNickname = String(nickname || "").trim();
-    const cleanState = String(state || "").trim();
-    if (!cleanNickname || !cleanState) throw new Error("Заполни никнейм и номер штата.");
-    return saveProfile({
-      id: `quick:${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`,
-      type: "quick",
-      nickname: cleanNickname,
-      state: cleanState,
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  function getAuthRedirectUrl() {
-    return new URL("./", window.location.href).toString().split("#")[0].split("?")[0];
-  }
-
-  function validatePassword(password, confirmation = password) {
-    if (String(password || "").length < 8) throw new Error("Пароль должен содержать не менее 8 символов.");
-    if (password !== confirmation) throw new Error("Пароли не совпадают.");
-  }
-
-  async function signUpWithPassword(email, password, confirmation, nickname, state) {
-    const cleanEmail = String(email || "").trim();
-    const cleanNickname = String(nickname || "").trim();
-    const cleanState = String(state || "").trim();
-    if (!cleanEmail || !cleanNickname || !cleanState) throw new Error("Заполни никнейм, номер штата и email.");
-    validatePassword(password, confirmation);
-    if (!window.harvestHubSupabase) throw new Error("Supabase пока недоступен.");
-
-    const { data, error } = await window.harvestHubSupabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        emailRedirectTo: getAuthRedirectUrl(),
-        data: { nickname: cleanNickname, state: cleanState }
-      }
-    });
-    if (error) throw error;
-    return data;
-  }
-
-  async function signInWithPassword(email, password) {
-    const cleanEmail = String(email || "").trim();
-    if (!cleanEmail || !password) throw new Error("Укажи email и пароль.");
-    if (!window.harvestHubSupabase) throw new Error("Supabase пока недоступен.");
-    const { data, error } = await window.harvestHubSupabase.auth.signInWithPassword({ email: cleanEmail, password });
-    if (error) throw error;
-    if (data.user) await syncCloudProfile(data.user);
-    return data;
-  }
-
-  async function sendPasswordReset(email) {
-    const cleanEmail = String(email || "").trim();
-    if (!cleanEmail) throw new Error("Сначала укажи email профиля.");
-    if (!window.harvestHubSupabase) throw new Error("Supabase пока недоступен.");
-    const { error } = await window.harvestHubSupabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: getAuthRedirectUrl()
-    });
-    if (error) throw error;
-  }
-
-  async function updateRecoveredPassword(password, confirmation) {
-    validatePassword(password, confirmation);
-    if (!window.harvestHubSupabase) throw new Error("Supabase пока недоступен.");
-    const { error } = await window.harvestHubSupabase.auth.updateUser({ password });
-    if (error) throw error;
-  }
-
-  async function syncCloudProfile(user) {
-    if (!user) return null;
-    const nickname = user.user_metadata?.nickname || user.email?.split("@")[0] || "Пользователь";
-    const state = user.user_metadata?.state || "";
-    return saveProfile({
-      id: `account:${user.id}`,
-      type: "account",
-      supabaseUserId: user.id,
-      nickname,
-      state,
-      email: user.email || "",
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  async function signOutAccount() {
-    const profile = getActiveProfile();
-    if (profile?.type === "account" && window.harvestHubSupabase) await window.harvestHubSupabase.auth.signOut();
-    localStorage.removeItem(ACTIVE_KEY);
-    dispatchChange(null);
-  }
-
-  function openAccount() {
-    const profile = getActiveProfile();
-    if (profile) window.loadPage?.("profile.html");
-    else {
-      document.getElementById("accountModal")?.classList.add("is-open");
-      document.body.classList.add("account-modal-open");
-    }
-  }
-
-  function closeAccountModal() {
-    document.getElementById("accountModal")?.classList.remove("is-open");
-    document.body.classList.remove("account-modal-open");
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-  }
-
-  function renderDesktopProfileCard(profile) {
-    const content = document.getElementById("desktopProfileContent");
-    if (!content) return;
-    if (!profile) {
-      content.innerHTML = `<p class="desktop-profile-text">Сохраняйте данные и используйте их на разных устройствах.</p><button type="button" class="account-trigger desktop-profile-button" data-account-button>Войти или создать профиль</button>`;
-      return;
-    }
-    const status = profile.type === "quick" ? "Быстрый профиль" : "Данные синхронизируются";
-    content.innerHTML = `<div class="desktop-profile-user"><strong>${escapeHtml(profile.nickname)}</strong><span>Штат ${escapeHtml(profile.state)}</span></div><p class="desktop-profile-status">${status}</p><button type="button" class="account-trigger desktop-profile-button" data-account-button>Открыть профиль</button>`;
-  }
-
-  function renderAccountButtons() {
-    const profile = getActiveProfile();
-    renderDesktopProfileCard(profile);
-    document.querySelectorAll("[data-account-button]").forEach(button => {
-      button.textContent = button.classList.contains("desktop-profile-button") ? (profile ? "Открыть профиль" : "Войти или создать профиль") : (profile ? profile.nickname : "Профиль");
-      button.title = profile ? `Открыть профиль ${profile.nickname}` : "Войти или создать профиль";
-    });
+  function showMessage(message, type = "") {
+    const element = document.getElementById("accountMessage");
+    if (!element) return;
+    element.textContent = message || "";
+    element.dataset.type = type;
   }
 
   function setTab(tab) {
@@ -179,13 +28,6 @@
       button.setAttribute("aria-selected", active ? "true" : "false");
     });
     showMessage("");
-  }
-
-  function showMessage(message, type = "") {
-    const element = document.getElementById("accountMessage");
-    if (!element) return;
-    element.textContent = message || "";
-    element.dataset.type = type;
   }
 
   function setButtonBusy(button, busy, busyText, normalText) {
@@ -216,14 +58,14 @@
   function openRecoveryMode() {
     const modal = document.getElementById("accountModal");
     if (!modal) return;
-    modal.classList.add("is-recovery");
-    modal.classList.add("is-open");
+    modal.classList.add("is-recovery", "is-open");
     document.body.classList.add("account-modal-open");
     showMessage("Введите новый пароль для профиля.");
   }
 
   function injectModal() {
     if (document.getElementById("accountModal")) return;
+
     document.body.insertAdjacentHTML("beforeend", `
       <div id="accountModal" class="account-modal" aria-hidden="true">
         <div class="account-modal-backdrop" data-account-close></div>
@@ -275,28 +117,40 @@
         </section>
       </div>`);
 
-    document.querySelectorAll("[data-account-close]").forEach(el => el.addEventListener("click", closeAccountModal));
-    document.querySelectorAll("[data-account-tab]").forEach(el => el.addEventListener("click", () => setTab(el.dataset.accountTab)));
-    document.querySelectorAll("[data-cloud-mode-button]").forEach(el => el.addEventListener("click", () => setCloudMode(el.dataset.cloudModeButton)));
-    document.querySelectorAll("[data-password-toggle]").forEach(el => el.addEventListener("click", () => togglePassword(el.dataset.passwordToggle, el)));
+    bindModalEvents();
+  }
+
+  function bindModalEvents() {
+    const session = window.harvestHubAccountSession;
+    const ui = window.harvestHubAccountUI;
+
+    document.querySelectorAll("[data-account-close]").forEach(element => element.addEventListener("click", ui.close));
+    document.querySelectorAll("[data-account-tab]").forEach(element => element.addEventListener("click", () => setTab(element.dataset.accountTab)));
+    document.querySelectorAll("[data-cloud-mode-button]").forEach(element => element.addEventListener("click", () => setCloudMode(element.dataset.cloudModeButton)));
+    document.querySelectorAll("[data-password-toggle]").forEach(element => element.addEventListener("click", () => togglePassword(element.dataset.passwordToggle, element)));
 
     document.getElementById("quickProfileForm")?.addEventListener("submit", event => {
       event.preventDefault();
       try {
-        createQuickProfile(document.getElementById("quickProfileNickname").value, document.getElementById("quickProfileState").value);
-        closeAccountModal();
+        window.harvestHubAccountStorage.createQuickProfile(
+          document.getElementById("quickProfileNickname").value,
+          document.getElementById("quickProfileState").value
+        );
+        ui.close();
         window.loadPage?.("profile.html");
-      } catch (error) { showMessage(error.message, "error"); }
+      } catch (error) {
+        showMessage(error.message, "error");
+      }
     });
 
     document.getElementById("cloudSignupForm")?.addEventListener("submit", async event => {
       event.preventDefault();
       const form = event.currentTarget;
-      showMessage("");
       const button = document.getElementById("createCloudProfile");
+      showMessage("");
       setButtonBusy(button, true, "Создаём профиль…", "Создать профиль");
       try {
-        await signUpWithPassword(
+        await session.signUpWithPassword(
           document.getElementById("cloudProfileEmail").value,
           document.getElementById("cloudProfilePassword").value,
           document.getElementById("cloudProfilePasswordConfirm").value,
@@ -304,83 +158,83 @@
           document.getElementById("cloudProfileState").value
         );
         showMessage("Профиль создан. Проверьте почту и подтвердите email по ссылке из письма.", "success");
-        form?.reset();
-      } catch (error) { showMessage(getFriendlyAuthError(error), "error"); }
-      finally { setButtonBusy(button, false, "", "Создать профиль"); }
+        form.reset();
+      } catch (error) {
+        showMessage(getFriendlyAuthError(error), "error");
+      } finally {
+        setButtonBusy(button, false, "", "Создать профиль");
+      }
     });
 
     document.getElementById("cloudLoginForm")?.addEventListener("submit", async event => {
       event.preventDefault();
-      showMessage("");
       const button = document.getElementById("loginCloudProfile");
+      showMessage("");
       setButtonBusy(button, true, "Входим…", "Войти");
       try {
-        await signInWithPassword(document.getElementById("cloudLoginEmail").value, document.getElementById("cloudLoginPassword").value);
-        closeAccountModal();
+        await session.signInWithPassword(
+          document.getElementById("cloudLoginEmail").value,
+          document.getElementById("cloudLoginPassword").value
+        );
+        ui.close();
         window.loadPage?.("profile.html");
-      } catch (error) { showMessage(getFriendlyAuthError(error), "error"); }
-      finally { setButtonBusy(button, false, "", "Войти"); }
+      } catch (error) {
+        showMessage(getFriendlyAuthError(error), "error");
+      } finally {
+        setButtonBusy(button, false, "", "Войти");
+      }
     });
 
     document.getElementById("forgotCloudPassword")?.addEventListener("click", async () => {
       showMessage("");
-      const email = document.getElementById("cloudLoginEmail").value;
       try {
-        await sendPasswordReset(email);
+        await session.sendPasswordReset(document.getElementById("cloudLoginEmail").value);
         showMessage("Письмо для восстановления пароля отправлено. Проверьте почту.", "success");
-      } catch (error) { showMessage(getFriendlyAuthError(error), "error"); }
+      } catch (error) {
+        showMessage(getFriendlyAuthError(error), "error");
+      }
     });
 
     document.getElementById("passwordRecoveryForm")?.addEventListener("submit", async event => {
       event.preventDefault();
-      showMessage("");
       const button = document.getElementById("saveRecoveredPassword");
+      showMessage("");
       setButtonBusy(button, true, "Сохраняем…", "Сохранить новый пароль");
       try {
-        await updateRecoveredPassword(document.getElementById("recoveryPassword").value, document.getElementById("recoveryPasswordConfirm").value);
+        await session.updateRecoveredPassword(
+          document.getElementById("recoveryPassword").value,
+          document.getElementById("recoveryPasswordConfirm").value
+        );
         document.getElementById("accountModal")?.classList.remove("is-recovery");
         showMessage("Пароль изменён. Теперь можно входить с новым паролем.", "success");
         setTab("account");
         setCloudMode("login");
-      } catch (error) { showMessage(getFriendlyAuthError(error), "error"); }
-      finally { setButtonBusy(button, false, "", "Сохранить новый пароль"); }
+      } catch (error) {
+        showMessage(getFriendlyAuthError(error), "error");
+      } finally {
+        setButtonBusy(button, false, "", "Сохранить новый пароль");
+      }
     });
   }
 
   async function init() {
     injectModal();
-    renderAccountButtons();
-    window.setTimeout(renderAccountButtons, 250);
-    window.setTimeout(renderAccountButtons, 1000);
-
-    document.addEventListener("click", event => {
-      const button = event.target.closest("[data-account-button]");
-      if (!button) return;
-      event.preventDefault();
-      openAccount();
-    });
-
-    if (window.harvestHubSupabase) {
-      const { data } = await window.harvestHubSupabase.auth.getSession();
-      if (data.session?.user) await syncCloudProfile(data.session.user);
-      window.harvestHubSupabase.auth.onAuthStateChange((event, session) => {
-        if (event === "PASSWORD_RECOVERY") openRecoveryMode();
-        if (session?.user) syncCloudProfile(session.user);
-      });
-    }
+    window.harvestHubAccountUI.init();
+    await window.harvestHubAccountSession.init();
   }
 
+  window.harvestHubAccountModal = { setTab, setCloudMode, openRecoveryMode, injectModal };
   window.harvestHubAccount = {
-    getProfile: getActiveProfile,
-    open: openAccount,
-    close: closeAccountModal,
+    getProfile: window.harvestHubAccountStorage.getActiveProfile,
+    open: window.harvestHubAccountUI.open,
+    close: window.harvestHubAccountUI.close,
     setTab,
     setCloudMode,
-    signOut: signOutAccount,
-    syncCloudProfile,
-    render: renderAccountButtons
+    signOut: window.harvestHubAccountSession.signOutAccount,
+    syncCloudProfile: window.harvestHubGameProfileManager.syncCloudProfile,
+    render: window.harvestHubAccountUI.render
   };
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 })();
