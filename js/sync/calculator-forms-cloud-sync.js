@@ -39,8 +39,20 @@
     }
   }
 
+  function stableJson(value) {
+    if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+    if (value && typeof value === "object") {
+      return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+    }
+    return JSON.stringify(value);
+  }
+
+  function statesEqual(first, second) {
+    return stableJson(first || {}) === stableJson(second || {});
+  }
+
   function getMetaKey() {
-    return activeUserId ? `${META_PREFIX}${activeUserId}` : "";
+    return activeUserId && activeProfileId ? `${META_PREFIX}${activeUserId}:${activeProfileId}` : "";
   }
 
   function readMeta() {
@@ -88,6 +100,61 @@
       const key = getPageStorageKey(pageName);
       if (key) localStorage.setItem(key, JSON.stringify(pageState || {}));
     });
+  }
+
+  function getFieldKey(field, index) {
+    const buildingRow = field.closest?.(".season-building-row");
+
+    if (buildingRow?.dataset?.buildingId) {
+      if (field.classList.contains("season-building-enabled")) return `building:${buildingRow.dataset.buildingId}:enabled`;
+      if (field.classList.contains("season-building-current")) return `building:${buildingRow.dataset.buildingId}:current`;
+      if (field.classList.contains("season-building-target")) return `building:${buildingRow.dataset.buildingId}:target`;
+    }
+
+    if (field.id) return `id:${field.id}`;
+    if (field.name) return `name:${field.name}`;
+    return `field:${field.tagName.toLowerCase()}:${field.type || "value"}:${index}`;
+  }
+
+  function getPersistableFields(container) {
+    if (!container) return [];
+    return Array.from(container.querySelectorAll("input, select, textarea")).filter(field => {
+      const type = (field.type || "").toLowerCase();
+      if (field.dataset.noPersist === "true") return false;
+      return !["button", "submit", "reset", "hidden", "file"].includes(type);
+    });
+  }
+
+  function setFieldValue(field, value) {
+    const type = (field.type || "").toLowerCase();
+    if (type === "checkbox" || type === "radio") field.checked = Boolean(value);
+    else field.value = String(value ?? "");
+  }
+
+  function applyCurrentPageFields(state) {
+    const currentPage = localStorage.getItem("currentPage") || "";
+    if (!CALCULATOR_PAGES.has(currentPage)) return;
+
+    const pageState = state?.pages?.[currentPage];
+    if (!pageState || typeof pageState !== "object") return;
+
+    const container = document.getElementById("page-content");
+    const fields = getPersistableFields(container);
+
+    fields.forEach((field, index) => {
+      const key = getFieldKey(field, index);
+      if (!Object.prototype.hasOwnProperty.call(pageState, key)) return;
+      setFieldValue(field, pageState[key]);
+    });
+
+    fields.forEach(field => {
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      field.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    if (typeof window.savePageFormState === "function") {
+      window.savePageFormState(currentPage);
+    }
   }
 
   async function getSessionContext() {
@@ -172,18 +239,17 @@
 
     isApplyingRemote = true;
     try {
-      applyLocalState(row.data || {});
+      const remoteState = row.data || {};
+      applyLocalState(remoteState);
+      applyCurrentPageFields(remoteState);
       remoteRevision = Number(row.revision) || 0;
       dirty = false;
       writeMeta({ revision: remoteRevision, syncedAt: row.updated_at || new Date().toISOString() });
       emitStatus("synced");
-
-      const currentPage = localStorage.getItem("currentPage") || "";
-      if (CALCULATOR_PAGES.has(currentPage) && typeof window.loadPage === "function") {
-        await window.loadPage(currentPage);
-      }
     } finally {
-      isApplyingRemote = false;
+      window.setTimeout(() => {
+        isApplyingRemote = false;
+      }, 0);
     }
   }
 
@@ -205,8 +271,9 @@
 
       const nextRevision = Number(remote.revision) || 0;
       remoteRevision = Math.max(remoteRevision, nextRevision);
+      const contentDiffers = !statesEqual(remote.data || {}, local);
 
-      if (!localHasData || nextRevision > metaRevision) {
+      if (!localHasData || contentDiffers || nextRevision > metaRevision) {
         await applyRemote(remote);
       } else if (initial && localHasData && metaRevision === 0) {
         dirty = true;
@@ -252,7 +319,7 @@
   }
 
   function handleFieldChange(event) {
-    if (!isCalculatorField(event.target)) return;
+    if (isApplyingRemote || !isCalculatorField(event.target)) return;
     window.setTimeout(scheduleUpload, 50);
   }
 
