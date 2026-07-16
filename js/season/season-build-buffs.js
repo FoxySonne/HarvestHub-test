@@ -1,4 +1,4 @@
-import { seasonDatabase } from "../data/season-database.js";
+import { seasonDatabase } from "../../data/season-database.js";
 
 let seasonBuildBuffObserver = null;
 let isPopulatingEngineeringEfficiency = false;

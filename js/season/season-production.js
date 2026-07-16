@@ -1,4 +1,4 @@
-import { seasonDatabase } from "../data/season-database.js";
+import { seasonDatabase } from "../../data/season-database.js";
 
 const numberFormat = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 1

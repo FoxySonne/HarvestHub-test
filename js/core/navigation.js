@@ -16,6 +16,16 @@
     { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" },
     { title: "Обучение войск", path: "calculator/troop-training.html", group: "Калькуляторы" }
   ];
+  const pageModulePaths = {
+    home: "../pages/home.js",
+    members: "../pages/members.js",
+    profile: "../pages/profile.js",
+    settings: "../pages/settings.js",
+    ipk: "../calculators/ipk.js",
+    "turbo-vs": "../calculators/turbo-vs.js",
+    "troop-training": "../calculators/troop-training.js",
+    "season-resources": "../season/season-resources.js"
+  };
 
   let currentLoadedPage = localStorage.getItem("currentPage") || "";
 
@@ -109,16 +119,22 @@
 
     container.innerHTML = await response.text();
     const fileName = filePath.split("/").pop().replace(".html", "");
+    const modulePath = pageModulePaths[fileName];
 
-    try {
-      const module = await import(`../${fileName}.js?v=${SITE_ASSET_VERSION}-${Date.now()}`);
-      if (typeof module.init === "function") module.init();
-      else {
+    if (modulePath) {
+      try {
+        const module = await import(`${modulePath}?v=${SITE_ASSET_VERSION}-${Date.now()}`);
+        if (typeof module.init === "function") module.init();
+        else {
+          const globalInitName = getGlobalInitName(fileName);
+          if (typeof window[globalInitName] === "function") window[globalInitName]();
+        }
+      } catch (error) {
+        console.warn(`JS-модуль для страницы ${fileName} не был запущен:`, error);
         const globalInitName = getGlobalInitName(fileName);
         if (typeof window[globalInitName] === "function") window[globalInitName]();
       }
-    } catch (error) {
-      console.warn(`JS-модуль для страницы ${fileName} не был запущен:`, error);
+    } else {
       const globalInitName = getGlobalInitName(fileName);
       if (typeof window[globalInitName] === "function") window[globalInitName]();
     }

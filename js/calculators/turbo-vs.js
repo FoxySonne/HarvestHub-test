@@ -1,5 +1,5 @@
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
-const { database } = await import(`../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
+const { database } = await import(`../../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
 
 const TURBO_WEEK_STATE_PREFIX = "harvesthub_turbo_vs_week_state:";
 const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
