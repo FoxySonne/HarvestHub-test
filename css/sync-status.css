@@ -1,21 +1,87 @@
-.sync-state{display:flex;align-items:center;gap:8px;color:var(--text-soft)}
-.calculator-sync-state{margin:0 0 14px;font-size:13px}
-.sync-state-icon{position:relative;display:inline-block;flex:0 0 18px;width:18px;height:18px}
-.sync-state-icon span{position:absolute;display:block;box-sizing:border-box;width:auto;height:auto;border-radius:0;background:transparent;box-shadow:none}
-.profile-sync-status.sync-state .sync-state-icon span{width:auto;height:auto;border-radius:0;background:transparent;box-shadow:none}
-.sync-state[data-sync-state="syncing"] .sync-state-icon{border:2px solid rgba(139,234,99,.2);border-top-color:var(--accent);border-radius:50%;animation:sync-spin .8s linear infinite}
-.sync-state[data-sync-state="syncing"] .sync-state-icon span{display:none}
-.sync-state[data-sync-state="synced"]{color:var(--text-soft)}
-.sync-state[data-sync-state="synced"] .sync-state-icon span:first-child{left:2px;top:9px;width:6px;height:3px;border-bottom:2px solid var(--accent);transform:rotate(45deg);transform-origin:left center;animation:sync-check-short .18s ease-out both}
-.sync-state[data-sync-state="synced"] .sync-state-icon span:last-child{left:7px;top:10px;width:10px;height:3px;border-bottom:2px solid var(--accent);transform:rotate(-45deg);transform-origin:left center;animation:sync-check-long .28s .14s ease-out both}
-.sync-state[data-sync-state="error"]{color:#ff9b9b}
-.sync-state[data-sync-state="error"] .sync-state-icon span{left:2px;top:8px;width:14px;height:2px;background:#ff6b6b;transform-origin:center}
-.sync-state[data-sync-state="error"] .sync-state-icon span:first-child{transform:rotate(45deg) scaleX(0);animation:sync-cross-first .2s ease-out forwards}
-.sync-state[data-sync-state="error"] .sync-state-icon span:last-child{transform:rotate(-45deg) scaleX(0);animation:sync-cross-second .2s .16s ease-out forwards}
-.desktop-profile-status.sync-state{margin:0 0 12px;font-size:12px;color:var(--text-soft)}
-@keyframes sync-spin{to{transform:rotate(360deg)}}
-@keyframes sync-check-short{from{transform:rotate(45deg) scaleX(0)}to{transform:rotate(45deg) scaleX(1)}}
-@keyframes sync-check-long{from{transform:rotate(-45deg) scaleX(0)}to{transform:rotate(-45deg) scaleX(1)}}
-@keyframes sync-cross-first{to{transform:rotate(45deg) scaleX(1)}}
-@keyframes sync-cross-second{to{transform:rotate(-45deg) scaleX(1)}}
-@media (prefers-reduced-motion:reduce){.sync-state-icon,.sync-state-icon span{animation:none!important}.sync-state[data-sync-state="error"] .sync-state-icon span:first-child{transform:rotate(45deg)}.sync-state[data-sync-state="error"] .sync-state-icon span:last-child{transform:rotate(-45deg)}}
+.desktop-profile-status,
+.profile-sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 20px;
+}
+
+.desktop-profile-status {
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+
+.sync-status-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  overflow: visible;
+}
+
+.sync-status-icon circle,
+.sync-status-icon path,
+.sync-status-icon line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sync-status-icon--pending,
+.sync-status-icon--syncing {
+  animation: harvesthub-sync-spin 0.85s linear infinite;
+}
+
+.sync-status-icon--pending circle,
+.sync-status-icon--syncing circle {
+  stroke-dasharray: 34 13;
+}
+
+.sync-status-icon--synced path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: harvesthub-sync-draw 0.55s ease-out forwards;
+}
+
+.sync-status-icon--error line:first-child {
+  stroke-dasharray: 18;
+  stroke-dashoffset: 18;
+  animation: harvesthub-sync-draw 0.32s ease-out forwards;
+}
+
+.sync-status-icon--error line:last-child {
+  stroke-dasharray: 18;
+  stroke-dashoffset: 18;
+  animation: harvesthub-sync-draw 0.32s 0.24s ease-out forwards;
+}
+
+.sync-status-icon--offline .sync-alert-mark,
+.sync-status-icon--reauth .sync-lock-shackle {
+  animation: harvesthub-sync-pop 0.35s ease-out both;
+}
+
+@keyframes harvesthub-sync-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes harvesthub-sync-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes harvesthub-sync-pop {
+  from { opacity: 0; transform: scale(0.65); transform-origin: center; }
+  to { opacity: 1; transform: scale(1); transform-origin: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-status-icon {
+    animation: none !important;
+  }
+
+  .sync-status-icon path,
+  .sync-status-icon line {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
