@@ -111,15 +111,8 @@ export function buildShortageItems(shortages) {
   ];
 }
 
-function getWarriorWord(value) {
-  const number = Math.abs(Math.floor(Number(value) || 0));
-  const lastTwo = number % 100;
-  const last = number % 10;
-
-  if (lastTwo >= 11 && lastTwo <= 14) return "воинов";
-  if (last === 1) return "воин";
-  if (last >= 2 && last <= 4) return "воина";
-  return "воинов";
+function getSoldierWord(value) {
+  return Math.abs(Math.floor(Number(value) || 0)) === 1 ? "солдата" : "солдат";
 }
 
 function getStageResultLabel(stage) {
@@ -171,7 +164,7 @@ export function renderResults() {
   }
 
   if (extraTitle) {
-    extraTitle.textContent = `Не хватает ресурсов для обучения ещё ${formatNumber(extra.nextBatchTroops)} ${getWarriorWord(extra.nextBatchTroops)}:`;
+    extraTitle.textContent = `Не хватает ресурсов для обучения ещё ${formatNumber(extra.nextBatchTroops)} ${getSoldierWord(extra.nextBatchTroops)}:`;
   }
 
   setShortageSubtitle("Нужно добавить:");
