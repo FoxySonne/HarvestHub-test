@@ -1,7 +1,14 @@
 async function resetAllSiteData() {
-    if (!confirm("Сбросить все данные HarvestHub? Будут удалены сохранённые значения калькуляторов, настройки, профили и локальные данные сайта на этом устройстве.")) return;
+    if (!confirm("Очистить все локальные данные HarvestHub на этом устройстве? Синхронизированные данные в аккаунте останутся без изменений. На этом устройстве потребуется войти в аккаунт заново.")) return;
 
     try {
+        // Завершаем только локальную сессию, чтобы облачные данные не восстановились
+        // сразу после очистки. Данные аккаунта и user_app_state в Supabase не меняются.
+        if (window.harvestHubSupabase) {
+            const { error } = await window.harvestHubSupabase.auth.signOut({ scope: "local" });
+            if (error) throw error;
+        }
+
         if ("caches" in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
@@ -10,15 +17,18 @@ async function resetAllSiteData() {
             const registrations = await navigator.serviceWorker.getRegistrations();
             await Promise.all(registrations.map(registration => registration.unregister()));
         }
+
         localStorage.clear();
         sessionStorage.clear();
         localStorage.setItem("currentPage", "settings.html");
+
         const pageContent = document.getElementById("page-content");
         if (pageContent) pageContent.innerHTML = "";
+
         window.location.replace(`${window.location.pathname}?reset=${Date.now()}`);
     } catch (error) {
-        console.error("Ошибка при сбросе данных:", error);
-        alert("Не удалось полностью сбросить данные. Попробуй обновить страницу вручную.");
+        console.error("Ошибка при локальном сбросе данных:", error);
+        alert("Не удалось полностью очистить локальные данные. Попробуй ещё раз.");
     }
 }
 
