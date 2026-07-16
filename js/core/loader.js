@@ -493,7 +493,7 @@ async function loadBlock(containerId, filePath) {
     const fileName = filePath.split("/").pop().replace(".html", "");
 
     try {
-        const module = await import(`./${fileName}.js?v=${SITE_ASSET_VERSION}-${Date.now()}`);
+        const module = await import(`../${fileName}.js?v=${SITE_ASSET_VERSION}-${Date.now()}`);
 
         if (typeof module.init === "function") {
             module.init();
