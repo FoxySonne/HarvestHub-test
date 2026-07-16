@@ -111,6 +111,17 @@ export function buildShortageItems(shortages) {
   ];
 }
 
+function getWarriorWord(value) {
+  const number = Math.abs(Math.floor(Number(value) || 0));
+  const lastTwo = number % 100;
+  const last = number % 10;
+
+  if (lastTwo >= 11 && lastTwo <= 14) return "воинов";
+  if (last === 1) return "воин";
+  if (last >= 2 && last <= 4) return "воина";
+  return "воинов";
+}
+
 export function setShortageSubtitle(text) {
   const shortages = getElement("troopShortages");
   const subtitle = shortages?.previousElementSibling;
@@ -155,7 +166,7 @@ export function renderResults() {
   }
 
   if (extraTitle) {
-    extraTitle.textContent = `Для обучения ещё ${formatNumber(extra.nextBatchTroops)} войск не хватает:`;
+    extraTitle.textContent = `Не хватает ресурсов для обучения ещё ${formatNumber(extra.nextBatchTroops)} ${getWarriorWord(extra.nextBatchTroops)}:`;
   }
 
   setShortageSubtitle("Нужно добавить:");
