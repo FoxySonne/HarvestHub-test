@@ -1,19 +1,18 @@
+import { createIpkCloudSync } from "../ipk/cloud-sync.js";
+import {
+  isTroopTransferApplied,
+  markTroopTransferApplied,
+  readTroopTransferPreset
+} from "../ipk/transfer-storage.js";
+
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
 const { database } = await import(`../../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
 
-const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
-const TROOP_TRANSFER_APPLIED_KEY = "harvesthub_troop_training_transfer_applied_ipk";
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const CLOUD_SAVE_DELAY = 400;
 
 let selectedCategoryIds = new Set();
 const ipkValues = new Map();
 const ipkResultOverrides = new Map();
-let activeCloudProfileId = "";
-let activeCloudProfileData = {};
-let cloudSaveTimer = null;
-let cloudSaveInProgress = false;
-let cloudSaveQueued = false;
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("ru-RU");
@@ -22,19 +21,6 @@ function formatNumber(value) {
 function parseNumber(value) {
   const number = Number(String(value || "").replace(/\s+/g, ""));
   return Number.isFinite(number) && number > 0 ? number : 0;
-}
-
-function readTroopTransferPreset() {
-  try {
-    return JSON.parse(localStorage.getItem(TROOP_TRANSFER_STORAGE_KEY) || "null");
-  } catch (error) {
-    console.warn("Не удалось прочитать заготовку обучения войск для ИПК", error);
-    return null;
-  }
-}
-
-function getLocalAccountProfile() {
-  return window.harvestHubAccount?.getProfile?.() || window.getActiveProfile?.() || null;
 }
 
 function serializeIpkData() {
@@ -72,71 +58,10 @@ function applyStoredIpkData(ipkData) {
   return true;
 }
 
-async function loadCloudIpkData() {
-  const accountProfile = getLocalAccountProfile();
-  if (accountProfile?.type !== "account" || !window.harvestHubSupabase) return false;
-
-  const { data: sessionData, error: sessionError } = await window.harvestHubSupabase.auth.getSession();
-  const user = sessionData?.session?.user;
-  if (sessionError || !user) return false;
-
-  const { data, error } = await window.harvestHubSupabase
-    .from("game_profiles")
-    .select("id,data")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("Не удалось загрузить данные ИПК из профиля:", error);
-    return false;
-  }
-
-  if (!data?.id) return false;
-
-  activeCloudProfileId = data.id;
-  activeCloudProfileData = data.data && typeof data.data === "object" ? data.data : {};
-  applyStoredIpkData(activeCloudProfileData.ipk);
-  return true;
-}
-
-async function saveCloudIpkDataNow() {
-  if (!activeCloudProfileId || !window.harvestHubSupabase) return;
-
-  if (cloudSaveInProgress) {
-    cloudSaveQueued = true;
-    return;
-  }
-
-  cloudSaveInProgress = true;
-  cloudSaveQueued = false;
-
-  try {
-    const nextData = {
-      ...activeCloudProfileData,
-      ipk: serializeIpkData()
-    };
-
-    const { error } = await window.harvestHubSupabase
-      .from("game_profiles")
-      .update({ data: nextData })
-      .eq("id", activeCloudProfileId);
-
-    if (error) throw error;
-    activeCloudProfileData = nextData;
-  } catch (error) {
-    console.warn("Не удалось сохранить данные ИПК в профиле:", error);
-  } finally {
-    cloudSaveInProgress = false;
-    if (cloudSaveQueued) saveCloudIpkDataNow();
-  }
-}
-
-function scheduleCloudIpkSave() {
-  if (!activeCloudProfileId) return;
-  window.clearTimeout(cloudSaveTimer);
-  cloudSaveTimer = window.setTimeout(saveCloudIpkDataNow, CLOUD_SAVE_DELAY);
-}
+const cloudSync = createIpkCloudSync({
+  serialize: serializeIpkData,
+  apply: applyStoredIpkData
+});
 
 function getActionById(actionId) {
   return database.action.find(action => action.id === actionId);
@@ -231,7 +156,7 @@ function createCard(category) {
       saveCardValues(card);
     }
     updateIpkResults();
-    scheduleCloudIpkSave();
+    cloudSync.schedule();
   });
 
   return card;
@@ -278,7 +203,7 @@ function setCategoryEnabled(categoryId, isEnabled) {
   });
 
   renderSelectedCards();
-  scheduleCloudIpkSave();
+  cloudSync.schedule();
 }
 
 function calculateCard(card) {
@@ -318,7 +243,7 @@ function updateIpkResults() {
 function applyTroopTransferPreset() {
   const preset = readTroopTransferPreset();
   const presetId = preset?.id || preset?.createdAt || "";
-  if (!preset || !presetId || localStorage.getItem(TROOP_TRANSFER_APPLIED_KEY) === presetId) return;
+  if (!preset || !presetId || isTroopTransferApplied(presetId)) return;
 
   const shouldApplyIpk = preset.targets?.ipk || preset.target === "ipk" || preset.target === "turtle-ipk" || preset.target === "vs-ipk";
   if (!shouldApplyIpk) return;
@@ -337,12 +262,12 @@ function applyTroopTransferPreset() {
 
   if (!applied) return;
   selectedCategoryIds.add("troops");
-  localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
+  markTroopTransferApplied(presetId);
   renderCategoryList(document.getElementById("ipkDesktopCategoriesList"));
   renderCategoryList(document.getElementById("ipkMobileCategoriesList"));
   renderSelectedCards({ preserveDomValues: false });
   if (typeof window.savePageFormState === "function") window.savePageFormState();
-  scheduleCloudIpkSave();
+  cloudSync.schedule();
 }
 
 function renderIpk() {
@@ -351,7 +276,7 @@ function renderIpk() {
   if (!desktopCategories || !mobileCategories) return;
 
   document.getElementById("profileBlock")?.remove();
-  if (selectedCategoryIds.size === 0 && !activeCloudProfileData.ipk) {
+  if (selectedCategoryIds.size === 0 && !cloudSync.hasStoredIpk()) {
     selectedCategoryIds = new Set(database.categoryIpk.map(category => category.id));
   }
 
@@ -365,10 +290,9 @@ export async function init() {
   selectedCategoryIds = new Set(database.categoryIpk.map(category => category.id));
   ipkValues.clear();
   ipkResultOverrides.clear();
-  activeCloudProfileId = "";
-  activeCloudProfileData = {};
+  cloudSync.reset();
 
-  await loadCloudIpkData();
+  await cloudSync.load();
   renderIpk();
   window.setTimeout(applyTroopTransferPreset, 250);
 }
