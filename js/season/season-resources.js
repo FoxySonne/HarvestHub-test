@@ -1,6 +1,7 @@
 import { seasonDatabase } from "../../data/season-database.js";
 import { seasonBuildingsDatabase } from "../../data/season-buildings-database.js";
 import { initSeasonBuildBuffs } from "./season-build-buffs.js";
+import { createSeasonBuildings } from "./season-buildings.js";
 import { initSeasonBuildingLinks } from "./season-building-links.js";
 import { updateSeasonProduction } from "./season-production.js";
 
@@ -9,6 +10,21 @@ let isRaidNeedManual = false;
 
 const numberFormat = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 1
+});
+
+const {
+  renderBuildingRows,
+  syncAllBuildingRows,
+  syncBuildingRow,
+  syncMainBuildingLevel,
+  updateBuildingNeeds
+} = createSeasonBuildings({
+  database: seasonBuildingsDatabase,
+  getByLevel,
+  num,
+  setText,
+  setValue,
+  shouldSyncRaidNeeds: () => !isRaidNeedManual
 });
 
 function num(id) {
@@ -94,21 +110,6 @@ function fillSelect(id, list, defaultValue = null) {
   }
 }
 
-function createLevelSelect(className, defaultValue) {
-  const select = document.createElement("select");
-  select.className = className;
-
-  for (let level = 0; level <= 30; level++) {
-    const option = document.createElement("option");
-    option.value = String(level);
-    option.textContent = level === 0 ? "0" : `${level}`;
-    select.appendChild(option);
-  }
-
-  select.value = String(defaultValue);
-  return select;
-}
-
 function getSeasonEndUtcTime() {
   const now = typeof window.getHarvestHubUtcTime === "function"
     ? window.getHarvestHubUtcTime().date
@@ -181,160 +182,12 @@ function renderSeasonProfileBlock() {
   container.addEventListener("change", event => handleCalculatorInput(event.target));
 }
 
-function syncBuildingRow(row) {
-  if (!row) return;
-
-  const checkbox = row.querySelector(".season-building-enabled");
-  const currentSelect = row.querySelector(".season-building-current");
-  const targetSelect = row.querySelector(".season-building-target");
-
-  if (!checkbox || !currentSelect || !targetSelect) return;
-
-  const currentLevel = Number(currentSelect.value) || 0;
-  let targetLevel = Number(targetSelect.value) || 0;
-
-  Array.from(targetSelect.options).forEach(option => {
-    const optionLevel = Number(option.value) || 0;
-    option.disabled = optionLevel > 0 && optionLevel < currentLevel;
-  });
-
-  if (currentLevel > 0 && targetLevel < currentLevel) {
-    targetLevel = currentLevel;
-    targetSelect.value = String(currentLevel);
-  }
-
-  if (currentLevel > 0 || targetLevel > 0) {
-    checkbox.checked = true;
-  }
-}
-
-function syncAllBuildingRows() {
-  document.querySelectorAll(".season-building-row").forEach(row => syncBuildingRow(row));
-}
-
-function renderBuildingRows() {
-  const container = document.getElementById("seasonBuildingList");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  seasonBuildingsDatabase.buildings.forEach(building => {
-    const row = document.createElement("div");
-    row.className = "season-building-row";
-    row.dataset.buildingId = building.id;
-    row.dataset.buildingType = building.type;
-
-    const checkLabel = document.createElement("label");
-    checkLabel.className = "season-building-check";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.className = "season-building-enabled";
-
-    const name = document.createElement("span");
-    name.textContent = building.name;
-
-    checkLabel.append(checkbox, name);
-
-    const levels = document.createElement("div");
-    levels.className = "season-building-levels";
-
-    const currentWrap = document.createElement("label");
-    currentWrap.className = "season-building-level";
-    currentWrap.innerHTML = "<span>Есть</span>";
-    currentWrap.appendChild(createLevelSelect("season-building-current", 0));
-
-    const targetWrap = document.createElement("label");
-    targetWrap.className = "season-building-level";
-    targetWrap.innerHTML = "<span>Нужно</span>";
-    targetWrap.appendChild(createLevelSelect("season-building-target", 0));
-
-    levels.append(currentWrap, targetWrap);
-    row.append(checkLabel, levels);
-    container.appendChild(row);
-    syncBuildingRow(row);
-  });
-}
-
-function syncMainBuildingLevel() {
-  const mainRow = document.querySelector('.season-building-row[data-building-id="main"]');
-  const productionLevel = document.getElementById("productionBuildingLevel");
-  if (!mainRow || !productionLevel) return;
-
-  const targetLevel = Number(mainRow.querySelector(".season-building-target")?.value) || 0;
-  const currentLevel = Number(mainRow.querySelector(".season-building-current")?.value) || 0;
-  const syncedLevel = targetLevel || currentLevel || 1;
-
-  productionLevel.value = String(Math.min(30, Math.max(1, syncedLevel)));
-}
-
 function normalizeDiscountCans() {
   const input = document.getElementById("raidDiscountCans");
   if (!input) return;
 
   const value = Math.min(MAX_DISCOUNT_CANS, Math.max(0, Number(input.value) || 0));
   if (Number(input.value) !== value) input.value = String(value);
-}
-
-function sumRequirementsForBuilding(type, currentLevel, targetLevel) {
-  const table = seasonBuildingsDatabase.buildingTypes[type]?.requirements || [];
-  const start = Math.max(1, currentLevel + 1);
-  const end = Math.max(start - 1, targetLevel);
-  let secondary = 0;
-  let primary = 0;
-
-  for (let level = start; level <= end; level++) {
-    const requirement = getByLevel(table, level);
-    secondary += Number(requirement?.secondary) || 0;
-    primary += Number(requirement?.primary) || 0;
-  }
-
-  return { secondary, primary };
-}
-
-function getEngineeringReduction() {
-  const level = Math.min(3, Math.max(0, num("buildingEfficiencyLevel")));
-  return level / 100;
-}
-
-function applyEngineeringReduction(value) {
-  return Math.ceil(value * (1 - getEngineeringReduction()));
-}
-
-function updateBuildingNeeds() {
-  let secondaryTotal = 0;
-  let primaryTotal = 0;
-
-  document.querySelectorAll(".season-building-row").forEach(row => {
-    const enabled = row.querySelector(".season-building-enabled")?.checked;
-    if (!enabled) return;
-
-    const currentLevel = Number(row.querySelector(".season-building-current")?.value) || 0;
-    const targetLevel = Number(row.querySelector(".season-building-target")?.value) || 0;
-    if (targetLevel <= currentLevel) return;
-
-    const requirement = sumRequirementsForBuilding(row.dataset.buildingType, currentLevel, targetLevel);
-    secondaryTotal += requirement.secondary;
-    primaryTotal += requirement.primary;
-  });
-
-  const secondaryAfterEfficiency = applyEngineeringReduction(secondaryTotal);
-  const primaryAfterEfficiency = applyEngineeringReduction(primaryTotal);
-  const secondary = Math.max(0, secondaryAfterEfficiency - num("buildingOwnedSecondary"));
-  const primary = Math.max(0, primaryAfterEfficiency - num("buildingOwnedPrimary"));
-
-  setValue("productionNeedPrimary", primary);
-  setValue("productionNeedSecondary", secondary);
-
-  if (!isRaidNeedManual) {
-    setValue("raidNeedPrimary", primary);
-    setValue("raidNeedSecondary", secondary);
-  }
-
-  setText("buildingNeedPrimary", primary);
-  setText("buildingNeedSecondary", secondary);
-  setText("productionNeedPrimaryText", primary);
-  setText("productionNeedSecondaryText", secondary);
 }
 
 function calculateNeedByDrops(needPrimary, needSecondary, drop, energyPerRun) {
