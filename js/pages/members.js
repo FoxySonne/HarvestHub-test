@@ -1,4 +1,13 @@
-const ACTIVE_ALLIANCE_STORAGE_KEY = "harvesthub_active_alliance_id";
+import {
+  createAlliance,
+  deleteParticipant,
+  fetchMemberships,
+  fetchParticipants,
+  joinAlliance,
+  saveParticipant
+} from "../alliance/api.js";
+import { ACTIVE_ALLIANCE_STORAGE_KEY, ROLE_LABELS } from "../alliance/config.js";
+import { renderMembershipOptions, renderParticipantRows } from "../alliance/view.js";
 
 const state = {
   client: null,
@@ -11,33 +20,8 @@ const state = {
   authSubscription: null
 };
 
-const STATUS_LABELS = {
-  active: "Активен",
-  reserve: "Резерв",
-  inactive: "Неактивен"
-};
-
-const ROLE_LABELS = {
-  owner: "Владелец",
-  editor: "Редактор",
-  viewer: "Только просмотр"
-};
-
 function getElement(id) {
   return document.getElementById(id);
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function formatNumber(value) {
-  return Math.max(0, Number(value) || 0).toLocaleString("ru-RU");
 }
 
 function showMessage(message, type = "info") {
@@ -105,12 +89,7 @@ function renderMemberships() {
 
   localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, state.activeAllianceId);
 
-  selector.innerHTML = state.memberships.map(item => {
-    const alliance = item.alliances;
-    const stateSuffix = alliance?.state_number ? ` · штат ${escapeHtml(alliance.state_number)}` : "";
-
-    return `<option value="${escapeHtml(item.alliance_id)}">${escapeHtml(alliance?.name || "Без названия")}${stateSuffix}</option>`;
-  }).join("");
+  selector.innerHTML = renderMembershipOptions(state.memberships);
 
   selector.value = state.activeAllianceId;
   dataArea.hidden = false;
@@ -134,10 +113,7 @@ function applyActiveAllianceDetails() {
 }
 
 async function loadMemberships() {
-  const { data, error } = await state.client
-    .from("alliance_members")
-    .select("alliance_id, role, alliances(id, name, state_number, invite_code)")
-    .order("joined_at", { ascending: true });
+  const { data, error } = await fetchMemberships(state.client);
 
   if (error) throw error;
 
@@ -164,33 +140,13 @@ function renderParticipants() {
   count.textContent = `${state.participants.length} участников`;
   emptyState.hidden = state.participants.length > 0;
 
-  body.innerHTML = state.participants.map(participant => {
-    const actions = canEditParticipants()
-      ? `<div class="participant-row-actions">
-          <button type="button" class="secondary-button" data-participant-edit="${participant.id}">Изменить</button>
-          <button type="button" class="danger-button" data-participant-delete="${participant.id}">Удалить</button>
-        </div>`
-      : "";
-
-    return `<tr>
-      <td><strong>${escapeHtml(participant.nickname)}</strong></td>
-      <td>${escapeHtml(participant.rank_name || "—")}</td>
-      <td>${formatNumber(participant.squad_power)}</td>
-      <td><span class="participant-status participant-status-${escapeHtml(participant.status)}">${escapeHtml(STATUS_LABELS[participant.status] || participant.status)}</span></td>
-      <td>${escapeHtml(participant.comment || "—")}</td>
-      <td>${actions}</td>
-    </tr>`;
-  }).join("");
+  body.innerHTML = renderParticipantRows(state.participants, canEditParticipants());
 }
 
 async function loadParticipants() {
   if (!state.activeAllianceId) return;
 
-  const { data, error } = await state.client
-    .from("participants")
-    .select("*")
-    .eq("alliance_id", state.activeAllianceId)
-    .order("nickname", { ascending: true });
+  const { data, error } = await fetchParticipants(state.client, state.activeAllianceId);
 
   if (error) throw error;
 
@@ -340,15 +296,11 @@ async function handleCreateAlliance(event) {
   setBusy(button, true, "Создаём…");
   showMessage("");
 
-  const { data, error } = await state.client
-    .from("alliances")
-    .insert({
-      name,
-      state_number: stateNumber,
-      created_by: state.session.user.id
-    })
-    .select("id")
-    .single();
+  const { data, error } = await createAlliance(state.client, {
+    name,
+    stateNumber,
+    userId: state.session.user.id
+  });
 
   setBusy(button, false);
 
@@ -377,9 +329,7 @@ async function handleJoinAlliance(event) {
   setBusy(button, true, "Подключаем…");
   showMessage("");
 
-  const { data, error } = await state.client.rpc("join_alliance_by_code", {
-    join_code: code
-  });
+  const { data, error } = await joinAlliance(state.client, code);
 
   setBusy(button, false);
 
@@ -454,22 +404,12 @@ async function handleParticipantSubmit(event) {
     updated_by: state.session.user.id
   };
 
-  let result;
-
-  if (id) {
-    result = await state.client
-      .from("participants")
-      .update(payload)
-      .eq("id", id)
-      .eq("alliance_id", state.activeAllianceId);
-  } else {
-    result = await state.client
-      .from("participants")
-      .insert({
-        ...payload,
-        created_by: state.session.user.id
-      });
-  }
+  const result = await saveParticipant(state.client, {
+    id,
+    allianceId: state.activeAllianceId,
+    payload,
+    userId: state.session.user.id
+  });
 
   setBusy(button, false);
 
@@ -503,11 +443,10 @@ async function handleTableClick(event) {
 
   deleteButton.disabled = true;
 
-  const { error } = await state.client
-    .from("participants")
-    .delete()
-    .eq("id", participant.id)
-    .eq("alliance_id", state.activeAllianceId);
+  const { error } = await deleteParticipant(state.client, {
+    id: participant.id,
+    allianceId: state.activeAllianceId
+  });
 
   if (error) {
     deleteButton.disabled = false;
