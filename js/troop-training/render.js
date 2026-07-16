@@ -1,6 +1,6 @@
 import { LEVELS, RESOURCE_CONFIG, TROOP_COST_PRESETS } from "./config.js";
 import { getElement } from "./dom.js";
-import { calculateExtraTraining, buildCalculation, isStageEnabled } from "./calculator.js";
+import { calculateExtraTraining, buildCalculation, isStageEnabled } from "./calculator.js?v=20260716-1";
 import { formatDuration, formatNumber, formatResource } from "./format.js";
 
 export function fillLevelSelect(select, defaultLevel) {
