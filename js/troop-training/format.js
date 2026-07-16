@@ -117,5 +117,5 @@ export function formatDuration(totalSeconds, { showDays = true } = {}) {
 }
 
 export function roundTroops(value) {
-  return Math.max(0, Math.floor((Number(value) || 0) / 1000) * 1000);
+  return Math.max(0, Math.floor(Number(value) || 0));
 }
