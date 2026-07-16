@@ -68,7 +68,13 @@ function bindTransferButtons() {
         targets: getTransferTargets(target),
         preferredDay: getPreferredDay(target),
         troops: calculation.possibleTroops,
-        stages: calculation.stages.map(stage => ({ stage: stage.stage, type: stage.type, level: stage.level, troops: calculation.possibleTroops })),
+        stages: calculation.stages.map(stage => ({
+          stage: stage.stage,
+          type: stage.type,
+          level: stage.level,
+          troops: stage.processedTroops
+        })),
+        distribution: calculation.distribution,
         createdAt: new Date().toISOString()
       };
 
