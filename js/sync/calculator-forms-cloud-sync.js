@@ -85,12 +85,9 @@
     const pages = state?.pages || {};
 
     CALCULATOR_PAGES.forEach(pageName => {
+      if (!Object.prototype.hasOwnProperty.call(pages, pageName)) return;
       const key = getPageStorageKey(pageName);
-      if (!key) return;
-
-      if (Object.prototype.hasOwnProperty.call(pages, pageName)) {
-        localStorage.setItem(key, JSON.stringify(pages[pageName] || {}));
-      }
+      if (key) localStorage.setItem(key, JSON.stringify(pages[pageName] || {}));
     });
   }
 
@@ -148,7 +145,6 @@
     if (!row || !activeUserId || !activeProfileId) return;
 
     isApplyingRemote = true;
-
     try {
       remoteRevision = Number(row.revision) || 0;
       applyLocalState(row.data || {});
@@ -158,8 +154,6 @@
 
       const currentPage = localStorage.getItem("currentPage") || "";
       if (CALCULATOR_PAGES.has(currentPage) && typeof window.loadPage === "function") {
-        const container = document.getElementById("page-content");
-        if (container) container.innerHTML = "";
         await window.loadPage(currentPage);
       }
     } finally {
@@ -169,7 +163,6 @@
 
   async function uploadNow({ force = false } = {}) {
     window.clearTimeout(uploadTimer);
-
     if (isApplyingRemote || isUploading) return;
     if (!force && !dirty) return;
 
@@ -227,6 +220,7 @@
 
       isPulling = true;
       const remote = await fetchRemote();
+      const metaRevision = Number(readJson(getMetaKey(), {}).revision || 0);
 
       if (!remote) {
         dirty = true;
@@ -235,11 +229,13 @@
       }
 
       const nextRemoteRevision = Number(remote.revision) || 0;
-      const metaRevision = Number(readJson(getMetaKey(), {}).revision || 0);
       remoteRevision = nextRemoteRevision;
 
-      if (initial || nextRemoteRevision > metaRevision) {
+      if (nextRemoteRevision > metaRevision) {
         await applyRemote(remote);
+      } else if (initial && metaRevision === 0) {
+        dirty = true;
+        await uploadNow({ force: true });
       } else {
         emitStatus("synced");
       }
@@ -263,7 +259,6 @@
         emitStatus("local");
         return;
       }
-
       await pullRemote({ initial: true });
     } catch (error) {
       console.error("Calculator forms cloud sync initialization failed:", error);
@@ -271,29 +266,28 @@
     }
   }
 
-  function getCurrentCalculatorPage() {
-    const pageName = localStorage.getItem("currentPage") || "";
-    return CALCULATOR_PAGES.has(pageName) ? pageName : "";
-  }
+  function installSaveHook() {
+    const originalSave = window.savePageFormState;
+    if (typeof originalSave !== "function" || originalSave.__cloudSyncWrapped) return;
 
-  function handleFormChange(event) {
-    if (isApplyingRemote || !(event.target instanceof Element)) return;
-    if (!event.target.closest("#page-content")) return;
+    function savePageFormStateWithCloudSignal(pageName, ...args) {
+      const result = originalSave.call(this, pageName, ...args);
+      const resolvedPage = pageName || localStorage.getItem("currentPage") || "";
 
-    const pageName = getCurrentCalculatorPage();
-    if (!pageName) return;
+      if (!isApplyingRemote && CALCULATOR_PAGES.has(resolvedPage)) {
+        window.dispatchEvent(new CustomEvent("harvesthub:page-form-state-change", {
+          detail: { pageName: resolvedPage }
+        }));
+      }
 
-    if (typeof window.savePageFormState === "function") {
-      window.savePageFormState(pageName);
+      return result;
     }
 
-    window.dispatchEvent(new CustomEvent("harvesthub:page-form-state-change", {
-      detail: { pageName }
-    }));
+    savePageFormStateWithCloudSignal.__cloudSyncWrapped = true;
+    window.savePageFormState = savePageFormStateWithCloudSignal;
   }
 
-  document.addEventListener("input", handleFormChange, true);
-  document.addEventListener("change", handleFormChange, true);
+  installSaveHook();
   window.addEventListener("harvesthub:page-form-state-change", scheduleUpload);
   window.addEventListener("harvesthub:profile-change", initializeForSession);
 
@@ -314,7 +308,10 @@
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeForSession, { once: true });
+    document.addEventListener("DOMContentLoaded", () => {
+      installSaveHook();
+      initializeForSession();
+    }, { once: true });
   } else {
     initializeForSession();
   }
