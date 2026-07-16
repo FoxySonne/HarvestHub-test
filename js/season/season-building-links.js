@@ -1,5 +1,5 @@
-let seasonLinksObserver = null;
 let isApplyingSeasonLimits = false;
+let seasonLinksStarted = false;
 
 function getSeasonPage() {
   return document.querySelector(".season-page");
@@ -128,25 +128,14 @@ function handleSeasonLevelChange(event) {
   applyMainBuildingLimits({ notify: true });
 }
 
-function startSeasonBuildingLinks() {
-  const pageContent = document.getElementById("page-content");
-  if (!pageContent) return;
-
-  document.addEventListener("change", handleSeasonLevelChange);
-  document.addEventListener("input", handleSeasonLevelChange);
-
-  seasonLinksObserver?.disconnect();
-  seasonLinksObserver = new MutationObserver(() => prepareSeasonPage());
-  seasonLinksObserver.observe(pageContent, { childList: true, subtree: true });
+export function initSeasonBuildingLinks() {
+  if (!seasonLinksStarted) {
+    document.addEventListener("change", handleSeasonLevelChange);
+    document.addEventListener("input", handleSeasonLevelChange);
+    window.addEventListener("harvesthub:profile-block-ready", prepareSeasonPage);
+    window.addEventListener("harvesthub:advanced-mode-change", prepareSeasonPage);
+    seasonLinksStarted = true;
+  }
 
   prepareSeasonPage();
 }
-
-if (document.readyState === "loading") {
-  window.addEventListener("DOMContentLoaded", startSeasonBuildingLinks);
-} else {
-  startSeasonBuildingLinks();
-}
-
-window.addEventListener("harvesthub:profile-block-ready", prepareSeasonPage);
-window.addEventListener("harvesthub:advanced-mode-change", prepareSeasonPage);

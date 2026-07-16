@@ -1,8 +1,8 @@
 import { seasonDatabase } from "../../data/season-database.js";
 import { seasonBuildingsDatabase } from "../../data/season-buildings-database.js";
-import "./season-build-buffs.js";
-import "./season-building-links.js";
-import "./season-production.js";
+import { initSeasonBuildBuffs } from "./season-build-buffs.js";
+import { initSeasonBuildingLinks } from "./season-building-links.js";
+import { updateSeasonProduction } from "./season-production.js";
 
 const MAX_DISCOUNT_CANS = 50;
 let isRaidNeedManual = false;
@@ -179,36 +179,6 @@ function renderSeasonProfileBlock() {
 
   container.addEventListener("input", event => handleCalculatorInput(event.target));
   container.addEventListener("change", event => handleCalculatorInput(event.target));
-}
-
-function getBuildingCurrentLevel(buildingId) {
-  const row = document.querySelector(`.season-building-row[data-building-id="${buildingId}"]`);
-  return Number(row?.querySelector(".season-building-current")?.value) || 0;
-}
-
-function getBuildingProductionByCurrentLevel(buildingId) {
-  return getByLevel(seasonDatabase.productionByBuildingLevel, getBuildingCurrentLevel(buildingId));
-}
-
-function getFactoryProductionFromBuildingRows() {
-  const secondaryFactory1 = getBuildingProductionByCurrentLevel("secondary_factory_1");
-  const secondaryFactory2 = getBuildingProductionByCurrentLevel("secondary_factory_2");
-  const primaryFactory1 = getBuildingProductionByCurrentLevel("primary_factory_1");
-  const primaryFactory2 = getBuildingProductionByCurrentLevel("primary_factory_2");
-
-  const hasBuildingRows = [
-    "secondary_factory_1",
-    "secondary_factory_2",
-    "primary_factory_1",
-    "primary_factory_2"
-  ].every(buildingId => document.querySelector(`.season-building-row[data-building-id="${buildingId}"]`));
-
-  if (!hasBuildingRows) return null;
-
-  return {
-    secondary: (Number(secondaryFactory1?.secondary) || 0) + (Number(secondaryFactory2?.secondary) || 0),
-    primary: (Number(primaryFactory1?.primary) || 0) + (Number(primaryFactory2?.primary) || 0)
-  };
 }
 
 function syncBuildingRow(row) {
@@ -435,47 +405,6 @@ function updateRaids() {
   setText("raidAvailableEnergy", availableEnergy);
 }
 
-function getBonus(list, level) {
-  const item = getByLevel(list, level);
-  return Number(item?.bonus) || 0;
-}
-
-function calculateProductionPerHour() {
-  const factoryProduction = getFactoryProductionFromBuildingRows();
-  const base = factoryProduction || getByLevel(seasonDatabase.productionByBuildingLevel, num("productionBuildingLevel"));
-  const labBonus = getBonus(seasonDatabase.labProductionBonus, num("productionLabLevel"));
-  const seasonBonus = getBonus(seasonDatabase.seasonalBuildingProductionBonus, num("productionSeasonLevel"));
-  const village = num("productionVillage") === 2 ? seasonDatabase.territoryBuffs.villageProduction : 0;
-  const factory = num("productionVillage") === 2 ? seasonDatabase.territoryBuffs.factoryProduction : 0;
-  const megapolis = num("productionMegapolis") === 2 ? seasonDatabase.territoryBuffs.megapolisProduction : 0;
-  const bull = num("productionBull") === 2 ? seasonDatabase.territoryBuffs.mightyBullProduction : 0;
-  const premiumPass = num("productionPremiumPass") || 1;
-  const weeklyPass = num("productionWeeklyPass") || 1;
-
-  const secondaryPerHour = base.secondary * (1 + labBonus + seasonBonus + village + megapolis + bull) * premiumPass;
-  const primaryPerHour = base.primary * (1 + labBonus + seasonBonus + factory + megapolis + bull) * weeklyPass;
-
-  return { secondaryPerHour, primaryPerHour };
-}
-
-function updateProduction() {
-  const production = calculateProductionPerHour();
-  const hours = num("productionHours");
-  const secondaryTotal = production.secondaryPerHour * hours;
-  const primaryTotal = production.primaryPerHour * hours;
-  const needSecondary = num("productionNeedSecondary");
-  const needPrimary = num("productionNeedPrimary");
-  const secondaryHours = production.secondaryPerHour > 0 ? needSecondary / production.secondaryPerHour : 0;
-  const primaryHours = production.primaryPerHour > 0 ? needPrimary / production.primaryPerHour : 0;
-  const needHours = Math.round(Math.max(secondaryHours, primaryHours) * 10) / 10;
-
-  setText("productionSecondaryPerHour", Math.round(production.secondaryPerHour));
-  setText("productionPrimaryPerHour", Math.round(production.primaryPerHour));
-  setText("productionSecondaryTotal", Math.round(secondaryTotal));
-  setText("productionPrimaryTotal", Math.round(primaryTotal));
-  setText("productionNeedHours", needHours);
-}
-
 function handleCalculatorInput(target) {
   const buildingRow = target?.closest?.(".season-building-row");
   if (buildingRow) syncBuildingRow(buildingRow);
@@ -543,7 +472,7 @@ function updateAll(target = null) {
 
   updateBuildingNeeds();
   updateRaids();
-  updateProduction();
+  updateSeasonProduction();
 }
 
 export function init() {
@@ -556,9 +485,11 @@ export function init() {
   fillSelect("productionBuildingLevel", seasonDatabase.productionByBuildingLevel);
   fillSelect("productionLabLevel", seasonDatabase.labProductionBonus);
   fillSelect("productionSeasonLevel", seasonDatabase.seasonalBuildingProductionBonus);
+  initSeasonBuildBuffs();
 
   renderBuildingRows();
   setDefaults();
+  initSeasonBuildingLinks();
   renderSeasonProfileBlock();
   bindCalculatorInputs();
   updateAll();

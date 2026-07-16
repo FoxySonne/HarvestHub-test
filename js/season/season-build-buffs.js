@@ -1,6 +1,5 @@
 import { seasonDatabase } from "../../data/season-database.js";
 
-let seasonBuildBuffObserver = null;
 let isPopulatingEngineeringEfficiency = false;
 
 function getExpectedOptions() {
@@ -56,36 +55,7 @@ function populateEngineeringEfficiency() {
   }
 }
 
-function prepareSeasonBuildBuffs() {
+export function initSeasonBuildBuffs() {
   if (!document.querySelector(".season-page")) return;
   populateEngineeringEfficiency();
 }
-
-function startSeasonBuildBuffs() {
-  const pageContent = document.getElementById("page-content");
-  if (!pageContent) return;
-
-  seasonBuildBuffObserver?.disconnect();
-  seasonBuildBuffObserver = new MutationObserver(mutations => {
-    const seasonPageAdded = mutations.some(mutation =>
-      Array.from(mutation.addedNodes).some(node =>
-        node.nodeType === Node.ELEMENT_NODE &&
-        (node.matches?.(".season-page") || node.querySelector?.(".season-page"))
-      )
-    );
-
-    if (seasonPageAdded) prepareSeasonBuildBuffs();
-  });
-
-  seasonBuildBuffObserver.observe(pageContent, { childList: true, subtree: true });
-  prepareSeasonBuildBuffs();
-}
-
-if (document.readyState === "loading") {
-  window.addEventListener("DOMContentLoaded", startSeasonBuildBuffs);
-} else {
-  startSeasonBuildBuffs();
-}
-
-window.addEventListener("harvesthub:profile-block-ready", prepareSeasonBuildBuffs);
-window.addEventListener("harvesthub:advanced-mode-change", prepareSeasonBuildBuffs);

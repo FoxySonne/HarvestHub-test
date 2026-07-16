@@ -107,7 +107,7 @@ function calculateProductionPerHour() {
   };
 }
 
-function updateProduction() {
+export function updateSeasonProduction() {
   if (!document.querySelector(".season-page")) return;
 
   positionOceanAbundanceField();
@@ -125,40 +125,4 @@ function updateProduction() {
   setText("productionSecondaryTotal", Math.round(production.secondaryPerHour * hours));
   setText("productionPrimaryTotal", Math.round(production.primaryPerHour * hours));
   setText("productionNeedHours", needHours);
-}
-
-function scheduleUpdate() {
-  window.setTimeout(updateProduction, 0);
-}
-
-document.addEventListener("input", event => {
-  if (event.target.closest?.(".season-page")) scheduleUpdate();
-});
-
-document.addEventListener("change", event => {
-  if (event.target.closest?.(".season-page")) scheduleUpdate();
-});
-
-const observer = new MutationObserver(mutations => {
-  const seasonPageAdded = mutations.some(mutation =>
-    Array.from(mutation.addedNodes).some(node =>
-      node.nodeType === Node.ELEMENT_NODE &&
-      (node.matches?.(".season-page") || node.querySelector?.(".season-page"))
-    )
-  );
-
-  if (seasonPageAdded) scheduleUpdate();
-});
-
-function start() {
-  const pageContent = document.getElementById("page-content");
-  if (!pageContent) return;
-  observer.observe(pageContent, { childList: true, subtree: true });
-  scheduleUpdate();
-}
-
-if (document.readyState === "loading") {
-  window.addEventListener("DOMContentLoaded", start);
-} else {
-  start();
 }
