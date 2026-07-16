@@ -112,7 +112,8 @@ export function buildShortageItems(shortages) {
 }
 
 function getSoldierWord(value) {
-  return Math.abs(Math.floor(Number(value) || 0)) === 1 ? "солдата" : "солдат";
+  const number = Math.abs(Math.floor(Number(value) || 0));
+  return number % 10 === 1 && number % 100 !== 11 ? "солдата" : "солдат";
 }
 
 function getStageResultLabel(stage) {
