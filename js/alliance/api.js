@@ -13,6 +13,12 @@ export function fetchParticipants(client, allianceId) {
     .order("nickname", { ascending: true });
 }
 
+export function fetchAllianceForGuest(client, code) {
+  return client.rpc("open_alliance_by_code", {
+    access_code: String(code || "").trim().toUpperCase()
+  });
+}
+
 export function createAlliance(client, { name, stateNumber, userId }) {
   return client
     .from("alliances")
