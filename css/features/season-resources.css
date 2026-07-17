@@ -164,6 +164,8 @@ SEASON RESOURCES — compact calculator layout
 }
 
 .season-efficiency-field span {
+  justify-content: flex-start;
+  text-align: left;
   min-height: 0;
   color: var(--text);
   font-size: 13px;
@@ -394,6 +396,76 @@ SEASON RESOURCES — compact calculator layout
 
 .season-tracking-actions p.is-error {
   color: #ff7b7b;
+}
+
+.season-deadline-card {
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--text-muted);
+  border-radius: var(--radius);
+}
+
+.season-deadline-card h4,
+.season-deadline-card p {
+  margin: 0;
+}
+
+.season-deadline-card p {
+  margin-top: 8px;
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
+.season-deadline-card[data-state="success"] {
+  border-left-color: var(--accent);
+}
+
+.season-deadline-card[data-state="danger"] {
+  border-left-color: var(--danger);
+}
+
+.season-deadline-missing {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.season-deadline-missing[hidden] {
+  display: none;
+}
+
+.season-deadline-missing div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.season-deadline-missing strong {
+  color: var(--danger);
+}
+
+.season-raid-auto-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.season-raid-auto-state p {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.season-raid-auto-state button {
+  min-width: 190px;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
 }
 
 .season-building-totals-card .season-total-card span {

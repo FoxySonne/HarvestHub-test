@@ -149,8 +149,8 @@
           <h4>Сколько будет произведено</h4>
 
           <label class="season-field">
-            <span>Время, часов</span>
-            <input id="productionHours" type="number" min="0" step="0.1" value="10">
+            <span>Планируемое время ожидания, часов</span>
+            <input id="productionHours" type="number" min="0" step="0.1" value="0">
           </label>
 
           <div class="season-results season-results-compact">
@@ -172,6 +172,15 @@
           </div>
         </section>
       </div>
+
+      <section id="seasonDeadlineCard" class="season-deadline-card" data-state="neutral" aria-live="polite">
+        <h4 id="seasonDeadlineTitle">Успею ли до конца сезона?</h4>
+        <p id="seasonDeadlineMessage">Выберите здания, которые хотите построить.</p>
+        <div id="seasonDeadlineMissing" class="season-deadline-missing" hidden>
+          <div><span>Не хватит Вода / Рыба / Вольфрам</span><strong id="seasonDeadlineMissingSecondary">0</strong></div>
+          <div><span>Не хватит Бензин / Фрукты / Кварц</span><strong id="seasonDeadlineMissingPrimary">0</strong></div>
+        </div>
+      </section>
     </section>
 
     <section class="card season-card season-compact-card season-raids-card">
@@ -195,6 +204,12 @@
             <span>Вода / Рыба / Вольфрам</span>
             <input id="raidNeedSecondary" type="number" min="0" value="0">
           </label>
+        </div>
+
+        <input id="seasonRaidAutoEnabled" type="checkbox" checked hidden>
+        <div class="season-raid-auto-state">
+          <p id="seasonRaidAutoStatus">Автоподстановка нехватки включена.</p>
+          <button id="restoreSeasonRaidAuto" type="button" hidden>Вернуть автоподстановку</button>
         </div>
       </div>
 

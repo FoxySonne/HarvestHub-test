@@ -3,8 +3,7 @@ export function createSeasonBuildings({
   getByLevel,
   num,
   setText,
-  setValue,
-  shouldSyncRaidNeeds
+  setValue
 }) {
   function createLevelSelect(className, defaultValue) {
     const select = document.createElement("select");
@@ -36,7 +35,6 @@ export function createSeasonBuildings({
       targetLevel = currentLevel;
       targetSelect.value = String(currentLevel);
     }
-    if (currentLevel > 0 || targetLevel > 0) checkbox.checked = true;
   }
 
   function syncAllBuildingRows() {
@@ -72,7 +70,7 @@ export function createSeasonBuildings({
       const targetWrap = document.createElement("label");
       targetWrap.className = "season-building-level";
       targetWrap.innerHTML = "<span>Нужно</span>";
-      targetWrap.appendChild(createLevelSelect("season-building-target", 0));
+      targetWrap.appendChild(createLevelSelect("season-building-target", 30));
       levels.append(currentWrap, targetWrap);
       row.append(checkLabel, levels);
       container.appendChild(row);
@@ -104,8 +102,10 @@ export function createSeasonBuildings({
   function updateBuildingNeeds() {
     let secondaryTotal = 0;
     let primaryTotal = 0;
+    let selectedCount = 0;
     document.querySelectorAll(".season-building-row").forEach(row => {
       if (!row.querySelector(".season-building-enabled")?.checked) return;
+      selectedCount += 1;
       const currentLevel = Number(row.querySelector(".season-building-current")?.value) || 0;
       const targetLevel = Number(row.querySelector(".season-building-target")?.value) || 0;
       if (targetLevel <= currentLevel) return;
@@ -119,14 +119,11 @@ export function createSeasonBuildings({
     const primary = Math.max(0, Math.ceil(primaryTotal * (1 - reduction)) - num("buildingOwnedPrimary"));
     setValue("productionNeedPrimary", primary);
     setValue("productionNeedSecondary", secondary);
-    if (shouldSyncRaidNeeds()) {
-      setValue("raidNeedPrimary", primary);
-      setValue("raidNeedSecondary", secondary);
-    }
     setText("buildingNeedPrimary", primary);
     setText("buildingNeedSecondary", secondary);
     setText("productionNeedPrimaryText", primary);
     setText("productionNeedSecondaryText", secondary);
+    return { selectedCount, primary, secondary };
   }
 
   return {

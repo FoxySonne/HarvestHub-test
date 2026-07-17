@@ -90,7 +90,7 @@ function calculateProductionPerHour() {
 }
 
 export function updateSeasonProduction() {
-  if (!document.querySelector(".season-page")) return;
+  if (!document.querySelector(".season-page")) return null;
 
   positionOceanAbundanceField();
 
@@ -98,13 +98,35 @@ export function updateSeasonProduction() {
   const hours = num("productionHours");
   const needSecondary = num("productionNeedSecondary");
   const needPrimary = num("productionNeedPrimary");
-  const secondaryHours = production.secondaryPerHour > 0 ? needSecondary / production.secondaryPerHour : 0;
-  const primaryHours = production.primaryPerHour > 0 ? needPrimary / production.primaryPerHour : 0;
-  const needHours = Math.round(Math.max(secondaryHours, primaryHours) * 10) / 10;
+  const secondaryHours = needSecondary <= 0
+    ? 0
+    : production.secondaryPerHour > 0 ? needSecondary / production.secondaryPerHour : Number.POSITIVE_INFINITY;
+  const primaryHours = needPrimary <= 0
+    ? 0
+    : production.primaryPerHour > 0 ? needPrimary / production.primaryPerHour : Number.POSITIVE_INFINITY;
+  const rawNeedHours = Math.max(secondaryHours, primaryHours);
+  const needHours = Number.isFinite(rawNeedHours) ? Math.round(rawNeedHours * 10) / 10 : null;
 
   setText("productionSecondaryPerHour", Math.round(production.secondaryPerHour));
   setText("productionPrimaryPerHour", Math.round(production.primaryPerHour));
   setText("productionSecondaryTotal", Math.round(production.secondaryPerHour * hours));
   setText("productionPrimaryTotal", Math.round(production.primaryPerHour * hours));
-  setText("productionNeedHours", needHours);
+  if (needHours === null) {
+    const needHoursElement = document.getElementById("productionNeedHours");
+    if (needHoursElement) needHoursElement.textContent = "—";
+  } else {
+    setText("productionNeedHours", needHours);
+  }
+
+  return {
+    ...production,
+    plannedHours: hours,
+    needPrimary,
+    needSecondary,
+    primaryHours,
+    secondaryHours,
+    totalRequiredHours: rawNeedHours,
+    primaryProduced: production.primaryPerHour * hours,
+    secondaryProduced: production.secondaryPerHour * hours
+  };
 }

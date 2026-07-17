@@ -2,15 +2,15 @@ import { seasonDatabase } from "../../data/season-database.js";
 import { seasonBuildingsDatabase } from "../../data/season-buildings-database.js";
 import { findByLevel, num, setText } from "./dom.js";
 import { initSeasonBuildBuffs } from "./season-build-buffs.js";
-import { createSeasonBuildings } from "./season-buildings.js";
+import { createSeasonBuildings } from "./season-buildings.js?v=20260717-27";
 import { initSeasonBuildingLinks } from "./season-building-links.js";
-import { updateSeasonProduction } from "./season-production.js";
+import { updateSeasonProduction } from "./season-production.js?v=20260717-27";
 import { calculateSeasonCountdown, calculateSeasonEndUtc, parseSeasonEnd } from "./season-tracking.js?v=20260717-26";
+import { calculateSeasonResourcePlan } from "./season-planning.js?v=20260717-27";
 
 const MAX_DISCOUNT_CANS = 50;
 const SEASON_PAGE = "calculator/season-resources.html";
 const TRACKING_INTERVAL_MS = 60 * 1000;
-let isRaidNeedManual = false;
 
 const {
   renderBuildingRows,
@@ -23,8 +23,7 @@ const {
   getByLevel,
   num,
   setText,
-  setValue,
-  shouldSyncRaidNeeds: () => !isRaidNeedManual
+  setValue
 });
 
 function setValue(id, value) {
@@ -61,15 +60,6 @@ function syncLinkedRaidInputs(target) {
 
 function isRaidNeedInput(target) {
   return target?.id === "raidNeedPrimary" || target?.id === "raidNeedSecondary";
-}
-
-function isBuildingNeedSource(target) {
-  if (!target) return true;
-
-  return target.id === "buildingOwnedPrimary" ||
-    target.id === "buildingOwnedSecondary" ||
-    target.id === "buildingEfficiencyLevel" ||
-    Boolean(target.closest?.(".season-building-row"));
 }
 
 function shouldSyncMainBuildingLevel(target) {
@@ -191,6 +181,7 @@ function startSeasonTracking() {
   if (status) status.classList.remove("is-error");
   saveSeasonTrackingState();
   updateSeasonProfileBlockSummary();
+  updateAll();
 }
 
 function stopTrackingWhenEdited(target) {
@@ -215,6 +206,7 @@ function scheduleSeasonCountdown() {
       return;
     }
     updateSeasonProfileBlockSummary();
+    updateAll();
   }, TRACKING_INTERVAL_MS);
 }
 
@@ -341,16 +333,120 @@ function updateRaids() {
   setText("raidAvailableEnergy", availableEnergy);
 }
 
+function getSeasonHoursLeft() {
+  const now = getCurrentUtcDate();
+  const trackedEnd = getTrackedSeasonEnd();
+  if (trackedEnd) return Math.max(0, (trackedEnd.getTime() - now.getTime()) / (60 * 60 * 1000));
+
+  const days = Math.max(0, num("seasonProfileDaysLeft"));
+  const hours = Math.max(0, num("seasonProfileHoursLeft"));
+  if (days * 24 + hours <= 0) return null;
+  const end = calculateSeasonEndUtc(now, days, hours);
+  return Math.max(0, (end.getTime() - now.getTime()) / (60 * 60 * 1000));
+}
+
+function formatHours(value) {
+  if (!Number.isFinite(value)) return "недоступно при текущем производстве";
+  return `${(Math.round(value * 10) / 10).toLocaleString("ru-RU")} ч`;
+}
+
+function isRaidAutoEnabled() {
+  return document.getElementById("seasonRaidAutoEnabled")?.checked !== false;
+}
+
+function syncRaidAutoControls(plan = null) {
+  const automatic = isRaidAutoEnabled();
+  const status = document.getElementById("seasonRaidAutoStatus");
+  const restoreButton = document.getElementById("restoreSeasonRaidAuto");
+  if (restoreButton) restoreButton.hidden = automatic;
+  if (!status) return;
+
+  if (!automatic) {
+    status.textContent = "Ручной режим: значения рейдов не изменяются автоматически.";
+    return;
+  }
+  if (!plan || plan.selectedCount === 0) {
+    status.textContent = "Автоподстановка включена. Выберите здания для расчёта нехватки.";
+    return;
+  }
+
+  const limitedBySeason = plan.hasSeasonDeadline && plan.seasonHours < plan.plannedHours;
+  status.textContent = limitedBySeason
+    ? `Автоподстановка рассчитана по времени до конца сезона: ${formatHours(plan.effectiveHours)}.`
+    : `Автоподстановка рассчитана по времени ожидания: ${formatHours(plan.effectiveHours)}.`;
+}
+
+function setRaidAutoEnabled(enabled) {
+  const checkbox = document.getElementById("seasonRaidAutoEnabled");
+  if (checkbox) checkbox.checked = Boolean(enabled);
+  syncRaidAutoControls();
+}
+
+function updateSeasonDeadline(plan) {
+  const card = document.getElementById("seasonDeadlineCard");
+  const title = document.getElementById("seasonDeadlineTitle");
+  const message = document.getElementById("seasonDeadlineMessage");
+  const missing = document.getElementById("seasonDeadlineMissing");
+  if (!card || !title || !message || !missing) return;
+
+  missing.hidden = true;
+  card.dataset.state = "neutral";
+
+  if (plan.selectedCount === 0) {
+    title.textContent = "Успею ли до конца сезона?";
+    message.textContent = "Выберите здания, которые хотите построить.";
+    return;
+  }
+
+  if (!plan.hasSeasonDeadline) {
+    title.textContent = "Укажите срок сезона";
+    message.textContent = "Введите оставшиеся дни и часы или включите отслеживание сезона.";
+    return;
+  }
+
+  if (plan.canFinishBySeason) {
+    card.dataset.state = "success";
+    title.textContent = "Вы успеете накопить ресурсы";
+    message.textContent = `Потребуется ${formatHours(plan.totalRequiredHours)}. До конца сезона осталось ${formatHours(plan.seasonHours)}.`;
+    return;
+  }
+
+  card.dataset.state = "danger";
+  title.textContent = "До конца сезона ресурсов не хватит";
+  message.textContent = Number.isFinite(plan.totalRequiredHours)
+    ? `Потребуется ${formatHours(plan.totalRequiredHours)}, а осталось ${formatHours(plan.seasonHours)}.`
+    : "Для необходимого ресурса производство равно нулю.";
+  setText("seasonDeadlineMissingSecondary", plan.deadlineMissing.secondary);
+  setText("seasonDeadlineMissingPrimary", plan.deadlineMissing.primary);
+  missing.hidden = false;
+}
+
+function updateSeasonPlanning(buildingState, productionState) {
+  const plan = calculateSeasonResourcePlan({
+    selectedCount: buildingState?.selectedCount || 0,
+    needPrimary: buildingState?.primary || 0,
+    needSecondary: buildingState?.secondary || 0,
+    primaryPerHour: productionState?.primaryPerHour || 0,
+    secondaryPerHour: productionState?.secondaryPerHour || 0,
+    plannedHours: productionState?.plannedHours || 0,
+    seasonHours: getSeasonHoursLeft()
+  });
+
+  updateSeasonDeadline(plan);
+  if (isRaidAutoEnabled()) {
+    setValue("raidNeedPrimary", plan.raidMissing.primary);
+    setValue("raidNeedSecondary", plan.raidMissing.secondary);
+  }
+  syncRaidAutoControls(plan);
+  return plan;
+}
+
 function handleCalculatorInput(target) {
   const buildingRow = target?.closest?.(".season-building-row");
   if (buildingRow) syncBuildingRow(buildingRow);
 
   if (isRaidNeedInput(target)) {
-    isRaidNeedManual = true;
-  }
-
-  if (isBuildingNeedSource(target)) {
-    isRaidNeedManual = false;
+    setRaidAutoEnabled(false);
   }
 
   updateSeasonProfileBlockSummary();
@@ -364,6 +460,13 @@ function bindCalculatorInputs() {
   inputs.forEach(input => {
     input.addEventListener("input", event => handleCalculatorInput(event.target));
     input.addEventListener("change", event => handleCalculatorInput(event.target));
+  });
+
+  document.getElementById("restoreSeasonRaidAuto")?.addEventListener("click", () => {
+    const checkbox = document.getElementById("seasonRaidAutoEnabled");
+    if (!checkbox) return;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event("change", { bubbles: true }));
   });
 }
 
@@ -389,7 +492,8 @@ function setDefaults() {
     productionWeeklyPass: 1,
     productionVillage: 1,
     productionMegapolis: 1,
-    productionBull: 1
+    productionBull: 1,
+    productionHours: 0
   };
 
   Object.entries(defaults).forEach(([id, value]) => {
@@ -406,14 +510,13 @@ function updateAll(target = null) {
     syncMainBuildingLevel();
   }
 
-  updateBuildingNeeds();
+  const buildingState = updateBuildingNeeds();
+  const productionState = updateSeasonProduction();
+  updateSeasonPlanning(buildingState, productionState);
   updateRaids();
-  updateSeasonProduction();
 }
 
 export function init() {
-  isRaidNeedManual = false;
-
   fillSelect("alphaNeedLevel", seasonDatabase.alphaDrops);
   fillSelect("alphaFarmLevel", seasonDatabase.alphaDrops);
   fillSelect("infectedNeedLevel", seasonDatabase.infectedDrops);
