@@ -1,4 +1,4 @@
-import { createIpkCloudSync } from "../ipk/cloud-sync.js?v=20260717-21";
+import { createIpkCloudSync } from "../ipk/cloud-sync.js?v=20260717-25";
 import {
   isTroopTransferApplied,
   markTroopTransferApplied,
@@ -286,6 +286,13 @@ function renderIpk() {
   if (typeof window.bindCollapsibleCards === "function") window.bindCollapsibleCards();
 }
 
+async function resetIpkData() {
+  await cloudSync.clear();
+  selectedCategoryIds = new Set(database.categoryIpk.map(category => category.id));
+  ipkValues.clear();
+  ipkResultOverrides.clear();
+}
+
 export async function init() {
   selectedCategoryIds = new Set(database.categoryIpk.map(category => category.id));
   ipkValues.clear();
@@ -293,6 +300,8 @@ export async function init() {
   cloudSync.reset();
 
   await cloudSync.load();
+  window.harvestHubCalculatorResetHandlers = window.harvestHubCalculatorResetHandlers || {};
+  window.harvestHubCalculatorResetHandlers["calculator/ipk.html"] = resetIpkData;
   renderIpk();
   window.setTimeout(applyTroopTransferPreset, 250);
 }

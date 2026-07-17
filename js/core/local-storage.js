@@ -214,6 +214,7 @@
     return Array.from(container.querySelectorAll("input, select, textarea")).filter(field => {
       const type = (field.type || "").toLowerCase();
       if (field.dataset.noPersist === "true") return false;
+      if (field.closest("[data-no-form-persistence='true']")) return false;
       return !["button", "submit", "reset", "hidden", "file"].includes(type);
     });
   }
@@ -283,6 +284,12 @@
     }
   }
 
+  function clearPageFormState(pageName) {
+    if (!pageName) return false;
+    localStorage.removeItem(getPageFormStateKey(pageName));
+    return true;
+  }
+
   function bindPageFormPersistence(pageName) {
     getPersistableFields(document.getElementById("page-content")).forEach(field => {
       if (field.dataset.formPersistenceBound === pageName) return;
@@ -297,6 +304,7 @@
     if (!target.closest("#page-content")) return false;
     if (!target.matches("input, select, textarea")) return false;
     if (target.dataset.noPersist === "true") return false;
+    if (target.closest("[data-no-form-persistence='true']")) return false;
     return !["button", "submit", "reset", "hidden", "file"].includes(String(target.type || "").toLowerCase());
   }
 
@@ -312,6 +320,7 @@
   window.harvestHubStorage = {
     readJsonStorage,
     writeJsonStorage,
+    clearPageFormState,
     restorePageFormState,
     bindPageFormPersistence
   };

@@ -10,6 +10,7 @@ export function createIpkCloudSync({ serialize, apply }) {
   let saveTimer = null;
   let saveInProgress = false;
   let saveQueued = false;
+  let clearInProgress = false;
   let flusherRegistered = false;
 
   function reset() {
@@ -18,6 +19,7 @@ export function createIpkCloudSync({ serialize, apply }) {
     activeProfileData = {};
     saveInProgress = false;
     saveQueued = false;
+    clearInProgress = false;
   }
 
   async function load() {
@@ -53,7 +55,7 @@ export function createIpkCloudSync({ serialize, apply }) {
   }
 
   async function saveNow() {
-    if (!activeProfileId || !window.harvestHubSupabase) return;
+    if (!activeProfileId || !window.harvestHubSupabase || clearInProgress) return;
 
     if (saveInProgress) {
       saveQueued = true;
@@ -82,13 +84,41 @@ export function createIpkCloudSync({ serialize, apply }) {
   }
 
   function schedule() {
-    if (!activeProfileId) return;
+    if (!activeProfileId || clearInProgress) return;
     window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(saveNow, CLOUD_SAVE_DELAY);
   }
 
+  async function clear() {
+    window.clearTimeout(saveTimer);
+    saveQueued = false;
+    if (!activeProfileId || !window.harvestHubSupabase) return false;
+
+    clearInProgress = true;
+    try {
+      while (saveInProgress) {
+        await new Promise(resolve => window.setTimeout(resolve, 20));
+      }
+
+      const nextData = { ...activeProfileData };
+      delete nextData.ipk;
+      const { error } = await window.harvestHubSupabase
+        .from("game_profiles")
+        .update({ data: nextData })
+        .eq("id", activeProfileId)
+        .eq("user_id", getLocalAccountProfile()?.supabaseUserId || "");
+
+      if (error) throw error;
+      activeProfileData = nextData;
+      return true;
+    } finally {
+      clearInProgress = false;
+    }
+  }
+
   return {
     hasStoredIpk: () => Boolean(activeProfileData.ipk),
+    clear,
     load,
     reset,
     schedule,

@@ -82,3 +82,23 @@ margin-top:20px;
 .danger-button:hover {
   background: #a43a3a !important;
 }
+
+.calculator-data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.calculator-data-actions [data-calculator-reset-status] {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.calculator-data-actions [data-calculator-reset-status].is-error {
+  color: #ff7b7b;
+}

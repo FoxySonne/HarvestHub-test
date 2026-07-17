@@ -1,6 +1,7 @@
 (() => {
   const TURBO_LOCAL_PREFIX = "harvesthub_turbo_vs_week_state:";
   const FORM_LOCAL_PREFIX = "harvesthub_page_form_state:";
+  const PROFILE_BLOCK_LOCAL_PREFIX = "harvesthub_profile_block_state:";
   const TRANSFER_LOCAL_KEY = "harvesthub_troop_training_transfer";
   const ADVANCED_MODE_LOCAL_KEY = "harvesthub_advanced_mode";
   const CALCULATOR_PAGES = new Set([
@@ -63,6 +64,7 @@
 
     applyRemoteState(data, context) {
       localStorage.setItem(context.localKey, JSON.stringify(data || {}));
+      localStorage.removeItem(getFormStorageKey(context.profileId, "calculator/turbo-vs.html"));
     },
 
     async afterRemoteApplied() {
@@ -101,6 +103,10 @@
     return `${FORM_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
   }
 
+  function getProfileBlockStorageKey(profileId, pageName) {
+    return `${PROFILE_BLOCK_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
+  }
+
   const formsEngine = window.harvestHubCreateSyncEngine({
     label: "Calculator forms",
     stateKey: "calculator_forms",
@@ -115,16 +121,22 @@
 
     readLocalState(context) {
       const pages = {};
+      const profileBlocks = {};
       CALCULATOR_PAGES.forEach(pageName => {
         const key = getFormStorageKey(context.profileId, pageName);
         const raw = localStorage.getItem(key);
         if (raw != null) pages[pageName] = readJson(key, {});
+
+        const profileBlockKey = getProfileBlockStorageKey(context.profileId, pageName);
+        const profileBlockRaw = localStorage.getItem(profileBlockKey);
+        if (profileBlockRaw != null) profileBlocks[pageName] = readJson(profileBlockKey, {});
       });
       return {
-        schemaVersion: 2,
+        schemaVersion: 3,
         profileId: context.profileId,
         transfer: readJson(getScopedTransferKey(context.profileId), null),
-        pages
+        pages,
+        profileBlocks
       };
     },
 
@@ -137,6 +149,18 @@
           JSON.stringify(pages[pageName] || {})
         );
       });
+
+      if (Object.prototype.hasOwnProperty.call(data || {}, "profileBlocks")) {
+        const profileBlocks = data.profileBlocks || {};
+        CALCULATOR_PAGES.forEach(pageName => {
+          const key = getProfileBlockStorageKey(context.profileId, pageName);
+          if (Object.prototype.hasOwnProperty.call(profileBlocks, pageName)) {
+            localStorage.setItem(key, JSON.stringify(profileBlocks[pageName] || {}));
+          } else {
+            localStorage.removeItem(key);
+          }
+        });
+      }
 
       if (Object.prototype.hasOwnProperty.call(data || {}, "transfer")) {
         if (data.transfer && typeof data.transfer === "object") {
@@ -185,6 +209,7 @@
     scheduleUpload: turboEngine.scheduleUpload,
     uploadNow: turboEngine.uploadNow,
     pullRemote: turboEngine.pullRemote,
+    forceUpload: turboEngine.forceUpload,
     get isApplyingRemote() {
       return turboEngine.isApplyingRemote;
     }

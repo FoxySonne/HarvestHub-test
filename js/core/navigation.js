@@ -136,27 +136,27 @@
     if (modulePath) {
       try {
         const module = await import(`${modulePath}?v=${SITE_ASSET_VERSION}-${Date.now()}`);
-        if (typeof module.init === "function") module.init();
+        if (typeof module.init === "function") await module.init();
         else {
           const globalInitName = getGlobalInitName(fileName);
-          if (typeof window[globalInitName] === "function") window[globalInitName]();
+          if (typeof window[globalInitName] === "function") await window[globalInitName]();
         }
       } catch (error) {
         console.warn(`JS-модуль для страницы ${fileName} не был запущен:`, error);
         const globalInitName = getGlobalInitName(fileName);
-        if (typeof window[globalInitName] === "function") window[globalInitName]();
+        if (typeof window[globalInitName] === "function") await window[globalInitName]();
       }
     } else {
       const globalInitName = getGlobalInitName(fileName);
-      if (typeof window[globalInitName] === "function") window[globalInitName]();
+      if (typeof window[globalInitName] === "function") await window[globalInitName]();
     }
 
     if (containerId === "rightbar-container") renderQuickLinks();
     return true;
   }
 
-  async function loadPage(pageName) {
-    window.savePageFormState(currentLoadedPage);
+  async function loadPage(pageName, options = {}) {
+    if (!options.skipCurrentSave) window.savePageFormState(currentLoadedPage);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
     if (!isLoaded) return;
 
@@ -167,8 +167,8 @@
     window.harvestHubStorage.bindPageFormPersistence(pageName);
     window.savePageFormState(pageName);
     window.applyAdvancedModeSetting();
-    window.applyActiveProfileSetting();
-    trackPageVisit(pageName);
+    if (!options.skipProfileRefresh) window.applyActiveProfileSetting();
+    if (!options.skipVisit) trackPageVisit(pageName);
     renderQuickLinks(pageName);
 
     if (window.innerWidth < 900 && typeof window.closeMenu === "function") window.closeMenu();
