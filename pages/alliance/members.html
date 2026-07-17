@@ -20,17 +20,8 @@
   <section id="allianceManagementCard" class="card alliance-setup-card" data-no-collapse="true" hidden>
     <div class="card-header"><div><h3>Подключить союзный штаб</h3><p>Создай новый штаб или подключи существующий.</p></div></div>
     <div class="alliance-setup-grid">
-      <form id="allianceCreateForm" class="alliance-form-block">
-        <h4>Создать штаб</h4>
-        <label><span>Название союза</span><input id="allianceCreateName" type="text" maxlength="80" data-no-persist="true" required></label>
-        <label><span>Номер штата</span><input id="allianceCreateState" type="text" maxlength="30" data-no-persist="true"></label>
-        <button type="submit">Создать</button>
-      </form>
-      <form id="allianceJoinForm" class="alliance-form-block">
-        <h4>Подключить существующий штаб</h4>
-        <label><span>Пригласительный код</span><input id="allianceJoinCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required></label>
-        <button type="submit">Подключить к аккаунту</button>
-      </form>
+      <form id="allianceCreateForm" class="alliance-form-block"><h4>Создать штаб</h4><label><span>Название союза</span><input id="allianceCreateName" type="text" maxlength="80" data-no-persist="true" required></label><label><span>Номер штата</span><input id="allianceCreateState" type="text" maxlength="30" data-no-persist="true"></label><button type="submit">Создать</button></form>
+      <form id="allianceJoinForm" class="alliance-form-block"><h4>Подключить существующий штаб</h4><label><span>Пригласительный код</span><input id="allianceJoinCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required></label><button type="submit">Подключить к аккаунту</button></form>
     </div>
   </section>
 
@@ -43,46 +34,50 @@
     </section>
 
     <nav class="alliance-section-tabs" aria-label="Разделы союзного штаба">
-      <button type="button" class="is-active">Состав</button>
-      <button type="button" disabled>Сила отрядов</button>
+      <button type="button" class="is-active" data-alliance-tab="roster">Состав</button>
+      <button type="button" data-alliance-tab="power">Сила отрядов</button>
       <button type="button" disabled>VS</button>
       <button type="button" disabled>Резервуар: активность</button>
       <button type="button" disabled>Резервуар: расстановка</button>
     </nav>
 
-    <section id="allianceDetailsEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden>
-      <div class="card-header"><div><h3>Данные союза</h3><p>Название и номер штата.</p></div></div>
-      <form id="allianceDetailsForm" class="alliance-details-form">
-        <label><span>Название союза</span><input id="allianceEditName" type="text" maxlength="80" data-no-persist="true" required></label>
-        <label><span>Номер штата</span><input id="allianceEditState" type="text" maxlength="30" data-no-persist="true"></label>
-        <button type="submit">Сохранить изменения</button>
-      </form>
-    </section>
+    <div id="allianceRosterSection">
+      <section id="allianceDetailsEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden><div class="card-header"><div><h3>Данные союза</h3><p>Название и номер штата.</p></div></div><form id="allianceDetailsForm" class="alliance-details-form"><label><span>Название союза</span><input id="allianceEditName" type="text" maxlength="80" data-no-persist="true" required></label><label><span>Номер штата</span><input id="allianceEditState" type="text" maxlength="30" data-no-persist="true"></label><button type="submit">Сохранить изменения</button></form></section>
 
-    <section id="participantEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden>
-      <div class="card-header"><div><h3 id="participantEditorTitle">Добавить участника</h3><p>Единая форма для добавления и редактирования состава.</p></div></div>
-      <form id="participantForm" class="participant-form participant-roster-form">
-        <input id="participantId" type="hidden" data-no-persist="true">
-        <input id="participantStatus" type="hidden" value="main" data-no-persist="true">
-        <label><span>Никнейм</span><input id="participantNickname" type="text" maxlength="80" data-no-persist="true" required></label>
-        <label><span>Ранг</span><select id="participantRank" data-no-persist="true"><option value="">Не указан</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select></label>
-        <label><span>Часовой пояс от Москвы</span><input id="participantTimezone" type="number" min="-12" max="12" step="1" data-no-persist="true" placeholder="Например, 2 или -3"></label>
-        <label><span>День рождения</span><input id="participantBirthday" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="ДД.ММ" data-no-persist="true"></label>
-        <label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label>
-        <div class="alliance-actions participant-form-actions"><button type="submit">Сохранить</button><button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить редактирование</button></div>
-      </form>
-    </section>
+      <section id="participantEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden><div class="card-header"><div><h3 id="participantEditorTitle">Добавить участника</h3><p>Единая форма для добавления и редактирования состава.</p></div></div><form id="participantForm" class="participant-form participant-roster-form"><input id="participantId" type="hidden" data-no-persist="true"><input id="participantStatus" type="hidden" value="main" data-no-persist="true"><label><span>Никнейм</span><input id="participantNickname" type="text" maxlength="80" data-no-persist="true" required></label><label><span>Ранг</span><select id="participantRank" data-no-persist="true"><option value="">Не указан</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select></label><label><span>Часовой пояс от Москвы</span><input id="participantTimezone" type="number" min="-12" max="12" step="1" data-no-persist="true" placeholder="Например, 2 или -3"></label><label><span>День рождения</span><input id="participantBirthday" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="ДД.ММ" data-no-persist="true"></label><label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label><div class="alliance-actions participant-form-actions"><button type="submit">Сохранить</button><button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить редактирование</button></div></form></section>
 
-    <section class="card alliance-list-card" data-no-collapse="true">
-      <div class="card-header alliance-roster-header"><div><h3>Состав союза</h3><p id="participantCount">0 участников</p></div>
-        <div class="alliance-roster-tools">
-          <input id="participantSearch" type="search" placeholder="Поиск по нику" data-no-persist="true">
-          <select id="participantRankFilter" data-no-persist="true"><option value="">Все ранги</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select>
-          <select id="participantSort" data-no-persist="true"><option value="rank">По рангу</option><option value="nickname">По нику</option></select>
-        </div>
-      </div>
-      <div class="alliance-table-wrap"><table class="alliance-table alliance-roster-table"><thead><tr><th>Никнейм</th><th>Ранг</th><th>День рождения</th><th class="participant-private-column">Часовой пояс</th><th class="participant-private-column">Комментарий</th><th></th></tr></thead><tbody id="participantTableBody"></tbody></table></div>
-      <div id="participantEmptyState" class="alliance-empty-state">Пока нет ни одного участника.</div>
-    </section>
+      <section class="card alliance-list-card" data-no-collapse="true"><div class="card-header alliance-roster-header"><div><h3>Состав союза</h3><p id="participantCount">0 участников</p></div><div class="alliance-roster-tools"><input id="participantSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="participantRankFilter" data-no-persist="true"><option value="">Все ранги</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select><select id="participantSort" data-no-persist="true"><option value="rank">По рангу</option><option value="nickname">По нику</option></select></div></div><div class="alliance-table-wrap"><table class="alliance-table alliance-roster-table"><thead><tr><th>Никнейм</th><th>Ранг</th><th>День рождения</th><th class="participant-private-column">Часовой пояс</th><th class="participant-private-column">Комментарий</th><th></th></tr></thead><tbody id="participantTableBody"></tbody></table></div><div id="participantEmptyState" class="alliance-empty-state">Пока нет ни одного участника.</div></section>
+    </div>
+
+    <div id="alliancePowerSection" hidden>
+      <div id="powerSectionError" class="alliance-message" data-type="error" hidden></div>
+
+      <section id="powerEditorCard" class="card alliance-editor-card power-editor-card" data-no-collapse="true">
+        <div class="card-header"><div><h3>Добавить замер силы</h3><p>БМ указывается в миллионах с дробной частью, например 87,72.</p></div></div>
+        <form id="powerForm" class="power-form">
+          <label><span>Участник</span><select id="powerParticipant" data-no-persist="true" required></select></label>
+          <label><span>Дата замера</span><input id="powerDate" type="date" data-no-persist="true" required></label>
+          <label><span>1-й отряд, млн</span><input id="powerSquad1" type="text" inputmode="decimal" placeholder="87,72" data-no-persist="true" required></label>
+          <label><span>2-й отряд, млн</span><input id="powerSquad2" type="text" inputmode="decimal" placeholder="54,94" data-no-persist="true"></label>
+          <label><span>3-й отряд, млн</span><input id="powerSquad3" type="text" inputmode="decimal" placeholder="52,43" data-no-persist="true"></label>
+          <label><span>4-й отряд, млн</span><input id="powerSquad4" type="text" inputmode="decimal" placeholder="51,88" data-no-persist="true"></label>
+          <label><span>5-й отряд, млн</span><input id="powerSquad5" type="text" inputmode="decimal" placeholder="51,24" data-no-persist="true"></label>
+          <button type="submit">Сохранить замер</button>
+        </form>
+      </section>
+
+      <section id="powerSeasonSettings" class="card power-season-card" data-no-collapse="true" hidden>
+        <form id="powerSeasonForm" class="power-season-form">
+          <label><span>Начало текущего сезона</span><input id="powerSeasonStart" type="date" data-no-persist="true"></label>
+          <button type="submit">Сохранить дату</button>
+        </form>
+      </section>
+
+      <section class="card alliance-list-card" data-no-collapse="true">
+        <div class="card-header alliance-roster-header"><div><h3>Сила отрядов</h3><p id="powerCount">0 участников</p></div><div class="alliance-roster-tools power-tools"><input id="powerSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="powerSort" data-no-persist="true"><option value="power">По силе</option><option value="growth">По приросту</option><option value="nickname">По нику</option></select></div></div>
+        <div class="alliance-table-wrap"><table class="alliance-table power-table"><thead><tr><th>Место</th><th>Участник</th><th>Дата</th><th>БМ 1-го отряда, млн</th><th>С прошлого замера</th><th>За неделю</th><th>За месяц</th><th>За сезон</th><th>Прирост, %</th></tr></thead><tbody id="powerTableBody"></tbody></table></div>
+        <div id="powerEmptyState" class="alliance-empty-state">Пока нет ни одного замера.</div>
+      </section>
+    </div>
   </section>
 </section>
