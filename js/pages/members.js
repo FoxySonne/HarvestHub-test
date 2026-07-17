@@ -18,28 +18,26 @@ const state = {
   activeAlliance: null,
   activeRole: "viewer",
   participants: [],
+  guestMode: true,
   realtimeChannel: null,
-  authSubscription: null,
-  guestMode: true
+  authSubscription: null
 };
 
-function getElement(id) {
-  return document.getElementById(id);
-}
+const byId = id => document.getElementById(id);
 
 function showMessage(message, type = "info") {
-  const element = getElement("allianceMessage");
-  if (!element) return;
-  element.hidden = !message;
-  element.textContent = message || "";
-  element.dataset.type = type;
+  const box = byId("allianceMessage");
+  if (!box) return;
+  box.hidden = !message;
+  box.textContent = message || "";
+  box.dataset.type = type;
 }
 
-function setBusy(button, busy, busyText = "Подождите…") {
+function setBusy(button, busy, text = "Подождите…") {
   if (!button) return;
   if (busy) {
     button.dataset.originalText = button.textContent;
-    button.textContent = busyText;
+    button.textContent = text;
     button.disabled = true;
   } else {
     button.textContent = button.dataset.originalText || button.textContent;
@@ -47,63 +45,124 @@ function setBusy(button, busy, busyText = "Подождите…") {
   }
 }
 
-function canEditParticipants() {
-  return Boolean(state.session?.user) && !state.guestMode && ["owner", "editor"].includes(state.activeRole);
+function canManage() {
+  return Boolean(state.session?.user)
+    && !state.guestMode
+    && ["owner", "editor"].includes(state.activeRole)
+    && window.getAdvancedMode?.() === true;
 }
 
-function updateAccountVisibility() {
+function canSeePrivate() {
+  return !state.guestMode && ["owner", "editor"].includes(state.activeRole);
+}
+
+function updatePageAccess() {
   const signedIn = Boolean(state.session?.user);
-  const hint = getElement("allianceAccountHint");
-  const management = getElement("allianceManagementCard");
-  if (hint) hint.hidden = signedIn;
-  if (management) management.hidden = !signedIn;
+  const advanced = window.getAdvancedMode?.() === true;
+  const hasAlliance = Boolean(state.activeAllianceId);
+
+  const hint = byId("allianceAccountHint");
+  const management = byId("allianceManagementCard");
+  const guest = document.querySelector(".alliance-guest-card");
+  const editor = byId("participantEditorCard");
+
+  if (hint) hint.hidden = signedIn && advanced;
+  if (management) management.hidden = !signedIn || !advanced || hasAlliance;
+  if (guest) guest.hidden = hasAlliance;
+  if (editor) editor.hidden = !canManage();
+
+  const accountButton = byId("allianceAccountButton");
+  const advancedButton = byId("allianceAdvancedModeButton");
+  if (accountButton) accountButton.hidden = signedIn;
+  if (advancedButton) advancedButton.hidden = !signedIn || advanced;
+
+  const hintText = byId("allianceAccessHintText");
+  if (hintText) {
+    hintText.textContent = signedIn
+      ? "Для создания и редактирования союзного штаба включи продвинутый режим."
+      : "Для создания и редактирования нужен полноценный аккаунт и продвинутый режим.";
+  }
 }
 
 function applyAllianceHeader() {
   const alliance = state.activeAlliance || {};
-  getElement("allianceOpenedName").textContent = alliance.name || "—";
-  getElement("allianceOpenedState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
+  byId("allianceOpenedName").textContent = alliance.name || "—";
+  byId("allianceOpenedState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
 
-  const roleBox = getElement("allianceRoleBox");
-  const inviteBox = getElement("allianceInviteBox");
+  const roleBox = byId("allianceRoleBox");
+  const inviteBox = byId("allianceInviteBox");
   if (roleBox) roleBox.hidden = state.guestMode || !state.session;
   if (inviteBox) inviteBox.hidden = state.guestMode || !state.session;
+  if (byId("allianceSessionRole")) byId("allianceSessionRole").textContent = ROLE_LABELS[state.activeRole] || "Только просмотр";
+  if (byId("allianceInviteCode")) byId("allianceInviteCode").textContent = alliance.invite_code || "—";
 
-  const role = getElement("allianceSessionRole");
-  if (role) role.textContent = ROLE_LABELS[state.activeRole] || "Только просмотр";
+  document.querySelectorAll(".participant-private-column").forEach(element => {
+    element.hidden = !canSeePrivate();
+  });
+}
 
-  const code = getElement("allianceInviteCode");
-  if (code) code.textContent = alliance.invite_code || "—";
+function filteredParticipants() {
+  const search = (byId("participantSearch")?.value || "").trim().toLowerCase();
+  const rank = byId("participantRankFilter")?.value || "";
+  const status = byId("participantStatusFilter")?.value || "";
+  const sort = byId("participantSort")?.value || "rank";
+  const rankWeight = { "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 };
 
-  const editor = getElement("participantEditorCard");
-  if (editor) editor.hidden = !canEditParticipants();
+  return state.participants
+    .filter(item => !search || item.nickname.toLowerCase().includes(search))
+    .filter(item => !rank || item.rank_name === rank)
+    .filter(item => !status || item.member_status === status)
+    .sort((a, b) => {
+      if (sort === "nickname") return a.nickname.localeCompare(b.nickname, "ru");
+      return (rankWeight[b.rank_name] || 0) - (rankWeight[a.rank_name] || 0)
+        || a.nickname.localeCompare(b.nickname, "ru");
+    });
 }
 
 function renderParticipants() {
-  const body = getElement("participantTableBody");
-  const empty = getElement("participantEmptyState");
-  const count = getElement("participantCount");
+  const body = byId("participantTableBody");
+  const empty = byId("participantEmptyState");
+  const count = byId("participantCount");
   if (!body || !empty || !count) return;
 
+  const rows = filteredParticipants();
   count.textContent = `${state.participants.length} участников`;
-  empty.hidden = state.participants.length > 0;
-  body.innerHTML = renderParticipantRows(state.participants, canEditParticipants());
+  empty.hidden = rows.length > 0;
+  body.innerHTML = renderParticipantRows(rows, canManage(), canSeePrivate());
+  applyAllianceHeader();
 }
 
 function showAllianceData() {
-  const area = getElement("allianceDataArea");
+  const area = byId("allianceDataArea");
   if (area) area.hidden = false;
+  updatePageAccess();
   applyAllianceHeader();
   renderParticipants();
 }
 
-function removeRealtimeChannel() {
-  if (!state.realtimeChannel || !state.client) return;
-  state.client.removeChannel(state.realtimeChannel);
-  state.realtimeChannel = null;
+function resetParticipantForm() {
+  byId("participantForm")?.reset();
+  if (byId("participantId")) byId("participantId").value = "";
+  if (byId("participantStatus")) byId("participantStatus").value = "main";
+  if (byId("participantEditorTitle")) byId("participantEditorTitle").textContent = "Добавить участника";
+  if (byId("participantCancelButton")) byId("participantCancelButton").hidden = true;
 }
 
-async function loadMemberParticipants() {
+function fillParticipantForm(participant) {
+  if (!participant) return;
+  byId("participantId").value = participant.id;
+  byId("participantNickname").value = participant.nickname || "";
+  byId("participantRank").value = participant.rank_name || "";
+  byId("participantStatus").value = participant.member_status || "main";
+  byId("participantTimezone").value = participant.timezone_offset ?? "";
+  byId("participantBirthday").value = participant.birthday || "";
+  byId("participantComment").value = participant.comment || "";
+  byId("participantEditorTitle").textContent = "Редактировать участника";
+  byId("participantCancelButton").hidden = false;
+  byId("participantEditorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function loadParticipants() {
   if (!state.activeAllianceId) return;
   const { data, error } = await fetchParticipants(state.client, state.activeAllianceId);
   if (error) throw error;
@@ -111,10 +170,15 @@ async function loadMemberParticipants() {
   renderParticipants();
 }
 
-function subscribeToParticipants() {
-  removeRealtimeChannel();
-  if (!state.activeAllianceId || state.guestMode) return;
+function removeRealtime() {
+  if (!state.realtimeChannel || !state.client) return;
+  state.client.removeChannel(state.realtimeChannel);
+  state.realtimeChannel = null;
+}
 
+function subscribeRealtime() {
+  removeRealtime();
+  if (!state.activeAllianceId || state.guestMode) return;
   state.realtimeChannel = state.client
     .channel(`participants:${state.activeAllianceId}`)
     .on("postgres_changes", {
@@ -122,109 +186,38 @@ function subscribeToParticipants() {
       schema: "public",
       table: "participants",
       filter: `alliance_id=eq.${state.activeAllianceId}`
-    }, async () => {
-      try {
-        await loadMemberParticipants();
-      } catch (error) {
-        console.error("Не удалось обновить список участников", error);
-      }
-    })
+    }, () => loadParticipants().catch(console.error))
     .subscribe();
 }
 
-function resetParticipantForm() {
-  getElement("participantForm")?.reset();
-  if (getElement("participantId")) getElement("participantId").value = "";
-  if (getElement("participantPower")) getElement("participantPower").value = "0";
-  if (getElement("participantStatus")) getElement("participantStatus").value = "active";
-  if (getElement("participantEditorTitle")) getElement("participantEditorTitle").textContent = "Добавить участника";
-  if (getElement("participantCancelButton")) getElement("participantCancelButton").hidden = true;
-}
-
-function fillParticipantForm(participant) {
-  if (!participant) return;
-  getElement("participantId").value = participant.id;
-  getElement("participantNickname").value = participant.nickname || "";
-  getElement("participantRank").value = participant.rank_name || "";
-  getElement("participantPower").value = String(participant.squad_power || 0);
-  getElement("participantStatus").value = participant.status || "active";
-  getElement("participantComment").value = participant.comment || "";
-  getElement("participantEditorTitle").textContent = "Редактировать участника";
-  getElement("participantCancelButton").hidden = false;
-  getElement("participantEditorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-async function openGuestAlliance(event) {
-  event.preventDefault();
-  const code = getElement("allianceGuestCode").value.trim().toUpperCase();
-  const button = getElement("allianceGuestOpenButton");
-  if (!code) return showMessage("Укажи пригласительный код.", "error");
-
-  setBusy(button, true, "Открываем…");
-  showMessage("");
-  const { data, error } = await fetchAllianceForGuest(state.client, code);
-  setBusy(button, false);
-
-  if (error) {
-    const message = String(error.message || "");
-    showMessage(
-      message.includes("open_alliance_by_code")
-        ? "Гостевой просмотр ещё не подключён в Supabase. Нужно выполнить новый SQL-скрипт для союзного штаба."
-        : message,
-      "error"
-    );
-    return;
-  }
-
-  if (!data?.alliance) {
-    showMessage("Союз с таким кодом не найден.", "error");
-    return;
-  }
-
-  removeRealtimeChannel();
-  state.guestMode = true;
-  state.activeAlliance = data.alliance;
-  state.activeAllianceId = data.alliance.id || "";
-  state.activeRole = "viewer";
-  state.participants = Array.isArray(data.participants) ? data.participants : [];
-  resetParticipantForm();
-  showAllianceData();
-  showMessage("Штаб открыт в режиме просмотра.", "success");
-}
-
 function renderMemberships() {
-  const selector = getElement("allianceSelector");
-  const field = getElement("allianceSelectorField");
+  const selector = byId("allianceSelector");
+  const field = byId("allianceSelectorField");
   if (!selector || !field) return;
-
-  field.hidden = state.memberships.length === 0;
+  field.hidden = state.memberships.length < 2;
   selector.innerHTML = renderMembershipOptions(state.memberships);
-  if (!state.memberships.length) return;
-
-  const saved = localStorage.getItem(ACTIVE_ALLIANCE_STORAGE_KEY) || "";
-  const membership = state.memberships.find(item => item.alliance_id === saved) || state.memberships[0];
-  selector.value = membership.alliance_id;
+  if (state.activeAllianceId) selector.value = state.activeAllianceId;
 }
 
 async function openMembership(allianceId) {
   const membership = state.memberships.find(item => item.alliance_id === allianceId);
   if (!membership) return;
-
   state.guestMode = false;
   state.activeAllianceId = membership.alliance_id;
   state.activeAlliance = membership.alliances || null;
   state.activeRole = membership.role || "viewer";
   localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, state.activeAllianceId);
   resetParticipantForm();
-  await loadMemberParticipants();
+  await loadParticipants();
   showAllianceData();
-  subscribeToParticipants();
+  subscribeRealtime();
 }
 
 async function loadMemberships() {
   if (!state.session?.user) {
     state.memberships = [];
     renderMemberships();
+    updatePageAccess();
     return;
   }
 
@@ -233,40 +226,60 @@ async function loadMemberships() {
   state.memberships = Array.isArray(data) ? data : [];
   renderMemberships();
 
-  if (state.memberships.length && getElement("allianceDataArea")?.hidden) {
+  if (state.memberships.length) {
     const saved = localStorage.getItem(ACTIVE_ALLIANCE_STORAGE_KEY) || "";
     const membership = state.memberships.find(item => item.alliance_id === saved) || state.memberships[0];
     await openMembership(membership.alliance_id);
+  } else {
+    state.activeAllianceId = "";
+    updatePageAccess();
   }
+}
+
+async function openGuestAlliance(event) {
+  event.preventDefault();
+  const code = byId("allianceGuestCode").value.trim().toUpperCase();
+  const button = byId("allianceGuestOpenButton");
+  if (!code) return showMessage("Укажи пригласительный код.", "error");
+
+  setBusy(button, true, "Открываем…");
+  const { data, error } = await fetchAllianceForGuest(state.client, code);
+  setBusy(button, false);
+  if (error) return showMessage(error.message, "error");
+  if (!data?.alliance) return showMessage("Союз с таким кодом не найден.", "error");
+
+  removeRealtime();
+  state.guestMode = true;
+  state.activeAlliance = data.alliance;
+  state.activeAllianceId = data.alliance.id;
+  state.activeRole = "viewer";
+  state.participants = Array.isArray(data.participants) ? data.participants : [];
+  showAllianceData();
+  showMessage("Штаб открыт в режиме просмотра.", "success");
 }
 
 async function handleCreateAlliance(event) {
   event.preventDefault();
-  if (!state.session?.user) return showMessage("Для создания штаба войди в аккаунт HarvestHub.", "error");
-
-  const name = getElement("allianceCreateName").value.trim();
-  const stateNumber = getElement("allianceCreateState").value.trim();
   const button = event.submitter;
+  const name = byId("allianceCreateName").value.trim();
+  const stateNumber = byId("allianceCreateState").value.trim();
   if (!name) return showMessage("Укажи название союза.", "error");
 
   setBusy(button, true, "Создаём…");
-  const { data, error } = await createAlliance(state.client, { name, stateNumber, userId: state.session.user.id });
+  const { data, error } = await createAlliance(state.client, { name, stateNumber });
   setBusy(button, false);
   if (error) return showMessage(error.message, "error");
 
-  localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, data.id);
+  localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, data);
   event.currentTarget.reset();
   await loadMemberships();
-  await openMembership(data.id);
   showMessage("Союзный штаб создан.", "success");
 }
 
 async function handleJoinAlliance(event) {
   event.preventDefault();
-  if (!state.session?.user) return showMessage("Для подключения штаба войди в аккаунт HarvestHub.", "error");
-
-  const code = getElement("allianceJoinCode").value.trim().toUpperCase();
   const button = event.submitter;
+  const code = byId("allianceJoinCode").value.trim().toUpperCase();
   if (!code) return showMessage("Укажи пригласительный код.", "error");
 
   setBusy(button, true, "Подключаем…");
@@ -277,108 +290,91 @@ async function handleJoinAlliance(event) {
   localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, data);
   event.currentTarget.reset();
   await loadMemberships();
-  await openMembership(data);
   showMessage("Штаб подключён к аккаунту.", "success");
 }
 
 async function handleParticipantSubmit(event) {
   event.preventDefault();
-  if (!canEditParticipants()) return showMessage("У тебя нет прав на изменение участников.", "error");
+  if (!canManage()) return showMessage("Редактирование доступно только управляющим союза в продвинутом режиме.", "error");
 
-  const id = getElement("participantId").value;
-  const nickname = getElement("participantNickname").value.trim();
+  const nickname = byId("participantNickname").value.trim();
   if (!nickname) return showMessage("Укажи никнейм участника.", "error");
+  const duplicate = state.participants.find(item => item.nickname.trim().toLowerCase() === nickname.toLowerCase() && item.id !== byId("participantId").value);
+  if (duplicate) return showMessage("Участник с таким никнеймом уже существует.", "error");
 
   const button = event.submitter;
-  const payload = {
-    alliance_id: state.activeAllianceId,
-    nickname,
-    rank_name: getElement("participantRank").value.trim(),
-    squad_power: Math.max(0, Math.floor(Number(getElement("participantPower").value) || 0)),
-    status: getElement("participantStatus").value,
-    comment: getElement("participantComment").value.trim(),
-    updated_by: state.session.user.id
-  };
-
   setBusy(button, true, "Сохраняем…");
-  const result = await saveParticipant(state.client, {
-    id,
+  const { error } = await saveParticipant(state.client, {
+    id: byId("participantId").value || null,
     allianceId: state.activeAllianceId,
-    payload,
-    userId: state.session.user.id
+    payload: {
+      nickname,
+      rank_name: byId("participantRank").value,
+      member_status: byId("participantStatus").value,
+      timezone_offset: byId("participantTimezone").value === "" ? null : Number(byId("participantTimezone").value),
+      birthday: byId("participantBirthday").value || null,
+      comment: byId("participantComment").value.trim()
+    }
   });
   setBusy(button, false);
-  if (result.error) return showMessage(result.error.message, "error");
+  if (error) return showMessage(error.message, "error");
 
   resetParticipantForm();
-  await loadMemberParticipants();
-  showMessage(id ? "Данные участника обновлены." : "Участник добавлен.", "success");
+  await loadParticipants();
+  showMessage("Данные участника сохранены.", "success");
 }
 
 async function handleTableClick(event) {
-  const editButton = event.target.closest("[data-participant-edit]");
-  const deleteButton = event.target.closest("[data-participant-delete]");
-
-  if (editButton) {
-    fillParticipantForm(state.participants.find(item => item.id === editButton.dataset.participantEdit));
+  const edit = event.target.closest("[data-participant-edit]");
+  if (edit) {
+    fillParticipantForm(state.participants.find(item => item.id === edit.dataset.participantEdit));
     return;
   }
-  if (!deleteButton || !canEditParticipants()) return;
 
-  const participant = state.participants.find(item => item.id === deleteButton.dataset.participantDelete);
-  if (!participant || !window.confirm(`Удалить участника «${participant.nickname}»?`)) return;
+  const remove = event.target.closest("[data-participant-delete]");
+  if (!remove || !canManage()) return;
+  const participant = state.participants.find(item => item.id === remove.dataset.participantDelete);
+  if (!participant || !window.confirm(`Отметить участника «${participant.nickname}» как вышедшего? История сохранится.`)) return;
 
-  deleteButton.disabled = true;
   const { error } = await deleteParticipant(state.client, { id: participant.id, allianceId: state.activeAllianceId });
-  if (error) {
-    deleteButton.disabled = false;
-    return showMessage(error.message, "error");
-  }
-  await loadMemberParticipants();
-  showMessage("Участник удалён.", "success");
+  if (error) return showMessage(error.message, "error");
+  await loadParticipants();
+  showMessage("Участник отмечен как вышедший.", "success");
 }
 
-async function handleCopyCode() {
-  const code = getElement("allianceInviteCode")?.textContent?.trim();
+async function copyInviteCode() {
+  const code = byId("allianceInviteCode")?.textContent?.trim();
   if (!code || code === "—") return;
-  try {
-    await navigator.clipboard.writeText(code);
-    showMessage("Код приглашения скопирован.", "success");
-  } catch {
-    showMessage(`Код приглашения: ${code}`, "info");
-  }
+  await navigator.clipboard.writeText(code);
+  showMessage("Код приглашения скопирован.", "success");
 }
 
 function bindEvents() {
-  getElement("allianceGuestOpenForm")?.addEventListener("submit", openGuestAlliance);
-  getElement("allianceCreateForm")?.addEventListener("submit", handleCreateAlliance);
-  getElement("allianceJoinForm")?.addEventListener("submit", handleJoinAlliance);
-  getElement("allianceSelector")?.addEventListener("change", event => openMembership(event.target.value).catch(error => showMessage(error.message, "error")));
-  getElement("allianceCopyCodeButton")?.addEventListener("click", handleCopyCode);
-  getElement("participantForm")?.addEventListener("submit", handleParticipantSubmit);
-  getElement("participantCancelButton")?.addEventListener("click", resetParticipantForm);
-  getElement("participantTableBody")?.addEventListener("click", handleTableClick);
+  byId("allianceGuestOpenForm")?.addEventListener("submit", openGuestAlliance);
+  byId("allianceCreateForm")?.addEventListener("submit", handleCreateAlliance);
+  byId("allianceJoinForm")?.addEventListener("submit", handleJoinAlliance);
+  byId("participantForm")?.addEventListener("submit", handleParticipantSubmit);
+  byId("participantCancelButton")?.addEventListener("click", resetParticipantForm);
+  byId("participantTableBody")?.addEventListener("click", handleTableClick);
+  byId("allianceCopyCodeButton")?.addEventListener("click", copyInviteCode);
+  byId("allianceSelector")?.addEventListener("change", event => openMembership(event.target.value).catch(error => showMessage(error.message, "error")));
+  ["participantSearch", "participantRankFilter", "participantStatusFilter", "participantSort"].forEach(id => {
+    byId(id)?.addEventListener(id === "participantSearch" ? "input" : "change", renderParticipants);
+  });
 }
 
 async function applySession(session) {
   state.session = session;
-  updateAccountVisibility();
+  updatePageAccess();
   try {
     await loadMemberships();
   } catch (error) {
-    console.error("Ошибка загрузки союзного штаба", error);
-    showMessage(error.message, "error");
+    console.error(error);
+    showMessage(error.message || "Не удалось загрузить союзный штаб.", "error");
   }
 }
 
-function cleanup() {
-  removeRealtimeChannel();
-  state.authSubscription?.unsubscribe?.();
-  state.authSubscription = null;
-}
-
 export async function init() {
-  cleanup();
   state.client = window.harvestHubSupabase;
   if (!state.client) return showMessage("Не удалось подключить Supabase.", "error");
 
@@ -387,7 +383,7 @@ export async function init() {
   if (error) return showMessage(error.message, "error");
   await applySession(data.session);
 
-  const authListener = state.client.auth.onAuthStateChange(async (_event, session) => applySession(session));
-  state.authSubscription = authListener.data.subscription;
-  window.harvestHubAllianceCleanup = cleanup;
+  const listener = state.client.auth.onAuthStateChange((_event, session) => applySession(session));
+  state.authSubscription = listener.data.subscription;
+  window.addEventListener("harvesthub:advanced-mode-change", updatePageAccess);
 }
