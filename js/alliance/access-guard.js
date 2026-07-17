@@ -14,6 +14,10 @@
     return Boolean(session?.user) && hasAdvancedMode();
   }
 
+  function isOwner() {
+    return getElement("allianceSessionRole")?.textContent?.trim() === "Владелец";
+  }
+
   function showMessage(message, type = "error") {
     const element = getElement("allianceMessage");
     if (!element) return;
@@ -35,6 +39,21 @@
     }
   }
 
+  function syncDetailsEditor() {
+    const card = getElement("allianceDetailsEditorCard");
+    const canEdit = canManageAlliance() && isOwner();
+    if (card) card.hidden = !canEdit;
+    if (!canEdit) return;
+
+    const nameInput = getElement("allianceEditName");
+    const stateInput = getElement("allianceEditState");
+    const shownName = getElement("allianceOpenedName")?.textContent?.trim() || "";
+    const shownState = getElement("allianceOpenedState")?.textContent?.replace(/^Штат\s*/i, "").trim() || "";
+
+    if (nameInput && document.activeElement !== nameInput && !nameInput.value) nameInput.value = shownName === "—" ? "" : shownName;
+    if (stateInput && document.activeElement !== stateInput && !stateInput.value) stateInput.value = shownState;
+  }
+
   function applyAccessState() {
     scheduled = false;
     if (!document.querySelector(".alliance-page")) return;
@@ -42,6 +61,8 @@
     const signedIn = Boolean(session?.user);
     const advanced = hasAdvancedMode();
     const allowed = signedIn && advanced;
+    const dataArea = getElement("allianceDataArea");
+    const hasOpenedAlliance = Boolean(dataArea && !dataArea.hidden);
 
     const hint = getElement("allianceAccountHint");
     const management = getElement("allianceManagementCard");
@@ -49,7 +70,7 @@
     const advancedButton = getElement("allianceAdvancedModeButton");
     const hintText = getElement("allianceAccessHintText");
 
-    if (management) management.hidden = !allowed;
+    if (management) management.hidden = !allowed || hasOpenedAlliance;
     if (hint) hint.hidden = allowed;
     if (accountButton) accountButton.hidden = signedIn;
     if (advancedButton) advancedButton.hidden = !signedIn || advanced;
@@ -63,9 +84,13 @@
     if (!allowed) {
       const editor = getElement("participantEditorCard");
       const invite = getElement("allianceInviteBox");
+      const details = getElement("allianceDetailsEditorCard");
       if (editor) editor.hidden = true;
       if (invite) invite.hidden = true;
+      if (details) details.hidden = true;
     }
+
+    syncDetailsEditor();
   }
 
   function scheduleApply() {
@@ -91,11 +116,9 @@
     event.stopImmediatePropagation();
 
     if (!canManageAlliance()) {
-      showMessage(
-        session?.user
-          ? "Для создания союзного штаба включи продвинутый режим."
-          : "Для создания союзного штаба войди в аккаунт и включи продвинутый режим."
-      );
+      showMessage(session?.user
+        ? "Для создания союзного штаба включи продвинутый режим."
+        : "Для создания союзного штаба войди в аккаунт и включи продвинутый режим.");
       return;
     }
 
@@ -103,11 +126,7 @@
     const stateNumber = getElement("allianceCreateState")?.value.trim() || "";
     const button = event.submitter || event.target.querySelector("button[type='submit']");
 
-    if (!name) {
-      showMessage("Укажи название союза.");
-      return;
-    }
-
+    if (!name) return showMessage("Укажи название союза.");
     setBusy(button, true, "Создаём…");
 
     try {
@@ -115,25 +134,57 @@
         alliance_name: name,
         alliance_state_number: stateNumber
       });
-
       if (error) throw error;
       if (!data) throw new Error("Supabase не вернул идентификатор созданного штаба.");
 
       localStorage.setItem("harvesthub_active_alliance_id", data);
       event.target.reset();
-      showMessage("Союзный штаб создан. Обновляю данные…", "success");
-
-      window.setTimeout(() => {
-        window.loadPage?.("alliance/members.html");
-      }, 300);
+      showMessage("Союзный штаб создан.", "success");
+      await window.loadPage?.("alliance/members.html");
     } catch (error) {
       console.error("Не удалось создать союзный штаб", error);
       const message = String(error?.message || "");
-      showMessage(
-        message.includes("create_alliance_hub")
-          ? "В Supabase ещё не подключена функция создания штаба. Выполни SQL-файл 003_alliance_create_rpc.sql."
-          : message || "Не удалось создать союзный штаб."
-      );
+      showMessage(message.includes("create_alliance_hub")
+        ? "В Supabase ещё не подключена функция создания штаба. Выполни SQL-файл 003_alliance_create_rpc.sql."
+        : message || "Не удалось создать союзный штаб.");
+      setBusy(button, false);
+    }
+  }
+
+  async function updateAllianceDetails(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    if (!canManageAlliance() || !isOwner()) {
+      showMessage("Изменять название и номер штата может только владелец штаба в продвинутом режиме.");
+      return;
+    }
+
+    const allianceId = localStorage.getItem("harvesthub_active_alliance_id") || "";
+    const name = getElement("allianceEditName")?.value.trim() || "";
+    const stateNumber = getElement("allianceEditState")?.value.trim() || "";
+    const button = event.submitter || event.target.querySelector("button[type='submit']");
+
+    if (!allianceId) return showMessage("Не удалось определить текущий союзный штаб.");
+    if (!name) return showMessage("Укажи название союза.");
+
+    setBusy(button, true, "Сохраняем…");
+    try {
+      const { error } = await window.harvestHubSupabase
+        .from("alliances")
+        .update({ name, state_number: stateNumber })
+        .eq("id", allianceId);
+      if (error) throw error;
+
+      const openedName = getElement("allianceOpenedName");
+      const openedState = getElement("allianceOpenedState");
+      if (openedName) openedName.textContent = name;
+      if (openedState) openedState.textContent = stateNumber ? `Штат ${stateNumber}` : "";
+      showMessage("Данные союза обновлены.", "success");
+    } catch (error) {
+      console.error("Не удалось обновить данные союза", error);
+      showMessage(error?.message || "Не удалось обновить данные союза.");
+    } finally {
       setBusy(button, false);
     }
   }
@@ -143,17 +194,19 @@
       createAlliance(event);
       return;
     }
+    if (event.target?.id === "allianceDetailsForm") {
+      updateAllianceDetails(event);
+      return;
+    }
 
     const protectedForms = ["allianceJoinForm", "participantForm"];
     if (!protectedForms.includes(event.target?.id) || canManageAlliance()) return;
 
     event.preventDefault();
     event.stopImmediatePropagation();
-    showMessage(
-      session?.user
-        ? "Для создания и редактирования союзного штаба включи продвинутый режим."
-        : "Для создания и редактирования союзного штаба войди в аккаунт и включи продвинутый режим."
-    );
+    showMessage(session?.user
+      ? "Для создания и редактирования союзного штаба включи продвинутый режим."
+      : "Для создания и редактирования союзного штаба войди в аккаунт и включи продвинутый режим.");
   }, true);
 
   document.addEventListener("click", event => {
@@ -164,9 +217,7 @@
       return;
     }
 
-    const protectedControl = event.target.closest?.(
-      "[data-participant-edit], [data-participant-delete], #allianceCopyCodeButton"
-    );
+    const protectedControl = event.target.closest?.("[data-participant-edit], [data-participant-delete], #allianceCopyCodeButton");
     if (!protectedControl || canManageAlliance()) return;
 
     event.preventDefault();
@@ -175,7 +226,7 @@
   }, true);
 
   const observer = new MutationObserver(scheduleApply);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["hidden"] });
 
   window.addEventListener("storage", scheduleApply);
   window.addEventListener("harvesthub:profile-change", refreshSession);
