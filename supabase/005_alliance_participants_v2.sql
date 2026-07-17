@@ -63,16 +63,16 @@ security definer
 set search_path = public
 as $$
 declare
-  current_role text;
+  alliance_role text;
   can_see_private boolean;
   result jsonb;
 begin
-  current_role := public.get_alliance_role(target_alliance_id);
-  if current_role is null then
+  alliance_role := public.get_alliance_role(target_alliance_id);
+  if alliance_role is null then
     raise exception 'Нет доступа к этому союзному штабу';
   end if;
 
-  can_see_private := current_role in ('owner', 'editor');
+  can_see_private := alliance_role in ('owner', 'editor');
 
   select coalesce(jsonb_agg(item order by
     case item->>'rank_name'
@@ -127,11 +127,11 @@ security definer
 set search_path = public
 as $$
 declare
-  current_role text;
+  alliance_role text;
   saved_id uuid;
 begin
-  current_role := public.get_alliance_role(target_alliance_id);
-  if current_role not in ('owner', 'editor') then
+  alliance_role := public.get_alliance_role(target_alliance_id);
+  if alliance_role not in ('owner', 'editor') then
     raise exception 'Редактировать состав могут только управляющие союза';
   end if;
 
