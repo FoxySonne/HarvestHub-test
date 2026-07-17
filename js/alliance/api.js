@@ -1,8 +1,5 @@
 export function fetchMemberships(client) {
-  return client
-    .from("alliance_members")
-    .select("alliance_id, role, alliances(id, name, state_number, invite_code)")
-    .order("joined_at", { ascending: true });
+  return client.rpc("get_my_alliance_hubs");
 }
 
 export function fetchParticipants(client, allianceId) {
