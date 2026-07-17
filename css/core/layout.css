@@ -114,38 +114,3 @@ RIGHT SIDEBAR
   gap: 18px;
   min-width: 0;
 }
-
-/* ==========================================================
-ADAPTIVE GRIDS
-========================================================== */
-
-.adaptive-grid,
-.grid,
-.grid-2,
-.grid-3,
-.grid-4 {
-  display: grid;
-  gap: 24px;
-}
-
-.flex,
-.flex-between,
-.flex-column {
-  display: flex;
-}
-
-.flex {
-  gap: 16px;
-  align-items: center;
-}
-
-.flex-between {
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.flex-column {
-  flex-direction: column;
-  gap: 16px;
-}

@@ -1,23 +1,5 @@
 import { seasonDatabase } from "../../data/season-database.js";
-
-const numberFormat = new Intl.NumberFormat("ru-RU", {
-  maximumFractionDigits: 1
-});
-
-function num(id) {
-  const element = document.getElementById(id);
-  return Number(element?.value) || 0;
-}
-
-function setText(id, value) {
-  const element = document.getElementById(id);
-  if (!element) return;
-  element.textContent = numberFormat.format(value);
-}
-
-function getByLevel(list, level) {
-  return list.find(item => Number(item.level) === Number(level)) || null;
-}
+import { findByLevel as getByLevel, num, setText } from "./dom.js";
 
 function getBuildingCurrentLevel(buildingId) {
   const row = document.querySelector(`.season-building-row[data-building-id="${buildingId}"]`);

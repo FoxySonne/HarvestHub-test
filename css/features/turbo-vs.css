@@ -1,4 +1,23 @@
 /* TURBO VS CALCULATOR */
+.turbo-card{min-width:0}
+.turbo-content{display:flex;flex-direction:column;gap:16px}
+.desktop-fixed-right,.results{order:-1}
+.action-list{display:flex;flex-direction:column;gap:10px}
+.action-row{display:grid;grid-template-columns:minmax(0,1fr) clamp(150px,32vw,170px);gap:12px;align-items:center}
+.action-row-with-level{grid-template-columns:minmax(0,1fr) clamp(150px,32vw,170px)}
+.action-row label{color:var(--text);font-size:14px;line-height:1.3}
+.action-controls{display:grid;grid-template-columns:1fr;gap:8px;min-width:0}
+.action-row-with-level .action-controls{display:flex;gap:8px;align-items:center;min-width:0}
+.action-row input,.action-row select{width:100%;min-width:0}
+.action-row-with-level .action-level-select,.action-row-with-level .action-quantity-input{flex:1 1 0;width:0;min-width:0}
+.action-row-with-level .action-level-select{padding-left:8px;padding-right:6px}
+.action-row-with-level .action-quantity-input{padding-left:8px;padding-right:8px;text-align:center}
+.action-row-text{display:block;padding:14px 16px;color:var(--text-soft);background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);line-height:1.4}
+.result-block{padding:14px 0;border-bottom:1px solid var(--border)}
+.result-block:last-child{border-bottom:none}
+.result-block h4{margin:0 0 8px}
+.result-block div{font-size:24px;font-weight:700;color:var(--accent)}
+
 .turbo-mobile-switch {
   display: none !important;
 }
@@ -89,4 +108,22 @@
   .action-row-multi-level > label {
     padding-top: 0;
   }
+}
+
+@media (min-width:900px){
+  .turbo-content{display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,1fr) minmax(260px,320px);gap:24px;align-items:start}
+  .results{grid-column:3;grid-row:1;order:initial}
+  .action-row-with-level .action-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .action-row-with-level .action-level-select,.action-row-with-level .action-quantity-input{width:100%;max-width:100%;min-width:0}
+}
+
+@media (min-width:900px) and (max-width:1199px){
+  .turbo-content{grid-template-columns:1fr;gap:18px}
+  .results{grid-column:1;grid-row:1;order:-1}
+  .action-row{grid-template-columns:minmax(0,1fr) minmax(140px,170px)}
+}
+
+@media (min-width:1200px) and (max-width:1599px){
+  .turbo-content{grid-template-columns:repeat(2,minmax(280px,1fr))}
+  .results{grid-column:1/-1;grid-row:1;order:-1}
 }

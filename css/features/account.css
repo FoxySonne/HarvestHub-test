@@ -41,7 +41,6 @@
 .account-message{min-height:24px;margin:14px 0 0}
 .account-message[data-type="error"],.settings-form-message[data-type="error"]{color:#ff8c8c}
 .account-message[data-type="success"],.settings-form-message[data-type="success"]{color:var(--accent)}
-.account-inline-action{display:inline;padding:0;border:0;background:none;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
 .advanced-mode-setting-row>span:first-child{display:flex;flex-direction:column;gap:4px}
 .advanced-mode-setting-row small{max-width:620px;color:var(--text-soft);font-size:12px;line-height:1.4}
 .advanced-mode-setting-row input:disabled+.ipk-switch-track{opacity:.45;cursor:not-allowed}
@@ -51,7 +50,6 @@
 .settings-form-message{min-height:20px;margin:10px 0 0;font-size:13px}
 .settings-danger-zone{max-width:720px;margin-top:28px;padding-top:24px;border-top:1px solid var(--border)}
 .settings-danger-zone p{max-width:650px;color:var(--text-soft);line-height:1.5}
-.danger-button{background:#8b3030!important;border-color:#b94b4b!important;color:#fff!important}
 .account-delete-modal[hidden]{display:none}
 .account-delete-modal{position:fixed;inset:0;z-index:3200;display:flex;align-items:center;justify-content:center;padding:20px}
 .account-delete-backdrop{position:absolute;inset:0;background:rgba(4,10,16,.82);backdrop-filter:blur(5px)}
@@ -68,7 +66,6 @@
 .profile-state{margin:10px 0 0;font-size:20px;color:var(--text-soft)}
 .profile-email{margin:8px 0 0;color:var(--muted)}
 .profile-sync-status{display:flex;align-items:center;gap:8px;margin:18px 0 0;color:var(--text-soft)}
-.profile-sync-status:not(.sync-state)>span:first-child{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(139,234,99,.45)}
 .profile-edit-button{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;min-width:34px;min-height:34px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--text-soft);font-size:17px}
 .profile-edit-button:hover{border-color:var(--accent);color:var(--accent)}
 .profile-edit-form{max-width:560px;margin:24px 0;padding:20px;border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.02)}
@@ -76,21 +73,10 @@
 .profile-edit-actions{display:flex;justify-content:flex-end;gap:10px}
 .profile-edit-actions button{width:auto}
 .game-profiles-section{padding:30px 0;border-bottom:1px solid var(--border)}
-.game-profiles-heading{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
-.game-profiles-heading h2{margin:0 0 5px}
-.game-profiles-heading p{margin:0;color:var(--muted);font-size:13px}
-.game-profile-item{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0}
-.game-profile-item>div{display:flex;flex-direction:column;gap:5px}
-.game-profile-item strong{font-size:18px}
-.game-profile-item span{color:var(--text-soft)}
-.game-profile-active-label{padding:5px 9px;border-radius:999px;background:rgba(139,234,99,.1);color:var(--accent)!important;font-size:12px;font-weight:700}
 .profile-page-actions{padding-top:24px}
 .profile-page-actions button{width:auto;min-width:140px}
 .profile-warning{max-width:760px;margin-top:24px}
 @media (max-width:899px){
-  .topbar-account-trigger{display:inline-flex;flex:0 0 34px;width:34px;height:34px;min-width:34px;max-width:34px;min-height:34px;margin-left:auto;padding:0;border:1px solid rgba(139,234,99,.38);border-radius:50%;background:transparent;box-shadow:none;color:var(--text-soft);font-size:0;line-height:0}
-  .topbar-account-trigger::before{content:"";display:block;width:17px;height:17px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z'/%3E%3C/svg%3E") center/contain no-repeat}
-  .topbar-account-trigger:hover,.topbar-account-trigger:focus-visible{border-color:var(--accent);color:var(--accent);background:rgba(139,234,99,.08)}
   .desktop-profile-box{display:none}
   .account-modal{align-items:flex-end;justify-content:center;padding:0;padding-top:env(safe-area-inset-top)}
   .account-dialog{width:100%;max-width:none;max-height:100dvh;padding:16px 12px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-padding-top:66px;scroll-padding-bottom:110px}
@@ -110,7 +96,6 @@
   .account-message{min-height:18px;margin:8px 0 0;font-size:11px}
   .profile-title-row h1,.profile-hero>h1{font-size:34px}
   .profile-state{font-size:17px}
-  .game-profile-item{align-items:flex-start}
   .account-delete-actions{flex-direction:column-reverse}
   .account-delete-actions button{width:100%}
 }

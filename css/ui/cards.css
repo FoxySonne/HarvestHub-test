@@ -1,7 +1,14 @@
 /* COLLAPSIBLE CARDS */
 .collapsible-card-header {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   cursor: default;
+}
+
+.collapsible-card-header > :first-child {
+  min-width: 0;
 }
 
 .collapsible-card-toggle {

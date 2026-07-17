@@ -1,3 +1,5 @@
+import { runWhenDomReady } from "./dom-ready.js";
+
 const TEXT_REPLACEMENTS = [
   [/Расчет/g, "Расчёт"],
   [/расчет/g, "расчёт"],
@@ -62,8 +64,7 @@ function start() {
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 }
 
-if (document.readyState === "loading") window.addEventListener("DOMContentLoaded", start);
-else start();
+runWhenDomReady(start);
 
 window.addEventListener("harvesthub:advanced-mode-change", schedulePolish);
 window.harvestHubPolishText = schedulePolish;

@@ -2,6 +2,27 @@
 SEASON RESOURCES — compact calculator layout
 ========================================================== */
 
+.season-page{gap:18px}
+.season-layout{display:grid;grid-template-columns:1fr;gap:24px}
+.season-card{display:flex;flex-direction:column;gap:18px}
+.season-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.season-field{display:flex;flex-direction:column;gap:8px}
+.season-field span{color:var(--text-soft);font-size:14px;line-height:1.35}
+.season-field input,.season-field select{width:100%}
+.season-subgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.season-subgrid-production{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.season-results{display:flex;flex-direction:column;gap:10px}
+.season-results div,.season-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.season-results div:last-child{border-bottom:none}
+.season-results span,.season-summary span{color:var(--text-soft);font-size:14px;line-height:1.35}
+.season-results strong,.season-summary strong{color:var(--accent);font-size:20px;white-space:nowrap}
+
+@media (max-width:899px){
+  .season-subgrid,.season-subgrid-production{grid-template-columns:1fr}
+  .season-results div,.season-summary{align-items:flex-start;flex-direction:column}
+  .season-results strong,.season-summary strong{font-size:18px}
+}
+
 .season-compact-page {
   gap: 16px;
 }
@@ -229,13 +250,6 @@ SEASON RESOURCES — compact calculator layout
   min-height: 28px;
   padding: 3px 5px;
   font-size: 13px;
-}
-
-.season-build-total-mobile {
-  padding: 12px 14px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
 }
 
 .season-raid-grid {

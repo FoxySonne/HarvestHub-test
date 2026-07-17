@@ -95,16 +95,6 @@
   background: var(--card-hover);
 }
 
-.danger-button {
-  background: transparent;
-  color: var(--danger);
-  border: 1px solid var(--danger);
-}
-
-.danger-button:hover {
-  background: rgba(214, 79, 79, .12);
-}
-
 .alliance-workspace,
 .alliance-data-area {
   display: flex;

@@ -16,12 +16,6 @@ window.addEventListener("DOMContentLoaded", () => {
         "components/main-title.html"
         );
 
-    document.addEventListener("click", event => {
-        const homeLink = event.target.closest("[data-home-link='true']");
-        if (!homeLink) return;
-        loadPage("home.html");
-    });
-
     const lastPage = localStorage.getItem("currentPage") || "home.html";
 
 loadPage(lastPage);

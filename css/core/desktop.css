@@ -42,47 +42,10 @@ DESKTOP: 900px+
     min-width: 0;
   }
 
-  .adaptive-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    align-items: start;
-  }
-
-  .desktop-fixed-right {
-    grid-column: -2 / -1;
-    grid-row: 1;
-  }
-
   .button-group {
     flex-direction: row;
   }
 
-  .turbo-content {
-    display: grid;
-    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr) minmax(260px, 320px);
-    gap: 24px;
-    align-items: start;
-  }
-
-  .turbo-mobile-switch {
-    display: none !important;
-  }
-
-  .results {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .action-row-with-level .action-controls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .action-row-with-level .action-level-select,
-  .action-row-with-level .action-quantity-input {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
 }
 
 /* ==========================================================
@@ -129,29 +92,6 @@ MEDIUM DESKTOP: 900–1199px
     min-width: 0;
   }
 
-  .turbo-content {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  .turbo-mobile-switch {
-    display: none !important;
-  }
-
-  .results {
-    grid-column: 1;
-    grid-row: 1;
-    order: -1;
-  }
-
-  .action-row {
-    grid-template-columns: minmax(0, 1fr) minmax(140px, 170px);
-  }
-
-  .home-status-grid,
-  .home-calculator-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 /* ==========================================================
@@ -170,23 +110,6 @@ DESKTOP: 1200–1599px
     padding: 16px;
   }
 
-  .adaptive-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  }
-
-  .turbo-content {
-    grid-template-columns: repeat(2, minmax(280px, 1fr));
-  }
-
-  .turbo-mobile-switch {
-    display: none !important;
-  }
-
-  .results {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    order: -1;
-  }
 }
 
 /* ==========================================================
@@ -205,7 +128,4 @@ WIDE DESKTOP: 1600px+
     padding: 24px;
   }
 
-  .adaptive-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  }
 }

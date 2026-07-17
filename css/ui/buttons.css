@@ -73,19 +73,12 @@ margin-top:20px;
 }
 
 
-/* ==========================================================
-FULL WIDTH BUTTON
-========================================================== */
-
-.button-block{
-
-display:flex;
-
-width:100%;
-
+.danger-button {
+  background: #8b3030 !important;
+  border: 1px solid #b94b4b !important;
+  color: #fff !important;
 }
 
-
-}
-
+.danger-button:hover {
+  background: #a43a3a !important;
 }

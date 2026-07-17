@@ -1,3 +1,5 @@
+import { runWhenDomReady } from "./dom-ready.js";
+
 const STORAGE_KEY = "harvesthub_turbo_vs_mobile_tab";
 const VALID_TABS = new Set(["turtle", "vs"]);
 
@@ -50,7 +52,6 @@ function start() {
   observer.observe(document.body, { childList: true, subtree: true });
   scheduleBind();
 }
-if (document.readyState === "loading") window.addEventListener("DOMContentLoaded", start);
-else start();
+runWhenDomReady(start);
 
 window.harvestHubTurboVsApplyMobileTab = applyTab;

@@ -2,6 +2,48 @@
 IPK CALCULATOR — mobile overflow fixes
 ========================================================== */
 
+.ipk-page{gap:18px}
+.ipk-mobile-categories{display:none}
+.ipk-total-card{display:flex;align-items:center;gap:20px;width:fit-content;min-width:320px}
+.ipk-total-card span{font-size:22px;font-weight:700}
+.ipk-total-card strong{color:var(--button);font-size:28px}
+.ipk-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,280px);gap:18px;align-items:start}
+.ipk-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;align-items:start}
+.ipk-card{display:flex;flex-direction:column;gap:16px}
+.ipk-card-body{display:flex;flex-direction:column;gap:16px}
+.ipk-card.is-collapsed .ipk-card-body{display:none}
+.ipk-stats{display:flex;flex-direction:column;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.ipk-stats div,.ipk-row{display:grid;grid-template-columns:minmax(0,1fr) 80px 86px;gap:8px;align-items:center}
+.ipk-stats span,.ipk-row label{color:var(--text);line-height:1.35}
+.ipk-stats strong{grid-column:2/4;justify-self:end;font-weight:500;white-space:nowrap}
+.ipk-rows{display:flex;flex-direction:column;gap:10px}
+.ipk-row input[type="number"],.ipk-need{width:100%!important;height:32px!important;min-height:32px!important;max-height:32px!important;box-sizing:border-box!important;border-radius:var(--radius-small)!important;padding:0 8px!important;font-size:14px!important;font-weight:600!important;line-height:1!important;white-space:nowrap!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.ipk-row input[type="number"]{text-align:center;appearance:textfield;border:1px solid var(--border)}
+.ipk-need{text-align:center;background:var(--button);color:white;border:1px solid var(--button)}
+.ipk-desktop-categories{display:flex;flex-direction:column;gap:14px;position:sticky;top:20px}
+.ipk-desktop-categories h3{margin:0;font-size:18px}
+.ipk-category-list{display:flex;flex-direction:column;gap:12px}
+.ipk-category-list.is-collapsed{display:none}
+.ipk-category-item{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--text);font-weight:600;cursor:pointer}
+.ipk-switch{position:relative;display:inline-flex;flex:0 0 auto}
+.ipk-switch input{position:absolute;opacity:0;pointer-events:none}
+.ipk-switch-track{width:52px;height:28px;padding:3px;border-radius:999px;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;transition:var(--transition)}
+.ipk-switch-thumb{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--text-muted);color:transparent;font-size:13px;font-weight:900;transform:translateX(0);transition:var(--transition)}
+.ipk-switch input:checked+.ipk-switch-track{background:var(--button);border-color:var(--button);box-shadow:none}
+.ipk-switch input:checked+.ipk-switch-track .ipk-switch-thumb{background:var(--button);color:white;transform:translateX(24px)}
+#ipkTotal{color:var(--accent)}
+
+@media (max-width:899px){
+  .ipk-mobile-categories{display:flex;flex-direction:column;gap:14px}
+  .ipk-total-card{width:100%;min-width:0;justify-content:space-between}
+  .ipk-total-card span{font-size:16px}
+  .ipk-total-card strong{font-size:22px}
+  .ipk-layout,.ipk-cards{grid-template-columns:1fr}
+  .ipk-desktop-categories{display:none}
+  .ipk-stats div,.ipk-row{grid-template-columns:minmax(0,1fr) 58px 76px;gap:8px}
+  .ipk-card-header h3{font-size:17px}
+}
+
 .ipk-page,
 .ipk-layout,
 .ipk-cards,
@@ -79,13 +121,6 @@ IPK CALCULATOR — mobile overflow fixes
 }
 
 @media (max-width: 899px) {
-  html,
-  body {
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  .main,
   .page-section,
   .ipk-page,
   .ipk-layout,
@@ -131,24 +166,6 @@ IPK CALCULATOR — mobile overflow fixes
 
   .ipk-card-body {
     gap: 12px;
-  }
-
-  .ipk-card-header {
-    gap: 8px;
-    min-width: 0;
-  }
-
-  .ipk-card-header h3 {
-    min-width: 0;
-    font-size: 16px;
-    line-height: 1.25;
-    overflow-wrap: anywhere;
-  }
-
-  .ipk-card-toggle {
-    flex: 0 0 auto;
-    width: auto;
-    min-width: 0;
   }
 
   .ipk-stats {

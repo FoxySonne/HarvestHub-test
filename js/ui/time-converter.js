@@ -1,3 +1,5 @@
+import { runWhenDomReady } from "./dom-ready.js";
+
 const FIELD_IDS = {
   days: "timeConverterDays",
   hours: "timeConverterHours",
@@ -72,8 +74,7 @@ function start() {
   observer.observe(document.body, { childList: true, subtree: true });
   scheduleBind();
 }
-if (document.readyState === "loading") window.addEventListener("DOMContentLoaded", start);
-else start();
+runWhenDomReady(start);
 
 window.harvestHubInitTimeConverter = bindTimeConverter;
 window.harvestHubUpdateTimeConverter = renderTimeConverter;

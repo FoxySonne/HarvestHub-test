@@ -86,14 +86,26 @@
       </a>
     `).join("");
 
-    container.querySelectorAll(".quick-link-item").forEach(link => {
-      link.addEventListener("click", event => {
-        event.preventDefault();
-        const pagePath = link.dataset.pagePath;
-        if (pagePath) loadPage(pagePath);
-      });
-    });
   }
+
+  function activatePageLink(target) {
+    const link = target.closest?.("[data-page-path]");
+    const pagePath = link?.dataset.pagePath;
+    if (!pagePath) return false;
+    loadPage(pagePath);
+    return true;
+  }
+
+  document.addEventListener("click", event => {
+    if (!activatePageLink(event.target)) return;
+    event.preventDefault();
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!activatePageLink(event.target)) return;
+    event.preventDefault();
+  });
 
   function getGlobalInitName(fileName) {
     return fileName

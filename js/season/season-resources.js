@@ -1,5 +1,6 @@
 import { seasonDatabase } from "../../data/season-database.js";
 import { seasonBuildingsDatabase } from "../../data/season-buildings-database.js";
+import { findByLevel, num, setText } from "./dom.js";
 import { initSeasonBuildBuffs } from "./season-build-buffs.js";
 import { createSeasonBuildings } from "./season-buildings.js";
 import { initSeasonBuildingLinks } from "./season-building-links.js";
@@ -7,10 +8,6 @@ import { updateSeasonProduction } from "./season-production.js";
 
 const MAX_DISCOUNT_CANS = 50;
 let isRaidNeedManual = false;
-
-const numberFormat = new Intl.NumberFormat("ru-RU", {
-  maximumFractionDigits: 1
-});
 
 const {
   renderBuildingRows,
@@ -26,17 +23,6 @@ const {
   setValue,
   shouldSyncRaidNeeds: () => !isRaidNeedManual
 });
-
-function num(id) {
-  const element = document.getElementById(id);
-  return Number(element?.value) || 0;
-}
-
-function setText(id, value) {
-  const element = document.getElementById(id);
-  if (!element) return;
-  element.textContent = numberFormat.format(value);
-}
 
 function setValue(id, value) {
   const element = document.getElementById(id);
@@ -89,7 +75,7 @@ function shouldSyncMainBuildingLevel(target) {
 }
 
 function getByLevel(list, level) {
-  return list.find(item => Number(item.level) === Number(level)) || list[0];
+  return findByLevel(list, level, list[0]);
 }
 
 function fillSelect(id, list, defaultValue = null) {

@@ -200,6 +200,7 @@ async function initAccountSecurity() {
 }
 
 async function initSettingsPage() {
+    document.getElementById("resetSiteDataButton")?.addEventListener("click", resetAllSiteData);
     await initAdvancedModeSetting();
     await initAccountSecurity();
 }
