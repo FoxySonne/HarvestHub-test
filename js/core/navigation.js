@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260717-37";
+  const SITE_ASSET_VERSION = "20260717-38";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -18,7 +18,7 @@
   ];
   const pageModulePaths = {
     home: "../pages/home.js",
-    members: "../pages/members.js",
+    members: "../pages/members-wrapper.js",
     profile: "../pages/profile.js",
     settings: "../pages/settings.js",
     ipk: "../calculators/ipk.js",
