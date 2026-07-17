@@ -152,7 +152,7 @@
 }
 .alliance-details-form button { width: auto; }
 
-.participant-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.participant-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .participant-comment-field,
 .participant-form-actions { grid-column: 1 / -1; }
 .participant-comment-field textarea { width: 100%; resize: vertical; }
@@ -165,13 +165,13 @@
 }
 .alliance-roster-tools {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) repeat(3, minmax(130px, auto));
+  grid-template-columns: minmax(170px, 1fr) repeat(2, minmax(130px, auto));
   gap: 10px;
-  width: min(100%, 760px);
+  width: min(100%, 620px);
 }
 
 .alliance-table-wrap { overflow-x: auto; }
-.alliance-table { width: 100%; min-width: 980px; border-collapse: collapse; }
+.alliance-table { width: 100%; min-width: 840px; border-collapse: collapse; }
 .alliance-table th,
 .alliance-table td {
   padding: 12px;
@@ -181,23 +181,6 @@
 }
 .alliance-table th { color: var(--text-soft); font-size: 13px; font-weight: 600; }
 .alliance-table td { color: var(--text); }
-
-.participant-status {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.participant-status-main { background: rgba(61, 138, 82, .18); color: var(--accent); }
-.participant-status-reserve { background: rgba(217, 164, 61, .16); color: var(--warning); }
-.participant-status-inactive,
-.participant-status-left { background: rgba(143, 152, 168, .16); color: var(--text-muted); }
-.participant-row-reserve { background: rgba(217, 164, 61, .04); }
-.participant-row-inactive,
-.participant-row-left { opacity: .65; }
 
 .participant-nickname.has-history {
   cursor: help;
