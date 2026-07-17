@@ -12,51 +12,37 @@ function parseAlliance(value) {
   return null;
 }
 
+function normalizeMemberships(data) {
+  const rows = Array.isArray(data) ? data : [];
+  return rows.map(item => ({
+    alliance_id: item.alliance_id || item.id || "",
+    role: item.role || "viewer",
+    alliances: parseAlliance(item.alliances || item.alliance)
+  })).filter(item => item.alliance_id);
+}
+
 export async function fetchMemberships(client) {
-  const rpcResult = await client.rpc("get_my_alliance_hubs");
-  let memberships = [];
-
-  if (!rpcResult.error && Array.isArray(rpcResult.data)) {
-    memberships = rpcResult.data.map(item => ({
-      alliance_id: item.alliance_id || item.id || "",
-      role: item.role || "viewer",
-      alliances: parseAlliance(item.alliances || item.alliance)
-    })).filter(item => item.alliance_id);
+  const v2Result = await client.rpc("get_my_alliance_hubs_v2");
+  if (!v2Result.error) {
+    return { data: normalizeMemberships(v2Result.data), error: null };
   }
 
-  if (!memberships.length) {
-    const directResult = await client
-      .from("alliance_members")
-      .select("alliance_id, role, alliances(id, name, state_number, invite_code)")
-      .order("joined_at", { ascending: true });
-
-    if (directResult.error) return rpcResult.error ? rpcResult : directResult;
-
-    memberships = (directResult.data || []).map(item => ({
-      alliance_id: item.alliance_id,
-      role: item.role || "viewer",
-      alliances: parseAlliance(item.alliances)
-    })).filter(item => item.alliance_id);
+  const oldResult = await client.rpc("get_my_alliance_hubs");
+  if (!oldResult.error) {
+    const normalized = normalizeMemberships(oldResult.data);
+    if (normalized.length) return { data: normalized, error: null };
   }
 
-  const missingIds = memberships
-    .filter(item => !item.alliances?.id)
-    .map(item => item.alliance_id);
+  const directResult = await client
+    .from("alliance_members")
+    .select("alliance_id, role, alliances(id, name, state_number, invite_code)")
+    .order("joined_at", { ascending: true });
 
-  if (missingIds.length) {
-    const { data: allianceRows } = await client
-      .from("alliances")
-      .select("id, name, state_number, invite_code")
-      .in("id", missingIds);
-
-    const byId = new Map((allianceRows || []).map(item => [item.id, item]));
-    memberships = memberships.map(item => ({
-      ...item,
-      alliances: item.alliances?.id ? item.alliances : byId.get(item.alliance_id) || null
-    }));
+  if (!directResult.error) {
+    return { data: normalizeMemberships(directResult.data), error: null };
   }
 
-  return { data: memberships, error: null };
+  return v2Result.error ? v2Result : (oldResult.error ? oldResult : directResult);
 }
 
 export function fetchParticipants(client, allianceId) {
