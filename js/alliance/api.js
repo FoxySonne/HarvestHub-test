@@ -1,48 +1,31 @@
-function parseAlliance(value) {
-  if (!value) return null;
-  if (typeof value === "object") return value;
-  if (typeof value === "string") {
-    try {
-      const parsed = JSON.parse(value);
-      return parsed && typeof parsed === "object" ? parsed : null;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-function normalizeMemberships(data) {
-  const rows = Array.isArray(data) ? data : [];
-  return rows.map(item => ({
-    alliance_id: item.alliance_id || item.id || "",
-    role: item.role || "viewer",
-    alliances: parseAlliance(item.alliances || item.alliance)
-  })).filter(item => item.alliance_id);
-}
-
 export async function fetchMemberships(client) {
-  const v2Result = await client.rpc("get_my_alliance_hubs_v2");
-  if (!v2Result.error) {
-    return { data: normalizeMemberships(v2Result.data), error: null };
-  }
-
-  const oldResult = await client.rpc("get_my_alliance_hubs");
-  if (!oldResult.error) {
-    const normalized = normalizeMemberships(oldResult.data);
-    if (normalized.length) return { data: normalized, error: null };
-  }
-
-  const directResult = await client
+  const membershipResult = await client
     .from("alliance_members")
-    .select("alliance_id, role, alliances(id, name, state_number, invite_code)")
+    .select("alliance_id, role, joined_at")
     .order("joined_at", { ascending: true });
 
-  if (!directResult.error) {
-    return { data: normalizeMemberships(directResult.data), error: null };
-  }
+  if (membershipResult.error) return membershipResult;
 
-  return v2Result.error ? v2Result : (oldResult.error ? oldResult : directResult);
+  const memberships = Array.isArray(membershipResult.data) ? membershipResult.data : [];
+  if (!memberships.length) return { data: [], error: null };
+
+  const ids = memberships.map(item => item.alliance_id).filter(Boolean);
+  const allianceResult = await client
+    .from("alliances")
+    .select("id, name, state_number, invite_code")
+    .in("id", ids);
+
+  if (allianceResult.error) return allianceResult;
+
+  const allianceById = new Map((allianceResult.data || []).map(item => [item.id, item]));
+  return {
+    data: memberships.map(item => ({
+      alliance_id: item.alliance_id,
+      role: item.role || "viewer",
+      alliances: allianceById.get(item.alliance_id) || null
+    })),
+    error: null
+  };
 }
 
 export function fetchParticipants(client, allianceId) {
