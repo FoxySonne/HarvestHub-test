@@ -4,9 +4,10 @@ import { findByLevel, num, setText } from "./dom.js";
 import { initSeasonBuildBuffs } from "./season-build-buffs.js";
 import { createSeasonBuildings } from "./season-buildings.js?v=20260717-27";
 import { initSeasonBuildingLinks } from "./season-building-links.js";
-import { updateSeasonProduction } from "./season-production.js?v=20260717-27";
+import { updateSeasonProduction } from "./season-production.js?v=20260717-31";
 import { calculateSeasonCountdown, calculateSeasonEndUtc, parseSeasonEnd } from "./season-tracking.js?v=20260717-26";
 import { calculateSeasonResourcePlan } from "./season-planning.js?v=20260717-27";
+import { formatHoursMinutes } from "./time-format.js?v=20260717-31";
 
 const MAX_DISCOUNT_CANS = 50;
 const SEASON_PAGE = "calculator/season-resources.html";
@@ -345,9 +346,8 @@ function getSeasonHoursLeft() {
   return Math.max(0, (end.getTime() - now.getTime()) / (60 * 60 * 1000));
 }
 
-function formatHours(value) {
-  if (!Number.isFinite(value)) return "недоступно при текущем производстве";
-  return `${(Math.round(value * 10) / 10).toLocaleString("ru-RU")} ч`;
+function formatHours(value, rounding = "round") {
+  return formatHoursMinutes(value, { rounding });
 }
 
 function isRaidAutoEnabled() {
@@ -372,7 +372,7 @@ function syncRaidAutoControls(plan = null) {
 
   const limitedBySeason = plan.hasSeasonDeadline && plan.seasonHours < plan.plannedHours;
   status.textContent = limitedBySeason
-    ? `Автоподстановка рассчитана по времени до конца сезона: ${formatHours(plan.effectiveHours)}.`
+    ? `Автоподстановка рассчитана по времени до конца сезона: ${formatHours(plan.effectiveHours, "floor")}.`
     : `Автоподстановка рассчитана по времени ожидания: ${formatHours(plan.effectiveHours)}.`;
 }
 
@@ -407,14 +407,14 @@ function updateSeasonDeadline(plan) {
   if (plan.canFinishBySeason) {
     card.dataset.state = "success";
     title.textContent = "Вы успеете накопить ресурсы";
-    message.textContent = `Потребуется ${formatHours(plan.totalRequiredHours)}. До конца сезона осталось ${formatHours(plan.seasonHours)}.`;
+    message.textContent = `Потребуется ${formatHours(plan.totalRequiredHours, "ceil")}. До конца сезона осталось ${formatHours(plan.seasonHours, "floor")}.`;
     return;
   }
 
   card.dataset.state = "danger";
   title.textContent = "До конца сезона ресурсов не хватит";
   message.textContent = Number.isFinite(plan.totalRequiredHours)
-    ? `Потребуется ${formatHours(plan.totalRequiredHours)}, а осталось ${formatHours(plan.seasonHours)}.`
+    ? `Потребуется ${formatHours(plan.totalRequiredHours, "ceil")}, а осталось ${formatHours(plan.seasonHours, "floor")}.`
     : "Для необходимого ресурса производство равно нулю.";
   setText("seasonDeadlineMissingSecondary", plan.deadlineMissing.secondary);
   setText("seasonDeadlineMissingPrimary", plan.deadlineMissing.primary);
@@ -530,6 +530,10 @@ export function init() {
   setDefaults();
   initSeasonBuildingLinks();
   renderSeasonProfileBlock();
+
+  const needHoursLabel = document.getElementById("productionNeedHours")?.previousElementSibling;
+  if (needHoursLabel) needHoursLabel.textContent = "Потребуется времени";
+
   bindCalculatorInputs();
   updateAll();
 }
