@@ -19,12 +19,11 @@ export function fetchAllianceForGuest(client, code) {
   });
 }
 
-export function createAlliance(client, { name, stateNumber, userId }) {
-  return client
-    .from("alliances")
-    .insert({ name, state_number: stateNumber, created_by: userId })
-    .select("id")
-    .single();
+export function createAlliance(client, { name, stateNumber }) {
+  return client.rpc("create_alliance_hub", {
+    alliance_name: String(name || "").trim(),
+    alliance_state_number: String(stateNumber || "").trim()
+  });
 }
 
 export function joinAlliance(client, code) {
