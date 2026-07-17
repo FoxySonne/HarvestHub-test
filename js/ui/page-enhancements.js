@@ -69,11 +69,15 @@ function ensureProfileBlock() {
   const pageContent = document.getElementById("page-content");
   if (!pageContent) return null;
   let block = document.getElementById("profileBlock");
-  if (block) return block;
+  if (block) {
+    block.dataset.noFormPersistence = "true";
+    return block;
+  }
   block = document.createElement("section");
   block.id = "profileBlock";
   block.className = "card profile-block advanced-only";
   block.dataset.profileBlockReady = "false";
+  block.dataset.noFormPersistence = "true";
   block.innerHTML = `
     <div class="card-header profile-block-header">
       <p id="profileBlockDescription"></p>
