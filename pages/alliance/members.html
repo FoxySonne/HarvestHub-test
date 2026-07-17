@@ -63,9 +63,9 @@
       <div class="card-header"><div><h3 id="participantEditorTitle">Добавить участника</h3><p>Единая форма для добавления и редактирования состава.</p></div></div>
       <form id="participantForm" class="participant-form participant-roster-form">
         <input id="participantId" type="hidden" data-no-persist="true">
+        <input id="participantStatus" type="hidden" value="main" data-no-persist="true">
         <label><span>Никнейм</span><input id="participantNickname" type="text" maxlength="80" data-no-persist="true" required></label>
         <label><span>Ранг</span><select id="participantRank" data-no-persist="true"><option value="">Не указан</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select></label>
-        <label><span>Статус</span><select id="participantStatus" data-no-persist="true"><option value="main">Основной состав</option><option value="reserve">Резерв</option><option value="inactive">Неактивен</option><option value="left">Вышел</option></select></label>
         <label><span>Часовой пояс от Москвы</span><input id="participantTimezone" type="number" min="-12" max="12" step="1" data-no-persist="true" placeholder="Например, 2 или -3"></label>
         <label><span>День рождения</span><input id="participantBirthday" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="ДД.ММ" data-no-persist="true"></label>
         <label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label>
@@ -78,11 +78,10 @@
         <div class="alliance-roster-tools">
           <input id="participantSearch" type="search" placeholder="Поиск по нику" data-no-persist="true">
           <select id="participantRankFilter" data-no-persist="true"><option value="">Все ранги</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select>
-          <select id="participantStatusFilter" data-no-persist="true"><option value="">Все статусы</option><option value="main">Основной состав</option><option value="reserve">Резерв</option><option value="inactive">Неактивен</option><option value="left">Вышел</option></select>
           <select id="participantSort" data-no-persist="true"><option value="rank">По рангу</option><option value="nickname">По нику</option></select>
         </div>
       </div>
-      <div class="alliance-table-wrap"><table class="alliance-table alliance-roster-table"><thead><tr><th>Никнейм</th><th>Ранг</th><th>Статус</th><th>День рождения</th><th class="participant-private-column">Часовой пояс</th><th class="participant-private-column">Комментарий</th><th></th></tr></thead><tbody id="participantTableBody"></tbody></table></div>
+      <div class="alliance-table-wrap"><table class="alliance-table alliance-roster-table"><thead><tr><th>Никнейм</th><th>Ранг</th><th>День рождения</th><th class="participant-private-column">Часовой пояс</th><th class="participant-private-column">Комментарий</th><th></th></tr></thead><tbody id="participantTableBody"></tbody></table></div>
       <div id="participantEmptyState" class="alliance-empty-state">Пока нет ни одного участника.</div>
     </section>
   </section>
