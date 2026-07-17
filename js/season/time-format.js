@@ -12,11 +12,19 @@ export function formatHoursMinutes(value, { rounding = "round", unavailableText 
     totalMinutes = Math.round(rawMinutes);
   }
 
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  const formattedHours = hours.toLocaleString("ru-RU");
+  const days = Math.floor(totalMinutes / (24 * 60));
+  const remainingMinutes = totalMinutes % (24 * 60);
+  const hours = Math.floor(remainingMinutes / 60);
+  const minutes = remainingMinutes % 60;
+
+  if (days > 0) {
+    const formattedDays = days.toLocaleString("ru-RU");
+    const formattedHours = String(hours).padStart(2, "0");
+    const formattedMinutes = String(minutes).padStart(2, "0");
+    return `${formattedDays} д. ${formattedHours}:${formattedMinutes}`;
+  }
 
   if (hours === 0) return `${minutes} мин`;
-  if (minutes === 0) return `${formattedHours} ч`;
-  return `${formattedHours} ч ${minutes} мин`;
+  if (minutes === 0) return `${hours} ч`;
+  return `${hours} ч ${minutes} мин`;
 }
