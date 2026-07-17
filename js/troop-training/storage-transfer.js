@@ -2,8 +2,12 @@ import { TRANSFER_STORAGE_KEY, TURBO_WEEK_STATE_PREFIX } from "./config.js";
 import { formatNumber } from "./format.js";
 
 function getTransferScope() {
-  const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
-  return profile?.id ? `profile:${profile.id}` : "local";
+  const profileId = window.getActiveDataProfileId?.() || "";
+  return profileId ? `profile:${profileId}` : "local";
+}
+
+function getTransferStorageKey() {
+  return `${TRANSFER_STORAGE_KEY}:${getTransferScope()}`;
 }
 
 function getTurboWeekStateKey() {
@@ -79,7 +83,7 @@ function getTransferTargetName(target) {
 }
 
 export function saveTransferPayload(payload) {
-  localStorage.setItem(TRANSFER_STORAGE_KEY, JSON.stringify(payload));
+  localStorage.setItem(getTransferStorageKey(), JSON.stringify(payload));
   window.dispatchEvent(new CustomEvent("harvesthub:calculator-transfer-change", {
     detail: { target: payload?.target || "", id: payload?.id || "" }
   }));

@@ -22,16 +22,34 @@
       || (typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null);
   }
 
+  function resolveGameProfileContext(user) {
+    const profile = getProfile();
+    if (profile?.type !== "account" || profile.supabaseUserId !== user.id || !profile.gameProfileId) return null;
+    return {
+      profileId: profile.gameProfileId,
+      isPrimary: Boolean(profile.isPrimaryGameProfile)
+    };
+  }
+
+  function getScopedTransferKey(profileId) {
+    return `${TRANSFER_LOCAL_KEY}:profile:${profileId}`;
+  }
+
   const turboEngine = window.harvestHubCreateSyncEngine({
     label: "Turbo/VS",
     stateKey: "turbo_vs_week",
     metaPrefix: "harvesthub_cloud_meta:turbo_vs:",
 
     resolveContext(user) {
-      const profile = getProfile();
-      const profileId = profile?.id || `account:${user.id}`;
-      return { localKey: `${TURBO_LOCAL_PREFIX}profile:${profileId}` };
+      const context = resolveGameProfileContext(user);
+      return context ? {
+        ...context,
+        localKey: `${TURBO_LOCAL_PREFIX}profile:${context.profileId}`
+      } : null;
     },
+
+    getStateKey: context => context ? `game_profile:${context.profileId}:turbo_vs_week` : "turbo_vs_week",
+    getLegacyStateKey: context => context?.isPrimary ? "turbo_vs_week" : "",
 
     readLocalState(context) {
       return readJson(context.localKey, {});
@@ -48,12 +66,6 @@
     }
   });
 
-  function resolveFormsProfileId(user) {
-    const storedId = localStorage.getItem("harvesthub_active_profile") || "";
-    if (storedId) return storedId;
-    return getProfile()?.id || `account:${user.id}`;
-  }
-
   function getFormStorageKey(profileId, pageName) {
     return `${FORM_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
   }
@@ -64,9 +76,11 @@
     metaPrefix: "harvesthub_cloud_meta:calculator_forms:",
 
     resolveContext(user) {
-      const profileId = resolveFormsProfileId(user);
-      return profileId ? { profileId } : null;
+      return resolveGameProfileContext(user);
     },
+
+    getStateKey: context => context ? `game_profile:${context.profileId}:calculator_forms` : "calculator_forms",
+    getLegacyStateKey: context => context?.isPrimary ? "calculator_forms" : "",
 
     readLocalState(context) {
       const pages = {};
@@ -78,8 +92,10 @@
       return {
         schemaVersion: 2,
         profileId: context.profileId,
-        advancedMode: localStorage.getItem(ADVANCED_MODE_LOCAL_KEY) === "1",
-        transfer: readJson(TRANSFER_LOCAL_KEY, null),
+        advancedMode: typeof window.getAdvancedMode === "function"
+          ? window.getAdvancedMode()
+          : localStorage.getItem(`${ADVANCED_MODE_LOCAL_KEY}:profile:${context.profileId}`) === "1",
+        transfer: readJson(getScopedTransferKey(context.profileId), null),
         pages
       };
     },
@@ -100,9 +116,9 @@
 
       if (Object.prototype.hasOwnProperty.call(data || {}, "transfer")) {
         if (data.transfer && typeof data.transfer === "object") {
-          localStorage.setItem(TRANSFER_LOCAL_KEY, JSON.stringify(data.transfer));
+          localStorage.setItem(getScopedTransferKey(context.profileId), JSON.stringify(data.transfer));
         } else {
-          localStorage.removeItem(TRANSFER_LOCAL_KEY);
+          localStorage.removeItem(getScopedTransferKey(context.profileId));
         }
       }
     },

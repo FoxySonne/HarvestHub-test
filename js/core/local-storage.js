@@ -1,6 +1,7 @@
 (() => {
   const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
   const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
+  const ADVANCED_MODE_MIGRATION_KEY = "harvesthub_advanced_mode_profile_migrated";
   const PROFILES_STORAGE_KEY = "harvesthub_profiles";
   const ACTIVE_PROFILE_STORAGE_KEY = "harvesthub_active_profile";
 
@@ -57,6 +58,13 @@
     const activeProfileId = getActiveProfileId();
     const profiles = readProfiles();
     return activeProfileId ? profiles[activeProfileId] || null : null;
+  }
+
+  function getActiveDataProfileId() {
+    const profile = getActiveProfile();
+    if (!profile) return "";
+    if (profile.type === "account") return profile.gameProfileId || profile.id;
+    return profile.id || "";
   }
 
   function validateProfileData(nickname, state, pin) {
@@ -138,14 +146,28 @@
     }
 
     window.dispatchEvent(new CustomEvent("harvesthub:profile-change", {
-      detail: { profile }
+      detail: { profile, dataProfileId: getActiveDataProfileId() }
     }));
 
     return profile;
   }
 
   function isAdvancedModeEnabled() {
-    return localStorage.getItem(ADVANCED_MODE_STORAGE_KEY) === "1";
+    const dataProfileId = getActiveDataProfileId();
+    if (!dataProfileId) return localStorage.getItem(ADVANCED_MODE_STORAGE_KEY) === "1";
+
+    const profileKey = `${ADVANCED_MODE_STORAGE_KEY}:profile:${dataProfileId}`;
+    const stored = localStorage.getItem(profileKey);
+    if (stored != null) return stored === "1";
+
+    if (!localStorage.getItem(ADVANCED_MODE_MIGRATION_KEY)) {
+      const legacy = localStorage.getItem(ADVANCED_MODE_STORAGE_KEY);
+      if (legacy != null) localStorage.setItem(profileKey, legacy);
+      localStorage.setItem(ADVANCED_MODE_MIGRATION_KEY, dataProfileId);
+      return legacy === "1";
+    }
+
+    return false;
   }
 
   function applyAdvancedModeSetting() {
@@ -163,7 +185,11 @@
   }
 
   function setAdvancedMode(enabled) {
-    localStorage.setItem(ADVANCED_MODE_STORAGE_KEY, enabled ? "1" : "0");
+    const dataProfileId = getActiveDataProfileId();
+    const storageKey = dataProfileId
+      ? `${ADVANCED_MODE_STORAGE_KEY}:profile:${dataProfileId}`
+      : ADVANCED_MODE_STORAGE_KEY;
+    localStorage.setItem(storageKey, enabled ? "1" : "0");
     const applied = applyAdvancedModeSetting();
 
     window.dispatchEvent(new CustomEvent("harvesthub:advanced-mode-change", {
@@ -174,8 +200,8 @@
   }
 
   function getPageFormStateKey(pageName) {
-    const activeProfileId = getActiveProfileId();
-    const scope = activeProfileId ? `profile:${activeProfileId}` : "local";
+    const dataProfileId = getActiveDataProfileId();
+    const scope = dataProfileId ? `profile:${dataProfileId}` : "local";
     return `${PAGE_FORM_STATE_PREFIX}${scope}:${pageName}`;
   }
 
@@ -291,6 +317,7 @@
   window.setAdvancedMode = setAdvancedMode;
   window.applyAdvancedModeSetting = applyAdvancedModeSetting;
   window.getActiveProfile = getActiveProfile;
+  window.getActiveDataProfileId = getActiveDataProfileId;
   window.getProfiles = readProfiles;
   window.createUserProfile = createUserProfile;
   window.loginUserProfile = loginUserProfile;

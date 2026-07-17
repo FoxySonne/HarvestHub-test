@@ -10,6 +10,7 @@ export function createIpkCloudSync({ serialize, apply }) {
   let saveTimer = null;
   let saveInProgress = false;
   let saveQueued = false;
+  let flusherRegistered = false;
 
   function reset() {
     window.clearTimeout(saveTimer);
@@ -21,7 +22,7 @@ export function createIpkCloudSync({ serialize, apply }) {
 
   async function load() {
     const accountProfile = getLocalAccountProfile();
-    if (accountProfile?.type !== "account" || !window.harvestHubSupabase) return false;
+    if (accountProfile?.type !== "account" || !accountProfile.gameProfileId || !window.harvestHubSupabase) return false;
 
     const { data: sessionData, error: sessionError } = await window.harvestHubSupabase.auth.getSession();
     const user = sessionData?.session?.user;
@@ -31,7 +32,7 @@ export function createIpkCloudSync({ serialize, apply }) {
       .from("game_profiles")
       .select("id,data")
       .eq("user_id", user.id)
-      .eq("is_active", true)
+      .eq("id", accountProfile.gameProfileId)
       .maybeSingle();
 
     if (error) {
@@ -43,6 +44,10 @@ export function createIpkCloudSync({ serialize, apply }) {
 
     activeProfileId = data.id;
     activeProfileData = data.data && typeof data.data === "object" ? data.data : {};
+    if (!flusherRegistered) {
+      window.harvestHubCloudSync?.registerFlusher?.(saveNow);
+      flusherRegistered = true;
+    }
     apply(activeProfileData.ipk);
     return true;
   }
@@ -63,7 +68,8 @@ export function createIpkCloudSync({ serialize, apply }) {
       const { error } = await window.harvestHubSupabase
         .from("game_profiles")
         .update({ data: nextData })
-        .eq("id", activeProfileId);
+        .eq("id", activeProfileId)
+        .eq("user_id", getLocalAccountProfile()?.supabaseUserId || "");
 
       if (error) throw error;
       activeProfileData = nextData;
@@ -85,6 +91,7 @@ export function createIpkCloudSync({ serialize, apply }) {
     hasStoredIpk: () => Boolean(activeProfileData.ipk),
     load,
     reset,
-    schedule
+    schedule,
+    flush: saveNow
   };
 }

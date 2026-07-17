@@ -71,21 +71,37 @@
   async function signOutAccount() {
     const profile = window.harvestHubAccountStorage.getActiveProfile();
     const client = getClient();
+    await window.harvestHubCloudSync?.flushAll?.();
     if (profile?.type === "account" && client) await client.auth.signOut();
     window.harvestHubAccountStorage.clearActiveProfile();
+  }
+
+  async function refreshCloudProfile() {
+    const client = getClient();
+    if (!client) return;
+    const { data } = await client.auth.getSession();
+    if (data.session?.user) await window.harvestHubGameProfileManager.syncCloudProfile(data.session.user);
   }
 
   async function init() {
     const client = getClient();
     if (!client) return;
 
-    const { data } = await client.auth.getSession();
-    if (data.session?.user) await window.harvestHubGameProfileManager.syncCloudProfile(data.session.user);
+    await refreshCloudProfile();
 
     client.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") window.harvestHubAccountModal?.openRecoveryMode?.();
-      if (session?.user) window.harvestHubGameProfileManager.syncCloudProfile(session.user);
+      if (session?.user) {
+        window.harvestHubGameProfileManager.syncCloudProfile(session.user).catch(error => {
+          console.warn("Не удалось обновить игровой профиль аккаунта:", error);
+        });
+      }
     });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refreshCloudProfile().catch(() => {});
+    });
+    window.setInterval(() => refreshCloudProfile().catch(() => {}), 60000);
   }
 
   window.harvestHubAccountSession = {

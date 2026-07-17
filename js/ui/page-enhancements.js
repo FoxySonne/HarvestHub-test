@@ -5,8 +5,8 @@ import "./turbo-mobile-tabs.js";
 const PROFILE_BLOCK_STATE_PREFIX = "harvesthub_profile_block_state:";
 
 function getProfileBlockScope() {
-  const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
-  return profile?.id ? `profile:${profile.id}` : "local";
+  const profileId = window.getActiveDataProfileId?.() || "";
+  return profileId ? `profile:${profileId}` : "local";
 }
 
 function getProfileBlockPageName() {

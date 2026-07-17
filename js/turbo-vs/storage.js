@@ -3,8 +3,12 @@ const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
 const TROOP_TRANSFER_APPLIED_KEY = "harvesthub_troop_training_transfer_applied_turbo_vs";
 
 function getWeekScope() {
-  const profile = typeof window.getActiveProfile === "function" ? window.getActiveProfile() : null;
-  return profile?.id ? `profile:${profile.id}` : "local";
+  const profileId = window.getActiveDataProfileId?.() || "";
+  return profileId ? `profile:${profileId}` : "local";
+}
+
+function getScopedTransferKey(key) {
+  return `${key}:${getWeekScope()}`;
 }
 
 function getWeekStateKey() {
@@ -26,7 +30,7 @@ export function writeWeekState(state) {
 
 export function readTroopTransferPreset() {
   try {
-    return JSON.parse(localStorage.getItem(TROOP_TRANSFER_STORAGE_KEY) || "null");
+    return JSON.parse(localStorage.getItem(getScopedTransferKey(TROOP_TRANSFER_STORAGE_KEY)) || "null");
   } catch (error) {
     console.warn("Не удалось прочитать заготовку обучения войск", error);
     return null;
@@ -34,9 +38,9 @@ export function readTroopTransferPreset() {
 }
 
 export function isTroopTransferApplied(presetId) {
-  return localStorage.getItem(TROOP_TRANSFER_APPLIED_KEY) === presetId;
+  return localStorage.getItem(getScopedTransferKey(TROOP_TRANSFER_APPLIED_KEY)) === presetId;
 }
 
 export function markTroopTransferApplied(presetId) {
-  localStorage.setItem(TROOP_TRANSFER_APPLIED_KEY, presetId);
+  localStorage.setItem(getScopedTransferKey(TROOP_TRANSFER_APPLIED_KEY), presetId);
 }

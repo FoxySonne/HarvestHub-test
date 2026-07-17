@@ -1,7 +1,7 @@
 import { getAdvancedMode, getElement } from "./dom.js";
 import { formatAvailableTimeInput, formatStageTimeInput } from "./format.js";
 import { applyStagePreset, initStages, renderResults, syncStageEnabledState } from "./render.js?v=20260716-3";
-import { getPreferredDay, getTransferStatusHtml, getTransferTargets, saveTransferPayload, saveTurboVsTransfer } from "./storage-transfer.js";
+import { getPreferredDay, getTransferStatusHtml, getTransferTargets, saveTransferPayload, saveTurboVsTransfer } from "./storage-transfer.js?v=20260717-21";
 
 function bindUnitToggles() {
   document.querySelectorAll(".troop-unit-toggle button").forEach(button => {

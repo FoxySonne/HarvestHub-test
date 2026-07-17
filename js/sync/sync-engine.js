@@ -2,6 +2,8 @@
   const TABLE = "user_app_state";
   const DEBOUNCE_MS = 1500;
   const PULL_INTERVAL_MS = 60000;
+  const engines = new Set();
+  const externalFlushers = new Set();
 
   function createSyncEngine(config) {
     let uploadTimer = null;
@@ -13,14 +15,20 @@
     let isPulling = false;
     let dirty = false;
     let started = false;
+    let uploadPromise = null;
+    let pullPromise = null;
 
     function getClient() {
       return window.harvestHubSupabase || null;
     }
 
+    function getStateKey(context = activeContext) {
+      return config.getStateKey?.(context) || config.stateKey;
+    }
+
     function emitStatus(status, detail = "") {
       window.dispatchEvent(new CustomEvent("harvesthub:cloud-sync-status", {
-        detail: { scope: config.stateKey, status, detail }
+        detail: { scope: getStateKey(), status, detail }
       }));
     }
 
@@ -33,12 +41,12 @@
       }
     }
 
-    function getMetaKey(userId = activeUserId) {
-      return userId ? `${config.metaPrefix}${userId}` : "";
+    function getMetaKey(userId = activeUserId, stateKey = getStateKey()) {
+      return userId && stateKey ? `${config.metaPrefix}${userId}:${encodeURIComponent(stateKey)}` : "";
     }
 
-    function writeMeta(values) {
-      const key = getMetaKey();
+    function writeMeta(values, stateKey = getStateKey()) {
+      const key = getMetaKey(activeUserId, stateKey);
       if (!key) return;
       localStorage.setItem(key, JSON.stringify({ ...readJson(key, {}), ...values }));
     }
@@ -53,101 +61,100 @@
 
     async function ensureSession() {
       if (activeUserId && activeContext) return true;
-
       const user = await getAuthenticatedUser();
       activeUserId = user?.id || "";
       activeContext = activeUserId ? await config.resolveContext(user) : null;
-      return Boolean(activeUserId && activeContext);
+      return Boolean(activeUserId && activeContext && getStateKey());
     }
 
-    async function fetchRemote() {
+    async function fetchRemote(stateKey = getStateKey()) {
       const client = getClient();
-      if (!client || !activeUserId) return null;
-
+      if (!client || !activeUserId || !stateKey) return null;
       const { data, error } = await client
         .from(TABLE)
         .select("data, revision, updated_at")
         .eq("user_id", activeUserId)
-        .eq("state_key", config.stateKey)
+        .eq("state_key", stateKey)
         .maybeSingle();
-
       if (error) throw error;
       return data || null;
     }
 
-    async function upsertState(state, revision) {
+    async function upsertState(state, revision, stateKey = getStateKey()) {
       const client = getClient();
       if (!client) throw new Error("Supabase недоступен");
-
       const { data, error } = await client
         .from(TABLE)
         .upsert({
           user_id: activeUserId,
-          state_key: config.stateKey,
+          state_key: stateKey,
           data: state || {},
           revision
         }, { onConflict: "user_id,state_key" })
         .select("revision, updated_at")
         .single();
-
       if (error) throw error;
       return data;
     }
 
-    async function applyRemote(row) {
-      if (!row || !activeUserId || !activeContext) return;
-
+    async function applyRemote(row, context = activeContext, stateKey = getStateKey(context)) {
+      if (!row || !activeUserId || !context) return;
       isApplyingRemote = true;
       try {
         remoteRevision = Number(row.revision) || 0;
-        await config.applyRemoteState(row.data || {}, activeContext);
-        writeMeta({ revision: remoteRevision, syncedAt: row.updated_at || new Date().toISOString() });
+        await config.applyRemoteState(row.data || {}, context);
+        writeMeta({ revision: remoteRevision, syncedAt: row.updated_at || new Date().toISOString() }, stateKey);
         dirty = false;
         emitStatus("synced");
-        await config.afterRemoteApplied?.(activeContext);
+        await config.afterRemoteApplied?.(context);
       } finally {
         isApplyingRemote = false;
       }
     }
 
-    async function uploadNow({ force = false } = {}) {
+    function uploadNow({ force = false } = {}) {
       window.clearTimeout(uploadTimer);
-      if (isApplyingRemote || isUploading) return;
-      if (!force && !dirty) return;
+      if (uploadPromise) return uploadPromise;
+      if (isApplyingRemote || (!force && !dirty)) return Promise.resolve();
 
-      try {
-        if (!await ensureSession()) {
-          emitStatus("local");
-          return;
+      uploadPromise = (async () => {
+        try {
+          if (!await ensureSession()) {
+            emitStatus("local");
+            return;
+          }
+
+          isUploading = true;
+          emitStatus("syncing");
+          const context = activeContext;
+          const stateKey = getStateKey(context);
+          const state = await config.readLocalState(context);
+          const nextRevision = Math.max(remoteRevision + 1, 1);
+          const data = await upsertState(state, nextRevision, stateKey);
+
+          remoteRevision = Number(data?.revision) || nextRevision;
+          dirty = false;
+          writeMeta({ revision: remoteRevision, syncedAt: data?.updated_at || new Date().toISOString() }, stateKey);
+          emitStatus("synced");
+        } catch (error) {
+          console.error(`${config.label} cloud sync upload failed:`, error);
+          emitStatus("error", error?.message || "Ошибка синхронизации");
+        } finally {
+          isUploading = false;
+          uploadPromise = null;
         }
+      })();
 
-        isUploading = true;
-        emitStatus("syncing");
-        const state = await config.readLocalState(activeContext);
-        const nextRevision = Math.max(remoteRevision + 1, 1);
-        const data = await upsertState(state, nextRevision);
-
-        remoteRevision = Number(data?.revision) || nextRevision;
-        dirty = false;
-        writeMeta({ revision: remoteRevision, syncedAt: data?.updated_at || new Date().toISOString() });
-        emitStatus("synced");
-      } catch (error) {
-        console.error(`${config.label} cloud sync upload failed:`, error);
-        emitStatus("error", error?.message || "Ошибка синхронизации");
-      } finally {
-        isUploading = false;
-      }
+      return uploadPromise;
     }
 
     async function scheduleUpload() {
       if (isApplyingRemote) return;
-
       try {
         await ensureSession();
       } catch (error) {
         console.error(`${config.label} cloud sync session failed:`, error);
       }
-
       if (!activeUserId || !activeContext) return;
 
       dirty = true;
@@ -157,43 +164,63 @@
       uploadTimer = window.setTimeout(() => uploadNow(), DEBOUNCE_MS);
     }
 
-    async function pullRemote({ initial = false } = {}) {
-      if (isPulling || isUploading || dirty) return;
+    function pullRemote({ initial = false } = {}) {
+      if (pullPromise) return pullPromise;
+      if (isUploading || dirty) return Promise.resolve();
 
-      try {
-        if (!await ensureSession()) {
-          emitStatus("local");
-          return;
+      pullPromise = (async () => {
+        try {
+          if (!await ensureSession()) {
+            emitStatus("local");
+            return;
+          }
+
+          isPulling = true;
+          const context = activeContext;
+          const stateKey = getStateKey(context);
+          let remote = await fetchRemote(stateKey);
+
+          if (!remote) {
+            const legacyStateKey = config.getLegacyStateKey?.(context) || "";
+            if (legacyStateKey) {
+              const legacy = await fetchRemote(legacyStateKey);
+              if (legacy) {
+                await applyRemote(legacy, context, stateKey);
+                dirty = true;
+                await uploadNow({ force: true });
+                return;
+              }
+            }
+
+            dirty = true;
+            await uploadNow({ force: true });
+            return;
+          }
+
+          const metaRevision = Number(readJson(getMetaKey(activeUserId, stateKey), {}).revision || 0);
+          const nextRemoteRevision = Number(remote.revision) || 0;
+          remoteRevision = nextRemoteRevision;
+
+          if (nextRemoteRevision > metaRevision) await applyRemote(remote, context, stateKey);
+          else if (initial && metaRevision === 0) {
+            dirty = true;
+            await uploadNow({ force: true });
+          } else emitStatus("synced");
+        } catch (error) {
+          console.error(`${config.label} cloud sync pull failed:`, error);
+          emitStatus("error", error?.message || "Ошибка загрузки");
+        } finally {
+          isPulling = false;
+          pullPromise = null;
         }
+      })();
 
-        isPulling = true;
-        const remote = await fetchRemote();
-        const metaRevision = Number(readJson(getMetaKey(), {}).revision || 0);
-
-        if (!remote) {
-          dirty = true;
-          await uploadNow({ force: true });
-          return;
-        }
-
-        const nextRemoteRevision = Number(remote.revision) || 0;
-        remoteRevision = nextRemoteRevision;
-
-        if (nextRemoteRevision > metaRevision) await applyRemote(remote);
-        else if (initial && metaRevision === 0) {
-          dirty = true;
-          await uploadNow({ force: true });
-        } else emitStatus("synced");
-      } catch (error) {
-        console.error(`${config.label} cloud sync pull failed:`, error);
-        emitStatus("error", error?.message || "Ошибка загрузки");
-      } finally {
-        isPulling = false;
-      }
+      return pullPromise;
     }
 
     async function initializeForSession() {
       window.clearTimeout(uploadTimer);
+      if (dirty) await uploadNow();
       activeUserId = "";
       activeContext = null;
       remoteRevision = 0;
@@ -225,8 +252,9 @@
         if (dirty) scheduleUpload();
       });
 
-      const client = getClient();
-      client?.auth.onAuthStateChange(() => window.setTimeout(initializeForSession, 0));
+      getClient()?.auth.onAuthStateChange((_event, session) => {
+        if ((session?.user?.id || "") !== activeUserId) window.setTimeout(initializeForSession, 0);
+      });
 
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", initializeForSession, { once: true });
@@ -237,7 +265,7 @@
       }, PULL_INTERVAL_MS);
     }
 
-    return {
+    const engine = {
       start,
       scheduleUpload,
       uploadNow,
@@ -250,6 +278,7 @@
       getState: () => ({
         activeUserId,
         activeContext,
+        stateKey: getStateKey(),
         remoteRevision,
         dirty,
         isApplyingRemote,
@@ -261,7 +290,20 @@
         return isApplyingRemote;
       }
     };
+
+    engines.add(engine);
+    return engine;
   }
 
+  window.harvestHubCloudSync = {
+    flushAll: () => Promise.all([
+      ...Array.from(engines, engine => engine.uploadNow()),
+      ...Array.from(externalFlushers, flusher => flusher())
+    ]),
+    registerFlusher(flusher) {
+      if (typeof flusher === "function") externalFlushers.add(flusher);
+      return () => externalFlushers.delete(flusher);
+    }
+  };
   window.harvestHubCreateSyncEngine = createSyncEngine;
 })();

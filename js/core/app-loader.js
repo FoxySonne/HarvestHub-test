@@ -1,10 +1,25 @@
 (() => {
   const ACTIVE_PROFILE_STORAGE_KEY = "harvesthub_active_profile";
-  let lastProfileId = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY) || "";
+
+  function getStoredDataProfileId() {
+    const activeId = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY) || "";
+    if (!activeId) return "";
+    try {
+      const profile = JSON.parse(localStorage.getItem("harvesthub_profiles") || "{}")[activeId];
+      return profile?.type === "account" ? profile.gameProfileId || profile.id : profile?.id || activeId;
+    } catch {
+      return activeId;
+    }
+  }
+
+  let lastProfileId = getStoredDataProfileId();
   let profileReloadScheduled = false;
 
   function handleProfileChange(event) {
-    const nextProfileId = event.detail?.profile?.id || "";
+    const profile = event.detail?.profile;
+    const nextProfileId = event.detail?.dataProfileId
+      || (profile?.type === "account" ? profile.gameProfileId || profile.id : profile?.id)
+      || "";
 
     if (nextProfileId === lastProfileId) {
       event.stopImmediatePropagation();

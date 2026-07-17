@@ -1,9 +1,9 @@
-import { createIpkCloudSync } from "../ipk/cloud-sync.js";
+import { createIpkCloudSync } from "../ipk/cloud-sync.js?v=20260717-21";
 import {
   isTroopTransferApplied,
   markTroopTransferApplied,
   readTroopTransferPreset
-} from "../ipk/transfer-storage.js";
+} from "../ipk/transfer-storage.js?v=20260717-21";
 
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
 const { database } = await import(`../../data/database.js?v=${encodeURIComponent(moduleVersion)}`);

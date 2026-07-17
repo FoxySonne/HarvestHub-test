@@ -19,17 +19,37 @@
     return readProfiles()[id] || null;
   }
 
-  function dispatchChange(profile = getActiveProfile()) {
-    window.dispatchEvent(new CustomEvent("harvesthub:profile-change", { detail: { profile } }));
+  function getDataProfileId(profile = getActiveProfile()) {
+    if (!profile) return "";
+    if (profile.type === "account") return profile.gameProfileId || profile.id;
+    return profile.id || "";
+  }
+
+  function dispatchChange(profile = getActiveProfile(), previousDataProfileId = "") {
+    window.dispatchEvent(new CustomEvent("harvesthub:profile-change", {
+      detail: {
+        profile,
+        dataProfileId: getDataProfileId(profile),
+        previousDataProfileId
+      }
+    }));
     window.harvestHubAccountUI?.render?.();
   }
 
-  function saveProfile(profile) {
+  function saveProfile(profile, { forceProfileChange = false } = {}) {
+    const previousDataProfileId = getDataProfileId();
     const profiles = readProfiles();
     profiles[profile.id] = profile;
     writeProfiles(profiles);
     localStorage.setItem(ACTIVE_KEY, profile.id);
-    dispatchChange(profile);
+    const nextDataProfileId = getDataProfileId(profile);
+
+    if (forceProfileChange || previousDataProfileId !== nextDataProfileId) {
+      dispatchChange(profile, previousDataProfileId);
+    } else {
+      window.dispatchEvent(new CustomEvent("harvesthub:account-profile-render", { detail: { profile } }));
+      window.harvestHubAccountUI?.render?.();
+    }
     return profile;
   }
 
@@ -48,14 +68,16 @@
   }
 
   function clearActiveProfile() {
+    const previousDataProfileId = getDataProfileId();
     localStorage.removeItem(ACTIVE_KEY);
-    dispatchChange(null);
+    dispatchChange(null, previousDataProfileId);
   }
 
   window.harvestHubAccountStorage = {
     readProfiles,
     writeProfiles,
     getActiveProfile,
+    getDataProfileId,
     saveProfile,
     createQuickProfile,
     clearActiveProfile,

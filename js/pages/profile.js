@@ -11,66 +11,6 @@ function maskProfileEmail(email) {
   return email ? email.replace(/^(.{2}).*(@.*)$/, "$1***$2") : "";
 }
 
-async function getPrimaryGameProfile() {
-  if (!window.harvestHubSupabase) throw new Error("Supabase пока недоступен.");
-  const { data: sessionData, error: sessionError } = await window.harvestHubSupabase.auth.getSession();
-  if (sessionError || !sessionData.session?.user) throw new Error("Сессия аккаунта не найдена.");
-  const user = sessionData.session.user;
-
-  const { data, error } = await window.harvestHubSupabase
-    .from("game_profiles")
-    .select("id,nickname,state,is_primary,data,created_at,updated_at")
-    .eq("user_id", user.id)
-    .eq("is_primary", true)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data?.id) throw new Error("Основной игровой профиль не найден.");
-  return { user, gameProfile: data };
-}
-
-function syncLocalAccountProfile(accountProfile, gameProfile) {
-  if (!accountProfile || !gameProfile) return accountProfile;
-  const updated = {
-    ...accountProfile,
-    nickname: gameProfile.nickname,
-    state: gameProfile.state,
-    gameProfileId: gameProfile.id,
-    gameProfilesCount: 1,
-    isPrimaryGameProfile: true
-  };
-
-  try {
-    const profiles = JSON.parse(localStorage.getItem("harvesthub_profiles") || "{}");
-    profiles[updated.id] = updated;
-    localStorage.setItem("harvesthub_profiles", JSON.stringify(profiles));
-  } catch (error) {
-    console.warn("Не удалось обновить локальный профиль:", error);
-  }
-
-  window.harvestHubAccount?.render?.();
-  return updated;
-}
-
-async function savePrimaryProfile(accountProfile, gameProfile, nickname, state) {
-  const cleanNickname = String(nickname || "").trim();
-  const cleanState = String(state || "").trim();
-  if (!cleanNickname || !cleanState) throw new Error("Заполни никнейм и номер штата.");
-
-  const { error } = await window.harvestHubSupabase
-    .from("game_profiles")
-    .update({ nickname: cleanNickname, state: cleanState })
-    .eq("id", gameProfile.id);
-  if (error) throw error;
-
-  const { data, error: userError } = await window.harvestHubSupabase.auth.updateUser({
-    data: { nickname: cleanNickname, state: cleanState }
-  });
-  if (userError) throw userError;
-  if (data.user) await window.harvestHubAccount?.syncCloudProfile?.(data.user);
-
-  syncLocalAccountProfile(accountProfile, { ...gameProfile, nickname: cleanNickname, state: cleanState });
-}
-
 function renderQuickProfile(container, profile) {
   container.innerHTML = `
     <header class="profile-hero">
@@ -82,34 +22,83 @@ function renderQuickProfile(container, profile) {
     <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
 }
 
-function renderAccountProfile(container, profile, gameProfile) {
+function renderGameProfileCards(profiles, activeProfileId) {
+  return profiles.map(profile => {
+    const active = profile.id === activeProfileId;
+    return `
+      <article class="game-profile-card${active ? " is-active" : ""}">
+        <div class="game-profile-card-copy">
+          <div class="game-profile-card-title">
+            <h3>${escapeProfileHtml(profile.nickname)}</h3>
+            ${profile.is_primary ? '<span class="game-profile-badge">Основной</span>' : ""}
+            ${active ? '<span class="game-profile-badge is-active">Выбран</span>' : ""}
+          </div>
+          <p>Штат ${escapeProfileHtml(profile.state)}</p>
+        </div>
+        ${active
+          ? '<button type="button" class="game-profile-select" disabled>Используется</button>'
+          : `<button type="button" class="game-profile-select" data-game-profile-select="${escapeProfileHtml(profile.id)}">Переключиться</button>`}
+      </article>`;
+  }).join("");
+}
+
+function renderAccountProfile(container, accountProfile, profiles) {
+  const active = profiles.find(profile => profile.id === accountProfile.gameProfileId)
+    || profiles.find(profile => profile.is_active)
+    || profiles[0];
+  if (!active) throw new Error("Игровой профиль не найден.");
+
   container.innerHTML = `
     <header class="profile-hero">
       <p class="profile-eyebrow">Профиль HarvestHub</p>
       <div class="profile-title-row">
-        <h1>${escapeProfileHtml(gameProfile.nickname)}</h1>
-        <button type="button" class="profile-edit-button" id="editAccountProfileButton" aria-label="Изменить профиль" title="Изменить профиль">✎</button>
+        <h1>${escapeProfileHtml(active.nickname)}</h1>
+        <button type="button" class="profile-edit-button" id="editAccountProfileButton" aria-label="Изменить игровой профиль" title="Изменить игровой профиль">✎</button>
       </div>
-      <p class="profile-state">Штат ${escapeProfileHtml(gameProfile.state)}</p>
-      <p class="profile-email">${escapeProfileHtml(maskProfileEmail(profile.email))}</p>
+      <p class="profile-state">Штат ${escapeProfileHtml(active.state)}</p>
+      <p class="profile-email">Аккаунт: ${escapeProfileHtml(maskProfileEmail(accountProfile.email))}</p>
       <p class="profile-sync-status"></p>
     </header>
 
     <form id="accountProfileEditForm" class="profile-edit-form" hidden>
-      <label class="form-group"><span>Никнейм</span><input id="accountProfileNickname" value="${escapeProfileHtml(gameProfile.nickname)}" required></label>
-      <label class="form-group"><span>Номер штата</span><input id="accountProfileState" value="${escapeProfileHtml(gameProfile.state)}" inputmode="numeric" required></label>
+      <h2>Изменить выбранный профиль</h2>
+      <label class="form-group"><span>Никнейм</span><input id="accountProfileNickname" value="${escapeProfileHtml(active.nickname)}" required></label>
+      <label class="form-group"><span>Номер штата</span><input id="accountProfileState" value="${escapeProfileHtml(active.state)}" inputmode="numeric" required></label>
       <div class="profile-edit-actions"><button type="button" id="cancelAccountProfileEdit">Отмена</button><button type="submit" id="saveAccountProfileEdit">Сохранить</button></div>
       <p id="profileEditMessage" class="settings-form-message"></p>
     </form>
 
     <section class="game-profiles-section">
-      <h2>Основной игровой профиль</h2>
-      <p class="profile-single-mode-note">Дополнительные игровые профили временно отключены, пока настраивается стабильная синхронизация между устройствами.</p>
+      <div class="game-profiles-heading">
+        <div><h2>Игровые профили</h2><p>Данные калькуляторов и настройки сохраняются отдельно для каждого профиля.</p></div>
+        <button type="button" id="showCreateGameProfile">Добавить профиль</button>
+      </div>
+      <div class="game-profile-list">${renderGameProfileCards(profiles, active.id)}</div>
+      <form id="createGameProfileForm" class="profile-edit-form game-profile-create-form" hidden>
+        <h3>Новый игровой профиль</h3>
+        <label class="form-group"><span>Никнейм</span><input id="newGameProfileNickname" required></label>
+        <label class="form-group"><span>Номер штата</span><input id="newGameProfileState" inputmode="numeric" required></label>
+        <div class="profile-edit-actions"><button type="button" id="cancelCreateGameProfile">Отмена</button><button type="submit" id="createGameProfileButton">Создать и переключиться</button></div>
+        <p id="createGameProfileMessage" class="settings-form-message"></p>
+      </form>
     </section>
 
-    <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
+    <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти из аккаунта</button></div>`;
 
+  bindAccountProfileEvents(active);
+}
+
+function setFormBusy(button, busy, busyText, normalText) {
+  if (!button) return;
+  button.disabled = busy;
+  button.textContent = busy ? busyText : normalText;
+}
+
+function bindAccountProfileEvents(activeProfile) {
+  const manager = window.harvestHubGameProfileManager;
   const editForm = document.getElementById("accountProfileEditForm");
+  const createForm = document.getElementById("createGameProfileForm");
+
   document.getElementById("editAccountProfileButton")?.addEventListener("click", () => {
     editForm.hidden = false;
     document.getElementById("accountProfileNickname")?.focus();
@@ -119,22 +108,67 @@ function renderAccountProfile(container, profile, gameProfile) {
     editForm.reset();
     document.getElementById("profileEditMessage").textContent = "";
   });
+  document.getElementById("showCreateGameProfile")?.addEventListener("click", () => {
+    createForm.hidden = false;
+    document.getElementById("newGameProfileNickname")?.focus();
+  });
+  document.getElementById("cancelCreateGameProfile")?.addEventListener("click", () => {
+    createForm.hidden = true;
+    createForm.reset();
+    document.getElementById("createGameProfileMessage").textContent = "";
+  });
+
   editForm?.addEventListener("submit", async event => {
     event.preventDefault();
     const button = document.getElementById("saveAccountProfileEdit");
     const message = document.getElementById("profileEditMessage");
-    button.disabled = true;
-    button.textContent = "Сохраняем…";
+    setFormBusy(button, true, "Сохраняем…", "Сохранить");
     message.textContent = "";
     try {
-      await savePrimaryProfile(profile, gameProfile, document.getElementById("accountProfileNickname").value, document.getElementById("accountProfileState").value);
+      await manager.updateGameProfile(
+        activeProfile.id,
+        document.getElementById("accountProfileNickname").value,
+        document.getElementById("accountProfileState").value
+      );
       await renderProfilePage();
     } catch (error) {
       message.textContent = error.message || "Не удалось сохранить изменения.";
       message.dataset.type = "error";
-      button.disabled = false;
-      button.textContent = "Сохранить";
+      setFormBusy(button, false, "", "Сохранить");
     }
+  });
+
+  createForm?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = document.getElementById("createGameProfileButton");
+    const message = document.getElementById("createGameProfileMessage");
+    setFormBusy(button, true, "Создаём…", "Создать и переключиться");
+    message.textContent = "";
+    try {
+      await manager.createGameProfile(
+        document.getElementById("newGameProfileNickname").value,
+        document.getElementById("newGameProfileState").value
+      );
+      await renderProfilePage();
+    } catch (error) {
+      message.textContent = error.message || "Не удалось создать профиль.";
+      message.dataset.type = "error";
+      setFormBusy(button, false, "", "Создать и переключиться");
+    }
+  });
+
+  document.querySelectorAll("[data-game-profile-select]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const normalText = button.textContent;
+      setFormBusy(button, true, "Переключаем…", normalText);
+      try {
+        await manager.activateGameProfile(button.dataset.gameProfileSelect);
+        await renderProfilePage();
+      } catch (error) {
+        setFormBusy(button, false, "", normalText);
+        window.alert(error.message || "Не удалось переключить профиль.");
+      }
+    });
   });
 }
 
@@ -151,19 +185,18 @@ async function renderProfilePage() {
   if (profile.type === "quick") {
     renderQuickProfile(container, profile);
   } else {
-    container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>Загружаем профиль…</h1></header>`;
+    container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>Загружаем профили…</h1></header>`;
     try {
-      const { gameProfile } = await getPrimaryGameProfile();
-      const syncedProfile = syncLocalAccountProfile(profile, gameProfile);
-      renderAccountProfile(container, syncedProfile, gameProfile);
+      const { profiles } = await window.harvestHubGameProfileManager.listGameProfiles();
+      renderAccountProfile(container, window.harvestHubAccount?.getProfile?.() || profile, profiles);
       window.harvestHubSyncStatus?.markSynced?.();
     } catch (error) {
-      container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>${escapeProfileHtml(profile.nickname)}</h1></header><p class="account-warning profile-warning">Не удалось загрузить профиль: ${escapeProfileHtml(error.message || "неизвестная ошибка")}</p><div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
+      container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>${escapeProfileHtml(profile.nickname)}</h1></header><p class="account-warning profile-warning">Не удалось загрузить профили: ${escapeProfileHtml(error.message || "неизвестная ошибка")}</p><div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
     }
   }
 
   document.getElementById("profileLogoutButton")?.addEventListener("click", async () => {
-    if (typeof window.setAdvancedMode === "function") window.setAdvancedMode(false);
+    await window.harvestHubCloudSync?.flushAll?.();
     await window.harvestHubAccount?.signOut?.();
     await renderProfilePage();
   });

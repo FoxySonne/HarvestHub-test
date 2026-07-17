@@ -5,7 +5,7 @@ import {
   readTroopTransferPreset,
   readWeekState,
   writeWeekState
-} from "../turbo-vs/storage.js";
+} from "../turbo-vs/storage.js?v=20260717-21";
 import { createTurboVsView } from "../turbo-vs/view.js";
 
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
