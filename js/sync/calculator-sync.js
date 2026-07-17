@@ -31,6 +31,12 @@
     };
   }
 
+  function resolveAccountContext(user) {
+    const profile = getProfile();
+    if (profile?.type !== "account" || profile.supabaseUserId !== user.id) return null;
+    return { accountId: profile.id };
+  }
+
   function getScopedTransferKey(profileId) {
     return `${TRANSFER_LOCAL_KEY}:profile:${profileId}`;
   }
@@ -66,6 +72,31 @@
     }
   });
 
+  const preferencesEngine = window.harvestHubCreateSyncEngine({
+    label: "Account preferences",
+    stateKey: "account_preferences",
+    metaPrefix: "harvesthub_cloud_meta:account_preferences:",
+
+    resolveContext(user) {
+      return resolveAccountContext(user);
+    },
+
+    readLocalState() {
+      return {
+        schemaVersion: 1,
+        advancedMode: typeof window.getAdvancedMode === "function"
+          ? window.getAdvancedMode()
+          : localStorage.getItem(`${ADVANCED_MODE_LOCAL_KEY}:${getProfile()?.id || ""}`) === "1"
+      };
+    },
+
+    applyRemoteState(data) {
+      if (typeof data?.advancedMode === "boolean" && typeof window.setAdvancedMode === "function") {
+        window.setAdvancedMode(data.advancedMode);
+      }
+    }
+  });
+
   function getFormStorageKey(profileId, pageName) {
     return `${FORM_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
   }
@@ -92,9 +123,6 @@
       return {
         schemaVersion: 2,
         profileId: context.profileId,
-        advancedMode: typeof window.getAdvancedMode === "function"
-          ? window.getAdvancedMode()
-          : localStorage.getItem(`${ADVANCED_MODE_LOCAL_KEY}:profile:${context.profileId}`) === "1",
         transfer: readJson(getScopedTransferKey(context.profileId), null),
         pages
       };
@@ -109,10 +137,6 @@
           JSON.stringify(pages[pageName] || {})
         );
       });
-
-      if (typeof data?.advancedMode === "boolean" && typeof window.setAdvancedMode === "function") {
-        window.setAdvancedMode(data.advancedMode);
-      }
 
       if (Object.prototype.hasOwnProperty.call(data || {}, "transfer")) {
         if (data.transfer && typeof data.transfer === "object") {
@@ -151,9 +175,10 @@
     if (CALCULATOR_PAGES.has(event.detail?.pageName)) formsEngine.scheduleUpload();
   });
   window.addEventListener("harvesthub:calculator-transfer-change", () => formsEngine.scheduleUpload());
-  window.addEventListener("harvesthub:advanced-mode-change", () => formsEngine.scheduleUpload());
+  window.addEventListener("harvesthub:advanced-mode-change", () => preferencesEngine.scheduleUpload());
 
   turboEngine.start();
+  preferencesEngine.start();
   formsEngine.start();
 
   window.harvestHubTurboVsCloudSync = {
@@ -174,5 +199,13 @@
       ...formsEngine.getState(),
       currentPage: localStorage.getItem("currentPage") || ""
     })
+  };
+
+  window.harvestHubAccountPreferencesCloudSync = {
+    scheduleUpload: preferencesEngine.scheduleUpload,
+    uploadNow: preferencesEngine.uploadNow,
+    pullRemote: preferencesEngine.pullRemote,
+    forceUpload: preferencesEngine.forceUpload,
+    getState: preferencesEngine.getState
   };
 })();

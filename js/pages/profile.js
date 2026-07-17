@@ -35,9 +35,14 @@ function renderGameProfileCards(profiles, activeProfileId) {
           </div>
           <p>Штат ${escapeProfileHtml(profile.state)}</p>
         </div>
-        ${active
-          ? '<button type="button" class="game-profile-select" disabled>Используется</button>'
-          : `<button type="button" class="game-profile-select" data-game-profile-select="${escapeProfileHtml(profile.id)}">Переключиться</button>`}
+        <div class="game-profile-actions">
+          ${active
+            ? '<button type="button" class="game-profile-select" disabled>Используется</button>'
+            : `<button type="button" class="game-profile-select" data-game-profile-select="${escapeProfileHtml(profile.id)}">Переключиться</button>`}
+          ${profile.is_primary
+            ? ""
+            : `<button type="button" class="game-profile-delete danger-button" data-game-profile-delete="${escapeProfileHtml(profile.id)}" data-game-profile-name="${escapeProfileHtml(profile.nickname)}">Удалить</button>`}
+        </div>
       </article>`;
   }).join("");
 }
@@ -70,7 +75,7 @@ function renderAccountProfile(container, accountProfile, profiles) {
 
     <section class="game-profiles-section">
       <div class="game-profiles-heading">
-        <div><h2>Игровые профили</h2><p>Данные калькуляторов и настройки сохраняются отдельно для каждого профиля.</p></div>
+        <div><h2>Игровые профили</h2><p>Данные калькуляторов сохраняются отдельно. Продвинутый режим действует на весь аккаунт.</p></div>
         <button type="button" id="showCreateGameProfile">Добавить профиль</button>
       </div>
       <div class="game-profile-list">${renderGameProfileCards(profiles, active.id)}</div>
@@ -167,6 +172,22 @@ function bindAccountProfileEvents(activeProfile) {
       } catch (error) {
         setFormBusy(button, false, "", normalText);
         window.alert(error.message || "Не удалось переключить профиль.");
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-game-profile-delete]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const profileName = button.dataset.gameProfileName || "этот профиль";
+      if (!window.confirm(`Удалить игровой профиль «${profileName}»? Его сохранённые данные будут удалены без возможности восстановления.`)) return;
+      const normalText = button.textContent;
+      setFormBusy(button, true, "Удаляем…", normalText);
+      try {
+        await manager.deleteGameProfile(button.dataset.gameProfileDelete);
+        await renderProfilePage();
+      } catch (error) {
+        setFormBusy(button, false, "", normalText);
+        window.alert(error.message || "Не удалось удалить профиль.");
       }
     });
   });

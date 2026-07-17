@@ -236,11 +236,70 @@
     return data;
   }
 
+  function clearLocalProfileData(profileId) {
+    const plainScope = `:profile:${profileId}`;
+    const cloudScope = `game_profile%3A${encodeURIComponent(profileId)}%3A`;
+    Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
+      .filter(key => key?.includes(plainScope) || key?.includes(cloudScope))
+      .forEach(key => localStorage.removeItem(key));
+  }
+
+  async function clearCloudProfileState(userId, profileId) {
+    const stateKeys = [
+      `game_profile:${profileId}:turbo_vs_week`,
+      `game_profile:${profileId}:calculator_forms`
+    ];
+    const { error } = await getClient()
+      .from("user_app_state")
+      .delete()
+      .eq("user_id", userId)
+      .in("state_key", stateKeys);
+    if (error) console.warn("Не удалось удалить архивные данные игрового профиля:", error);
+  }
+
+  async function deleteGameProfile(profileId) {
+    const { user, profiles } = await listGameProfiles();
+    const requested = profiles.find(profile => profile.id === profileId);
+    if (!requested) throw new Error("Игровой профиль не найден.");
+    if (requested.is_primary) throw new Error("Основной игровой профиль нельзя удалить.");
+
+    const current = window.harvestHubAccountStorage.getActiveProfile();
+    const deletingActive = current?.gameProfileId === requested.id;
+    let nextActive = profiles.find(profile => profile.is_primary)
+      || profiles.find(profile => profile.id !== requested.id);
+    if (!nextActive) throw new Error("Нельзя удалить единственный игровой профиль.");
+
+    await window.harvestHubCloudSync?.flushAll?.();
+    if (deletingActive) nextActive = await markActiveProfile(user.id, nextActive.id);
+
+    const { error } = await getClient()
+      .from("game_profiles")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("id", requested.id);
+    if (error) {
+      if (deletingActive) await markActiveProfile(user.id, requested.id);
+      throw error;
+    }
+
+    await clearCloudProfileState(user.id, requested.id);
+    clearLocalProfileData(requested.id);
+
+    if (!deletingActive) {
+      nextActive = profiles.find(profile => profile.id === current?.gameProfileId)
+        || profiles.find(profile => profile.is_active)
+        || nextActive;
+    }
+    saveActiveProfile(user, nextActive, profiles.length - 1);
+    return nextActive;
+  }
+
   window.harvestHubGameProfileManager = {
     syncCloudProfile,
     listGameProfiles,
     activateGameProfile,
     createGameProfile,
-    updateGameProfile
+    updateGameProfile,
+    deleteGameProfile
   };
 })();

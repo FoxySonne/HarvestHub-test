@@ -86,8 +86,10 @@
 .game-profile-card-copy p{margin:5px 0 0;color:var(--text-soft)}
 .game-profile-badge{display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border:1px solid var(--border);border-radius:999px;color:var(--text-soft);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .game-profile-badge.is-active{border-color:rgba(139,234,99,.45);color:var(--accent)}
+.game-profile-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .game-profile-select{width:auto;min-width:132px;flex:0 0 auto}
 .game-profile-select:disabled{opacity:.72;cursor:default}
+.game-profile-delete{width:auto;min-width:88px}
 .game-profile-create-form{margin-bottom:0}
 .profile-page-actions{padding-top:24px}
 .profile-page-actions button{width:auto;min-width:140px}
@@ -113,7 +115,8 @@
   .profile-title-row h1,.profile-hero>h1{font-size:34px}
   .profile-state{font-size:17px}
   .game-profiles-heading,.game-profile-card{align-items:stretch;flex-direction:column}
-  .game-profiles-heading>button,.game-profile-select{width:100%}
+  .game-profiles-heading>button,.game-profile-actions,.game-profile-select,.game-profile-delete{width:100%}
+  .game-profile-actions{align-items:stretch;flex-direction:column}
   .account-delete-actions{flex-direction:column-reverse}
   .account-delete-actions button{width:100%}
 }

@@ -1,7 +1,6 @@
 (() => {
   const PAGE_FORM_STATE_PREFIX = "harvesthub_page_form_state:";
   const ADVANCED_MODE_STORAGE_KEY = "harvesthub_advanced_mode";
-  const ADVANCED_MODE_MIGRATION_KEY = "harvesthub_advanced_mode_profile_migrated";
   const PROFILES_STORAGE_KEY = "harvesthub_profiles";
   const ACTIVE_PROFILE_STORAGE_KEY = "harvesthub_active_profile";
 
@@ -65,6 +64,25 @@
     if (!profile) return "";
     if (profile.type === "account") return profile.gameProfileId || profile.id;
     return profile.id || "";
+  }
+
+  function getAdvancedModeStorageKey() {
+    const profile = getActiveProfile();
+    if (!profile) return ADVANCED_MODE_STORAGE_KEY;
+    const scope = profile.type === "account" ? profile.id : `profile:${profile.id}`;
+    return `${ADVANCED_MODE_STORAGE_KEY}:${scope}`;
+  }
+
+  function migrateAdvancedModeSetting(storageKey) {
+    if (localStorage.getItem(storageKey) != null) return;
+    const dataProfileId = getActiveDataProfileId();
+    const previousProfileKey = dataProfileId
+      ? `${ADVANCED_MODE_STORAGE_KEY}:profile:${dataProfileId}`
+      : "";
+    const previousValue = previousProfileKey ? localStorage.getItem(previousProfileKey) : null;
+    const legacyValue = localStorage.getItem(ADVANCED_MODE_STORAGE_KEY);
+    const value = previousValue ?? legacyValue;
+    if (value != null) localStorage.setItem(storageKey, value);
   }
 
   function validateProfileData(nickname, state, pin) {
@@ -153,21 +171,9 @@
   }
 
   function isAdvancedModeEnabled() {
-    const dataProfileId = getActiveDataProfileId();
-    if (!dataProfileId) return localStorage.getItem(ADVANCED_MODE_STORAGE_KEY) === "1";
-
-    const profileKey = `${ADVANCED_MODE_STORAGE_KEY}:profile:${dataProfileId}`;
-    const stored = localStorage.getItem(profileKey);
-    if (stored != null) return stored === "1";
-
-    if (!localStorage.getItem(ADVANCED_MODE_MIGRATION_KEY)) {
-      const legacy = localStorage.getItem(ADVANCED_MODE_STORAGE_KEY);
-      if (legacy != null) localStorage.setItem(profileKey, legacy);
-      localStorage.setItem(ADVANCED_MODE_MIGRATION_KEY, dataProfileId);
-      return legacy === "1";
-    }
-
-    return false;
+    const storageKey = getAdvancedModeStorageKey();
+    migrateAdvancedModeSetting(storageKey);
+    return localStorage.getItem(storageKey) === "1";
   }
 
   function applyAdvancedModeSetting() {
@@ -185,10 +191,7 @@
   }
 
   function setAdvancedMode(enabled) {
-    const dataProfileId = getActiveDataProfileId();
-    const storageKey = dataProfileId
-      ? `${ADVANCED_MODE_STORAGE_KEY}:profile:${dataProfileId}`
-      : ADVANCED_MODE_STORAGE_KEY;
+    const storageKey = getAdvancedModeStorageKey();
     localStorage.setItem(storageKey, enabled ? "1" : "0");
     const applied = applyAdvancedModeSetting();
 
