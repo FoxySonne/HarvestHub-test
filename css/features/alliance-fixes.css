@@ -1,35 +1,38 @@
 /* Дополнительная раскладка союзного штаба */
 .alliance-toolbar-card {
-  grid-template-columns: minmax(220px, 1.1fr) minmax(220px, 1fr) auto auto;
-  align-items: start;
+  grid-template-columns: minmax(220px, 1.1fr) minmax(220px, 1fr) auto minmax(280px, auto);
+  align-items: stretch;
   column-gap: 20px;
   row-gap: 16px;
 }
 
 .alliance-opened-summary,
-.alliance-role-box {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 6px;
-}
-
 .alliance-toolbar-card > label,
-.alliance-opened-summary,
 .alliance-role-box,
 .alliance-invite-box {
-  align-self: start;
+  display: grid;
+  grid-template-rows: 20px 44px 20px;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  align-self: stretch;
 }
 
 .alliance-opened-summary > span,
-.alliance-role-box > span {
+.alliance-toolbar-card > label > span,
+.alliance-role-box > span,
+.alliance-invite-box > span {
+  align-self: start;
   color: var(--text-soft);
   font-size: 14px;
+  line-height: 20px;
 }
 
 .alliance-opened-summary strong {
-  display: block;
+  display: flex;
+  align-items: center;
   min-width: 0;
+  height: 44px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -37,12 +40,41 @@
 }
 
 .alliance-opened-summary small {
+  align-self: end;
   color: var(--text-soft);
-  line-height: 1.4;
+  line-height: 20px;
+}
+
+.alliance-toolbar-card > label select {
+  align-self: stretch;
+  height: 44px;
 }
 
 .alliance-role-box strong {
+  display: flex;
+  align-items: center;
+  height: 44px;
   color: var(--accent);
+}
+
+.alliance-invite-box {
+  grid-template-columns: auto minmax(150px, 1fr);
+  column-gap: 10px;
+}
+
+.alliance-invite-box > span {
+  grid-column: 1 / -1;
+}
+
+.alliance-invite-box strong,
+.alliance-invite-box button {
+  align-self: stretch;
+  height: 44px;
+}
+
+.alliance-invite-box strong {
+  display: flex;
+  align-items: center;
 }
 
 .alliance-details-form {
