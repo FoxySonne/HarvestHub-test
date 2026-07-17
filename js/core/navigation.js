@@ -157,11 +157,16 @@
 
   async function loadPage(pageName, options = {}) {
     if (!options.skipCurrentSave) window.savePageFormState(currentLoadedPage);
+    const previousPage = currentLoadedPage;
+    localStorage.setItem("currentPage", pageName);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      if (previousPage) localStorage.setItem("currentPage", previousPage);
+      else localStorage.removeItem("currentPage");
+      return;
+    }
 
     currentLoadedPage = pageName;
-    localStorage.setItem("currentPage", pageName);
 
     window.harvestHubStorage.restorePageFormState(pageName);
     window.harvestHubStorage.bindPageFormPersistence(pageName);
