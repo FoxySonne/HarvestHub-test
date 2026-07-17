@@ -9,7 +9,7 @@
 @import url("features/season-building-links.css?v=20260717-20");
 @import url("ui/page-enhancements.css?v=20260717-20");
 @import url("ui/tooltips.css?v=20260717-20");
-@import url("core/mobile.css?v=20260717-20");
+@import url("core/mobile.css?v=20260717-23");
 @import url("features/ipk.css?v=20260717-20");
 @import url("features/troop-training.css?v=20260717-20");
 @import url("features/troop-training-note.css?v=20260717-20");
@@ -20,4 +20,4 @@
 @import url("features/alliance.css?v=20260717-20");
 @import url("features/account.css?v=20260717-22");
 @import url("features/sync-status.css?v=20260717-20");
-@import url("features/account-mobile.css?v=20260717-20");
+@import url("features/account-mobile.css?v=20260717-23");
