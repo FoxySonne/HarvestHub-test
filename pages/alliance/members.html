@@ -1,164 +1,138 @@
 <section class="page-section alliance-page">
   <h1>Союзный штаб</h1>
-  <p class="alliance-page-intro">Общая база участников союза с сохранением в Supabase и автоматическим обновлением данных.</p>
+  <p class="alliance-page-intro">Открой штаб по пригласительному коду. Просмотр доступен без регистрации, а создание и редактирование — пользователям с полноценным аккаунтом.</p>
 
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
-  <section id="allianceAuthCard" class="card alliance-auth-card" data-no-collapse="true">
+  <section class="card alliance-guest-card" data-no-collapse="true">
     <div class="card-header">
       <div>
-        <h3>Вход в общую базу</h3>
-        <p>Используй электронную почту и пароль Supabase.</p>
+        <h3>Открыть союзный штаб</h3>
+        <p>Введи пригласительный код, чтобы посмотреть доступную информацию союза.</p>
       </div>
     </div>
 
-    <div class="alliance-auth-grid">
+    <form id="allianceGuestOpenForm" class="alliance-form-block alliance-guest-open-form">
       <label>
-        <span>Электронная почта</span>
-        <input id="allianceAuthEmail" type="email" autocomplete="email" data-no-persist="true" placeholder="name@example.com">
+        <span>Пригласительный код</span>
+        <input id="allianceGuestCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required>
       </label>
+      <button type="submit" id="allianceGuestOpenButton">Открыть штаб</button>
+    </form>
+  </section>
 
-      <label>
-        <span>Пароль</span>
-        <input id="allianceAuthPassword" type="password" autocomplete="current-password" data-no-persist="true" placeholder="Не менее 6 символов">
-      </label>
+  <section id="allianceAccountHint" class="card alliance-account-hint" data-no-collapse="true" hidden>
+    <div class="card-header">
+      <div>
+        <h3>Создание и редактирование</h3>
+        <p>Для создания своего штаба и изменения данных необходим полноценный аккаунт HarvestHub.</p>
+      </div>
+    </div>
+    <button type="button" data-account-button>Войти или создать аккаунт</button>
+  </section>
+
+  <section id="allianceManagementCard" class="card alliance-setup-card" data-no-collapse="true" hidden>
+    <div class="card-header">
+      <div>
+        <h3>Управление союзным штабом</h3>
+        <p>Создай новый штаб или подключи существующий к своему аккаунту.</p>
+      </div>
     </div>
 
-    <div class="alliance-actions">
-      <button id="allianceLoginButton" type="button">Войти</button>
-      <button id="allianceRegisterButton" type="button" class="secondary-button">Создать аккаунт</button>
+    <div class="alliance-setup-grid">
+      <form id="allianceCreateForm" class="alliance-form-block">
+        <h4>Создать штаб</h4>
+        <label>
+          <span>Название союза</span>
+          <input id="allianceCreateName" type="text" maxlength="80" data-no-persist="true" required>
+        </label>
+        <label>
+          <span>Номер штата</span>
+          <input id="allianceCreateState" type="text" maxlength="30" data-no-persist="true">
+        </label>
+        <button type="submit">Создать</button>
+      </form>
+
+      <form id="allianceJoinForm" class="alliance-form-block">
+        <h4>Подключить существующий штаб</h4>
+        <label>
+          <span>Пригласительный код</span>
+          <input id="allianceJoinCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required>
+        </label>
+        <button type="submit">Подключить к аккаунту</button>
+      </form>
     </div>
   </section>
 
-  <section id="allianceWorkspace" class="alliance-workspace" hidden>
-    <section class="card alliance-session-card" data-no-collapse="true">
-      <div>
-        <strong id="allianceSessionEmail">—</strong>
-        <span id="allianceSessionRole">—</span>
+  <section id="allianceDataArea" class="alliance-data-area" hidden>
+    <section class="card alliance-toolbar-card" data-no-collapse="true">
+      <div class="alliance-opened-summary">
+        <span>Открыт штаб</span>
+        <strong id="allianceOpenedName">—</strong>
+        <small id="allianceOpenedState"></small>
       </div>
-      <button id="allianceLogoutButton" type="button" class="secondary-button">Выйти</button>
+
+      <label id="allianceSelectorField" hidden>
+        <span>Мои штабы</span>
+        <select id="allianceSelector" data-no-persist="true"></select>
+      </label>
+
+      <div id="allianceRoleBox" class="alliance-invite-box" hidden>
+        <span>Мои права</span>
+        <strong id="allianceSessionRole">Только просмотр</strong>
+      </div>
+
+      <div id="allianceInviteBox" class="alliance-invite-box" hidden>
+        <span>Код приглашения</span>
+        <strong id="allianceInviteCode">—</strong>
+        <button id="allianceCopyCodeButton" type="button" class="secondary-button">Копировать</button>
+      </div>
     </section>
 
-    <section id="allianceSetupCard" class="card alliance-setup-card" data-no-collapse="true">
+    <section id="participantEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden>
       <div class="card-header">
         <div>
-          <h3>Подключить союз</h3>
-          <p>Создай новое пространство или присоединись по коду приглашения.</p>
+          <h3 id="participantEditorTitle">Добавить участника</h3>
+          <p>Данные сохраняются в общей базе союза.</p>
         </div>
       </div>
 
-      <div class="alliance-setup-grid">
-        <form id="allianceCreateForm" class="alliance-form-block">
-          <h4>Создать союз</h4>
-          <label>
-            <span>Название союза</span>
-            <input id="allianceCreateName" type="text" maxlength="80" data-no-persist="true" required>
-          </label>
-          <label>
-            <span>Номер штата</span>
-            <input id="allianceCreateState" type="text" maxlength="30" data-no-persist="true">
-          </label>
-          <button type="submit">Создать</button>
-        </form>
-
-        <form id="allianceJoinForm" class="alliance-form-block">
-          <h4>Присоединиться</h4>
-          <label>
-            <span>Код приглашения</span>
-            <input id="allianceJoinCode" type="text" maxlength="20" data-no-persist="true" required>
-          </label>
-          <button type="submit">Присоединиться</button>
-        </form>
-      </div>
+      <form id="participantForm" class="participant-form">
+        <input id="participantId" type="hidden" data-no-persist="true">
+        <label><span>Никнейм</span><input id="participantNickname" type="text" maxlength="80" data-no-persist="true" required></label>
+        <label><span>Ранг</span><input id="participantRank" type="text" maxlength="40" data-no-persist="true"></label>
+        <label><span>БМ отряда</span><input id="participantPower" type="number" min="0" step="1" data-no-persist="true" value="0"></label>
+        <label>
+          <span>Статус</span>
+          <select id="participantStatus" data-no-persist="true">
+            <option value="active">Активен</option>
+            <option value="reserve">Резерв</option>
+            <option value="inactive">Неактивен</option>
+          </select>
+        </label>
+        <label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label>
+        <div class="alliance-actions participant-form-actions">
+          <button type="submit">Сохранить</button>
+          <button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить редактирование</button>
+        </div>
+      </form>
     </section>
 
-    <section id="allianceDataArea" class="alliance-data-area" hidden>
-      <section class="card alliance-toolbar-card" data-no-collapse="true">
-        <label>
-          <span>Текущий союз</span>
-          <select id="allianceSelector" data-no-persist="true"></select>
-        </label>
-
-        <div class="alliance-invite-box">
-          <span>Код приглашения</span>
-          <strong id="allianceInviteCode">—</strong>
-          <button id="allianceCopyCodeButton" type="button" class="secondary-button">Копировать</button>
+    <section class="card alliance-list-card" data-no-collapse="true">
+      <div class="card-header">
+        <div>
+          <h3>Участники</h3>
+          <p id="participantCount">0 участников</p>
         </div>
-      </section>
+      </div>
 
-      <section id="participantEditorCard" class="card alliance-editor-card" data-no-collapse="true">
-        <div class="card-header">
-          <div>
-            <h3 id="participantEditorTitle">Добавить участника</h3>
-            <p>Данные сохраняются в общей базе союза.</p>
-          </div>
-        </div>
-
-        <form id="participantForm" class="participant-form">
-          <input id="participantId" type="hidden" data-no-persist="true">
-
-          <label>
-            <span>Никнейм</span>
-            <input id="participantNickname" type="text" maxlength="80" data-no-persist="true" required>
-          </label>
-
-          <label>
-            <span>Ранг</span>
-            <input id="participantRank" type="text" maxlength="40" data-no-persist="true">
-          </label>
-
-          <label>
-            <span>БМ отряда</span>
-            <input id="participantPower" type="number" min="0" step="1" data-no-persist="true" value="0">
-          </label>
-
-          <label>
-            <span>Статус</span>
-            <select id="participantStatus" data-no-persist="true">
-              <option value="active">Активен</option>
-              <option value="reserve">Резерв</option>
-              <option value="inactive">Неактивен</option>
-            </select>
-          </label>
-
-          <label class="participant-comment-field">
-            <span>Комментарий</span>
-            <textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea>
-          </label>
-
-          <div class="alliance-actions participant-form-actions">
-            <button type="submit">Сохранить</button>
-            <button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить редактирование</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="card alliance-list-card" data-no-collapse="true">
-        <div class="card-header">
-          <div>
-            <h3>Участники</h3>
-            <p id="participantCount">0 участников</p>
-          </div>
-        </div>
-
-        <div class="alliance-table-wrap">
-          <table class="alliance-table">
-            <thead>
-              <tr>
-                <th>Никнейм</th>
-                <th>Ранг</th>
-                <th>БМ отряда</th>
-                <th>Статус</th>
-                <th>Комментарий</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="participantTableBody"></tbody>
-          </table>
-        </div>
-
-        <div id="participantEmptyState" class="alliance-empty-state">Пока нет ни одного участника.</div>
-      </section>
+      <div class="alliance-table-wrap">
+        <table class="alliance-table">
+          <thead><tr><th>Никнейм</th><th>Ранг</th><th>БМ отряда</th><th>Статус</th><th>Комментарий</th><th></th></tr></thead>
+          <tbody id="participantTableBody"></tbody>
+        </table>
+      </div>
+      <div id="participantEmptyState" class="alliance-empty-state">Пока нет ни одного участника.</div>
     </section>
   </section>
 </section>
