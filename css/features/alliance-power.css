@@ -1,0 +1,82 @@
+.power-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.power-form label,
+.power-season-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.power-form input,
+.power-form select,
+.power-season-form input {
+  width: 100%;
+}
+
+.power-form button,
+.power-season-form button {
+  width: auto;
+}
+
+.power-season-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.power-table {
+  min-width: 1180px;
+}
+
+.power-table td:nth-child(2) strong,
+.power-table td:nth-child(2) small {
+  display: block;
+}
+
+.power-table td:nth-child(2) small {
+  margin-top: 4px;
+  color: var(--text-soft);
+}
+
+.power-positive {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.power-negative {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.power-tools {
+  grid-template-columns: minmax(180px, 1fr) minmax(150px, auto);
+}
+
+#powerDate,
+#powerSeasonStart {
+  color-scheme: dark;
+}
+
+@media (max-width: 1100px) {
+  .power-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .power-form,
+  .power-season-form {
+    grid-template-columns: 1fr;
+  }
+
+  .power-form button,
+  .power-season-form button {
+    width: 100%;
+  }
+}
