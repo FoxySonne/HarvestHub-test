@@ -67,7 +67,7 @@
         <label><span>Ранг</span><select id="participantRank" data-no-persist="true"><option value="">Не указан</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select></label>
         <label><span>Статус</span><select id="participantStatus" data-no-persist="true"><option value="main">Основной состав</option><option value="reserve">Резерв</option><option value="inactive">Неактивен</option><option value="left">Вышел</option></select></label>
         <label><span>Часовой пояс от Москвы</span><input id="participantTimezone" type="number" min="-12" max="12" step="1" data-no-persist="true" placeholder="Например, 2 или -3"></label>
-        <label><span>День рождения</span><input id="participantBirthday" type="date" data-no-persist="true"></label>
+        <label><span>День рождения</span><input id="participantBirthday" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="ДД.ММ" data-no-persist="true"></label>
         <label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label>
         <div class="alliance-actions participant-form-actions"><button type="submit">Сохранить</button><button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить редактирование</button></div>
       </form>
