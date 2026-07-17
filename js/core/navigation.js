@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260718-39";
+  const SITE_ASSET_VERSION = "20260718-50";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -85,7 +85,6 @@
         <small>${page.group}</small>
       </a>
     `).join("");
-
   }
 
   function activatePageLink(target) {
