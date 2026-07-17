@@ -13,13 +13,8 @@
   color: var(--text);
 }
 
-.alliance-message[data-type="success"] {
-  border-color: var(--success);
-}
-
-.alliance-message[data-type="error"] {
-  border-color: var(--danger);
-}
+.alliance-message[data-type="success"] { border-color: var(--success); }
+.alliance-message[data-type="error"] { border-color: var(--danger); }
 
 .alliance-auth-card,
 .alliance-setup-card,
@@ -47,14 +42,13 @@
 }
 
 .alliance-auth-grid,
-.alliance-setup-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
+.alliance-setup-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 .alliance-auth-grid label,
 .alliance-form-block label,
 .participant-form label,
-.alliance-toolbar-card > label {
+.alliance-toolbar-card > label,
+.alliance-details-form label {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -64,58 +58,28 @@
 .alliance-form-block label > span,
 .participant-form label > span,
 .alliance-toolbar-card label > span,
-.alliance-invite-box > span {
+.alliance-invite-box > span,
+.alliance-role-box > span,
+.alliance-details-form label > span {
   color: var(--text-soft);
   font-size: 14px;
 }
 
-.alliance-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
+.alliance-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .alliance-actions button,
 .alliance-session-card button,
 .alliance-invite-box button,
-.participant-row-actions button {
-  width: auto;
-}
+.participant-row-actions button { width: auto; }
 
 .secondary-button {
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
 }
-
-.secondary-button:hover {
-  background: var(--card-hover);
-}
+.secondary-button:hover { background: var(--card-hover); }
 
 .alliance-workspace,
-.alliance-data-area {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.alliance-session-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.alliance-session-card > div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.alliance-session-card span {
-  color: var(--accent);
-}
+.alliance-data-area { display: flex; flex-direction: column; gap: 18px; }
 
 .alliance-form-block {
   display: flex;
@@ -126,34 +90,25 @@
   border-radius: var(--radius);
   background: var(--panel);
 }
-
-.alliance-form-block h4 {
-  margin: 0;
-}
-
-.alliance-form-block button {
-  align-self: flex-start;
-  width: auto;
-}
+.alliance-form-block h4 { margin: 0; }
+.alliance-form-block button { align-self: flex-start; width: auto; }
 
 .alliance-toolbar-card {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(220px, auto);
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(150px, auto));
   align-items: start;
-  gap: 18px 28px;
+  gap: 18px 24px;
 }
 
-.alliance-opened-summary {
+.alliance-opened-summary,
+.alliance-role-box {
   display: grid;
   gap: 6px;
   min-width: 0;
 }
 
 .alliance-opened-summary > span,
-.alliance-opened-summary > small {
-  color: var(--text-soft);
-}
-
+.alliance-opened-summary > small { color: var(--text-soft); }
 .alliance-opened-summary > strong {
   font-size: 20px;
   line-height: 1.3;
@@ -167,41 +122,56 @@
   gap: 10px;
   min-width: 0;
 }
+.alliance-invite-box > span { grid-column: 1 / -1; }
+.alliance-invite-box strong { color: var(--accent); letter-spacing: .08em; overflow-wrap: anywhere; }
 
-.alliance-invite-box > span {
-  grid-column: 1 / -1;
-}
-
-.alliance-invite-box strong {
-  color: var(--accent);
-  letter-spacing: .08em;
-  overflow-wrap: anywhere;
-}
-
-.participant-form {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.participant-comment-field,
-.participant-form-actions {
-  grid-column: 1 / -1;
-}
-
-.participant-comment-field textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.alliance-table-wrap {
+.alliance-section-tabs {
+  display: flex;
+  gap: 8px;
   overflow-x: auto;
+  padding-bottom: 2px;
+}
+.alliance-section-tabs button {
+  width: auto;
+  white-space: nowrap;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+}
+.alliance-section-tabs button.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.alliance-section-tabs button:disabled { opacity: .5; cursor: default; }
+
+.alliance-details-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+}
+.alliance-details-form button { width: auto; }
+
+.participant-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.participant-comment-field,
+.participant-form-actions { grid-column: 1 / -1; }
+.participant-comment-field textarea { width: 100%; resize: vertical; }
+
+.alliance-roster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.alliance-roster-tools {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) repeat(3, minmax(130px, auto));
+  gap: 10px;
+  width: min(100%, 760px);
 }
 
-.alliance-table {
-  width: 100%;
-  min-width: 920px;
-  border-collapse: collapse;
-}
-
+.alliance-table-wrap { overflow-x: auto; }
+.alliance-table { width: 100%; min-width: 980px; border-collapse: collapse; }
 .alliance-table th,
 .alliance-table td {
   padding: 12px;
@@ -209,16 +179,8 @@
   text-align: left;
   vertical-align: top;
 }
-
-.alliance-table th {
-  color: var(--text-soft);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.alliance-table td {
-  color: var(--text);
-}
+.alliance-table th { color: var(--text-soft); font-size: 13px; font-weight: 600; }
+.alliance-table td { color: var(--text); }
 
 .participant-status {
   display: inline-flex;
@@ -229,33 +191,22 @@
   font-size: 13px;
   font-weight: 700;
 }
+.participant-status-main { background: rgba(61, 138, 82, .18); color: var(--accent); }
+.participant-status-reserve { background: rgba(217, 164, 61, .16); color: var(--warning); }
+.participant-status-inactive,
+.participant-status-left { background: rgba(143, 152, 168, .16); color: var(--text-muted); }
+.participant-row-reserve { background: rgba(217, 164, 61, .04); }
+.participant-row-inactive,
+.participant-row-left { opacity: .65; }
 
-.participant-status-active {
-  background: rgba(61, 138, 82, .18);
-  color: var(--accent);
+.participant-nickname.has-history {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
 }
 
-.participant-status-reserve {
-  background: rgba(217, 164, 61, .16);
-  color: var(--warning);
-}
-
-.participant-status-inactive {
-  background: rgba(143, 152, 168, .16);
-  color: var(--text-muted);
-}
-
-.participant-row-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.participant-row-actions button {
-  min-height: 34px;
-  padding: 6px 10px;
-  font-size: 13px;
-}
+.participant-row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.participant-row-actions button { min-height: 34px; padding: 6px 10px; font-size: 13px; }
 
 .alliance-empty-state {
   padding: 18px;
@@ -267,37 +218,29 @@
 
 .alliance-page:has(#allianceDataArea:not([hidden])) .alliance-guest-card,
 .alliance-page:has(#allianceDataArea:not([hidden])) #allianceManagementCard,
-.alliance-page:has(#allianceDataArea:not([hidden])) #allianceAccountHint {
-  display: none !important;
+.alliance-page:has(#allianceDataArea:not([hidden])) #allianceAccountHint { display: none !important; }
+
+@media (max-width: 1100px) {
+  .alliance-toolbar-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .alliance-roster-header { align-items: stretch; flex-direction: column; }
+  .alliance-roster-tools { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 899px) {
   .alliance-auth-grid,
   .alliance-setup-grid,
   .participant-form,
-  .alliance-toolbar-card {
-    grid-template-columns: 1fr;
-  }
+  .alliance-toolbar-card,
+  .alliance-details-form,
+  .alliance-roster-tools { grid-template-columns: 1fr; }
 
-  .alliance-session-card {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .alliance-session-card button,
   .alliance-actions button,
   .alliance-form-block button,
-  .alliance-invite-box button {
-    width: 100%;
-  }
+  .alliance-invite-box button,
+  .alliance-details-form button { width: 100%; }
 
-  .alliance-invite-box {
-    grid-template-columns: 1fr;
-  }
-
+  .alliance-invite-box { grid-template-columns: 1fr; }
   .alliance-invite-box > span,
   .participant-comment-field,
-  .participant-form-actions {
-    grid-column: auto;
-  }
+  .participant-form-actions { grid-column: auto; }
 }
