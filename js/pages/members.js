@@ -1,6 +1,7 @@
 import {
   createAlliance,
   deleteParticipant,
+  fetchAllianceForGuest,
   fetchMemberships,
   fetchParticipants,
   joinAlliance,
@@ -14,10 +15,12 @@ const state = {
   session: null,
   memberships: [],
   activeAllianceId: "",
-  activeRole: "",
+  activeAlliance: null,
+  activeRole: "viewer",
   participants: [],
   realtimeChannel: null,
-  authSubscription: null
+  authSubscription: null,
+  guestMode: true
 };
 
 function getElement(id) {
@@ -27,7 +30,6 @@ function getElement(id) {
 function showMessage(message, type = "info") {
   const element = getElement("allianceMessage");
   if (!element) return;
-
   element.hidden = !message;
   element.textContent = message || "";
   element.dataset.type = type;
@@ -35,7 +37,6 @@ function showMessage(message, type = "info") {
 
 function setBusy(button, busy, busyText = "Подождите…") {
   if (!button) return;
-
   if (busy) {
     button.dataset.originalText = button.textContent;
     button.textContent = busyText;
@@ -46,161 +47,102 @@ function setBusy(button, busy, busyText = "Подождите…") {
   }
 }
 
-function getActiveMembership() {
-  return state.memberships.find(item => item.alliance_id === state.activeAllianceId) || null;
-}
-
 function canEditParticipants() {
-  return ["owner", "editor"].includes(state.activeRole);
+  return Boolean(state.session?.user) && !state.guestMode && ["owner", "editor"].includes(state.activeRole);
 }
 
-function updateWorkspaceVisibility() {
-  const authCard = getElement("allianceAuthCard");
-  const workspace = getElement("allianceWorkspace");
-
-  if (authCard) authCard.hidden = Boolean(state.session);
-  if (workspace) workspace.hidden = !state.session;
-
-  const emailElement = getElement("allianceSessionEmail");
-  if (emailElement) emailElement.textContent = state.session?.user?.email || "—";
+function updateAccountVisibility() {
+  const signedIn = Boolean(state.session?.user);
+  const hint = getElement("allianceAccountHint");
+  const management = getElement("allianceManagementCard");
+  if (hint) hint.hidden = signedIn;
+  if (management) management.hidden = !signedIn;
 }
 
-function renderMemberships() {
-  const selector = getElement("allianceSelector");
-  const dataArea = getElement("allianceDataArea");
+function applyAllianceHeader() {
+  const alliance = state.activeAlliance || {};
+  getElement("allianceOpenedName").textContent = alliance.name || "—";
+  getElement("allianceOpenedState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
 
-  if (!selector || !dataArea) return;
+  const roleBox = getElement("allianceRoleBox");
+  const inviteBox = getElement("allianceInviteBox");
+  if (roleBox) roleBox.hidden = state.guestMode || !state.session;
+  if (inviteBox) inviteBox.hidden = state.guestMode || !state.session;
 
-  if (!state.memberships.length) {
-    selector.innerHTML = "";
-    dataArea.hidden = true;
-    state.activeAllianceId = "";
-    state.activeRole = "";
-    getElement("allianceSessionRole").textContent = "Союз не подключён";
-    return;
-  }
+  const role = getElement("allianceSessionRole");
+  if (role) role.textContent = ROLE_LABELS[state.activeRole] || "Только просмотр";
 
-  const savedAllianceId = localStorage.getItem(ACTIVE_ALLIANCE_STORAGE_KEY) || "";
-  const hasSavedAlliance = state.memberships.some(item => item.alliance_id === savedAllianceId);
+  const code = getElement("allianceInviteCode");
+  if (code) code.textContent = alliance.invite_code || "—";
 
-  state.activeAllianceId = hasSavedAlliance
-    ? savedAllianceId
-    : state.memberships[0].alliance_id;
-
-  localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, state.activeAllianceId);
-
-  selector.innerHTML = renderMembershipOptions(state.memberships);
-
-  selector.value = state.activeAllianceId;
-  dataArea.hidden = false;
-  applyActiveAllianceDetails();
-}
-
-function applyActiveAllianceDetails() {
-  const membership = getActiveMembership();
-  const alliance = membership?.alliances;
-
-  state.activeRole = membership?.role || "viewer";
-
-  const roleElement = getElement("allianceSessionRole");
-  if (roleElement) roleElement.textContent = ROLE_LABELS[state.activeRole] || state.activeRole;
-
-  const codeElement = getElement("allianceInviteCode");
-  if (codeElement) codeElement.textContent = alliance?.invite_code || "—";
-
-  const editorCard = getElement("participantEditorCard");
-  if (editorCard) editorCard.hidden = !canEditParticipants();
-}
-
-async function loadMemberships() {
-  const { data, error } = await fetchMemberships(state.client);
-
-  if (error) throw error;
-
-  state.memberships = Array.isArray(data) ? data : [];
-  renderMemberships();
-
-  if (state.activeAllianceId) {
-    await loadParticipants();
-    subscribeToParticipants();
-  } else {
-    state.participants = [];
-    renderParticipants();
-    removeRealtimeChannel();
-  }
+  const editor = getElement("participantEditorCard");
+  if (editor) editor.hidden = !canEditParticipants();
 }
 
 function renderParticipants() {
   const body = getElement("participantTableBody");
-  const emptyState = getElement("participantEmptyState");
+  const empty = getElement("participantEmptyState");
   const count = getElement("participantCount");
-
-  if (!body || !emptyState || !count) return;
+  if (!body || !empty || !count) return;
 
   count.textContent = `${state.participants.length} участников`;
-  emptyState.hidden = state.participants.length > 0;
-
+  empty.hidden = state.participants.length > 0;
   body.innerHTML = renderParticipantRows(state.participants, canEditParticipants());
 }
 
-async function loadParticipants() {
-  if (!state.activeAllianceId) return;
-
-  const { data, error } = await fetchParticipants(state.client, state.activeAllianceId);
-
-  if (error) throw error;
-
-  state.participants = Array.isArray(data) ? data : [];
+function showAllianceData() {
+  const area = getElement("allianceDataArea");
+  if (area) area.hidden = false;
+  applyAllianceHeader();
   renderParticipants();
 }
 
 function removeRealtimeChannel() {
   if (!state.realtimeChannel || !state.client) return;
-
   state.client.removeChannel(state.realtimeChannel);
   state.realtimeChannel = null;
 }
 
+async function loadMemberParticipants() {
+  if (!state.activeAllianceId) return;
+  const { data, error } = await fetchParticipants(state.client, state.activeAllianceId);
+  if (error) throw error;
+  state.participants = Array.isArray(data) ? data : [];
+  renderParticipants();
+}
+
 function subscribeToParticipants() {
   removeRealtimeChannel();
-
-  if (!state.activeAllianceId) return;
+  if (!state.activeAllianceId || state.guestMode) return;
 
   state.realtimeChannel = state.client
     .channel(`participants:${state.activeAllianceId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "participants",
-        filter: `alliance_id=eq.${state.activeAllianceId}`
-      },
-      async () => {
-        try {
-          await loadParticipants();
-        } catch (error) {
-          console.error("Не удалось обновить список участников", error);
-        }
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "participants",
+      filter: `alliance_id=eq.${state.activeAllianceId}`
+    }, async () => {
+      try {
+        await loadMemberParticipants();
+      } catch (error) {
+        console.error("Не удалось обновить список участников", error);
       }
-    )
+    })
     .subscribe();
 }
 
 function resetParticipantForm() {
-  const form = getElement("participantForm");
-  if (form) form.reset();
-
-  getElement("participantId").value = "";
-  getElement("participantPower").value = "0";
-  getElement("participantStatus").value = "active";
-  getElement("participantEditorTitle").textContent = "Добавить участника";
-  getElement("participantCancelButton").hidden = true;
+  getElement("participantForm")?.reset();
+  if (getElement("participantId")) getElement("participantId").value = "";
+  if (getElement("participantPower")) getElement("participantPower").value = "0";
+  if (getElement("participantStatus")) getElement("participantStatus").value = "active";
+  if (getElement("participantEditorTitle")) getElement("participantEditorTitle").textContent = "Добавить участника";
+  if (getElement("participantCancelButton")) getElement("participantCancelButton").hidden = true;
 }
 
 function fillParticipantForm(participant) {
   if (!participant) return;
-
   getElement("participantId").value = participant.id;
   getElement("participantNickname").value = participant.nickname || "";
   getElement("participantRank").value = participant.rank_name || "";
@@ -212,214 +154,164 @@ function fillParticipantForm(participant) {
   getElement("participantEditorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-async function handleLogin() {
-  const button = getElement("allianceLoginButton");
-  const email = getElement("allianceAuthEmail").value.trim();
-  const password = getElement("allianceAuthPassword").value;
+async function openGuestAlliance(event) {
+  event.preventDefault();
+  const code = getElement("allianceGuestCode").value.trim().toUpperCase();
+  const button = getElement("allianceGuestOpenButton");
+  if (!code) return showMessage("Укажи пригласительный код.", "error");
 
-  if (!email || !password) {
-    showMessage("Укажи электронную почту и пароль.", "error");
-    return;
-  }
-
-  setBusy(button, true, "Входим…");
+  setBusy(button, true, "Открываем…");
   showMessage("");
-
-  const { error } = await state.client.auth.signInWithPassword({ email, password });
-
+  const { data, error } = await fetchAllianceForGuest(state.client, code);
   setBusy(button, false);
 
   if (error) {
-    showMessage(error.message, "error");
+    const message = String(error.message || "");
+    showMessage(
+      message.includes("open_alliance_by_code")
+        ? "Гостевой просмотр ещё не подключён в Supabase. Нужно выполнить новый SQL-скрипт для союзного штаба."
+        : message,
+      "error"
+    );
     return;
   }
 
-  getElement("allianceAuthPassword").value = "";
-  showMessage("Вход выполнен.", "success");
+  if (!data?.alliance) {
+    showMessage("Союз с таким кодом не найден.", "error");
+    return;
+  }
+
+  removeRealtimeChannel();
+  state.guestMode = true;
+  state.activeAlliance = data.alliance;
+  state.activeAllianceId = data.alliance.id || "";
+  state.activeRole = "viewer";
+  state.participants = Array.isArray(data.participants) ? data.participants : [];
+  resetParticipantForm();
+  showAllianceData();
+  showMessage("Штаб открыт в режиме просмотра.", "success");
 }
 
-async function handleRegister() {
-  const button = getElement("allianceRegisterButton");
-  const email = getElement("allianceAuthEmail").value.trim();
-  const password = getElement("allianceAuthPassword").value;
+function renderMemberships() {
+  const selector = getElement("allianceSelector");
+  const field = getElement("allianceSelectorField");
+  if (!selector || !field) return;
 
-  if (!email || password.length < 6) {
-    showMessage("Укажи электронную почту и пароль не короче 6 символов.", "error");
-    return;
-  }
+  field.hidden = state.memberships.length === 0;
+  selector.innerHTML = renderMembershipOptions(state.memberships);
+  if (!state.memberships.length) return;
 
-  setBusy(button, true, "Создаём…");
-  showMessage("");
-
-  const redirectTo = `${window.location.origin}${window.location.pathname}`;
-  const { data, error } = await state.client.auth.signUp({
-    email,
-    password,
-    options: { emailRedirectTo: redirectTo }
-  });
-
-  setBusy(button, false);
-
-  if (error) {
-    showMessage(error.message, "error");
-    return;
-  }
-
-  getElement("allianceAuthPassword").value = "";
-
-  if (data.session) {
-    showMessage("Аккаунт создан, вход выполнен.", "success");
-  } else {
-    showMessage("Аккаунт создан. Подтверди электронную почту по ссылке из письма.", "success");
-  }
+  const saved = localStorage.getItem(ACTIVE_ALLIANCE_STORAGE_KEY) || "";
+  const membership = state.memberships.find(item => item.alliance_id === saved) || state.memberships[0];
+  selector.value = membership.alliance_id;
 }
 
-async function handleLogout() {
-  showMessage("");
-  const { error } = await state.client.auth.signOut();
+async function openMembership(allianceId) {
+  const membership = state.memberships.find(item => item.alliance_id === allianceId);
+  if (!membership) return;
 
-  if (error) showMessage(error.message, "error");
+  state.guestMode = false;
+  state.activeAllianceId = membership.alliance_id;
+  state.activeAlliance = membership.alliances || null;
+  state.activeRole = membership.role || "viewer";
+  localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, state.activeAllianceId);
+  resetParticipantForm();
+  await loadMemberParticipants();
+  showAllianceData();
+  subscribeToParticipants();
+}
+
+async function loadMemberships() {
+  if (!state.session?.user) {
+    state.memberships = [];
+    renderMemberships();
+    return;
+  }
+
+  const { data, error } = await fetchMemberships(state.client);
+  if (error) throw error;
+  state.memberships = Array.isArray(data) ? data : [];
+  renderMemberships();
+
+  if (state.memberships.length && getElement("allianceDataArea")?.hidden) {
+    const saved = localStorage.getItem(ACTIVE_ALLIANCE_STORAGE_KEY) || "";
+    const membership = state.memberships.find(item => item.alliance_id === saved) || state.memberships[0];
+    await openMembership(membership.alliance_id);
+  }
 }
 
 async function handleCreateAlliance(event) {
   event.preventDefault();
+  if (!state.session?.user) return showMessage("Для создания штаба войди в аккаунт HarvestHub.", "error");
 
   const name = getElement("allianceCreateName").value.trim();
   const stateNumber = getElement("allianceCreateState").value.trim();
   const button = event.submitter;
-
-  if (!name) {
-    showMessage("Укажи название союза.", "error");
-    return;
-  }
+  if (!name) return showMessage("Укажи название союза.", "error");
 
   setBusy(button, true, "Создаём…");
-  showMessage("");
-
-  const { data, error } = await createAlliance(state.client, {
-    name,
-    stateNumber,
-    userId: state.session.user.id
-  });
-
+  const { data, error } = await createAlliance(state.client, { name, stateNumber, userId: state.session.user.id });
   setBusy(button, false);
-
-  if (error) {
-    showMessage(error.message, "error");
-    return;
-  }
+  if (error) return showMessage(error.message, "error");
 
   localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, data.id);
   event.currentTarget.reset();
   await loadMemberships();
-  showMessage("Союз создан.", "success");
+  await openMembership(data.id);
+  showMessage("Союзный штаб создан.", "success");
 }
 
 async function handleJoinAlliance(event) {
   event.preventDefault();
+  if (!state.session?.user) return showMessage("Для подключения штаба войди в аккаунт HarvestHub.", "error");
 
-  const code = getElement("allianceJoinCode").value.trim();
+  const code = getElement("allianceJoinCode").value.trim().toUpperCase();
   const button = event.submitter;
-
-  if (!code) {
-    showMessage("Укажи код приглашения.", "error");
-    return;
-  }
+  if (!code) return showMessage("Укажи пригласительный код.", "error");
 
   setBusy(button, true, "Подключаем…");
-  showMessage("");
-
   const { data, error } = await joinAlliance(state.client, code);
-
   setBusy(button, false);
-
-  if (error) {
-    showMessage(error.message, "error");
-    return;
-  }
+  if (error) return showMessage(error.message, "error");
 
   localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, data);
   event.currentTarget.reset();
   await loadMemberships();
-  showMessage("Союз подключён.", "success");
-}
-
-async function handleAllianceChange(event) {
-  state.activeAllianceId = event.target.value;
-  localStorage.setItem(ACTIVE_ALLIANCE_STORAGE_KEY, state.activeAllianceId);
-  applyActiveAllianceDetails();
-  resetParticipantForm();
-
-  try {
-    await loadParticipants();
-    subscribeToParticipants();
-  } catch (error) {
-    showMessage(error.message, "error");
-  }
-}
-
-async function handleCopyCode() {
-  const code = getElement("allianceInviteCode")?.textContent?.trim();
-  if (!code || code === "—") return;
-
-  try {
-    await navigator.clipboard.writeText(code);
-    showMessage("Код приглашения скопирован.", "success");
-  } catch {
-    showMessage(`Код приглашения: ${code}`, "info");
-  }
+  await openMembership(data);
+  showMessage("Штаб подключён к аккаунту.", "success");
 }
 
 async function handleParticipantSubmit(event) {
   event.preventDefault();
-
-  if (!canEditParticipants()) {
-    showMessage("У тебя нет прав на изменение участников.", "error");
-    return;
-  }
+  if (!canEditParticipants()) return showMessage("У тебя нет прав на изменение участников.", "error");
 
   const id = getElement("participantId").value;
   const nickname = getElement("participantNickname").value.trim();
-  const rankName = getElement("participantRank").value.trim();
-  const squadPower = Math.max(0, Math.floor(Number(getElement("participantPower").value) || 0));
-  const status = getElement("participantStatus").value;
-  const comment = getElement("participantComment").value.trim();
+  if (!nickname) return showMessage("Укажи никнейм участника.", "error");
+
   const button = event.submitter;
-
-  if (!nickname) {
-    showMessage("Укажи никнейм участника.", "error");
-    return;
-  }
-
-  setBusy(button, true, "Сохраняем…");
-  showMessage("");
-
   const payload = {
     alliance_id: state.activeAllianceId,
     nickname,
-    rank_name: rankName,
-    squad_power: squadPower,
-    status,
-    comment,
+    rank_name: getElement("participantRank").value.trim(),
+    squad_power: Math.max(0, Math.floor(Number(getElement("participantPower").value) || 0)),
+    status: getElement("participantStatus").value,
+    comment: getElement("participantComment").value.trim(),
     updated_by: state.session.user.id
   };
 
+  setBusy(button, true, "Сохраняем…");
   const result = await saveParticipant(state.client, {
     id,
     allianceId: state.activeAllianceId,
     payload,
     userId: state.session.user.id
   });
-
   setBusy(button, false);
-
-  if (result.error) {
-    showMessage(result.error.message, "error");
-    return;
-  }
+  if (result.error) return showMessage(result.error.message, "error");
 
   resetParticipantForm();
-  await loadParticipants();
+  await loadMemberParticipants();
   showMessage(id ? "Данные участника обновлены." : "Участник добавлен.", "success");
 }
 
@@ -428,43 +320,40 @@ async function handleTableClick(event) {
   const deleteButton = event.target.closest("[data-participant-delete]");
 
   if (editButton) {
-    const participant = state.participants.find(item => item.id === editButton.dataset.participantEdit);
-    fillParticipantForm(participant);
+    fillParticipantForm(state.participants.find(item => item.id === editButton.dataset.participantEdit));
     return;
   }
-
-  if (!deleteButton) return;
+  if (!deleteButton || !canEditParticipants()) return;
 
   const participant = state.participants.find(item => item.id === deleteButton.dataset.participantDelete);
-  if (!participant) return;
-
-  const confirmed = window.confirm(`Удалить участника «${participant.nickname}»?`);
-  if (!confirmed) return;
+  if (!participant || !window.confirm(`Удалить участника «${participant.nickname}»?`)) return;
 
   deleteButton.disabled = true;
-
-  const { error } = await deleteParticipant(state.client, {
-    id: participant.id,
-    allianceId: state.activeAllianceId
-  });
-
+  const { error } = await deleteParticipant(state.client, { id: participant.id, allianceId: state.activeAllianceId });
   if (error) {
     deleteButton.disabled = false;
-    showMessage(error.message, "error");
-    return;
+    return showMessage(error.message, "error");
   }
-
-  await loadParticipants();
+  await loadMemberParticipants();
   showMessage("Участник удалён.", "success");
 }
 
+async function handleCopyCode() {
+  const code = getElement("allianceInviteCode")?.textContent?.trim();
+  if (!code || code === "—") return;
+  try {
+    await navigator.clipboard.writeText(code);
+    showMessage("Код приглашения скопирован.", "success");
+  } catch {
+    showMessage(`Код приглашения: ${code}`, "info");
+  }
+}
+
 function bindEvents() {
-  getElement("allianceLoginButton")?.addEventListener("click", handleLogin);
-  getElement("allianceRegisterButton")?.addEventListener("click", handleRegister);
-  getElement("allianceLogoutButton")?.addEventListener("click", handleLogout);
+  getElement("allianceGuestOpenForm")?.addEventListener("submit", openGuestAlliance);
   getElement("allianceCreateForm")?.addEventListener("submit", handleCreateAlliance);
   getElement("allianceJoinForm")?.addEventListener("submit", handleJoinAlliance);
-  getElement("allianceSelector")?.addEventListener("change", handleAllianceChange);
+  getElement("allianceSelector")?.addEventListener("change", event => openMembership(event.target.value).catch(error => showMessage(error.message, "error")));
   getElement("allianceCopyCodeButton")?.addEventListener("click", handleCopyCode);
   getElement("participantForm")?.addEventListener("submit", handleParticipantSubmit);
   getElement("participantCancelButton")?.addEventListener("click", resetParticipantForm);
@@ -473,65 +362,32 @@ function bindEvents() {
 
 async function applySession(session) {
   state.session = session;
-  updateWorkspaceVisibility();
-
-  if (!session) {
-    state.memberships = [];
-    state.participants = [];
-    state.activeAllianceId = "";
-    state.activeRole = "";
-    removeRealtimeChannel();
-    renderParticipants();
-    return;
-  }
-
+  updateAccountVisibility();
   try {
     await loadMemberships();
   } catch (error) {
     console.error("Ошибка загрузки союзного штаба", error);
-    showMessage(
-      error.message.includes("relation")
-        ? "Сначала выполни SQL-скрипт 001_alliance_hub.sql в Supabase."
-        : error.message,
-      "error"
-    );
+    showMessage(error.message, "error");
   }
 }
 
 function cleanup() {
   removeRealtimeChannel();
-
-  if (state.authSubscription) {
-    state.authSubscription.unsubscribe();
-    state.authSubscription = null;
-  }
+  state.authSubscription?.unsubscribe?.();
+  state.authSubscription = null;
 }
 
 export async function init() {
   cleanup();
-
   state.client = window.harvestHubSupabase;
-
-  if (!state.client) {
-    showMessage("Не удалось подключить Supabase.", "error");
-    return;
-  }
+  if (!state.client) return showMessage("Не удалось подключить Supabase.", "error");
 
   bindEvents();
-
   const { data, error } = await state.client.auth.getSession();
-
-  if (error) {
-    showMessage(error.message, "error");
-    return;
-  }
-
+  if (error) return showMessage(error.message, "error");
   await applySession(data.session);
 
-  const authListener = state.client.auth.onAuthStateChange(async (_event, session) => {
-    await applySession(session);
-  });
-
+  const authListener = state.client.auth.onAuthStateChange(async (_event, session) => applySession(session));
   state.authSubscription = authListener.data.subscription;
   window.harvestHubAllianceCleanup = cleanup;
 }
