@@ -19,7 +19,7 @@
   </section>
 
   <section id="allianceManagementCard" class="card alliance-setup-card" data-no-collapse="true" hidden>
-    <div class="card-header"><div><h3>Управление союзным штабом</h3><p>Создай новый штаб или подключи существующий к своему аккаунту.</p></div></div>
+    <div class="card-header"><div><h3>Подключить союзный штаб</h3><p>Создай новый штаб или подключи существующий к своему аккаунту.</p></div></div>
     <div class="alliance-setup-grid">
       <form id="allianceCreateForm" class="alliance-form-block">
         <h4>Создать штаб</h4>
@@ -37,10 +37,23 @@
 
   <section id="allianceDataArea" class="alliance-data-area" hidden>
     <section class="card alliance-toolbar-card" data-no-collapse="true">
-      <div class="alliance-opened-summary"><span>Открыт штаб</span><strong id="allianceOpenedName">—</strong><small id="allianceOpenedState"></small></div>
+      <div class="alliance-opened-summary">
+        <span>Открыт штаб</span>
+        <strong id="allianceOpenedName">—</strong>
+        <small id="allianceOpenedState"></small>
+      </div>
       <label id="allianceSelectorField" hidden><span>Мои штабы</span><select id="allianceSelector" data-no-persist="true"></select></label>
-      <div id="allianceRoleBox" class="alliance-invite-box" hidden><span>Мои права</span><strong id="allianceSessionRole">Только просмотр</strong></div>
+      <div id="allianceRoleBox" class="alliance-role-box" hidden><span>Мои права</span><strong id="allianceSessionRole">Только просмотр</strong></div>
       <div id="allianceInviteBox" class="alliance-invite-box" hidden><span>Код приглашения</span><strong id="allianceInviteCode">—</strong><button id="allianceCopyCodeButton" type="button" class="secondary-button">Копировать</button></div>
+    </section>
+
+    <section id="allianceDetailsEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden>
+      <div class="card-header"><div><h3>Данные союза</h3><p>Название и номер штата видят все пользователи, открывшие штаб по коду.</p></div></div>
+      <form id="allianceDetailsForm" class="alliance-details-form">
+        <label><span>Название союза</span><input id="allianceEditName" type="text" maxlength="80" data-no-persist="true" required></label>
+        <label><span>Номер штата</span><input id="allianceEditState" type="text" maxlength="30" data-no-persist="true"></label>
+        <button type="submit">Сохранить изменения</button>
+      </form>
     </section>
 
     <section id="participantEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden>
