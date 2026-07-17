@@ -1,7 +1,6 @@
 export async function fetchMemberships(client) {
   const rpcResult = await client.rpc("get_my_alliance_hubs");
-
-  if (!rpcResult.error && Array.isArray(rpcResult.data) && rpcResult.data.length > 0) {
+  if (!rpcResult.error && Array.isArray(rpcResult.data)) {
     return {
       ...rpcResult,
       data: rpcResult.data.map(item => ({
@@ -11,24 +10,16 @@ export async function fetchMemberships(client) {
     };
   }
 
-  const directResult = await client
+  return client
     .from("alliance_members")
     .select("alliance_id, role, alliances(id, name, state_number, invite_code)")
     .order("joined_at", { ascending: true });
-
-  if (!directResult.error && Array.isArray(directResult.data)) {
-    return directResult;
-  }
-
-  return rpcResult.error ? rpcResult : directResult;
 }
 
 export function fetchParticipants(client, allianceId) {
-  return client
-    .from("participants")
-    .select("*")
-    .eq("alliance_id", allianceId)
-    .order("nickname", { ascending: true });
+  return client.rpc("get_alliance_participants", {
+    target_alliance_id: allianceId
+  });
 }
 
 export function fetchAllianceForGuest(client, code) {
@@ -48,24 +39,23 @@ export function joinAlliance(client, code) {
   return client.rpc("join_alliance_by_code", { join_code: code });
 }
 
-export function saveParticipant(client, { id, allianceId, payload, userId }) {
-  if (id) {
-    return client
-      .from("participants")
-      .update(payload)
-      .eq("id", id)
-      .eq("alliance_id", allianceId);
-  }
-
-  return client
-    .from("participants")
-    .insert({ ...payload, created_by: userId });
+export function saveParticipant(client, { id, allianceId, payload }) {
+  return client.rpc("save_alliance_participant", {
+    target_alliance_id: allianceId,
+    participant_id: id || null,
+    participant_nickname: payload.nickname,
+    participant_rank: payload.rank_name,
+    participant_status: payload.member_status,
+    participant_timezone: payload.timezone_offset,
+    participant_birthday: payload.birthday || null,
+    participant_comment: payload.comment
+  });
 }
 
 export function deleteParticipant(client, { id, allianceId }) {
   return client
     .from("participants")
-    .delete()
+    .update({ member_status: "left" })
     .eq("id", id)
     .eq("alliance_id", allianceId);
 }
