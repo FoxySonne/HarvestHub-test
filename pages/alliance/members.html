@@ -1,11 +1,10 @@
 <section class="page-section alliance-page">
   <h1>Союзный штаб</h1>
-  <p class="alliance-page-intro">Открой штаб по пригласительному коду. Просмотр доступен всем, а создание и редактирование — пользователям с полноценным аккаунтом и включённым продвинутым режимом.</p>
-
+  <p class="alliance-page-intro">Просмотр доступен по пригласительному коду. Управление — владельцу и управляющим союза в продвинутом режиме.</p>
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
   <section class="card alliance-guest-card" data-no-collapse="true">
-    <div class="card-header"><div><h3>Открыть союзный штаб</h3><p>Введи пригласительный код, чтобы посмотреть доступную информацию союза.</p></div></div>
+    <div class="card-header"><div><h3>Открыть союзный штаб</h3><p>Введи пригласительный код.</p></div></div>
     <form id="allianceGuestOpenForm" class="alliance-form-block alliance-guest-open-form">
       <label><span>Пригласительный код</span><input id="allianceGuestCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required></label>
       <button type="submit" id="allianceGuestOpenButton">Открыть штаб</button>
@@ -13,13 +12,13 @@
   </section>
 
   <section id="allianceAccountHint" class="card alliance-account-hint" data-no-collapse="true" hidden>
-    <div class="card-header"><div><h3 id="allianceAccessHintTitle">Создание и редактирование</h3><p id="allianceAccessHintText"></p></div></div>
+    <div class="card-header"><div><h3>Создание и редактирование</h3><p id="allianceAccessHintText"></p></div></div>
     <button id="allianceAccountButton" type="button" data-account-button>Войти или создать аккаунт</button>
     <button id="allianceAdvancedModeButton" type="button" hidden>Включить продвинутый режим</button>
   </section>
 
   <section id="allianceManagementCard" class="card alliance-setup-card" data-no-collapse="true" hidden>
-    <div class="card-header"><div><h3>Подключить союзный штаб</h3><p>Создай новый штаб или подключи существующий к своему аккаунту.</p></div></div>
+    <div class="card-header"><div><h3>Подключить союзный штаб</h3><p>Создай новый штаб или подключи существующий.</p></div></div>
     <div class="alliance-setup-grid">
       <form id="allianceCreateForm" class="alliance-form-block">
         <h4>Создать штаб</h4>
@@ -37,18 +36,22 @@
 
   <section id="allianceDataArea" class="alliance-data-area" hidden>
     <section class="card alliance-toolbar-card" data-no-collapse="true">
-      <div class="alliance-opened-summary">
-        <span>Открыт штаб</span>
-        <strong id="allianceOpenedName">—</strong>
-        <small id="allianceOpenedState"></small>
-      </div>
+      <div class="alliance-opened-summary"><span>Открыт штаб</span><strong id="allianceOpenedName">—</strong><small id="allianceOpenedState"></small></div>
       <label id="allianceSelectorField" hidden><span>Мои штабы</span><select id="allianceSelector" data-no-persist="true"></select></label>
       <div id="allianceRoleBox" class="alliance-role-box" hidden><span>Мои права</span><strong id="allianceSessionRole">Только просмотр</strong></div>
       <div id="allianceInviteBox" class="alliance-invite-box" hidden><span>Код приглашения</span><strong id="allianceInviteCode">—</strong><button id="allianceCopyCodeButton" type="button" class="secondary-button">Копировать</button></div>
     </section>
 
+    <nav class="alliance-section-tabs" aria-label="Разделы союзного штаба">
+      <button type="button" class="is-active">Состав</button>
+      <button type="button" disabled>Сила отрядов</button>
+      <button type="button" disabled>VS</button>
+      <button type="button" disabled>Резервуар: активность</button>
+      <button type="button" disabled>Резервуар: расстановка</button>
+    </nav>
+
     <section id="allianceDetailsEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden>
-      <div class="card-header"><div><h3>Данные союза</h3><p>Название и номер штата видят все пользователи, открывшие штаб по коду.</p></div></div>
+      <div class="card-header"><div><h3>Данные союза</h3><p>Название и номер штата.</p></div></div>
       <form id="allianceDetailsForm" class="alliance-details-form">
         <label><span>Название союза</span><input id="allianceEditName" type="text" maxlength="80" data-no-persist="true" required></label>
         <label><span>Номер штата</span><input id="allianceEditState" type="text" maxlength="30" data-no-persist="true"></label>
@@ -57,21 +60,29 @@
     </section>
 
     <section id="participantEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden>
-      <div class="card-header"><div><h3 id="participantEditorTitle">Добавить участника</h3><p>Данные сохраняются в общей базе союза.</p></div></div>
-      <form id="participantForm" class="participant-form">
+      <div class="card-header"><div><h3 id="participantEditorTitle">Добавить участника</h3><p>Единая форма для добавления и редактирования состава.</p></div></div>
+      <form id="participantForm" class="participant-form participant-roster-form">
         <input id="participantId" type="hidden" data-no-persist="true">
         <label><span>Никнейм</span><input id="participantNickname" type="text" maxlength="80" data-no-persist="true" required></label>
-        <label><span>Ранг</span><input id="participantRank" type="text" maxlength="40" data-no-persist="true"></label>
-        <label><span>БМ отряда</span><input id="participantPower" type="number" min="0" step="1" data-no-persist="true" value="0"></label>
-        <label><span>Статус</span><select id="participantStatus" data-no-persist="true"><option value="active">Активен</option><option value="reserve">Резерв</option><option value="inactive">Неактивен</option></select></label>
+        <label><span>Ранг</span><select id="participantRank" data-no-persist="true"><option value="">Не указан</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select></label>
+        <label><span>Статус</span><select id="participantStatus" data-no-persist="true"><option value="main">Основной состав</option><option value="reserve">Резерв</option><option value="inactive">Неактивен</option><option value="left">Вышел</option></select></label>
+        <label><span>Часовой пояс от Москвы</span><input id="participantTimezone" type="number" min="-12" max="12" step="1" data-no-persist="true" placeholder="Например, 2 или -3"></label>
+        <label><span>День рождения</span><input id="participantBirthday" type="date" data-no-persist="true"></label>
         <label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label>
         <div class="alliance-actions participant-form-actions"><button type="submit">Сохранить</button><button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить редактирование</button></div>
       </form>
     </section>
 
     <section class="card alliance-list-card" data-no-collapse="true">
-      <div class="card-header"><div><h3>Участники</h3><p id="participantCount">0 участников</p></div></div>
-      <div class="alliance-table-wrap"><table class="alliance-table"><thead><tr><th>Никнейм</th><th>Ранг</th><th>БМ отряда</th><th>Статус</th><th>Комментарий</th><th></th></tr></thead><tbody id="participantTableBody"></tbody></table></div>
+      <div class="card-header alliance-roster-header"><div><h3>Состав союза</h3><p id="participantCount">0 участников</p></div>
+        <div class="alliance-roster-tools">
+          <input id="participantSearch" type="search" placeholder="Поиск по нику" data-no-persist="true">
+          <select id="participantRankFilter" data-no-persist="true"><option value="">Все ранги</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select>
+          <select id="participantStatusFilter" data-no-persist="true"><option value="">Все статусы</option><option value="main">Основной состав</option><option value="reserve">Резерв</option><option value="inactive">Неактивен</option><option value="left">Вышел</option></select>
+          <select id="participantSort" data-no-persist="true"><option value="rank">По рангу</option><option value="nickname">По нику</option></select>
+        </div>
+      </div>
+      <div class="alliance-table-wrap"><table class="alliance-table alliance-roster-table"><thead><tr><th>Никнейм</th><th>Ранг</th><th>Статус</th><th>День рождения</th><th class="participant-private-column">Часовой пояс</th><th class="participant-private-column">Комментарий</th><th></th></tr></thead><tbody id="participantTableBody"></tbody></table></div>
       <div id="participantEmptyState" class="alliance-empty-state">Пока нет ни одного участника.</div>
     </section>
   </section>
