@@ -1,6 +1,5 @@
 (() => {
   const MOBILE_QUERY = "(max-width: 899px)";
-  const EDGE_SIZE = 28;
   const MIN_SWIPE_DISTANCE = 64;
   const MAX_SWIPE_DURATION = 900;
   const HORIZONTAL_RATIO = 1.25;
@@ -124,8 +123,20 @@
 
   function hasBlockingDialog() {
     return Boolean(document.querySelector(
-      ".account-modal.is-open, .account-delete-modal:not([hidden]), .mobile-profile-switcher.active, #sidebar.active"
+      ".account-modal.is-open, .account-delete-modal:not([hidden])"
     ));
+  }
+
+  function getGestureMode() {
+    if (window.harvestHubMenu?.isOpen?.()) return "close-menu";
+    if (isProfileSwitcherOpen()) return "close-profiles";
+    return "open-panel";
+  }
+
+  function isAllowedDirection(mode, distanceX) {
+    if (mode === "close-menu") return distanceX < 0;
+    if (mode === "close-profiles") return distanceX > 0;
+    return distanceX !== 0;
   }
 
   function getTouch(event) {
@@ -137,13 +148,8 @@
     const touch = getTouch(event);
     if (!touch) return;
 
-    let side = "";
-    if (touch.clientX <= EDGE_SIZE) side = "left";
-    else if (touch.clientX >= window.innerWidth - EDGE_SIZE && getAccountProfile()?.type === "account") side = "right";
-    if (!side) return;
-
     gesture = {
-      side,
+      mode: getGestureMode(),
       startX: touch.clientX,
       startY: touch.clientY,
       currentX: touch.clientX,
@@ -161,8 +167,7 @@
     gesture.currentY = touch.clientY;
     const distanceX = gesture.currentX - gesture.startX;
     const distanceY = gesture.currentY - gesture.startY;
-    const correctDirection = gesture.side === "left" ? distanceX > 0 : distanceX < 0;
-    gesture.horizontal = correctDirection
+    gesture.horizontal = isAllowedDirection(gesture.mode, distanceX)
       && Math.abs(distanceX) > 12
       && Math.abs(distanceX) > Math.abs(distanceY) * HORIZONTAL_RATIO;
     if (gesture.horizontal && event.cancelable) event.preventDefault();
@@ -178,17 +183,24 @@
     const distanceX = gesture.currentX - gesture.startX;
     const distanceY = gesture.currentY - gesture.startY;
     const elapsed = Date.now() - gesture.startedAt;
-    const correctDirection = gesture.side === "left" ? distanceX > 0 : distanceX < 0;
     const completed = gesture.horizontal
-      && correctDirection
+      && isAllowedDirection(gesture.mode, distanceX)
       && Math.abs(distanceX) >= MIN_SWIPE_DISTANCE
       && Math.abs(distanceX) > Math.abs(distanceY) * HORIZONTAL_RATIO
       && elapsed <= MAX_SWIPE_DURATION;
-    const side = gesture.side;
+    const mode = gesture.mode;
     gesture = null;
 
     if (!completed) return;
-    if (side === "left") window.harvestHubMenu?.open?.();
+    if (mode === "close-menu") {
+      window.harvestHubMenu?.close?.();
+      return;
+    }
+    if (mode === "close-profiles") {
+      closeProfileSwitcher();
+      return;
+    }
+    if (distanceX > 0) window.harvestHubMenu?.open?.();
     else openProfileSwitcher();
   }
 
