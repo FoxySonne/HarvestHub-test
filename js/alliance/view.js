@@ -1,10 +1,3 @@
-const STATUS_LABELS = {
-  main: "Основной состав",
-  reserve: "Резерв",
-  inactive: "Неактивен",
-  left: "Вышел"
-};
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -66,13 +59,11 @@ export function renderParticipantRows(participants, canEdit, canSeePrivate) {
         </div>`
       : "";
 
-    const status = participant.member_status || "main";
     const privateAttribute = canSeePrivate ? "" : " hidden";
 
-    return `<tr class="participant-row participant-row-${escapeHtml(status)}">
+    return `<tr class="participant-row">
       <td><strong class="${nicknameClass}"${nicknameAttributes}>${escapeHtml(participant.nickname)}</strong></td>
       <td>${escapeHtml(participant.rank_name || "—")}</td>
-      <td><span class="participant-status participant-status-${escapeHtml(status)}">${escapeHtml(STATUS_LABELS[status] || "Основной состав")}</span></td>
       <td>${formatBirthday(participant.birthday)}</td>
       <td class="participant-private-column"${privateAttribute}>${formatTimezone(participant.timezone_offset)}</td>
       <td class="participant-private-column"${privateAttribute}>${escapeHtml(participant.comment || "—")}</td>
