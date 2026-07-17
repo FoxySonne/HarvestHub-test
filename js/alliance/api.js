@@ -1,5 +1,15 @@
-export function fetchMemberships(client) {
-  return client.rpc("get_my_alliance_hubs");
+export async function fetchMemberships(client) {
+  const result = await client.rpc("get_my_alliance_hubs");
+  if (result.error) return result;
+
+  const data = Array.isArray(result.data)
+    ? result.data.map(item => ({
+        ...item,
+        alliances: item.alliances || item.alliance || null
+      }))
+    : [];
+
+  return { ...result, data };
 }
 
 export function fetchParticipants(client, allianceId) {
