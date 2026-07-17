@@ -1,15 +1,26 @@
 export async function fetchMemberships(client) {
-  const result = await client.rpc("get_my_alliance_hubs");
-  if (result.error) return result;
+  const rpcResult = await client.rpc("get_my_alliance_hubs");
 
-  const data = Array.isArray(result.data)
-    ? result.data.map(item => ({
+  if (!rpcResult.error && Array.isArray(rpcResult.data) && rpcResult.data.length > 0) {
+    return {
+      ...rpcResult,
+      data: rpcResult.data.map(item => ({
         ...item,
         alliances: item.alliances || item.alliance || null
       }))
-    : [];
+    };
+  }
 
-  return { ...result, data };
+  const directResult = await client
+    .from("alliance_members")
+    .select("alliance_id, role, alliances(id, name, state_number, invite_code)")
+    .order("joined_at", { ascending: true });
+
+  if (!directResult.error && Array.isArray(directResult.data)) {
+    return directResult;
+  }
+
+  return rpcResult.error ? rpcResult : directResult;
 }
 
 export function fetchParticipants(client, allianceId) {
