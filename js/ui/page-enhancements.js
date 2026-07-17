@@ -96,7 +96,11 @@ function setProfileBlockContent({ description = "", content = "" } = {}) {
   if (!block) return;
   const descriptionElement = document.getElementById("profileBlockDescription");
   const contentElement = document.getElementById("profileBlockContent");
-  if (descriptionElement) descriptionElement.textContent = description;
+  if (descriptionElement) {
+    const cleanDescription = String(description || "").trim();
+    descriptionElement.textContent = cleanDescription;
+    descriptionElement.closest(".profile-block-header")?.toggleAttribute("hidden", !cleanDescription);
+  }
   if (contentElement) {
     if (typeof content === "string") contentElement.innerHTML = content;
     else {

@@ -516,6 +516,27 @@ SEASON RESOURCES — compact calculator layout
 }
 
 @media (max-width: 899px) {
+  .season-card-header p,
+  .season-field span,
+  .season-results span,
+  .season-tracking-actions p,
+  .season-raid-auto-state p,
+  .season-deadline-card p {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .season-building-check,
+  .season-efficiency-field span {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .season-building-level span {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
   .season-compact-card {
     padding: 14px;
   }

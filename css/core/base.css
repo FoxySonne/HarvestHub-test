@@ -20,6 +20,8 @@
 /* Плавная прокрутка всей страницы */
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Базовые настройки для body — основа внешнего вида сайта */
