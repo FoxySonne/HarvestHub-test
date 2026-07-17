@@ -14,12 +14,25 @@
     return Boolean(session?.user) && hasAdvancedMode();
   }
 
-  function showMessage(message) {
+  function showMessage(message, type = "error") {
     const element = getElement("allianceMessage");
     if (!element) return;
     element.hidden = false;
     element.textContent = message;
-    element.dataset.type = "error";
+    element.dataset.type = type;
+    element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function setBusy(button, busy, text) {
+    if (!button) return;
+    if (busy) {
+      button.dataset.originalText = button.textContent;
+      button.textContent = text;
+      button.disabled = true;
+    } else {
+      button.textContent = button.dataset.originalText || button.textContent;
+      button.disabled = false;
+    }
   }
 
   function applyAccessState() {
@@ -73,8 +86,64 @@
     scheduleApply();
   }
 
+  async function createAlliance(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    if (!canManageAlliance()) {
+      showMessage(
+        session?.user
+          ? "Для создания союзного штаба включи продвинутый режим."
+          : "Для создания союзного штаба войди в аккаунт и включи продвинутый режим."
+      );
+      return;
+    }
+
+    const name = getElement("allianceCreateName")?.value.trim() || "";
+    const stateNumber = getElement("allianceCreateState")?.value.trim() || "";
+    const button = event.submitter || event.target.querySelector("button[type='submit']");
+
+    if (!name) {
+      showMessage("Укажи название союза.");
+      return;
+    }
+
+    setBusy(button, true, "Создаём…");
+
+    try {
+      const { data, error } = await window.harvestHubSupabase
+        .from("alliances")
+        .insert({
+          name,
+          state_number: stateNumber,
+          created_by: session.user.id
+        })
+        .select("id, name, state_number, invite_code")
+        .single();
+
+      if (error) throw error;
+
+      localStorage.setItem("harvesthub_active_alliance_id", data.id);
+      event.target.reset();
+      showMessage("Союзный штаб создан. Обновляю данные…", "success");
+
+      window.setTimeout(() => {
+        window.loadPage?.("alliance/members.html");
+      }, 300);
+    } catch (error) {
+      console.error("Не удалось создать союзный штаб", error);
+      showMessage(error?.message || "Не удалось создать союзный штаб.");
+      setBusy(button, false);
+    }
+  }
+
   document.addEventListener("submit", event => {
-    const protectedForms = ["allianceCreateForm", "allianceJoinForm", "participantForm"];
+    if (event.target?.id === "allianceCreateForm") {
+      createAlliance(event);
+      return;
+    }
+
+    const protectedForms = ["allianceJoinForm", "participantForm"];
     if (!protectedForms.includes(event.target?.id) || canManageAlliance()) return;
 
     event.preventDefault();
@@ -109,6 +178,7 @@
 
   window.addEventListener("storage", scheduleApply);
   window.addEventListener("harvesthub:profile-change", refreshSession);
+  window.addEventListener("harvesthub:advanced-mode-change", scheduleApply);
   window.addEventListener("DOMContentLoaded", refreshSession);
 
   if (window.harvestHubSupabase) {
