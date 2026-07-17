@@ -5,8 +5,11 @@ import { initSeasonBuildBuffs } from "./season-build-buffs.js";
 import { createSeasonBuildings } from "./season-buildings.js";
 import { initSeasonBuildingLinks } from "./season-building-links.js";
 import { updateSeasonProduction } from "./season-production.js";
+import { calculateSeasonCountdown, calculateSeasonEndUtc, parseSeasonEnd } from "./season-tracking.js?v=20260717-26";
 
 const MAX_DISCOUNT_CANS = 50;
+const SEASON_PAGE = "calculator/season-resources.html";
+const TRACKING_INTERVAL_MS = 60 * 1000;
 let isRaidNeedManual = false;
 
 const {
@@ -96,23 +99,22 @@ function fillSelect(id, list, defaultValue = null) {
   }
 }
 
-function getSeasonEndUtcTime() {
-  const now = typeof window.getHarvestHubUtcTime === "function"
+function getCurrentUtcDate() {
+  return typeof window.getHarvestHubUtcTime === "function"
     ? window.getHarvestHubUtcTime().date
     : new Date();
+}
 
-  const days = Math.max(0, num("seasonProfileDaysLeft"));
-  const hours = Math.max(0, num("seasonProfileHoursLeft"));
-  const rawEnd = new Date(now.getTime() + (days * 24 + hours) * 60 * 60 * 1000);
+function getTrackedSeasonEnd() {
+  return parseSeasonEnd(document.getElementById("seasonProfileEndAt")?.value || "");
+}
 
-  return new Date(Date.UTC(
-    rawEnd.getUTCFullYear(),
-    rawEnd.getUTCMonth(),
-    rawEnd.getUTCDate() + 1,
-    0,
-    0,
-    0
-  ));
+function getSeasonEndUtcTime() {
+  return getTrackedSeasonEnd() || calculateSeasonEndUtc(
+    getCurrentUtcDate(),
+    num("seasonProfileDaysLeft"),
+    num("seasonProfileHoursLeft")
+  );
 }
 
 function formatUtcDate(date) {
@@ -128,9 +130,92 @@ function formatUtcDate(date) {
 
 function updateSeasonProfileBlockSummary() {
   const summary = document.getElementById("seasonProfileEndSummary");
+  const trackingStatus = document.getElementById("seasonTrackingStatus");
+  const trackingButton = document.getElementById("seasonTrackButton");
   if (!summary) return;
 
-  summary.innerHTML = `Конец сезона: <strong>${formatUtcDate(getSeasonEndUtcTime())} UTC</strong>`;
+  const trackedEnd = getTrackedSeasonEnd();
+  const end = trackedEnd || getSeasonEndUtcTime();
+  summary.innerHTML = `Конец сезона: <strong>${formatUtcDate(end)} UTC</strong>`;
+
+  if (!trackedEnd) {
+    const replaceableStatus = !trackingStatus?.textContent
+      || trackingStatus.textContent.startsWith("Отслеживание включено")
+      || trackingStatus.textContent === "Сезон завершён.";
+    if (trackingStatus && !trackingStatus.classList.contains("is-error") && replaceableStatus) {
+      trackingStatus.textContent = "Дата окончания пока не отслеживается.";
+    }
+    if (trackingButton) {
+      trackingButton.textContent = "Отслеживать сезон";
+      trackingButton.disabled = false;
+    }
+    return;
+  }
+
+  const countdown = calculateSeasonCountdown(trackedEnd, getCurrentUtcDate());
+  if (!countdown) return;
+  setValue("seasonProfileDaysLeft", countdown.days);
+  setValue("seasonProfileHoursLeft", countdown.hours);
+  if (trackingStatus) {
+    trackingStatus.classList.remove("is-error");
+    trackingStatus.textContent = countdown.ended
+      ? "Сезон завершён."
+      : `Отслеживание включено: осталось ${countdown.days} д. ${countdown.hours} ч.`;
+  }
+  if (trackingButton) {
+    trackingButton.textContent = "Сезон отслеживается";
+    trackingButton.disabled = true;
+  }
+}
+
+function saveSeasonTrackingState() {
+  window.saveProfileBlockState?.();
+  window.harvestHubCalculatorFormsCloudSync?.scheduleUpload?.();
+}
+
+function startSeasonTracking() {
+  const status = document.getElementById("seasonTrackingStatus");
+  const days = Math.max(0, num("seasonProfileDaysLeft"));
+  const hours = Math.max(0, num("seasonProfileHoursLeft"));
+  if (days * 24 + hours <= 0) {
+    if (status) {
+      status.textContent = "Укажите, сколько дней или часов осталось до конца сезона.";
+      status.classList.add("is-error");
+    }
+    return;
+  }
+
+  const endInput = document.getElementById("seasonProfileEndAt");
+  if (!endInput) return;
+  endInput.value = calculateSeasonEndUtc(getCurrentUtcDate(), days, hours).toISOString();
+  if (status) status.classList.remove("is-error");
+  saveSeasonTrackingState();
+  updateSeasonProfileBlockSummary();
+}
+
+function stopTrackingWhenEdited(target) {
+  if (target?.id !== "seasonProfileDaysLeft" && target?.id !== "seasonProfileHoursLeft") return;
+  const endInput = document.getElementById("seasonProfileEndAt");
+  if (!endInput?.value) return;
+  endInput.value = "";
+  const status = document.getElementById("seasonTrackingStatus");
+  if (status) {
+    status.classList.remove("is-error");
+    status.textContent = "Значение изменено. Нажмите «Отслеживать сезон», чтобы зафиксировать новую дату.";
+  }
+  saveSeasonTrackingState();
+}
+
+function scheduleSeasonCountdown() {
+  window.clearInterval(window.harvestHubSeasonTrackingTimerId);
+  window.harvestHubSeasonTrackingTimerId = window.setInterval(() => {
+    if (localStorage.getItem("currentPage") !== SEASON_PAGE) {
+      window.clearInterval(window.harvestHubSeasonTrackingTimerId);
+      window.harvestHubSeasonTrackingTimerId = null;
+      return;
+    }
+    updateSeasonProfileBlockSummary();
+  }, TRACKING_INTERVAL_MS);
 }
 
 function renderSeasonProfileBlock() {
@@ -152,6 +237,13 @@ function renderSeasonProfileBlock() {
       </label>
     </div>
 
+    <input id="seasonProfileEndAt" type="hidden" value="">
+
+    <div class="season-tracking-actions">
+      <button id="seasonTrackButton" type="button">Отслеживать сезон</button>
+      <p id="seasonTrackingStatus" aria-live="polite"></p>
+    </div>
+
     <div id="seasonProfileEndSummary" class="profile-block-result"></div>
 
     <p class="profile-block-note">Чтобы расчёты работали точнее, ниже в блоке «Что нужно построить» укажи уровни зданий, которые у тебя уже есть, и уровни, до которых ты хочешь их поднять. По текущим уровням заводов калькулятор рассчитает производство ресурсов, а по целевым уровням — сколько ресурсов нужно на строительство.</p>
@@ -163,8 +255,13 @@ function renderSeasonProfileBlock() {
   });
 
   updateSeasonProfileBlockSummary();
+  scheduleSeasonCountdown();
+  document.getElementById("seasonTrackButton")?.addEventListener("click", startSeasonTracking);
 
-  container.addEventListener("input", event => handleCalculatorInput(event.target));
+  container.addEventListener("input", event => {
+    stopTrackingWhenEdited(event.target);
+    handleCalculatorInput(event.target);
+  });
   container.addEventListener("change", event => handleCalculatorInput(event.target));
 }
 

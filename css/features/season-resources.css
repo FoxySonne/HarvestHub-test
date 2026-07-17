@@ -374,6 +374,28 @@ SEASON RESOURCES — compact calculator layout
   font-size: 14px;
 }
 
+.season-tracking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.season-tracking-actions button {
+  min-width: 190px;
+}
+
+.season-tracking-actions p {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.season-tracking-actions p.is-error {
+  color: #ff7b7b;
+}
+
 .season-building-totals-card .season-total-card span {
   font-size: 13px;
 }
