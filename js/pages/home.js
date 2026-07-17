@@ -8,12 +8,6 @@ function setText(id, value) {
   element.textContent = value;
 }
 
-function removeDuplicateHomeHero() {
-  document.querySelectorAll("#page-content .home-hero").forEach(element => {
-    element.remove();
-  });
-}
-
 function getUtcNow() {
   return typeof window.getHarvestHubUtcTime === "function"
     ? window.getHarvestHubUtcTime().date
@@ -139,7 +133,6 @@ function updateHomeStatus() {
 let homeTimerId = null;
 
 export function init() {
-  removeDuplicateHomeHero();
   updateHomeStatus();
 
   if (homeTimerId) window.clearInterval(homeTimerId);

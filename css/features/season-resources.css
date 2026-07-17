@@ -12,15 +12,15 @@ SEASON RESOURCES — compact calculator layout
 .season-subgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .season-subgrid-production{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 .season-results{display:flex;flex-direction:column;gap:10px}
-.season-results div,.season-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.season-results div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
 .season-results div:last-child{border-bottom:none}
-.season-results span,.season-summary span{color:var(--text-soft);font-size:14px;line-height:1.35}
-.season-results strong,.season-summary strong{color:var(--accent);font-size:20px;white-space:nowrap}
+.season-results span{color:var(--text-soft);font-size:14px;line-height:1.35}
+.season-results strong{color:var(--accent);font-size:20px;white-space:nowrap}
 
 @media (max-width:899px){
   .season-subgrid,.season-subgrid-production{grid-template-columns:1fr}
-  .season-results div,.season-summary{align-items:flex-start;flex-direction:column}
-  .season-results strong,.season-summary strong{font-size:18px}
+  .season-results div{align-items:flex-start;flex-direction:column}
+  .season-results strong{font-size:18px}
 }
 
 .season-compact-page {

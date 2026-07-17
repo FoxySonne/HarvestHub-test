@@ -79,7 +79,7 @@ for (const file of javascriptFiles) {
   if (check.status !== 0) errors.push(`${relative(file)}: ${check.stderr.trim()}`);
 
   const source = fs.readFileSync(file, "utf8");
-  for (const match of source.matchAll(/(?:import|export)\s+(?:[^'\"]*?\s+from\s+)?["']([^"']+)["']/g)) {
+  for (const match of source.matchAll(/(?:import|export)\s+(?:[^'"]*?\s+from\s+)?["']([^"']+)["']/g)) {
     const reference = match[1];
     if (!reference.startsWith(".")) continue;
     const target = resolveLocalReference(file, reference);
@@ -90,7 +90,7 @@ for (const file of javascriptFiles) {
 for (const file of cssFiles) {
   const source = fs.readFileSync(file, "utf8");
   validateCssBraces(file, source);
-  for (const match of source.matchAll(/@import\s+(?:url\()?['\"]?([^'\")\s]+)["']?\)?/g)) {
+  for (const match of source.matchAll(/@import\s+(?:url\()?['"]?([^'")\s]+)["']?\)?/g)) {
     const reference = match[1];
     const target = resolveLocalReference(file, reference);
     if (target && !fs.existsSync(target)) errors.push(`${relative(file)}: не найден CSS ${reference}`);

@@ -41,7 +41,6 @@ IPK CALCULATOR — mobile overflow fixes
   .ipk-layout,.ipk-cards{grid-template-columns:1fr}
   .ipk-desktop-categories{display:none}
   .ipk-stats div,.ipk-row{grid-template-columns:minmax(0,1fr) 58px 76px;gap:8px}
-  .ipk-card-header h3{font-size:17px}
 }
 
 .ipk-page,
