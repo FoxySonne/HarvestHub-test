@@ -1,7 +1,7 @@
 /* Дополнительная раскладка союзного штаба */
 .alliance-toolbar-card {
   grid-template-columns: minmax(220px, 1.1fr) minmax(220px, 1fr) auto auto;
-  align-items: end;
+  align-items: start;
   column-gap: 20px;
   row-gap: 16px;
 }
@@ -12,6 +12,13 @@
   min-width: 0;
   flex-direction: column;
   gap: 6px;
+}
+
+.alliance-toolbar-card > label,
+.alliance-opened-summary,
+.alliance-role-box,
+.alliance-invite-box {
+  align-self: start;
 }
 
 .alliance-opened-summary > span,
