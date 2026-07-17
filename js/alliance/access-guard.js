@@ -111,19 +111,15 @@
     setBusy(button, true, "Создаём…");
 
     try {
-      const { data, error } = await window.harvestHubSupabase
-        .from("alliances")
-        .insert({
-          name,
-          state_number: stateNumber,
-          created_by: session.user.id
-        })
-        .select("id, name, state_number, invite_code")
-        .single();
+      const { data, error } = await window.harvestHubSupabase.rpc("create_alliance_hub", {
+        alliance_name: name,
+        alliance_state_number: stateNumber
+      });
 
       if (error) throw error;
+      if (!data) throw new Error("Supabase не вернул идентификатор созданного штаба.");
 
-      localStorage.setItem("harvesthub_active_alliance_id", data.id);
+      localStorage.setItem("harvesthub_active_alliance_id", data);
       event.target.reset();
       showMessage("Союзный штаб создан. Обновляю данные…", "success");
 
@@ -132,7 +128,12 @@
       }, 300);
     } catch (error) {
       console.error("Не удалось создать союзный штаб", error);
-      showMessage(error?.message || "Не удалось создать союзный штаб.");
+      const message = String(error?.message || "");
+      showMessage(
+        message.includes("create_alliance_hub")
+          ? "В Supabase ещё не подключена функция создания штаба. Выполни SQL-файл 003_alliance_create_rpc.sql."
+          : message || "Не удалось создать союзный штаб."
+      );
       setBusy(button, false);
     }
   }
