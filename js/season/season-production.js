@@ -1,5 +1,6 @@
 import { seasonDatabase } from "../../data/season-database.js";
 import { findByLevel as getByLevel, num, setText } from "./dom.js";
+import { formatHoursMinutes } from "./time-format.js?v=20260717-31";
 
 function getBuildingCurrentLevel(buildingId) {
   const row = document.querySelector(`.season-building-row[data-building-id="${buildingId}"]`);
@@ -67,7 +68,6 @@ function positionOceanAbundanceField() {
   const bullField = document.getElementById("productionBull")?.closest(".season-field");
 
   if (!oceanField || !bullField || oceanField.previousElementSibling === bullField) return;
-
   bullField.insertAdjacentElement("afterend", oceanField);
 }
 
@@ -105,17 +105,17 @@ export function updateSeasonProduction() {
     ? 0
     : production.primaryPerHour > 0 ? needPrimary / production.primaryPerHour : Number.POSITIVE_INFINITY;
   const rawNeedHours = Math.max(secondaryHours, primaryHours);
-  const needHours = Number.isFinite(rawNeedHours) ? Math.round(rawNeedHours * 10) / 10 : null;
 
   setText("productionSecondaryPerHour", Math.round(production.secondaryPerHour));
   setText("productionPrimaryPerHour", Math.round(production.primaryPerHour));
   setText("productionSecondaryTotal", Math.round(production.secondaryPerHour * hours));
   setText("productionPrimaryTotal", Math.round(production.primaryPerHour * hours));
-  if (needHours === null) {
-    const needHoursElement = document.getElementById("productionNeedHours");
-    if (needHoursElement) needHoursElement.textContent = "—";
-  } else {
-    setText("productionNeedHours", needHours);
+
+  const needHoursElement = document.getElementById("productionNeedHours");
+  if (needHoursElement) {
+    needHoursElement.textContent = Number.isFinite(rawNeedHours)
+      ? formatHoursMinutes(rawNeedHours, { rounding: "ceil" })
+      : "—";
   }
 
   return {
