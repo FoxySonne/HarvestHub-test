@@ -13,16 +13,17 @@ function localDateValue(date = new Date()) {
 
 function parsePower(value) {
   const normalized = String(value ?? "").trim().replace(",", ".");
-  if (!normalized) return 0;
+  if (!normalized) return null;
   const parsed = Number(normalized);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 1000) / 1000 : null;
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 1000) / 1000 : undefined;
 }
 
 function formatPower(value) {
+  if (value === null || value === undefined || value === "") return "—";
   return new Intl.NumberFormat("ru-RU", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 3
-  }).format(Number(value) || 0);
+  }).format(Number(value));
 }
 
 function formatDelta(value) {
@@ -130,7 +131,7 @@ async function submitPower(event) {
 
   const fields = [1, 2, 3, 4, 5].map(index => byId(`powerSquad${index}`));
   const values = fields.map(field => parsePower(field?.value));
-  const invalidIndex = values.findIndex(value => value === null);
+  const invalidIndex = values.findIndex(value => value === undefined);
   if (invalidIndex >= 0) {
     fields[invalidIndex].setCustomValidity("Укажи БМ в миллионах, например 87,72");
     fields[invalidIndex].reportValidity();
