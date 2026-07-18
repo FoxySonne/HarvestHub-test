@@ -44,6 +44,7 @@ input[type=number],
 input[type=password],
 input[type=email],
 input[type=search],
+input[type=date],
 textarea,
 select{
 
@@ -66,6 +67,22 @@ font-size:17px;
 font-family:inherit;
 
 transition:var(--transition);
+
+box-sizing:border-box;
+
+}
+
+input[type=date]{
+
+color-scheme:dark;
+
+}
+
+input[type=date]::-webkit-calendar-picker-indicator{
+
+cursor:pointer;
+
+opacity:.8;
 
 }
 
@@ -95,6 +112,7 @@ border-color:var(--accent);
   input[type=password],
   input[type=email],
   input[type=search],
+  input[type=date],
   textarea,
   select {
     font-size: 16px !important;
@@ -146,6 +164,7 @@ accent-color:var(--accent);
 /* ==========================================================
 RADIO - галочки
 ========================================================== */
+
 .radio {
   display: flex;
   align-items: center;
