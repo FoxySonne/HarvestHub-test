@@ -61,7 +61,7 @@ export function fillAllianceCompactHeader(context) {
   if (allianceName) allianceName.textContent = context.alliance?.name || "Союзный штаб";
   if (participantName) participantName.textContent = context.currentParticipant?.nickname || "Аккаунт не связан с участником";
   if (participantRank) participantRank.textContent = context.currentParticipant?.rank_name || "—";
-  if (role) role.textContent = context.membership?.role === "owner" ? "Полные права" : context.membership?.role === "editor" ? "Редактор" : "Смотритель";
+  if (role) role.textContent = context.membership?.role === "owner" ? "Полные права" : context.membership?.role === "editor" ? "Редактор" : "Наблюдатель";
 }
 
 export function canEditAlliance(context) {
