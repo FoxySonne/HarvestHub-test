@@ -73,9 +73,24 @@
         </form>
       </section>
 
-      <section class="card alliance-list-card" data-no-collapse="true">
-        <div class="card-header alliance-roster-header"><div><h3>Сила отрядов</h3><p id="powerCount">0 участников</p></div><div class="alliance-roster-tools power-tools"><input id="powerSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="powerSort" data-no-persist="true"><option value="power">По силе</option><option value="growth">По приросту</option><option value="nickname">По нику</option></select></div></div>
-        <div class="alliance-table-wrap"><table class="alliance-table power-table"><thead><tr><th>Место</th><th>Участник</th><th>Дата</th><th>БМ 1-го отряда, млн</th><th>С прошлого замера</th><th>За неделю</th><th>За месяц</th><th>За сезон</th><th>Прирост, %</th></tr></thead><tbody id="powerTableBody"></tbody></table></div>
+      <section id="powerStatisticsCard" class="card alliance-list-card power-statistics-card" data-no-collapse="true">
+        <div class="card-header alliance-roster-header">
+          <div><h3>Статистика силы всего союза</h3><p id="powerCount">0 участников</p></div>
+          <div class="alliance-roster-tools power-tools"><input id="powerSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="powerSort" data-no-persist="true"><option value="power">По силе</option><option value="growth">По приросту</option><option value="nickname">По нику</option></select></div>
+        </div>
+
+        <div class="power-view-options" aria-label="Показатели для сравнения">
+          <strong>Показать в таблице:</strong>
+          <label class="checkbox"><input type="checkbox" data-power-column="previous" checked><span>С прошлого замера</span></label>
+          <label class="checkbox"><input type="checkbox" data-power-column="week" checked><span>За неделю</span></label>
+          <label class="checkbox"><input type="checkbox" data-power-column="month" checked><span>За месяц</span></label>
+          <label class="checkbox"><input type="checkbox" data-power-column="season" checked><span>За сезон</span></label>
+          <label class="checkbox"><input type="checkbox" data-power-column="percent" checked><span>Прирост, %</span></label>
+          <button id="powerExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button>
+        </div>
+
+        <div class="alliance-table-wrap power-table-wrap"><table class="alliance-table power-table"><thead><tr><th>Место</th><th>Участник</th><th>Дата</th><th>БМ 1-го отряда, млн</th><th data-power-col="previous">С прошлого замера</th><th data-power-col="week">За неделю</th><th data-power-col="month">За месяц</th><th data-power-col="season">За сезон</th><th data-power-col="percent">Прирост, %</th></tr></thead><tbody id="powerTableBody"></tbody></table></div>
+        <div id="participantPowerSummary" class="power-summary" hidden></div>
         <div id="powerEmptyState" class="alliance-empty-state">Пока нет ни одного замера.</div>
       </section>
     </div>
