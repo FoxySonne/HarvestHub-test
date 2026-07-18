@@ -1,5 +1,5 @@
 import { init as initMembers } from "./members.js?v=20260718-39";
-import { initPowerSection } from "../alliance/power-section.js?v=20260718-50";
+import { initPowerSection } from "../alliance/power-section.js?v=20260718-51";
 
 function formatStoredBirthday(value) {
   const match = String(value || "").match(/^\d{4}-(\d{2})-(\d{2})$/);
