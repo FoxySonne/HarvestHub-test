@@ -121,30 +121,6 @@
   white-space: nowrap;
 }
 
-.vs-score-label > span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.field-help-button {
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: 50%;
-  line-height: 1;
-}
-
-.field-help-popover {
-  margin-top: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--text-soft);
-}
-
 .vs-statistics-filters {
   margin: 16px 0;
 }
