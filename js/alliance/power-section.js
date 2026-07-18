@@ -1,7 +1,7 @@
 import { fetchAllianceSquadPower, saveAllianceSquadPower, setAlliancePowerSeasonStart } from "./power-api.js?v=20260718-50";
 import { ACTIVE_ALLIANCE_STORAGE_KEY } from "./config.js";
 
-const state = { client: null, data: null };
+const state = { client: null, data: null, expanded: false };
 const byId = id => document.getElementById(id);
 
 function localDateValue(date = new Date()) {
@@ -56,6 +56,44 @@ function growthPercent(latest, previous) {
   return ((current - old) / old) * 100;
 }
 
+function selectedColumns() {
+  return new Set([...document.querySelectorAll("[data-power-column]:checked")].map(input => input.dataset.powerColumn));
+}
+
+function applyColumnVisibility() {
+  const visible = selectedColumns();
+  document.querySelectorAll("[data-power-col]").forEach(cell => {
+    cell.hidden = !visible.has(cell.dataset.powerCol);
+  });
+}
+
+function renderSummary(rows) {
+  const summary = byId("participantPowerSummary");
+  if (!summary) return;
+  const measured = rows.filter(item => item.latest_date);
+  if (!measured.length) {
+    summary.hidden = true;
+    summary.innerHTML = "";
+    return;
+  }
+
+  const totalPower = measured.reduce((sum, item) => sum + (Number(item.latest_power) || 0), 0);
+  const totalPrevious = measured.reduce((sum, item) => sum + (Number(item.previous_power) || 0), 0);
+  const totalWeek = measured.reduce((sum, item) => sum + (Number(item.week_power) || 0), 0);
+  const totalMonth = measured.reduce((sum, item) => sum + (Number(item.month_power) || 0), 0);
+  const totalSeason = measured.reduce((sum, item) => sum + (Number(item.season_power) || 0), 0);
+
+  summary.hidden = false;
+  summary.innerHTML = `
+    <div><span>Участников с замерами</span><strong>${measured.length}</strong></div>
+    <div><span>Общий БМ 1-х отрядов</span><strong>${formatPower(totalPower)} млн</strong></div>
+    <div data-power-col="previous"><span>Общий прирост с прошлого замера</span><strong>${formatDelta(totalPower - totalPrevious)} млн</strong></div>
+    <div data-power-col="week"><span>Общий прирост за неделю</span><strong>${formatDelta(totalPower - totalWeek)} млн</strong></div>
+    <div data-power-col="month"><span>Общий прирост за месяц</span><strong>${formatDelta(totalPower - totalMonth)} млн</strong></div>
+    <div data-power-col="season"><span>Общий прирост за сезон</span><strong>${formatDelta(totalPower - totalSeason)} млн</strong></div>
+  `;
+}
+
 function render() {
   const rows = Array.isArray(state.data?.participants) ? [...state.data.participants] : [];
   const search = (byId("powerSearch")?.value || "").trim().toLowerCase();
@@ -80,17 +118,19 @@ function render() {
         <td><strong>${item.nickname}</strong><small>${item.rank_name || "—"}</small></td>
         <td>${formatDate(item.latest_date)}</td>
         <td>${formatPower(item.squad_1)}</td>
-        <td class="${previous > 0 ? "power-positive" : previous < 0 ? "power-negative" : ""}">${formatDelta(previous)}</td>
-        <td>${formatDelta(week)}</td>
-        <td>${formatDelta(month)}</td>
-        <td>${formatDelta(season)}</td>
-        <td>${growthPercent(item.latest_power, item.previous_power).toFixed(1).replace(".", ",")}%</td>
+        <td data-power-col="previous" class="${previous > 0 ? "power-positive" : previous < 0 ? "power-negative" : ""}">${formatDelta(previous)}</td>
+        <td data-power-col="week">${formatDelta(week)}</td>
+        <td data-power-col="month">${formatDelta(month)}</td>
+        <td data-power-col="season">${formatDelta(season)}</td>
+        <td data-power-col="percent">${growthPercent(item.latest_power, item.previous_power).toFixed(1).replace(".", ",")}%</td>
       </tr>`;
     }).join("");
   }
 
   if (byId("powerEmptyState")) byId("powerEmptyState").hidden = filtered.length > 0;
   if (byId("powerCount")) byId("powerCount").textContent = `${rows.length} участников`;
+  renderSummary(filtered);
+  applyColumnVisibility();
 
   const select = byId("powerParticipant");
   if (select) {
@@ -173,6 +213,16 @@ function switchTab(target) {
   if (showPower) load();
 }
 
+function toggleExpandedTable() {
+  const card = byId("powerStatisticsCard");
+  const button = byId("powerExpandTable");
+  if (!card || !button) return;
+  state.expanded = !state.expanded;
+  card.classList.toggle("is-expanded", state.expanded);
+  document.body.classList.toggle("power-table-open", state.expanded);
+  button.textContent = state.expanded ? "Закрыть полный экран" : "Открыть таблицу целиком";
+}
+
 export function initPowerSection() {
   state.client = window.harvestHubSupabase;
   const date = byId("powerDate");
@@ -185,4 +235,6 @@ export function initPowerSection() {
   byId("powerSeasonForm")?.addEventListener("submit", saveSeason);
   byId("powerSearch")?.addEventListener("input", render);
   byId("powerSort")?.addEventListener("change", render);
+  document.querySelectorAll("[data-power-column]").forEach(input => input.addEventListener("change", applyColumnVisibility));
+  byId("powerExpandTable")?.addEventListener("click", toggleExpandedTable);
 }
