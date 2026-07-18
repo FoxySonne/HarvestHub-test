@@ -32,7 +32,7 @@ function selectedParticipant() {
 function roleLabel(role) {
   if (role === "owner") return "владелец";
   if (role === "editor") return "редактор";
-  if (role === "viewer") return "смотритель";
+  if (role === "viewer") return "наблюдатель";
   return "роль не назначена";
 }
 
