@@ -69,6 +69,12 @@
   font-size: 14px;
 }
 
+.alliance-user-summary > button {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 14px;
+}
+
 .alliance-context-card {
   margin-top: 14px;
 }
@@ -168,7 +174,8 @@
   background: var(--card);
 }
 
-.is-alliance-table-fullscreen .alliance-fullscreen-close {
+.is-alliance-table-fullscreen .alliance-fullscreen-close,
+.power-statistics-card.is-expanded > .alliance-fullscreen-close {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
   right: 12px;
@@ -238,18 +245,23 @@
   .alliance-back-button,
   .alliance-table-open-button,
   .alliance-table-actions button,
-  .alliance-invite-row button {
-    width: auto;
-    max-width: 100%;
-  }
-
+  .alliance-invite-row button,
   .alliance-inline-form button,
   .alliance-management-form button,
   .vs-current-form > button,
   .vs-target-form button,
   .alliance-role-management-grid > button,
-  .alliance-role-management-actions button {
-    width: 100%;
+  .alliance-role-management-actions button,
+  .power-form button,
+  .power-season-form button,
+  .power-view-options button {
+    width: fit-content;
+    max-width: 100%;
+    margin-left: 0;
+  }
+
+  .alliance-role-management-actions {
+    align-items: flex-start;
   }
 
   .alliance-invite-row {
