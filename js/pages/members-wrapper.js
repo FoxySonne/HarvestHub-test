@@ -1,6 +1,7 @@
 import { init as initMembers } from "./members.js?v=20260718-39";
 import { initPowerSection } from "../alliance/power-section.js?v=20260718-53";
 import { initVsSection } from "../alliance/vs-section.js?v=20260718-1";
+import { initRoleSection } from "../alliance/role-section.js?v=20260718-1";
 
 function formatStoredBirthday(value) {
   const match = String(value || "").match(/^\d{4}-(\d{2})-(\d{2})$/);
@@ -72,4 +73,5 @@ export async function init() {
   setupBirthdayField();
   initPowerSection();
   initVsSection();
+  initRoleSection();
 }
