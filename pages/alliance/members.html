@@ -1,99 +1,52 @@
-<section class="page-section alliance-page">
+<section class="page-section alliance-hub-page">
   <h1>Союзный штаб</h1>
-  <p class="alliance-page-intro">Просмотр доступен по пригласительному коду. Управление — владельцу и управляющим союза в продвинутом режиме.</p>
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
-  <section class="card alliance-guest-card" data-no-collapse="true">
-    <div class="card-header"><div><h3>Открыть союзный штаб</h3><p>Введи пригласительный код.</p></div></div>
-    <form id="allianceGuestOpenForm" class="alliance-form-block alliance-guest-open-form">
-      <label><span>Пригласительный код</span><input id="allianceGuestCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required></label>
-      <button type="submit" id="allianceGuestOpenButton">Открыть штаб</button>
+  <section id="allianceEntryCard" class="card alliance-entry-card">
+    <div class="card-header"><div><h3>Войти в союзный штаб</h3><p>Выбери подключённый союз или введи пригласительный код.</p></div></div>
+    <div class="alliance-entry-grid">
+      <label id="allianceHubSelectorField" hidden><span>Мои союзы</span><select id="allianceHubSelector" data-no-persist="true"></select></label>
+      <form id="allianceHubJoinForm" class="alliance-inline-form">
+        <label><span>Пригласительный код</span><input id="allianceHubJoinCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required></label>
+        <button type="submit">Открыть штаб</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="allianceCreateCard" class="card alliance-entry-card" hidden>
+    <div class="card-header"><div><h3>Создать союзный штаб</h3><p>Доступно после входа в аккаунт.</p></div></div>
+    <form id="allianceHubCreateForm" class="alliance-inline-form">
+      <label><span>Название союза</span><input id="allianceHubCreateName" type="text" maxlength="80" data-no-persist="true" required></label>
+      <label><span>Номер штата</span><input id="allianceHubCreateState" type="text" maxlength="30" data-no-persist="true"></label>
+      <button type="submit">Создать штаб</button>
     </form>
   </section>
 
-  <section id="allianceAccountHint" class="card alliance-account-hint" data-no-collapse="true" hidden>
-    <div class="card-header"><div><h3>Создание и редактирование</h3><p id="allianceAccessHintText"></p></div></div>
-    <button id="allianceAccountButton" type="button" data-account-button>Войти или создать аккаунт</button>
-    <button id="allianceAdvancedModeButton" type="button" hidden>Включить продвинутый режим</button>
+  <section id="allianceHubAccountHint" class="card" hidden>
+    <div class="card-header"><div><h3>Нужен аккаунт</h3><p>Чтобы подключить или создать союзный штаб, войди в HarvestHub.</p></div></div>
+    <button type="button" data-account-button>Войти или создать аккаунт</button>
   </section>
 
-  <section id="allianceManagementCard" class="card alliance-setup-card" data-no-collapse="true" hidden>
-    <div class="card-header"><div><h3>Подключить союзный штаб</h3><p>Создай новый штаб или подключи существующий.</p></div></div>
-    <div class="alliance-setup-grid">
-      <form id="allianceCreateForm" class="alliance-form-block"><h4>Создать штаб</h4><label><span>Название союза</span><input id="allianceCreateName" type="text" maxlength="80" data-no-persist="true" required></label><label><span>Номер штата</span><input id="allianceCreateState" type="text" maxlength="30" data-no-persist="true"></label><button type="submit">Создать</button></form>
-      <form id="allianceJoinForm" class="alliance-form-block"><h4>Подключить существующий штаб</h4><label><span>Пригласительный код</span><input id="allianceJoinCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required></label><button type="submit">Подключить к аккаунту</button></form>
-    </div>
-  </section>
+  <section id="allianceDashboard" hidden>
+    <article class="card alliance-user-summary">
+      <div class="card-header"><div><h3 id="allianceDashboardName">Союз</h3><p id="allianceDashboardState"></p></div></div>
+      <div class="alliance-user-summary-grid">
+        <div><span>Участник</span><strong id="allianceDashboardNickname">—</strong></div>
+        <div><span>Ранг</span><strong id="allianceDashboardRank">—</strong></div>
+        <div><span>Права</span><strong id="allianceDashboardRole">—</strong></div>
+      </div>
+    </article>
 
-  <section id="allianceDataArea" class="alliance-data-area" hidden>
-    <section class="card alliance-toolbar-card" data-no-collapse="true">
-      <div class="alliance-opened-summary"><span>Открыт штаб</span><strong id="allianceOpenedName">—</strong><small id="allianceOpenedState"></small></div>
-      <label id="allianceSelectorField" hidden><span>Мои штабы</span><select id="allianceSelector" data-no-persist="true"></select></label>
-      <div id="allianceRoleBox" class="alliance-role-box" hidden><span>Мои права</span><strong id="allianceSessionRole">Только просмотр</strong></div>
-      <div id="allianceInviteBox" class="alliance-invite-box" hidden><span>Код приглашения</span><strong id="allianceInviteCode">—</strong><button id="allianceCopyCodeButton" type="button" class="secondary-button">Копировать</button></div>
+    <section class="alliance-dashboard-links">
+      <h2>Разделы штаба</h2>
+      <div class="alliance-dashboard-grid">
+        <article class="card alliance-dashboard-card"><div><h3>Управление союзом</h3><p>Название, приглашения, аккаунты, роли, Р5 и владелец.</p></div><button type="button" data-page-path="alliance/management.html">Открыть</button></article>
+        <article class="card alliance-dashboard-card"><div><h3>Состав союза</h3><p>Участники, ранги, дни рождения и комментарии.</p></div><button type="button" data-page-path="alliance/roster.html">Открыть</button></article>
+        <article class="card alliance-dashboard-card"><div><h3>VS</h3><p>Ввод результатов и текущая неделя.</p></div><button type="button" data-page-path="alliance/vs.html">Открыть</button></article>
+        <article class="card alliance-dashboard-card"><div><h3>Статистика VS</h3><p>Прошедшие недели, сравнение, периоды и фильтры.</p></div><button type="button" data-page-path="alliance/vs-statistics.html">Открыть</button></article>
+        <article class="card alliance-dashboard-card"><div><h3>Резервуар: активность</h3><p>Отслеживание активности участников.</p></div><button type="button" data-page-path="alliance/reservoir-activity.html">Открыть</button></article>
+        <article class="card alliance-dashboard-card"><div><h3>Резервуар: расстановка</h3><p>Схема размещения участников.</p></div><button type="button" data-page-path="alliance/reservoir-layout.html">Открыть</button></article>
+      </div>
     </section>
-
-    <nav class="alliance-section-tabs" aria-label="Разделы союзного штаба">
-      <button type="button" class="is-active" data-alliance-tab="roster">Состав</button>
-      <button type="button" data-alliance-tab="power">Сила отрядов</button>
-      <button type="button" data-alliance-tab="vs">VS</button>
-      <button type="button" disabled>Резервуар: активность</button>
-      <button type="button" disabled>Резервуар: расстановка</button>
-    </nav>
-
-    <div id="allianceRosterSection">
-      <section id="allianceDetailsEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden><div class="card-header"><div><h3>Данные союза</h3><p>Название и номер штата.</p></div></div><form id="allianceDetailsForm" class="alliance-details-form"><label><span>Название союза</span><input id="allianceEditName" type="text" maxlength="80" data-no-persist="true" required></label><label><span>Номер штата</span><input id="allianceEditState" type="text" maxlength="30" data-no-persist="true"></label><button type="submit">Сохранить изменения</button></form></section>
-
-      <section id="participantEditorCard" class="card alliance-editor-card" data-no-collapse="true" hidden><div class="card-header"><div><h3 id="participantEditorTitle">Добавить участника</h3><p>Единая форма для добавления и редактирования состава.</p></div></div><form id="participantForm" class="participant-form participant-roster-form"><input id="participantId" type="hidden" data-no-persist="true"><input id="participantStatus" type="hidden" value="main" data-no-persist="true"><label><span>Никнейм</span><input id="participantNickname" type="text" maxlength="80" data-no-persist="true" required></label><label><span>Ранг</span><select id="participantRank" data-no-persist="true"><option value="">Не указан</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select></label><label><span>Часовой пояс от Москвы</span><input id="participantTimezone" type="number" min="-12" max="12" step="1" data-no-persist="true" placeholder="Например, 2 или -3"></label><label><span>День рождения</span><input id="participantBirthday" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="ДД.ММ" data-no-persist="true"></label><label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label><div class="alliance-actions participant-form-actions"><button type="submit">Сохранить</button><button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить редактирование</button></div></form></section>
-
-      <section class="card alliance-list-card" data-no-collapse="true"><div class="card-header alliance-roster-header"><div><h3>Состав союза</h3><p id="participantCount">0 участников</p></div><div class="alliance-roster-tools"><input id="participantSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="participantRankFilter" data-no-persist="true"><option value="">Все ранги</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select><select id="participantSort" data-no-persist="true"><option value="rank">По рангу</option><option value="nickname">По нику</option></select></div></div><div class="alliance-table-wrap"><table class="alliance-table alliance-roster-table"><thead><tr><th>Никнейм</th><th>Ранг</th><th>День рождения</th><th class="participant-private-column">Часовой пояс</th><th class="participant-private-column">Комментарий</th><th></th></tr></thead><tbody id="participantTableBody"></tbody></table></div><div id="participantEmptyState" class="alliance-empty-state">Пока нет ни одного участника.</div></section>
-    </div>
-
-    <div id="alliancePowerSection" hidden>
-      <div id="powerSectionError" class="alliance-message" data-type="error" hidden></div>
-      <section id="powerEditorCard" class="card alliance-editor-card power-editor-card" data-no-collapse="true"><div class="card-header"><div><h3>Добавить замер силы</h3></div></div><form id="powerForm" class="power-form"><label><span>Участник</span><select id="powerParticipant" data-no-persist="true" required></select></label><label><span>Дата замера</span><input id="powerDate" type="date" data-no-persist="true" required></label><label><span>1-й отряд, млн</span><input id="powerSquad1" type="text" inputmode="decimal" data-no-persist="true" required></label><label><span>2-й отряд, млн</span><input id="powerSquad2" type="text" inputmode="decimal" data-no-persist="true"></label><label><span>3-й отряд, млн</span><input id="powerSquad3" type="text" inputmode="decimal" data-no-persist="true"></label><label><span>4-й отряд, млн</span><input id="powerSquad4" type="text" inputmode="decimal" data-no-persist="true"></label><label><span>5-й отряд, млн</span><input id="powerSquad5" type="text" inputmode="decimal" data-no-persist="true"></label><button type="submit">Сохранить замер</button></form></section>
-      <section id="powerSeasonSettings" class="card power-season-card" data-no-collapse="true" hidden><form id="powerSeasonForm" class="power-season-form"><label><span>Начало текущего сезона</span><input id="powerSeasonStart" type="date" data-no-persist="true"></label><button type="submit">Сохранить дату</button></form></section>
-      <section id="powerStatisticsCard" class="card alliance-list-card power-statistics-card" data-no-collapse="true"><div class="card-header alliance-roster-header"><div><h3>Статистика силы всего союза</h3><p id="powerCount">0 участников</p></div><div class="alliance-roster-tools power-tools"><input id="powerSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="powerSort" data-no-persist="true"><option value="power">По силе</option><option value="growth">По приросту</option><option value="nickname">По нику</option></select></div></div><div class="power-view-options" aria-label="Показатели для сравнения"><strong>Показать в таблице:</strong><label class="checkbox"><input type="checkbox" data-power-column="previous" checked><span>С прошлого замера</span></label><label class="checkbox"><input type="checkbox" data-power-column="week" checked><span>За неделю</span></label><label class="checkbox"><input type="checkbox" data-power-column="month" checked><span>За месяц</span></label><label class="checkbox"><input type="checkbox" data-power-column="season" checked><span>За сезон</span></label><label class="checkbox"><input type="checkbox" data-power-column="percent" checked><span>Прирост, %</span></label><button id="powerExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button></div><div class="alliance-table-wrap power-table-wrap"><table class="alliance-table power-table"><thead><tr><th>Место</th><th>Участник</th><th>Дата</th><th>БМ 1-го отряда, млн</th><th data-power-col="previous">С прошлого замера</th><th data-power-col="week">За неделю</th><th data-power-col="month">За месяц</th><th data-power-col="season">За сезон</th><th data-power-col="percent">Прирост, %</th></tr></thead><tbody id="powerTableBody"></tbody></table></div><div id="participantPowerSummary" class="power-summary" hidden></div><div id="powerEmptyState" class="alliance-empty-state">Пока нет ни одного замера.</div></section>
-    </div>
-
-    <div id="allianceVsSection" hidden>
-      <div id="vsSectionError" class="alliance-message" data-type="error" hidden></div>
-
-      <section id="vsEditorCard" class="card alliance-editor-card vs-editor-card" data-no-collapse="true" hidden>
-        <div class="card-header"><div><h3>Внести результат VS</h3><p>Неделя и дата определяются автоматически.</p></div></div>
-        <form id="vsResultForm" class="vs-result-form">
-          <label><span>Участник</span><select id="vsParticipant" data-no-persist="true" required></select></label>
-          <label><span>Неделя</span><select id="vsInputWeek" data-no-persist="true"></select></label>
-          <label><span>День недели</span><select id="vsDay" data-no-persist="true"><option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option><option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option></select></label>
-          <label><span>Дата</span><strong id="vsCalculatedDate" class="vs-calculated-date">—</strong></label>
-          <label><span>Очки</span><input id="vsPoints" type="text" inputmode="decimal" placeholder="5,72M / 897K / 1,4B" data-no-persist="true"></label>
-          <label class="checkbox vs-vacation-field"><input id="vsVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
-          <button type="submit">Сохранить результат</button>
-        </form>
-      </section>
-
-      <section id="vsTargetCard" class="card alliance-editor-card vs-target-card" data-no-collapse="true" hidden>
-        <form id="vsTargetForm" class="vs-target-form"><label><span>Ежедневный норматив</span><input id="vsDailyTarget" type="text" inputmode="decimal" data-no-persist="true"></label><button type="submit">Сохранить норматив</button></form>
-      </section>
-
-      <section id="vsStatisticsCard" class="card alliance-list-card vs-statistics-card" data-no-collapse="true">
-        <div class="card-header alliance-roster-header"><div><h3>Статистика VS</h3><p id="vsCount">0 участников</p></div><div class="alliance-roster-tools vs-tools"><input id="vsSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="vsRankFilter" data-no-persist="true"><option value="">Все ранги</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select><select id="vsCompletionFilter" data-no-persist="true"><option value="">Все участники</option><option value="complete">Выполнили все дни</option><option value="incomplete">Выполнили не все дни</option></select><select id="vsSort" data-no-persist="true"><option value="total">По общей сумме</option><option value="completed">По выполненным дням</option><option value="nickname">По нику</option></select></div></div>
-
-        <div class="vs-period-controls">
-          <label><span>Режим</span><select id="vsMode" data-no-persist="true"><option value="week">Одна неделя</option><option value="compare">Сравнение двух недель</option><option value="period">Период</option></select></label>
-          <label data-vs-mode-field="week"><span>Неделя</span><select id="vsWeek" data-no-persist="true"></select></label>
-          <label data-vs-mode-field="compare" hidden><span>Первая неделя</span><select id="vsWeekA" data-no-persist="true"></select></label>
-          <label data-vs-mode-field="compare" hidden><span>Вторая неделя</span><select id="vsWeekB" data-no-persist="true"></select></label>
-          <label data-vs-mode-field="period" hidden><span>С недели</span><select id="vsPeriodFrom" data-no-persist="true"></select></label>
-          <label data-vs-mode-field="period" hidden><span>По неделю</span><select id="vsPeriodTo" data-no-persist="true"></select></label>
-        </div>
-
-        <div class="vs-view-options"><strong>Показать:</strong><label class="checkbox"><input type="checkbox" data-vs-column="day0" checked><span>Пн</span></label><label class="checkbox"><input type="checkbox" data-vs-column="day1" checked><span>Вт</span></label><label class="checkbox"><input type="checkbox" data-vs-column="day2" checked><span>Ср</span></label><label class="checkbox"><input type="checkbox" data-vs-column="day3" checked><span>Чт</span></label><label class="checkbox"><input type="checkbox" data-vs-column="day4" checked><span>Пт</span></label><label class="checkbox"><input type="checkbox" data-vs-column="day5" checked><span>Сб</span></label><label class="checkbox"><input type="checkbox" data-vs-column="total" checked><span>Общая сумма</span></label><label class="checkbox"><input type="checkbox" data-vs-column="completed" checked><span>Выполнено дней</span></label><button id="vsTogglePast" type="button" class="secondary-button" hidden>Развернуть неделю</button><button id="vsExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button></div>
-
-        <div class="alliance-table-wrap vs-table-wrap"><table class="alliance-table vs-table"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
-        <div id="vsEmptyState" class="alliance-empty-state">Нет участников для выбранного фильтра.</div>
-        <div id="vsSummary" class="vs-summary" hidden></div>
-      </section>
-    </div>
   </section>
 </section>
