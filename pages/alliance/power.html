@@ -1,0 +1,36 @@
+<section class="page-section alliance-subpage">
+  <button type="button" class="alliance-back-button secondary-button" data-page-path="alliance/members.html">← В штаб</button>
+  <section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section>
+  <div id="allianceMessage" class="alliance-message" hidden></div>
+
+  <div id="alliancePowerSection">
+    <div id="powerSectionError" class="alliance-message" data-type="error" hidden></div>
+    <section id="powerEditorCard" class="card power-editor-card">
+      <div class="card-header"><div><h3>Добавить замер силы</h3></div></div>
+      <form id="powerForm" class="power-form">
+        <label><span>Участник</span><select id="powerParticipant" data-no-persist="true" required></select></label>
+        <label><span>Дата замера</span><input id="powerDate" type="date" data-no-persist="true" required></label>
+        <label><span>1-й отряд, млн</span><input id="powerSquad1" type="text" inputmode="decimal" data-no-persist="true" required></label>
+        <label><span>2-й отряд, млн</span><input id="powerSquad2" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <label><span>3-й отряд, млн</span><input id="powerSquad3" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <label><span>4-й отряд, млн</span><input id="powerSquad4" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <label><span>5-й отряд, млн</span><input id="powerSquad5" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <button type="submit">Сохранить замер</button>
+      </form>
+    </section>
+
+    <section id="powerSeasonSettings" class="card power-season-card" hidden>
+      <div class="card-header"><div><h3>Начало сезона</h3></div></div>
+      <form id="powerSeasonForm" class="power-season-form"><label><span>Начало текущего сезона</span><input id="powerSeasonStart" type="date" data-no-persist="true"></label><button type="submit">Сохранить дату</button></form>
+    </section>
+
+    <section id="powerStatisticsCard" class="card alliance-list-card power-statistics-card">
+      <button id="powerCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button>
+      <div class="card-header alliance-roster-header"><div><h3>Статистика силы всего союза</h3><p id="powerCount">0 участников</p></div><div class="alliance-roster-tools power-tools"><input id="powerSearch" type="search" placeholder="Поиск по нику" data-no-persist="true"><select id="powerSort" data-no-persist="true"><option value="power">По силе</option><option value="growth">По приросту</option><option value="nickname">По нику</option></select></div></div>
+      <div class="power-view-options" aria-label="Показатели для сравнения"><strong>Показать в таблице:</strong><label class="checkbox"><input type="checkbox" data-power-column="previous" checked><span>С прошлого замера</span></label><label class="checkbox"><input type="checkbox" data-power-column="week" checked><span>За неделю</span></label><label class="checkbox"><input type="checkbox" data-power-column="month" checked><span>За месяц</span></label><label class="checkbox"><input type="checkbox" data-power-column="season" checked><span>За сезон</span></label><label class="checkbox"><input type="checkbox" data-power-column="percent" checked><span>Прирост, %</span></label><button id="powerExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button></div>
+      <div class="alliance-table-wrap power-table-wrap" data-horizontal-scroll><table class="alliance-table power-table"><thead><tr><th>Место</th><th>Участник</th><th>Дата</th><th>БМ 1-го отряда, млн</th><th data-power-col="previous">С прошлого замера</th><th data-power-col="week">За неделю</th><th data-power-col="month">За месяц</th><th data-power-col="season">За сезон</th><th data-power-col="percent">Прирост, %</th></tr></thead><tbody id="powerTableBody"></tbody></table></div>
+      <div id="participantPowerSummary" class="power-summary" hidden></div>
+      <div id="powerEmptyState" class="alliance-empty-state">Пока нет ни одного замера.</div>
+    </section>
+  </div>
+</section>
