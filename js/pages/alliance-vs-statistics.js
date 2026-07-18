@@ -64,6 +64,10 @@ function formatScore(value) {
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
 
+function formatPercent(value) {
+  return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(value)}%`;
+}
+
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
   if (!box) return;
@@ -152,6 +156,7 @@ function weekMetrics(participantId, start, map) {
   });
 
   const required = counted - vacation;
+  const missed = Math.max(0, required - completed);
   const allDone = required > 0
     ? completed === required
     : counted > 0 && vacation === counted;
@@ -159,9 +164,19 @@ function weekMetrics(participantId, start, map) {
   let status = "fail";
   if (pastWeek && vacation >= 3) status = "vacation";
   else if (allDone) status = "complete";
-  else if (pastWeek && completed === 5 && vacation === 0) status = "warning";
+  else if (pastWeek && missed === 1) status = "warning";
 
-  return { total, completed, vacation, counted, allDone, status, days };
+  return {
+    total,
+    completed,
+    vacation,
+    counted,
+    required,
+    missed,
+    allDone,
+    status,
+    days
+  };
 }
 
 function buildRows(weeks) {
@@ -175,9 +190,11 @@ function buildRows(weeks) {
         metrics,
         total: metrics.reduce((sum, item) => sum + item.total, 0),
         completed: metrics.reduce((sum, item) => sum + item.completed, 0),
-        complete: metrics.every(item => item.allDone),
-        fullWeeks: metrics.filter(item => item.allDone).length,
-        incompleteWeeks: metrics.filter(item => !item.allDone).length
+        complete: metrics.every(item => item.status === "complete"),
+        fullWeeks: metrics.filter(item => item.status === "complete").length,
+        partialWeeks: metrics.filter(item => item.status === "warning").length,
+        failedWeeks: metrics.filter(item => item.status === "fail").length,
+        vacationWeeks: metrics.filter(item => item.status === "vacation").length
       };
     });
 }
@@ -209,9 +226,9 @@ function statusMark(status) {
     return '<span class="vs-status vs-status-complete" title="Все доступные дни выполнены">✓</span>';
   }
   if (status === "warning") {
-    return '<span class="vs-status vs-status-warning" title="Выполнено пять дней из шести">!</span>';
+    return '<span class="vs-status vs-status-warning" title="Не выполнен один доступный день">!</span>';
   }
-  return '<span class="vs-status vs-status-fail" title="Выполнено меньше пяти дней">×</span>';
+  return '<span class="vs-status vs-status-fail" title="Не выполнено два или больше доступных дней">×</span>';
 }
 
 function participantCell(row) {
@@ -252,7 +269,7 @@ function renderWeek(rows, week) {
           ${day.future ? "" : day.entry?.is_vacation ? "О" : formatScore(day.points)}
         </td>`).join("")}
       <td><strong>${formatScore(row.total)}</strong></td>
-      <td>${row.metrics[0].completed} из ${row.metrics[0].counted - row.metrics[0].vacation}</td>
+      <td>${row.metrics[0].completed} из ${row.metrics[0].required}</td>
     </tr>
   `).join("");
 }
@@ -260,20 +277,36 @@ function renderWeek(rows, week) {
 function renderCompare(rows, weeks) {
   byId("vsStatsTogglePast").hidden = true;
   byId("vsStatsTableHead").innerHTML = `
-    <tr><th>Место</th><th>Участник</th><th>${weekLabel(weeks[0])}</th><th>${weekLabel(weeks[1])}</th><th>Разница</th><th>Выполнено дней</th></tr>`;
+    <tr>
+      <th>Место</th><th>Участник</th>
+      <th>${weekLabel(weeks[0])}</th><th>${weekLabel(weeks[1])}</th>
+      <th>Разница</th><th>Изменение</th>
+      <th>Дни: первая</th><th>Дни: вторая</th><th>Разница дней</th>
+    </tr>`;
+
   byId("vsStatsTableBody").innerHTML = rows.map((row, index) => {
-    const difference = row.metrics[1].total - row.metrics[0].total;
+    const first = row.metrics[0];
+    const second = row.metrics[1];
+    const difference = second.total - first.total;
+    const percentage = first.total > 0
+      ? difference / first.total * 100
+      : second.total > 0 ? 100 : 0;
+    const completedDifference = second.completed - first.completed;
     const differenceText = difference === 0
       ? "0"
       : `${difference > 0 ? "+" : ""}${formatScore(difference)}`;
+
     return `
       <tr>
         <td>${index + 1}</td>
         <td>${participantCell(row)}</td>
-        <td>${formatScore(row.metrics[0].total)}</td>
-        <td>${formatScore(row.metrics[1].total)}</td>
+        <td>${formatScore(first.total)}</td>
+        <td>${formatScore(second.total)}</td>
         <td class="${difference > 0 ? "vs-text-positive" : difference < 0 ? "vs-text-negative" : ""}">${differenceText}</td>
-        <td>${row.metrics[0].completed} / ${row.metrics[1].completed}</td>
+        <td class="${percentage > 0 ? "vs-text-positive" : percentage < 0 ? "vs-text-negative" : ""}">${percentage > 0 ? "+" : ""}${formatPercent(percentage)}</td>
+        <td>${first.completed} из ${first.required}</td>
+        <td>${second.completed} из ${second.required}</td>
+        <td>${completedDifference > 0 ? "+" : ""}${completedDifference}</td>
       </tr>`;
   }).join("");
 }
@@ -281,15 +314,23 @@ function renderCompare(rows, weeks) {
 function renderPeriod(rows, weeks) {
   byId("vsStatsTogglePast").hidden = true;
   byId("vsStatsTableHead").innerHTML = `
-    <tr><th>Место</th><th>Участник</th>${weeks.map(week => `<th>${weekLabel(week)}</th>`).join("")}<th>Сумма за период</th><th>Все недели</th><th>Не все недели</th></tr>`;
+    <tr>
+      <th>Место</th><th>Участник</th>
+      ${weeks.map(week => `<th>${weekLabel(week)}</th>`).join("")}
+      <th>Сумма за период</th><th>Недель</th><th>Полностью</th><th>Частично</th><th>Не выполнено</th><th>Отпуск</th>
+    </tr>`;
+
   byId("vsStatsTableBody").innerHTML = rows.map((row, index) => `
     <tr>
       <td>${index + 1}</td>
       <td>${participantCell(row)}</td>
       ${row.metrics.map(item => `<td>${formatScore(item.total)}</td>`).join("")}
       <td><strong>${formatScore(row.total)}</strong></td>
+      <td>${weeks.length}</td>
       <td>${row.fullWeeks}</td>
-      <td>${row.incompleteWeeks}</td>
+      <td>${row.partialWeeks}</td>
+      <td>${row.failedWeeks}</td>
+      <td>${row.vacationWeeks}</td>
     </tr>
   `).join("");
 }
@@ -322,7 +363,10 @@ function renderSummary(rows, weeks) {
         <div><span>Самый слабый день</span><strong>${DAYS[worstDay]}</strong></div>`;
     }
   } else {
-    const weekTotals = weeks.map((_, index) => rows.reduce((sum, row) => sum + row.metrics[index].total, 0));
+    const weekTotals = weeks.map((_, index) => rows.reduce(
+      (sum, row) => sum + row.metrics[index].total,
+      0
+    ));
     extra = `
       <div><span>Лучшая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.max(...weekTotals))])}</strong></div>
       <div><span>Самая слабая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.min(...weekTotals))])}</strong></div>`;
@@ -331,8 +375,8 @@ function renderSummary(rows, weeks) {
   box.hidden = false;
   box.innerHTML = `
     <div><span>Общая сумма союза</span><strong>${formatScore(total)}</strong></div>
-    <div><span>Выполнили все дни</span><strong>${complete}</strong></div>
-    <div><span>Выполнили не все дни</span><strong>${rows.length - complete}</strong></div>
+    <div><span>Выполнили всё</span><strong>${complete}</strong></div>
+    <div><span>Выполнили не всё</span><strong>${rows.length - complete}</strong></div>
     <div><span>Выполнили полностью</span><strong>${Math.round(complete / rows.length * 100)}%</strong></div>
     <div><span>Лучший участник</span><strong>${escapeHtml(best.nickname)}</strong></div>
     <div><span>Худший участник</span><strong>${escapeHtml(worst.nickname)}</strong></div>
