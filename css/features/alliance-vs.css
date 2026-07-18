@@ -1,0 +1,230 @@
+.vs-result-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.vs-result-form label,
+.vs-target-form label,
+.vs-period-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vs-result-form input,
+.vs-result-form select,
+.vs-target-form input,
+.vs-period-controls select {
+  width: 100%;
+}
+
+.vs-calculated-date {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.vs-vacation-field {
+  flex-direction: row !important;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+}
+
+.vs-target-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.vs-tools {
+  grid-template-columns: minmax(180px, 1fr) repeat(3, minmax(145px, auto));
+}
+
+.vs-period-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.vs-period-controls label {
+  min-width: 190px;
+}
+
+.vs-view-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+}
+
+.vs-view-options .checkbox {
+  margin: 0;
+}
+
+.vs-view-options button:first-of-type {
+  margin-left: auto;
+}
+
+.vs-table {
+  min-width: 1080px;
+}
+
+.vs-table td:nth-child(2) strong,
+.vs-table td:nth-child(2) small,
+.vs-table td:first-child strong,
+.vs-table td:first-child small {
+  display: block;
+}
+
+.vs-table td small {
+  margin-top: 4px;
+  color: var(--text-soft);
+}
+
+.vs-cell-failed {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 28%, transparent);
+}
+
+.vs-cell-met {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.vs-cell-future {
+  background: transparent;
+}
+
+.vs-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.vs-status-complete {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.vs-status-warning {
+  color: #d9a928;
+  background: rgba(217, 169, 40, 0.14);
+}
+
+.vs-status-fail {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+.vs-status-vacation {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text-soft) 18%, transparent);
+}
+
+.vs-text-positive {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.vs-text-negative {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.vs-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.vs-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.vs-summary span {
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.vs-statistics-card.is-expanded {
+  position: fixed;
+  inset: 12px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+  background: var(--card);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.vs-statistics-card.is-expanded .vs-table-wrap {
+  flex: 1;
+  overflow: auto;
+}
+
+.vs-table-open {
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  .vs-result-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vs-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .vs-result-form,
+  .vs-target-form,
+  .vs-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .vs-result-form button,
+  .vs-target-form button,
+  .vs-view-options button {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .vs-period-controls label {
+    width: 100%;
+  }
+
+  .vs-statistics-card.is-expanded {
+    inset: 0;
+    border-radius: 0;
+  }
+
+  .vs-table th:nth-child(2),
+  .vs-table td:nth-child(2) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--card);
+  }
+}
