@@ -204,13 +204,13 @@ async function saveSeason(event) {
 }
 
 function switchTab(target) {
-  const showPower = target === "power";
   document.querySelectorAll("[data-alliance-tab]").forEach(button => {
     button.classList.toggle("is-active", button.dataset.allianceTab === target);
   });
-  if (byId("allianceRosterSection")) byId("allianceRosterSection").hidden = showPower;
-  if (byId("alliancePowerSection")) byId("alliancePowerSection").hidden = !showPower;
-  if (showPower) load();
+  if (byId("allianceRosterSection")) byId("allianceRosterSection").hidden = target !== "roster";
+  if (byId("alliancePowerSection")) byId("alliancePowerSection").hidden = target !== "power";
+  if (byId("allianceVsSection")) byId("allianceVsSection").hidden = target !== "vs";
+  if (target === "power") load();
 }
 
 function toggleExpandedTable() {
