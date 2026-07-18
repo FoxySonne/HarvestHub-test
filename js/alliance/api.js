@@ -1,30 +1,8 @@
 export async function fetchMemberships(client) {
-  const membershipResult = await client
-    .from("alliance_members")
-    .select("alliance_id, role, joined_at")
-    .order("joined_at", { ascending: true });
-
-  if (membershipResult.error) return membershipResult;
-
-  const memberships = Array.isArray(membershipResult.data) ? membershipResult.data : [];
-  if (!memberships.length) return { data: [], error: null };
-
-  const ids = memberships.map(item => item.alliance_id).filter(Boolean);
-  const allianceResult = await client
-    .from("alliances")
-    .select("id, name, state_number, invite_code")
-    .in("id", ids);
-
-  if (allianceResult.error) return allianceResult;
-
-  const allianceById = new Map((allianceResult.data || []).map(item => [item.id, item]));
+  const result = await client.rpc("get_my_alliance_hubs_v2");
   return {
-    data: memberships.map(item => ({
-      alliance_id: item.alliance_id,
-      role: item.role || "viewer",
-      alliances: allianceById.get(item.alliance_id) || null
-    })),
-    error: null
+    data: Array.isArray(result.data) ? result.data : [],
+    error: result.error
   };
 }
 
@@ -70,4 +48,43 @@ export function deleteParticipant(client, { id, allianceId }) {
     .update({ member_status: "left" })
     .eq("id", id)
     .eq("alliance_id", allianceId);
+}
+
+export function linkParticipantAccount(client, allianceId, participantId, email) {
+  return client.rpc("link_alliance_participant_account", {
+    target_alliance_id: allianceId,
+    target_participant_id: participantId,
+    target_email: String(email || "").trim()
+  });
+}
+
+export function unlinkParticipantAccount(client, allianceId, participantId) {
+  return client.rpc("unlink_alliance_participant_account", {
+    target_alliance_id: allianceId,
+    target_participant_id: participantId
+  });
+}
+
+export function setAllianceMemberRole(client, allianceId, userId, role) {
+  return client.rpc("set_alliance_member_role", {
+    target_alliance_id: allianceId,
+    target_user_id: userId,
+    target_role: role
+  });
+}
+
+export function transferAllianceR5(client, allianceId, participantId, previousRole) {
+  return client.rpc("transfer_alliance_r5", {
+    target_alliance_id: allianceId,
+    target_participant_id: participantId,
+    previous_r5_role: previousRole
+  });
+}
+
+export function transferAllianceOwner(client, allianceId, userId, previousRole) {
+  return client.rpc("transfer_alliance_owner", {
+    target_alliance_id: allianceId,
+    target_user_id: userId,
+    previous_owner_role: previousRole
+  });
 }
