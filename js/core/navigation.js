@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260718-50";
+  const SITE_ASSET_VERSION = "20260718-55";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -11,6 +11,13 @@
     { title: "События", path: "timeline.html", group: "Основное" },
     { title: "Советы", path: "tips.html", group: "Основное" },
     { title: "Настройки", path: "settings.html", group: "Основное" },
+    { title: "Союзный штаб", path: "alliance/members.html", group: "Союз" },
+    { title: "Управление союзом", path: "alliance/management.html", group: "Союз" },
+    { title: "Состав союза", path: "alliance/roster.html", group: "Союз" },
+    { title: "VS", path: "alliance/vs.html", group: "Союз" },
+    { title: "Статистика VS", path: "alliance/vs-statistics.html", group: "Союз" },
+    { title: "Резервуар: активность", path: "alliance/reservoir-activity.html", group: "Союз" },
+    { title: "Резервуар: расстановка", path: "alliance/reservoir-layout.html", group: "Союз" },
     { title: "Игра по-крупному", path: "calculator/ipk.html", group: "Калькуляторы" },
     { title: "Турбочерепашка & VS", path: "calculator/turbo-vs.html", group: "Калькуляторы" },
     { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" },
@@ -18,7 +25,13 @@
   ];
   const pageModulePaths = {
     home: "../pages/home.js",
-    members: "../pages/members-wrapper.js",
+    members: "../pages/alliance-hub.js",
+    management: "../pages/alliance-management.js",
+    roster: "../pages/alliance-roster.js",
+    vs: "../pages/alliance-vs-current.js",
+    "vs-statistics": "../pages/alliance-vs-statistics.js",
+    "reservoir-activity": "../pages/alliance-placeholder.js",
+    "reservoir-layout": "../pages/alliance-placeholder.js",
     profile: "../pages/profile.js",
     settings: "../pages/settings.js",
     ipk: "../calculators/ipk.js",
