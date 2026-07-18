@@ -15,7 +15,7 @@ function showMessage(text, type = "info") {
 function roleLabel(role) {
   if (role === "owner") return "Полные права";
   if (role === "editor") return "Редактор";
-  return "Смотритель";
+  return "Наблюдатель";
 }
 
 function showEntry() {
