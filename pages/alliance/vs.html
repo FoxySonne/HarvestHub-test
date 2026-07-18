@@ -9,11 +9,10 @@
       <label><span>Участник</span><select id="vsParticipant" data-no-persist="true" required></select></label>
       <label><span>День недели</span><select id="vsDay" data-no-persist="true"><option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option><option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option></select></label>
       <label><span>Дата</span><strong id="vsCalculatedDate" class="vs-calculated-date">—</strong></label>
-      <label class="vs-score-label"><span>Очки <button id="vsScoreHelpButton" type="button" class="field-help-button" aria-label="Как вводить очки">?</button></span><input id="vsPoints" type="text" inputmode="decimal" data-no-persist="true"></label>
+      <label class="vs-score-label"><span class="tooltip" data-tooltip="Можно вводить точное число или использовать K, M, B, T. Например: 5720000, 5,72M, 897K, 1,4B или 2T.">Очки</span><input id="vsPoints" type="text" inputmode="decimal" data-no-persist="true"></label>
       <label class="checkbox vs-vacation-field"><input id="vsVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
       <button type="submit">Сохранить результат</button>
     </form>
-    <div id="vsScoreHelp" class="field-help-popover" hidden>Можно вводить точное число или использовать K, M, B, T. Например: 5720000, 5,72M, 897K, 1,4B или 2T.</div>
   </section>
 
   <section id="vsTargetCard" class="card" hidden>
