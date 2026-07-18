@@ -57,7 +57,8 @@ function growthPercent(latest, previous) {
 }
 
 function selectedColumns() {
-  return new Set([...document.querySelectorAll("[data-power-column]:checked")].map(input => input.dataset.powerColumn));
+  return new Set([...document.querySelectorAll("[data-power-column]:checked")]
+    .map(input => input.dataset.powerColumn));
 }
 
 function applyColumnVisibility() {
@@ -102,8 +103,12 @@ function render() {
 
   filtered.sort((a, b) => {
     if (sort === "nickname") return String(a.nickname).localeCompare(String(b.nickname), "ru");
-    if (sort === "growth") return (Number(b.latest_power) - Number(b.previous_power)) - (Number(a.latest_power) - Number(a.previous_power));
-    return Number(b.latest_power) - Number(a.latest_power) || String(a.nickname).localeCompare(String(b.nickname), "ru");
+    if (sort === "growth") {
+      return (Number(b.latest_power) - Number(b.previous_power))
+        - (Number(a.latest_power) - Number(a.previous_power));
+    }
+    return Number(b.latest_power) - Number(a.latest_power)
+      || String(a.nickname).localeCompare(String(b.nickname), "ru");
   });
 
   const tbody = byId("powerTableBody");
@@ -136,14 +141,18 @@ function render() {
   if (select) {
     const selected = select.value;
     const available = rows.filter(item => state.data?.can_manage || item.is_own);
-    select.innerHTML = available.map(item => `<option value="${item.participant_id}">${item.nickname}</option>`).join("");
+    select.innerHTML = available
+      .map(item => `<option value="${item.participant_id}">${item.nickname}</option>`)
+      .join("");
     if ([...select.options].some(option => option.value === selected)) select.value = selected;
     byId("powerEditorCard").hidden = available.length === 0;
   }
 
   const seasonInput = byId("powerSeasonStart");
   if (seasonInput) seasonInput.value = state.data?.season_start || "";
-  if (byId("powerSeasonSettings")) byId("powerSeasonSettings").hidden = !state.data?.can_manage;
+  if (byId("powerSeasonSettings")) {
+    byId("powerSeasonSettings").hidden = !state.data?.can_manage;
+  }
 }
 
 async function load() {
@@ -184,7 +193,11 @@ async function submitPower(event) {
   const { error } = await saveAllianceSquadPower(state.client, allianceId, {
     participantId,
     measuredOn: byId("powerDate").value,
-    squad1: values[0], squad2: values[1], squad3: values[2], squad4: values[3], squad5: values[4]
+    squad1: values[0],
+    squad2: values[1],
+    squad3: values[2],
+    squad4: values[3],
+    squad5: values[4]
   });
   if (button) button.disabled = false;
   if (error) return showMessage(error.message, "error");
@@ -197,7 +210,11 @@ async function submitPower(event) {
 
 async function saveSeason(event) {
   event.preventDefault();
-  const { error } = await setAlliancePowerSeasonStart(state.client, activeAllianceId(), byId("powerSeasonStart")?.value || null);
+  const { error } = await setAlliancePowerSeasonStart(
+    state.client,
+    activeAllianceId(),
+    byId("powerSeasonStart")?.value || null
+  );
   if (error) return showMessage(error.message, "error");
   await load();
   showMessage("Дата начала сезона сохранена.", "success");
@@ -213,11 +230,11 @@ function switchTab(target) {
   if (target === "power") load();
 }
 
-function toggleExpandedTable() {
+function toggleExpandedTable(forceOpen) {
   const card = byId("powerStatisticsCard");
   const button = byId("powerExpandTable");
   if (!card || !button) return;
-  state.expanded = !state.expanded;
+  state.expanded = typeof forceOpen === "boolean" ? forceOpen : !state.expanded;
   card.classList.toggle("is-expanded", state.expanded);
   document.body.classList.toggle("power-table-open", state.expanded);
   button.textContent = state.expanded ? "Закрыть полный экран" : "Открыть таблицу целиком";
@@ -235,6 +252,10 @@ export function initPowerSection() {
   byId("powerSeasonForm")?.addEventListener("submit", saveSeason);
   byId("powerSearch")?.addEventListener("input", render);
   byId("powerSort")?.addEventListener("change", render);
-  document.querySelectorAll("[data-power-column]").forEach(input => input.addEventListener("change", applyColumnVisibility));
-  byId("powerExpandTable")?.addEventListener("click", toggleExpandedTable);
+  document.querySelectorAll("[data-power-column]")
+    .forEach(input => input.addEventListener("change", applyColumnVisibility));
+  byId("powerExpandTable")?.addEventListener("click", () => toggleExpandedTable());
+  byId("powerCloseTable")?.addEventListener("click", () => toggleExpandedTable(false));
+
+  if (byId("alliancePowerSection") && !byId("alliancePowerSection").hidden) load();
 }
