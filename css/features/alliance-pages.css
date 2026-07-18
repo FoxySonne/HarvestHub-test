@@ -1,0 +1,266 @@
+.alliance-hub-page,
+.alliance-subpage {
+  min-width: 0;
+}
+
+.alliance-entry-grid,
+.alliance-inline-form,
+.alliance-management-form,
+.vs-current-form,
+.vs-statistics-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.alliance-entry-grid label,
+.alliance-inline-form label,
+.alliance-management-form label,
+.vs-current-form label,
+.vs-statistics-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.alliance-dashboard-links h2 {
+  margin: 24px 0 14px;
+}
+
+.alliance-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+.alliance-dashboard-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.alliance-dashboard-card button {
+  align-self: flex-start;
+}
+
+.alliance-user-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alliance-user-summary-grid > div,
+.alliance-invite-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.alliance-user-summary-grid span,
+.alliance-invite-row span {
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.alliance-context-card {
+  margin-top: 14px;
+}
+
+.alliance-context-card .card-header p {
+  margin-bottom: 0;
+}
+
+.alliance-back-button {
+  width: auto;
+}
+
+.alliance-invite-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.vs-current-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vs-current-form .vs-vacation-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  overflow: visible;
+}
+
+.vs-current-form .vs-vacation-field span {
+  display: inline;
+  white-space: nowrap;
+}
+
+.vs-score-label > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-help-button {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.field-help-popover {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text-soft);
+}
+
+.vs-statistics-filters {
+  margin: 16px 0;
+}
+
+.alliance-table-open-button {
+  width: auto;
+  margin-bottom: 12px;
+}
+
+.alliance-fullscreen-close {
+  display: none;
+}
+
+.is-alliance-table-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  overflow: auto;
+  padding: 64px 12px 12px;
+  background: var(--card);
+}
+
+.is-alliance-table-fullscreen .alliance-fullscreen-close {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  z-index: 1301;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid var(--text);
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 32px;
+  line-height: 1;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+.alliance-table-fullscreen-open {
+  overflow: hidden;
+}
+
+.is-alliance-table-fullscreen table {
+  min-width: max-content;
+}
+
+@media (max-width: 899px) {
+  .alliance-hub-page,
+  .alliance-subpage,
+  .alliance-hub-page .card,
+  .alliance-subpage .card {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .alliance-entry-grid,
+  .alliance-inline-form,
+  .alliance-management-form,
+  .alliance-role-management-grid,
+  .vs-current-form,
+  .vs-statistics-controls,
+  .vs-statistics-filters,
+  .alliance-user-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .alliance-dashboard-card {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .alliance-dashboard-card h3 {
+    font-size: 16px;
+  }
+
+  .alliance-dashboard-card p {
+    font-size: 13px;
+  }
+
+  .alliance-dashboard-card button,
+  .alliance-back-button,
+  .alliance-table-open-button,
+  .alliance-invite-row button {
+    width: auto;
+    max-width: 100%;
+  }
+
+  .alliance-inline-form button,
+  .alliance-management-form button,
+  .vs-current-form > button,
+  .vs-target-form button,
+  .alliance-role-management-grid > button,
+  .alliance-role-management-actions button {
+    width: 100%;
+  }
+
+  .alliance-invite-row {
+    align-items: center;
+  }
+
+  .alliance-table-wrap {
+    max-width: 100%;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+  }
+
+  .alliance-table {
+    min-width: 760px;
+  }
+
+  .alliance-roster-tools,
+  .vs-statistics-filters {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .is-alliance-table-fullscreen {
+    max-width: none;
+    touch-action: pan-x pan-y;
+  }
+}
+
+@media (max-width: 520px) {
+  .alliance-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
