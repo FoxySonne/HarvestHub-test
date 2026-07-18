@@ -25,6 +25,10 @@
   min-width: 0;
 }
 
+.vs-statistics-controls [hidden] {
+  display: none !important;
+}
+
 .alliance-dashboard-links h2 {
   margin: 24px 0 14px;
 }
@@ -98,6 +102,10 @@
   overflow: visible;
 }
 
+.vs-current-form .vs-vacation-field input {
+  flex: 0 0 auto;
+}
+
 .vs-current-form .vs-vacation-field span {
   display: inline;
   white-space: nowrap;
@@ -131,9 +139,20 @@
   margin: 16px 0;
 }
 
+.alliance-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
 .alliance-table-open-button {
   width: auto;
   margin-bottom: 12px;
+}
+
+.alliance-table-actions .alliance-table-open-button {
+  margin-bottom: 0;
 }
 
 .alliance-fullscreen-close {
@@ -218,6 +237,7 @@
   .alliance-dashboard-card button,
   .alliance-back-button,
   .alliance-table-open-button,
+  .alliance-table-actions button,
   .alliance-invite-row button {
     width: auto;
     max-width: 100%;
