@@ -1,0 +1,31 @@
+<section class="page-section alliance-subpage">
+  <button type="button" class="alliance-back-button secondary-button" data-page-path="alliance/members.html">← В штаб</button>
+  <section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section>
+  <div id="allianceMessage" class="alliance-message" hidden></div>
+
+  <section class="card" id="allianceDetailsCard">
+    <div class="card-header"><div><h3>Данные союза</h3><p>Название, номер штата и пригласительный код.</p></div></div>
+    <form id="allianceManagementDetailsForm" class="alliance-management-form">
+      <label><span>Название союза</span><input id="allianceManagementName" type="text" maxlength="80" data-no-persist="true" required></label>
+      <label><span>Номер штата</span><input id="allianceManagementState" type="text" maxlength="30" data-no-persist="true"></label>
+      <button type="submit">Сохранить</button>
+    </form>
+    <div class="alliance-invite-row"><div><span>Код приглашения</span><strong id="allianceManagementInvite">—</strong></div><button id="allianceManagementCopyInvite" type="button" class="secondary-button">Копировать</button></div>
+  </section>
+
+  <section class="card" id="allianceRoleManagementCard">
+    <div class="card-header"><div><h3>Аккаунты и права</h3><p>Связь участника с аккаунтом, роли, Р5 и владелец.</p></div></div>
+    <div class="alliance-role-management-grid">
+      <label><span>Участник</span><select id="allianceRoleParticipant" data-no-persist="true"></select></label>
+      <label><span>Email аккаунта</span><input id="allianceRoleEmail" type="email" autocomplete="email" data-no-persist="true"></label>
+      <div class="alliance-role-management-actions"><button id="allianceLinkAccountButton" type="button">Связать аккаунт</button><button id="allianceUnlinkAccountButton" type="button" class="secondary-button">Отвязать</button></div>
+      <label><span>Права аккаунта</span><select id="allianceLinkedRole" data-no-persist="true"><option value="editor">Редактор</option><option value="viewer">Смотритель</option></select></label>
+      <button id="allianceSaveLinkedRoleButton" type="button">Сохранить права</button>
+      <label><span>Прежний Р5 останется</span><select id="alliancePreviousR5Role" data-no-persist="true"><option value="editor">Редактором</option><option value="viewer">Смотрителем</option></select></label>
+      <button id="allianceTransferR5Button" type="button" class="secondary-button">Назначить Р5</button>
+      <label><span>Прежний владелец останется</span><select id="alliancePreviousOwnerRole" data-no-persist="true"><option value="editor">Редактором</option><option value="viewer">Смотрителем</option></select></label>
+      <button id="allianceTransferOwnerButton" type="button" class="danger-button">Передать владельца</button>
+    </div>
+    <p id="allianceRoleParticipantStatus" class="alliance-role-participant-status"></p>
+  </section>
+</section>
