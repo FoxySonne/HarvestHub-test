@@ -1,4 +1,4 @@
-import { initPowerSection } from "../alliance/power-section.js?v=20260718-54";
+import { initPowerSection } from "../alliance/power-section.js?v=20260718-55";
 import { loadAlliancePageContext, fillAllianceCompactHeader } from "../alliance/page-context.js?v=20260718-1";
 
 export async function init() {
