@@ -47,7 +47,11 @@
 }
 
 .alliance-dashboard-card button {
-  align-self: flex-start;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .alliance-user-summary-grid {
@@ -241,7 +245,6 @@
     font-size: 13px;
   }
 
-  .alliance-dashboard-card button,
   .alliance-back-button,
   .alliance-table-open-button,
   .alliance-table-actions button,
