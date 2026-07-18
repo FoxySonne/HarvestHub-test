@@ -1,5 +1,6 @@
 -- HarvestHub: таблица силы отрядов.
 -- БМ хранится в миллионах с дробной частью, например 87.72.
+-- 1-й отряд обязателен, 2–5-й могут быть не указаны.
 -- Файл можно выполнять повторно.
 
 alter table public.alliances
@@ -10,11 +11,11 @@ create table if not exists public.alliance_squad_power_measurements (
   alliance_id uuid not null references public.alliances(id) on delete cascade,
   participant_id uuid not null references public.participants(id) on delete cascade,
   measured_on date not null default current_date,
-  squad_1 numeric(12,3) not null default 0 check (squad_1 >= 0),
-  squad_2 numeric(12,3) not null default 0 check (squad_2 >= 0),
-  squad_3 numeric(12,3) not null default 0 check (squad_3 >= 0),
-  squad_4 numeric(12,3) not null default 0 check (squad_4 >= 0),
-  squad_5 numeric(12,3) not null default 0 check (squad_5 >= 0),
+  squad_1 numeric(12,3) not null check (squad_1 >= 0),
+  squad_2 numeric(12,3) check (squad_2 is null or squad_2 >= 0),
+  squad_3 numeric(12,3) check (squad_3 is null or squad_3 >= 0),
+  squad_4 numeric(12,3) check (squad_4 is null or squad_4 >= 0),
+  squad_5 numeric(12,3) check (squad_5 is null or squad_5 >= 0),
   created_by uuid references auth.users(id) on delete set null,
   updated_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
@@ -27,7 +28,17 @@ alter table public.alliance_squad_power_measurements
   alter column squad_2 type numeric(12,3) using squad_2::numeric,
   alter column squad_3 type numeric(12,3) using squad_3::numeric,
   alter column squad_4 type numeric(12,3) using squad_4::numeric,
-  alter column squad_5 type numeric(12,3) using squad_5::numeric;
+  alter column squad_5 type numeric(12,3) using squad_5::numeric,
+  alter column squad_1 drop default,
+  alter column squad_2 drop default,
+  alter column squad_3 drop default,
+  alter column squad_4 drop default,
+  alter column squad_5 drop default,
+  alter column squad_1 set not null,
+  alter column squad_2 drop not null,
+  alter column squad_3 drop not null,
+  alter column squad_4 drop not null,
+  alter column squad_5 drop not null;
 
 create index if not exists alliance_squad_power_alliance_date_idx
   on public.alliance_squad_power_measurements (alliance_id, measured_on desc);
@@ -83,11 +94,15 @@ begin
     raise exception 'Укажи дату замера';
   end if;
 
-  if least(
-    coalesce(target_squad_1, 0), coalesce(target_squad_2, 0),
-    coalesce(target_squad_3, 0), coalesce(target_squad_4, 0),
-    coalesce(target_squad_5, 0)
-  ) < 0 then
+  if target_squad_1 is null then
+    raise exception 'Укажи силу 1-го отряда';
+  end if;
+
+  if target_squad_1 < 0
+     or (target_squad_2 is not null and target_squad_2 < 0)
+     or (target_squad_3 is not null and target_squad_3 < 0)
+     or (target_squad_4 is not null and target_squad_4 < 0)
+     or (target_squad_5 is not null and target_squad_5 < 0) then
     raise exception 'Сила отряда не может быть отрицательной';
   end if;
 
@@ -97,11 +112,11 @@ begin
     created_by, updated_by
   ) values (
     target_alliance_id, target_participant_id, target_measured_on,
-    round(coalesce(target_squad_1, 0), 3),
-    round(coalesce(target_squad_2, 0), 3),
-    round(coalesce(target_squad_3, 0), 3),
-    round(coalesce(target_squad_4, 0), 3),
-    round(coalesce(target_squad_5, 0), 3),
+    round(target_squad_1, 3),
+    case when target_squad_2 is null then null else round(target_squad_2, 3) end,
+    case when target_squad_3 is null then null else round(target_squad_3, 3) end,
+    case when target_squad_4 is null then null else round(target_squad_4, 3) end,
+    case when target_squad_5 is null then null else round(target_squad_5, 3) end,
     auth.uid(), auth.uid()
   )
   on conflict (participant_id, measured_on) do update set
@@ -160,11 +175,11 @@ begin
       'is_own', p.linked_user_id = auth.uid(),
       'latest_date', latest.measured_on,
       'latest_power', coalesce(latest.squad_1, 0),
-      'squad_1', coalesce(latest.squad_1, 0),
-      'squad_2', coalesce(latest.squad_2, 0),
-      'squad_3', coalesce(latest.squad_3, 0),
-      'squad_4', coalesce(latest.squad_4, 0),
-      'squad_5', coalesce(latest.squad_5, 0),
+      'squad_1', latest.squad_1,
+      'squad_2', latest.squad_2,
+      'squad_3', latest.squad_3,
+      'squad_4', latest.squad_4,
+      'squad_5', latest.squad_5,
       'previous_power', coalesce(previous.squad_1, latest.squad_1, 0),
       'week_power', coalesce(week_old.squad_1, latest.squad_1, 0),
       'month_power', coalesce(month_old.squad_1, latest.squad_1, 0),
