@@ -1,7 +1,7 @@
 @import url("core/variables.css?v=20260717-20");
 @import url("core/base.css?v=20260717-28");
 @import url("core/layout.css?v=20260717-20");
-@import url("ui/forms.css?v=20260717-20");
+@import url("ui/forms.css?v=20260718-52");
 @import url("ui/buttons.css?v=20260717-25");
 @import url("ui/components.css?v=20260717-20");
 @import url("features/home.css?v=20260717-20");
@@ -19,7 +19,7 @@
 @import url("ui/time-converter.css?v=20260717-20");
 @import url("features/alliance.css?v=20260718-39");
 @import url("features/alliance-fixes.css?v=20260718-39");
-@import url("features/alliance-power.css?v=20260718-50");
+@import url("features/alliance-power.css?v=20260718-52");
 @import url("features/account.css?v=20260717-22");
 @import url("features/sync-status.css?v=20260717-20");
 @import url("features/account-mobile.css?v=20260717-23");
