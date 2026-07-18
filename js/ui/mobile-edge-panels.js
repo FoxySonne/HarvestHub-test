@@ -123,7 +123,13 @@
 
   function hasBlockingDialog() {
     return Boolean(document.querySelector(
-      ".account-modal.is-open, .account-delete-modal:not([hidden])"
+      ".account-modal.is-open, .account-delete-modal:not([hidden]), .is-alliance-table-fullscreen"
+    ));
+  }
+
+  function blocksPanelGesture(target) {
+    return Boolean(target?.closest?.(
+      "[data-horizontal-scroll], .alliance-table-wrap, input, select, textarea, button, [role='dialog']"
     ));
   }
 
@@ -144,7 +150,7 @@
   }
 
   function handleTouchStart(event) {
-    if (!isMobile() || event.touches?.length !== 1 || hasBlockingDialog()) return;
+    if (!isMobile() || event.touches?.length !== 1 || hasBlockingDialog() || blocksPanelGesture(event.target)) return;
     const touch = getTouch(event);
     if (!touch) return;
 
