@@ -60,7 +60,17 @@
 
 #powerDate,
 #powerSeasonStart {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  box-sizing: border-box;
   color-scheme: dark;
+  font: inherit;
+}
+#powerDate::-webkit-calendar-picker-indicator,
+#powerSeasonStart::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
 }
 
 @media (max-width: 1100px) {
