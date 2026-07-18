@@ -57,8 +57,9 @@ function parseScore(value) {
 function formatScore(value) {
   const number = Number(value) || 0;
   if (!number) return "—";
+  const absolute = Math.abs(number);
   const units = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
-  const unit = units.find(([size]) => number >= size);
+  const unit = units.find(([size]) => absolute >= size);
   if (!unit) return new Intl.NumberFormat("ru-RU").format(number);
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
@@ -113,14 +114,14 @@ function weekMetrics(participantId, start, map) {
     const date = addDays(start, index);
     const future = start === current && date > today;
     const entry = map.get(`${participantId}:${date}`);
+    const points = Number(entry?.points) || 0;
     if (!future) {
       counted += 1;
+      total += points;
       if (entry?.is_vacation) vacation += 1;
-      else if (Number(entry?.points) >= target) completed += 1;
+      else if (points >= target) completed += 1;
       else failed += 1;
     }
-    const points = Number(entry?.points) || 0;
-    total += points;
     return { label, date, future, entry, points, met: !future && !entry?.is_vacation && points >= target, failed: !future && !entry?.is_vacation && points < target };
   });
   const required = counted - vacation;
@@ -194,7 +195,8 @@ function renderCompare(rows, weeks) {
   byId("vsTableHead").innerHTML = `<tr><th>Место</th><th>Участник</th><th>${weekLabel(weeks[0])}</th><th>${weekLabel(weeks[1])}</th><th>Разница</th><th>Выполнено дней</th></tr>`;
   byId("vsTableBody").innerHTML = rows.map((row, index) => {
     const difference = row.metrics[1].total - row.metrics[0].total;
-    return `<tr><td>${index + 1}</td><td><strong>${escapeHtml(row.nickname)}</strong><small>${escapeHtml(row.rank_name || "—")}</small></td><td>${formatScore(row.metrics[0].total)}</td><td>${formatScore(row.metrics[1].total)}</td><td class="${difference < 0 ? "vs-text-negative" : difference > 0 ? "vs-text-positive" : ""}">${difference > 0 ? "+" : ""}${formatScore(difference)}</td><td>${row.metrics[0].completed} / ${row.metrics[1].completed}</td></tr>`;
+    const differenceText = difference === 0 ? "0" : `${difference > 0 ? "+" : ""}${formatScore(difference)}`;
+    return `<tr><td>${index + 1}</td><td><strong>${escapeHtml(row.nickname)}</strong><small>${escapeHtml(row.rank_name || "—")}</small></td><td>${formatScore(row.metrics[0].total)}</td><td>${formatScore(row.metrics[1].total)}</td><td class="${difference < 0 ? "vs-text-negative" : difference > 0 ? "vs-text-positive" : ""}">${differenceText}</td><td>${row.metrics[0].completed} / ${row.metrics[1].completed}</td></tr>`;
   }).join("");
 }
 
@@ -213,10 +215,13 @@ function renderSummary(rows, weeks) {
   const worst = [...rows].sort((a, b) => a.total - b.total)[0];
   let extra = "";
   if (weeks.length === 1) {
-    const dayTotals = DAYS.map((_, index) => rows.reduce((sum, row) => sum + row.metrics[0].days[index].points, 0));
-    const bestDay = dayTotals.indexOf(Math.max(...dayTotals));
-    const worstDay = dayTotals.indexOf(Math.min(...dayTotals));
-    extra = `<div><span>Лучший день союза</span><strong>${DAYS[bestDay]}</strong></div><div><span>Самый слабый день</span><strong>${DAYS[worstDay]}</strong></div>`;
+    const availableDays = DAYS.map((_, index) => index).filter(index => !rows[0]?.metrics[0].days[index].future);
+    const dayTotals = availableDays.map(index => ({ index, total: rows.reduce((sum, row) => sum + row.metrics[0].days[index].points, 0) }));
+    if (dayTotals.length) {
+      const bestDay = [...dayTotals].sort((a, b) => b.total - a.total)[0].index;
+      const worstDay = [...dayTotals].sort((a, b) => a.total - b.total)[0].index;
+      extra = `<div><span>Лучший день союза</span><strong>${DAYS[bestDay]}</strong></div><div><span>Самый слабый день</span><strong>${DAYS[worstDay]}</strong></div>`;
+    }
   } else {
     const weekTotals = weeks.map((_, index) => rows.reduce((sum, row) => sum + row.metrics[index].total, 0));
     extra = `<div><span>Лучшая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.max(...weekTotals))])}</strong></div><div><span>Самая слабая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.min(...weekTotals))])}</strong></div>`;
@@ -232,7 +237,7 @@ function applyColumns() {
 
 function render() {
   const weeks = selectedWeeks();
-  let rows = sortRows(filteredRows(buildRows(weeks)));
+  const rows = sortRows(filteredRows(buildRows(weeks)));
   const mode = byId("vsMode")?.value || "week";
   if (mode === "compare") renderCompare(rows, weeks);
   else if (mode === "period") renderPeriod(rows, weeks);
@@ -278,6 +283,8 @@ function updateInputDate() {
 
 async function saveResult(event) {
   event.preventDefault();
+  const resultDate = addDays(byId("vsInputWeek").value, Number(byId("vsDay").value));
+  if (resultDate > dateValue(new Date())) return showMessage("Будущие дни текущей недели пока не учитываются.", "error");
   const vacation = byId("vsVacation").checked;
   const points = vacation ? null : parseScore(byId("vsPoints").value);
   if (!vacation && points === null) {
@@ -290,7 +297,7 @@ async function saveResult(event) {
   button.disabled = true;
   const { error } = await saveAllianceVsResult(state.client, activeAllianceId(), {
     participantId: byId("vsParticipant").value,
-    resultDate: addDays(byId("vsInputWeek").value, Number(byId("vsDay").value)),
+    resultDate,
     points,
     isVacation: vacation
   });
@@ -298,6 +305,7 @@ async function saveResult(event) {
   if (error) return showMessage(error.message, "error");
   byId("vsPoints").value = "";
   byId("vsVacation").checked = false;
+  byId("vsPoints").disabled = false;
   await load();
   showMessage("Результат VS сохранён.", "success");
 }
