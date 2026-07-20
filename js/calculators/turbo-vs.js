@@ -1,15 +1,19 @@
-import { createTurboVsDataModel } from "../turbo-vs/data-model.js";
+import { createTurboVsDataModel } from "../turbo-vs/data-model.js?v=20260720-1";
 import {
   isTroopTransferApplied,
   markTroopTransferApplied,
+  readAllianceDuelBranchEnabled,
   readTroopTransferPreset,
   readWeekState,
+  writeAllianceDuelBranchEnabled,
   writeWeekState
-} from "../turbo-vs/storage.js?v=20260717-21";
+} from "../turbo-vs/storage.js?v=20260720-1";
 import { createTurboVsView } from "../turbo-vs/view.js";
 
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
 const { database } = await import(`../../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
+
+let allianceDuelBranchEnabled = false;
 
 const {
   calculateSavedItemTotal,
@@ -18,7 +22,9 @@ const {
   getTroopRowsFromState,
   resolveDayList,
   sortDayItems
-} = createTurboVsDataModel(database);
+} = createTurboVsDataModel(database, {
+  isAllianceDuelBranchEnabled: () => allianceDuelBranchEnabled && window.getAdvancedMode?.() === true
+});
 
 let isSyncingControls = false;
 let currentDayId = "";
@@ -50,6 +56,21 @@ function getCurrentUtcDayId() {
     : null;
 
   return utcDayId && database.days[utcDayId] ? utcDayId : database.dayOrder[0];
+}
+
+function initAllianceDuelBranchToggle() {
+  const toggle = document.getElementById("allianceDuelBranchToggle");
+  allianceDuelBranchEnabled = readAllianceDuelBranchEnabled();
+
+  if (!toggle) return;
+
+  toggle.checked = allianceDuelBranchEnabled;
+  toggle.addEventListener("change", () => {
+    allianceDuelBranchEnabled = toggle.checked;
+    writeAllianceDuelBranchEnabled(allianceDuelBranchEnabled);
+    updateTotals();
+    updateWeeklyTotals();
+  });
 }
 
 function saveCurrentDayState() {
@@ -313,6 +334,7 @@ export function init() {
   if (transferTimerId) window.clearTimeout(transferTimerId);
 
   fillDaySelector();
+  initAllianceDuelBranchToggle();
   selectCurrentUtcDay();
 
   transferTimerId = window.setTimeout(applyPendingTroopTransferAfterRestore, 300);
