@@ -13,13 +13,13 @@ export const database = {
   ],
 
   action: [
-    {name: "Синий болт", id: "blue_bolt", categoryId: "equipment", points: {turtle: 4000, vs: 2900, ipk: 714}},
-    {name: "Фиолетовый болт", id: "purple_bolt", categoryId: "equipment", points: {turtle: 16000, vs: 11500, ipk: 2857}},
-    {name: "Золотой болт", id: "gold_bolt", categoryId: "equipment", points: {turtle: 80000, vs: 57200, ipk: 14286}},
-    {name: "Неизвестный болт", id: "unknown_bolt", categoryId: "equipment", points: {turtle: 400000, vs: 285800, ipk: 71429}},
-    {name: "Увеличение звезд снаряжения", id: "equipment_stars", categoryId: "equipment", points: {turtle: 2200000, vs: 0, ipk: 0}},
-    {name: "Молот перековки", id: "reforge_hammer", categoryId: "equipment", points: {turtle: 8000, vs: 0, ipk: 0}},
-    {name: "Изолента", id: "insulation_tape", categoryId: "equipment", points: {turtle: 600000, vs: 0, ipk: 0}},
+    {name: "Синий болт", id: "blue_bolt", categoryId: "equipment", points: {turtle: 4000, vs: 2900, ipk: 714}, vsBranchBonusPercent: 100},
+    {name: "Фиолетовый болт", id: "purple_bolt", categoryId: "equipment", points: {turtle: 16000, vs: 11500, ipk: 2857}, vsBranchBonusPercent: 100},
+    {name: "Золотой болт", id: "gold_bolt", categoryId: "equipment", points: {turtle: 80000, vs: 57200, ipk: 14286}, vsBranchBonusPercent: 100},
+    {name: "Неизвестный болт", id: "unknown_bolt", categoryId: "equipment", points: {turtle: 400000, vs: 285800, ipk: 71429}, vsBranchBonusPercent: 100},
+    {name: "Увеличение звезд снаряжения", id: "equipment_stars", categoryId: "equipment", points: {turtle: 2200000, vs: 0, ipk: 0}, vsBranchBonusPercent: 100},
+    {name: "Молот перековки", id: "reforge_hammer", categoryId: "equipment", points: {turtle: 8000, vs: 0, ipk: 0}, vsBranchBonusPercent: 100},
+    {name: "Изолента", id: "insulation_tape", categoryId: "equipment", points: {turtle: 600000, vs: 0, ipk: 0}, vsBranchBonusPercent: 100},
 
     {name: "Желаемый призыв", id: "wish_summon", categoryId: "heroes", points: {turtle: 20000, vs: 13400, ipk: 0}},
     {name: "Продвинутый призыв", id: "advanced_summon", categoryId: "heroes", points: {turtle: 8000, vs: 3000, ipk: 0}},
