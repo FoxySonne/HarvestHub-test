@@ -50,6 +50,33 @@ function formatNumber(value) {
   return Math.round(Number(value) || 0).toLocaleString("ru-RU");
 }
 
+function parseTargetPoints(value) {
+  const text = String(value || "").trim().replace(/\s+/g, "").replace(/,/g, ".");
+  const match = text.match(/^(\d+(?:\.\d+)?)([kкmмbб])?$/i);
+
+  if (!match) {
+    const fallback = Number(text);
+    return Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
+  }
+
+  const base = Number(match[1]);
+  const suffix = (match[2] || "").toLowerCase();
+  const multiplier = suffix === "k" || suffix === "к"
+    ? 1000
+    : suffix === "m" || suffix === "м"
+      ? 1000000
+      : suffix === "b" || suffix === "б"
+        ? 1000000000
+        : 1;
+
+  const result = base * multiplier;
+  return Number.isFinite(result) && result > 0 ? result : 0;
+}
+
+function getCategoryName(categoryId) {
+  return database.category.find(category => category.id === categoryId)?.name || "Прочее";
+}
+
 function getCurrentUtcDayId() {
   const utcDayId = typeof window.getHarvestHubUtcDayId === "function"
     ? window.getHarvestHubUtcDayId()
@@ -177,6 +204,103 @@ function updateWeeklyTotals() {
   }
 }
 
+function getGoalVariants(action) {
+  const points = action.points?.turtle;
+  if (points == null) return [];
+
+  if (typeof points === "object") {
+    return (action.options || [])
+      .map(option => ({
+        id: `${action.id}:${option.value}`,
+        name: `${action.name} — ${option.label}`,
+        category: getCategoryName(action.categoryId),
+        points: Number(points[option.value]) || 0
+      }))
+      .filter(item => item.points > 0);
+  }
+
+  const simplePoints = Number(points) || 0;
+  if (simplePoints <= 0) return [];
+
+  return [{
+    id: action.id,
+    name: action.name,
+    category: getCategoryName(action.categoryId),
+    points: simplePoints
+  }];
+}
+
+function getCurrentTurtleGoalItems() {
+  const day = database.days[currentDayId];
+  if (!day) return [];
+
+  const seen = new Set();
+
+  return sortDayItems(resolveDayList(day.turtle))
+    .filter(item => typeof item === "string")
+    .flatMap(actionId => {
+      const action = getActionById(actionId);
+      return action ? getGoalVariants(action) : [];
+    })
+    .filter(item => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+}
+
+function renderTurtleGoalCalculator() {
+  const input = document.getElementById("turtleGoalPoints");
+  const container = document.getElementById("turtleGoalResults");
+  if (!input || !container) return;
+
+  const target = parseTargetPoints(input.value);
+  if (target <= 0) {
+    container.innerHTML = `<p class="turtle-goal-empty">Введите нужную сумму очков.</p>`;
+    return;
+  }
+
+  const items = getCurrentTurtleGoalItems();
+  if (!items.length) {
+    container.innerHTML = `<p class="turtle-goal-empty">Для выбранного дня нет действий Черепашки с очками.</p>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="turtle-goal-summary">
+      <span>Цель:</span>
+      <strong>${formatNumber(target)} очков</strong>
+    </div>
+    <div class="turtle-goal-list">
+      ${items.map(item => `
+        <div class="turtle-goal-row">
+          <div class="turtle-goal-name">
+            <strong>${item.name}</strong>
+            <span>${item.category}</span>
+          </div>
+          <div class="turtle-goal-points">
+            <span>за 1 раз</span>
+            <strong>${formatNumber(item.points)}</strong>
+          </div>
+          <div class="turtle-goal-count">
+            <span>нужно раз</span>
+            <strong>${formatNumber(Math.ceil(target / item.points))}</strong>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function bindTurtleGoalInput() {
+  const input = document.getElementById("turtleGoalPoints");
+  if (!input || input.dataset.turtleGoalBound === "true") return;
+
+  input.dataset.turtleGoalBound = "true";
+  input.addEventListener("input", renderTurtleGoalCalculator);
+  input.addEventListener("change", renderTurtleGoalCalculator);
+}
+
 function findTransferDay(eventType, preferredDay) {
   if (preferredDay && database.days[preferredDay] && resolveDayList(database.days[preferredDay][eventType]).includes("troop_upgrade")) {
     return preferredDay;
@@ -278,6 +402,8 @@ function renderDay(dayId, { skipSave = false } = {}) {
   restoreDayState(dayId);
   updateTotals();
   updateWeeklyTotals();
+  bindTurtleGoalInput();
+  renderTurtleGoalCalculator();
 }
 
 function fillDaySelector() {
@@ -336,6 +462,7 @@ export function init() {
   fillDaySelector();
   initAllianceDuelBranchToggle();
   selectCurrentUtcDay();
+  bindTurtleGoalInput();
 
   transferTimerId = window.setTimeout(applyPendingTroopTransferAfterRestore, 300);
 
