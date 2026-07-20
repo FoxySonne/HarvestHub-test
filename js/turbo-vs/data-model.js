@@ -1,6 +1,6 @@
 export const TROOP_LEVEL_DEFAULTS = [8, 9, 10];
 
-export function createTurboVsDataModel(database) {
+export function createTurboVsDataModel(database, { isAllianceDuelBranchEnabled = () => false } = {}) {
   function getActionById(actionId) {
     return database.action.find(action => action.id === actionId);
   }
@@ -47,9 +47,17 @@ export function createTurboVsDataModel(database) {
     const points = action?.points?.[eventType];
 
     if (points == null) return 0;
-    if (typeof points === "object") return Number(points[level]) || 0;
 
-    return Number(points) || 0;
+    const basePoints = typeof points === "object"
+      ? Number(points[level]) || 0
+      : Number(points) || 0;
+
+    if (eventType !== "vs" || !isAllianceDuelBranchEnabled()) return basePoints;
+
+    const bonusPercent = Number(action?.vsBranchBonusPercent) || 0;
+    if (bonusPercent <= 0) return basePoints;
+
+    return Math.round(basePoints * (1 + bonusPercent / 100));
   }
 
   function getTroopRowsFromState(state = {}) {
