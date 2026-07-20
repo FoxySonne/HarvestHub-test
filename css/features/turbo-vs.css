@@ -50,6 +50,113 @@
   text-align: center;
 }
 
+.turtle-goal-block {
+  display: grid;
+  gap: 12px;
+}
+
+.turtle-goal-field {
+  display: grid;
+  gap: 8px;
+}
+
+.turtle-goal-field span {
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.turtle-goal-field input {
+  width: 100%;
+  height: 42px;
+}
+
+.turtle-goal-results {
+  display: grid;
+  gap: 10px;
+}
+
+.turtle-goal-empty {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.turtle-goal-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.03);
+}
+
+.turtle-goal-summary span,
+.turtle-goal-row span {
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.turtle-goal-summary strong,
+.turtle-goal-row strong {
+  color: var(--text);
+}
+
+.turtle-goal-summary strong {
+  text-align: right;
+}
+
+.turtle-goal-list {
+  display: grid;
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.turtle-goal-row {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: rgba(255,255,255,.02);
+}
+
+.turtle-goal-name,
+.turtle-goal-points,
+.turtle-goal-count {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.turtle-goal-name strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.turtle-goal-points,
+.turtle-goal-count {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.turtle-goal-points strong {
+  font-size: 13px;
+}
+
+.turtle-goal-count strong {
+  color: var(--accent);
+  font-size: 16px;
+}
+
 @media (max-width: 899px) {
   .turbo-mobile-switch {
     display: grid !important;
@@ -107,6 +214,12 @@
 
   .action-row-multi-level > label {
     padding-top: 0;
+  }
+
+  .turtle-goal-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 }
 
