@@ -1,6 +1,7 @@
 const TURBO_WEEK_STATE_PREFIX = "harvesthub_turbo_vs_week_state:";
 const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
 const TROOP_TRANSFER_APPLIED_KEY = "harvesthub_troop_training_transfer_applied_turbo_vs";
+const TURBO_SETTINGS_KEY = "_settings";
 
 function getWeekScope() {
   const profileId = window.getActiveDataProfileId?.() || "";
@@ -26,6 +27,20 @@ export function readWeekState() {
 
 export function writeWeekState(state) {
   localStorage.setItem(getWeekStateKey(), JSON.stringify(state));
+  window.dispatchEvent(new CustomEvent("harvesthub:turbo-vs-state-change"));
+}
+
+export function readAllianceDuelBranchEnabled() {
+  return readWeekState()?.[TURBO_SETTINGS_KEY]?.allianceDuelBranchEnabled === true;
+}
+
+export function writeAllianceDuelBranchEnabled(enabled) {
+  const state = readWeekState();
+  state[TURBO_SETTINGS_KEY] = {
+    ...(state[TURBO_SETTINGS_KEY] || {}),
+    allianceDuelBranchEnabled: Boolean(enabled)
+  };
+  writeWeekState(state);
 }
 
 export function readTroopTransferPreset() {
