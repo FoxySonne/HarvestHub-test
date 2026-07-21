@@ -16,12 +16,16 @@ export function createTurboVsView({ getPoints, getTroopRowsFromState, onControlC
     return row.dataset.eventType || row.querySelector("[data-event-type]")?.dataset.eventType || "";
   }
 
+  function getLineState(line) {
+    return {
+      level: line.querySelector("select")?.value || line.dataset.level || "",
+      value: line.querySelector("input")?.value || "0"
+    };
+  }
+
   function getRowState(row) {
     if (row.classList.contains("action-row-multi-level")) {
-      const rows = Array.from(row.querySelectorAll(".action-multi-line")).map(line => ({
-        level: line.querySelector("select")?.value || "",
-        value: line.querySelector("input")?.value || "0"
-      }));
+      const rows = Array.from(row.querySelectorAll(".action-multi-line")).map(getLineState);
       const filledRows = rows.filter(item => Number(item.value) > 0);
       const lastFilled = filledRows[filledRows.length - 1] || rows[rows.length - 1] || { level: "", value: "0" };
 
@@ -48,10 +52,11 @@ export function createTurboVsView({ getPoints, getTroopRowsFromState, onControlC
 
       lines.forEach((line, index) => {
         const levelSelect = line.querySelector("select");
+        const lineLevel = String(levelSelect?.value || line.dataset.level || "");
         const quantityInput = line.querySelector("input");
-        const saved = savedRows[index];
+        const saved = savedRows.find(item => String(item.level) === lineLevel) || savedRows[index];
 
-        if (levelSelect) levelSelect.value = String(saved?.level ?? TROOP_LEVEL_DEFAULTS[index] ?? 10);
+        if (levelSelect && saved?.level != null) levelSelect.value = String(saved.level);
         if (quantityInput) quantityInput.value = String(saved?.value ?? "0");
       });
       return;
@@ -68,6 +73,16 @@ export function createTurboVsView({ getPoints, getTroopRowsFromState, onControlC
     row.className = "action-row action-row-text";
     row.textContent = text;
     return row;
+  }
+
+  function createNeedOutput(actionId, eventType) {
+    const output = document.createElement("div");
+    output.className = "action-need-output";
+    output.dataset.actionId = actionId;
+    output.dataset.eventType = eventType;
+    output.dataset.noPersist = "true";
+    output.innerHTML = `<span>нужно</span><strong>0</strong>`;
+    return output;
   }
 
   function createQuantitySelect(action, eventType) {
@@ -119,26 +134,53 @@ export function createTurboVsView({ getPoints, getTroopRowsFromState, onControlC
     return select;
   }
 
+  function createTroopLevelSelect(action, eventType, defaultLevel) {
+    const select = document.createElement("select");
+    select.className = "action-level-select";
+    select.dataset.levelActionId = action.id;
+    select.dataset.eventType = eventType;
+    select.dataset.noPersist = "true";
+
+    action.options
+      .filter(option => TROOP_LEVEL_DEFAULTS.includes(Number(option.value)))
+      .forEach(optionData => {
+        const option = document.createElement("option");
+        option.value = optionData.value;
+        option.textContent = optionData.label;
+        select.appendChild(option);
+      });
+
+    select.value = String(defaultLevel);
+    return select;
+  }
+
+  function createMultiLine(action, eventType, defaultLevel) {
+    const line = document.createElement("div");
+    line.className = "action-multi-line";
+
+    const levelSelect = createTroopLevelSelect(action, eventType, defaultLevel);
+    const quantityInput = createNumberInput(action, eventType);
+    const needOutput = createNeedOutput(action.id, eventType);
+    quantityInput.className = "action-quantity-input";
+    quantityInput.dataset.hasLevel = "true";
+
+    line.append(levelSelect, quantityInput, needOutput);
+    return line;
+  }
+
   function createTroopMultiControls(action, eventType) {
     const controls = document.createElement("div");
     controls.className = "action-controls action-multi-controls";
 
     TROOP_LEVEL_DEFAULTS.forEach(defaultLevel => {
-      const line = document.createElement("div");
-      line.className = "action-multi-line";
-      const levelSelect = createLevelSelect(action, eventType, defaultLevel);
-      const quantityInput = createNumberInput(action, eventType);
-      quantityInput.className = "action-quantity-input";
-      quantityInput.dataset.hasLevel = "true";
-      line.append(levelSelect, quantityInput);
-      controls.appendChild(line);
+      controls.appendChild(createMultiLine(action, eventType, defaultLevel));
     });
     return controls;
   }
 
   function createActionRow(action, eventType) {
     const row = document.createElement("div");
-    row.className = "action-row";
+    row.className = "action-row action-row-with-need";
     row.dataset.actionId = action.id;
     row.dataset.eventType = eventType;
     const label = document.createElement("label");
@@ -157,11 +199,13 @@ export function createTurboVsView({ getPoints, getTroopRowsFromState, onControlC
         const quantityInput = createNumberInput(action, eventType);
         quantityInput.className = "action-quantity-input";
         quantityInput.dataset.hasLevel = "true";
-        controls.append(levelSelect, quantityInput);
+        controls.append(levelSelect, quantityInput, createNeedOutput(action.id, eventType));
       } else {
-        controls.appendChild(action.quantityOptions
+        const spacer = document.createElement("div");
+        spacer.className = "action-level-spacer";
+        controls.append(spacer, action.quantityOptions
           ? createQuantitySelect(action, eventType)
-          : createNumberInput(action, eventType));
+          : createNumberInput(action, eventType), createNeedOutput(action.id, eventType));
       }
     }
 
