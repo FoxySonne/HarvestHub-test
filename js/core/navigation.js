@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260718-56";
+  const SITE_ASSET_VERSION = "20260721-light-theme-1";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -144,6 +144,7 @@
     }
 
     container.innerHTML = await response.text();
+    window.harvestHubTheme?.syncControls?.();
     const fileName = filePath.split("/").pop().replace(".html", "");
     const modulePath = pageModulePaths[fileName];
 

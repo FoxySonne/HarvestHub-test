@@ -395,7 +395,7 @@ SEASON RESOURCES — compact calculator layout
 }
 
 .season-tracking-actions p.is-error {
-  color: #ff7b7b;
+  color: var(--danger-text);
 }
 
 .season-deadline-card {

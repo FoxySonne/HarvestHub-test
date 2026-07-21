@@ -60,7 +60,7 @@
 .collapsible-card-toggle:hover {
   color: var(--accent) !important;
   border-color: var(--button) !important;
-  background: rgba(112, 220, 86, .1) !important;
+  background: var(--accent-soft) !important;
 }
 
 .collapsible-card.is-collapsed > :not(.collapsible-card-header) {

@@ -24,6 +24,7 @@ DESKTOP: 900px+
     left: 0;
     height: calc(100vh - 40px);
     border-radius: var(--radius-large);
+    border: 1px solid var(--border);
   }
 
   .main {

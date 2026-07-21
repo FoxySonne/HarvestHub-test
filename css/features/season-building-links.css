@@ -33,10 +33,10 @@
 
 .season-row-auto-adjusted {
   border-color: var(--button) !important;
-  background: rgba(112, 220, 86, .08) !important;
+  background: var(--accent-selection) !important;
 }
 
 .season-level-auto-adjusted {
   border-color: var(--button) !important;
-  box-shadow: 0 0 0 3px rgba(112, 220, 86, .16) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring) !important;
 }

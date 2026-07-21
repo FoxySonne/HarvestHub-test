@@ -30,7 +30,7 @@ label{
 
 font-weight:bold;
 
-color:white;
+color:var(--text-soft);
 
 }
 
@@ -54,7 +54,7 @@ height:48px;
 
 padding:0 16px;
 
-background:var(--panel);
+background:var(--field);
 
 color:var(--text);
 
@@ -74,7 +74,7 @@ box-sizing:border-box;
 
 input[type=date]{
 
-color-scheme:dark;
+color-scheme:var(--input-color-scheme);
 
 }
 

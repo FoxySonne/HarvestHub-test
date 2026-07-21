@@ -100,5 +100,5 @@ margin-top:20px;
 }
 
 .calculator-data-actions [data-calculator-reset-status].is-error {
-  color: #ff7b7b;
+  color: var(--danger-text);
 }

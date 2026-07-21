@@ -26,7 +26,10 @@ TOPBAR
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  background: var(--card);
+  background: var(--topbar);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -48,6 +51,7 @@ LEFT SIDEBAR
 
 .left {
   background: var(--panel);
+  border-right: 1px solid var(--border);
   padding: 24px;
   overflow-y: auto;
   transition: var(--transition);
@@ -61,7 +65,7 @@ OVERLAY
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .55);
+  background: var(--overlay);
   opacity: 0;
   pointer-events: none;
   transition: var(--transition);
@@ -92,12 +96,16 @@ MENU
 }
 
 .menu-item:hover {
-  color: white;
+  color: var(--accent);
 }
 
 .menu-item.active {
   color: var(--accent);
   font-weight: bold;
+}
+
+.mobile-theme-control {
+  display: none;
 }
 
 /* ==========================================================

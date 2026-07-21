@@ -85,16 +85,20 @@
 
     readLocalState() {
       return {
-        schemaVersion: 1,
+        schemaVersion: 2,
         advancedMode: typeof window.getAdvancedMode === "function"
           ? window.getAdvancedMode()
-          : localStorage.getItem(`${ADVANCED_MODE_LOCAL_KEY}:${getProfile()?.id || ""}`) === "1"
+          : localStorage.getItem(`${ADVANCED_MODE_LOCAL_KEY}:${getProfile()?.id || ""}`) === "1",
+        theme: window.harvestHubTheme?.getTheme?.() || "dark"
       };
     },
 
     applyRemoteState(data) {
       if (typeof data?.advancedMode === "boolean" && typeof window.setAdvancedMode === "function") {
         window.setAdvancedMode(data.advancedMode);
+      }
+      if ((data?.theme === "dark" || data?.theme === "light") && window.harvestHubTheme) {
+        window.harvestHubTheme.setTheme(data.theme, { notify: false });
       }
     }
   });
@@ -200,6 +204,7 @@
   });
   window.addEventListener("harvesthub:calculator-transfer-change", () => formsEngine.scheduleUpload());
   window.addEventListener("harvesthub:advanced-mode-change", () => preferencesEngine.scheduleUpload());
+  window.addEventListener("harvesthub:theme-change", () => preferencesEngine.scheduleUpload());
 
   turboEngine.start();
   preferencesEngine.start();

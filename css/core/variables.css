@@ -3,7 +3,8 @@
    Отвечает за: все переменные проекта (цвета, размеры, отступы, радиусы, анимации). Если захотите сменить тему сайта, почти все изменится только здесь.
 ========================================================== */
 
-:root{
+:root,
+html[data-theme="dark"]{
 
 /* COLORS */
 
@@ -15,6 +16,10 @@
 
 --card-hover:#212837;
 
+--field:#151922;
+
+--topbar:#1a1f2a;
+
 --text:#e6e6e6;
 
 --text-soft:#cfcfcf;
@@ -24,6 +29,8 @@
 --accent:#8BEA63;
 
 --accent-hover:#9EF277;
+
+--accent-soft:rgba(139,234,99,.12);
 
 --button:#3a7a3a;
 
@@ -40,6 +47,40 @@
 --border:#2b3140;
 
 --shadow:0 8px 24px rgba(0,0,0,.35);
+
+--shadow-heavy:0 20px 60px rgba(0,0,0,.45);
+
+--shadow-side:-18px 0 44px rgba(0,0,0,.38);
+
+--surface-soft:rgba(255,255,255,.02);
+
+--surface-soft-hover:rgba(255,255,255,.035);
+
+--overlay:rgba(0,0,0,.55);
+
+--modal-overlay:rgba(4,10,16,.8);
+
+--focus-ring:rgba(139,234,99,.12);
+
+--accent-border:rgba(139,234,99,.45);
+
+--accent-selection:rgba(139,234,99,.07);
+
+--danger-text:#ff8c8c;
+
+--tooltip-bg:#f7f7f7;
+
+--tooltip-text:#222;
+
+--tooltip-border:#8f8f8f;
+
+--tooltip-shadow:0 2px 8px rgba(0,0,0,.25);
+
+--input-color-scheme:dark;
+
+--page-header-background:radial-gradient(circle at 72% 42%,rgba(139,234,99,.34) 0%,rgba(139,234,99,.22) 18%,rgba(139,234,99,.08) 38%,rgba(139,234,99,0) 62%),var(--card);
+
+--page-header-mobile-background:radial-gradient(circle at 86% 36%,rgba(139,234,99,.26) 0%,rgba(139,234,99,.13) 28%,rgba(139,234,99,0) 58%),var(--card);
 
 
 /* LAYOUT */
@@ -90,5 +131,83 @@
 --control-height:48px;
 
 --transition:.2s ease;
+
+}
+
+html[data-theme="light"]{
+
+--bg:#e8f2f2;
+
+--panel:#cfe2df;
+
+--card:#f8ffff;
+
+--card-hover:#eaf7f5;
+
+--field:#dcecea;
+
+--topbar:#f8ffff;
+
+--text:#132627;
+
+--text-soft:#345052;
+
+--text-muted:#687f80;
+
+--accent:#17654f;
+
+--accent-hover:#17654f;
+
+--accent-soft:#c9ebe0;
+
+--button:#3a7a3a;
+
+--button-hover:#478f47;
+
+--danger:#d64f4f;
+
+--warning:#d9a43d;
+
+--info:#448de4;
+
+--success:#3d8a52;
+
+--border:#b8d3d0;
+
+--shadow:0 8px 24px rgba(20,80,72,.12);
+
+--shadow-heavy:0 20px 60px rgba(20,80,72,.18);
+
+--shadow-side:-18px 0 44px rgba(20,80,72,.18);
+
+--surface-soft:rgba(23,101,79,.035);
+
+--surface-soft-hover:rgba(23,101,79,.065);
+
+--overlay:rgba(19,38,39,.38);
+
+--modal-overlay:rgba(19,38,39,.5);
+
+--focus-ring:rgba(23,101,79,.14);
+
+--accent-border:rgba(23,101,79,.38);
+
+--accent-selection:rgba(201,235,224,.62);
+
+--danger-text:#b73535;
+
+--tooltip-bg:#f8ffff;
+
+--tooltip-text:#132627;
+
+--tooltip-border:#b8d3d0;
+
+--tooltip-shadow:0 2px 8px rgba(20,80,72,.16);
+
+--input-color-scheme:light;
+
+--page-header-background:radial-gradient(circle at 72% 42%,rgba(35,148,112,.31) 0%,rgba(35,148,112,.192) 18%,rgba(35,148,112,.078) 38%,rgba(35,148,112,0) 64%),var(--card);
+
+--page-header-mobile-background:radial-gradient(circle at 88% 35%,rgba(35,148,112,.31) 0%,rgba(35,148,112,.192) 28%,rgba(35,148,112,0) 62%),var(--card);
 
 }

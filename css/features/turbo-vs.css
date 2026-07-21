@@ -12,7 +12,7 @@
 .turbo-summary-section {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: rgba(255,255,255,.02);
+  background: var(--surface-soft);
   overflow: hidden;
 }
 
@@ -90,7 +90,7 @@
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
-  background: rgba(255,255,255,.02);
+  background: var(--surface-soft);
 }
 
 .turbo-goal-stats span {
@@ -180,7 +180,7 @@
   padding: 0 6px;
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
-  background: var(--input-bg, rgba(0,0,0,.16));
+  background: var(--field);
   color: var(--text);
   font-size: 12px;
   line-height: 1.15;
@@ -237,9 +237,9 @@
   align-items: center;
   justify-items: center;
   padding: 5px 6px;
-  border: 1px solid rgba(112,220,86,.35);
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius-small);
-  background: rgba(112,220,86,.14);
+  background: var(--accent-soft);
   color: var(--accent);
 }
 

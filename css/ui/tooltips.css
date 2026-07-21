@@ -15,10 +15,10 @@
   width: max-content;
   max-width: min(320px, 80vw);
   padding: 7px 10px;
-  background: #f7f7f7;
-  border: 1px solid #8f8f8f;
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
   border-radius: 3px;
-  color: #222;
+  color: var(--tooltip-text);
   font-size: 13px;
   font-weight: 400;
   line-height: 1.35;
@@ -28,7 +28,7 @@
   transition: var(--transition);
   pointer-events: none;
   z-index: 9999;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+  box-shadow: var(--tooltip-shadow);
   white-space: normal;
 }
 
