@@ -1,7 +1,7 @@
 export async function fetchReservoirWeeks(client, allianceId) {
   return client
     .from("alliance_reservoir_weeks")
-    .select("*")
+    .select("*, alliance_reservoir_participants(*)")
     .eq("alliance_id", allianceId)
     .order("event_date", { ascending: false });
 }
