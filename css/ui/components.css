@@ -32,11 +32,11 @@
 .theme-switch input:focus-visible+.theme-switch-track{outline:3px solid var(--focus-ring);outline-offset:2px}
 .theme-switch-icon{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--text-muted);font-size:15px;line-height:1;transition:var(--transition)}
 .theme-switch-icons .theme-switch-track{justify-content:space-between;width:68px;height:34px;padding:4px}
-.theme-switch-icons .theme-switch-thumb{left:4px;width:24px;height:24px}
-.theme-switch-icons input:checked+.theme-switch-track .theme-switch-thumb{transform:translateX(34px)}
-.theme-switch-icons input:not(:checked)+.theme-switch-track .theme-switch-sun,
-.theme-switch-icons input:checked+.theme-switch-track .theme-switch-moon{color:var(--button);z-index:3}
-.theme-switch-icons input:checked+.theme-switch-track .theme-switch-sun{color:rgba(255,255,255,.72)}
+.theme-switch-icons .theme-switch-thumb{left:4px;width:24px;height:24px;transform:translateX(34px)}
+.theme-switch-icons input:checked+.theme-switch-track .theme-switch-thumb{transform:translateX(0)}
+.theme-switch-icons input:not(:checked)+.theme-switch-track .theme-switch-moon,
+.theme-switch-icons input:checked+.theme-switch-track .theme-switch-sun{color:var(--button);z-index:3}
+.theme-switch-icons input:checked+.theme-switch-track .theme-switch-moon{color:rgba(255,255,255,.72)}
 .mobile-theme-control-title{color:var(--text-soft);font-size:14px;font-weight:600}
 
 @media (max-width:899px){
