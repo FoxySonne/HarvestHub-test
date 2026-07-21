@@ -1,1 +1,55 @@
-<section class="page-section alliance-subpage"><button type="button" class="alliance-back-button secondary-button" data-page-path="alliance/members.html">← В штаб</button><section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section><div id="allianceMessage" class="alliance-message" hidden></div><section class="card"><div class="card-header"><div><h3>Резервуар: активность</h3><p>Раздел подготовлен для следующего этапа разработки.</p></div></div></section></section>
+<section class="page-section alliance-subpage reservoir-activity-page">
+  <button type="button" class="alliance-back-button secondary-button" data-page-path="alliance/members.html">← В штаб</button>
+  <section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section>
+  <div id="allianceMessage" class="alliance-message" hidden></div>
+
+  <section class="card reservoir-week-card">
+    <div class="card-header"><div><h3>Текущая неделя</h3></div></div>
+    <div class="reservoir-week-summary">
+      <div><span>Дата события</span><strong id="reservoirEventDate">—</strong></div>
+      <div><span>Основа</span><strong id="reservoirMainCount">0/30</strong></div>
+      <div><span>Резерв</span><strong id="reservoirReserveCount">0/10</strong></div>
+      <div><span>Всего</span><strong id="reservoirTotalCount">0/40</strong></div>
+    </div>
+    <div class="reservoir-week-controls">
+      <label><span>Время события (МСК)</span><select id="reservoirEventHour" data-no-persist="true"><option value="6">06</option><option value="14">14</option><option value="22">22</option></select></label>
+      <button id="reservoirSaveButton" type="button">Сохранить состав</button>
+      <button id="reservoirLayoutButton" type="button" class="secondary-button">Перейти к расстановке</button>
+      <button id="reservoirCloseButton" type="button" class="danger-button">Закрыть неделю</button>
+    </div>
+  </section>
+
+  <section class="card reservoir-participants-card">
+    <div class="card-header"><div><h3>Участники недели</h3></div></div>
+    <div class="reservoir-filters">
+      <input id="reservoirSearch" type="search" placeholder="Поиск по нику" data-no-persist="true">
+      <select id="reservoirTimeFilter" data-no-persist="true"><option value="">Все по времени</option><option value="match">Подходит</option><option value="mismatch">Не подходит</option><option value="empty">Не указано</option></select>
+      <select id="reservoirIntentFilter" data-no-persist="true"><option value="">Все статусы</option><option value="willing">Желающий</option><option value="refusing">Отказник</option><option value="empty">Пусто</option></select>
+      <select id="reservoirAssignmentFilter" data-no-persist="true"><option value="">Весь состав</option><option value="main">Основа</option><option value="reserve">Резерв</option><option value="none">Не включён</option></select>
+      <select id="reservoirAttendanceFilter" data-no-persist="true"><option value="">Все посещения</option><option value="present">Был</option><option value="ready">Был готов зайти</option><option value="absent_excused">Уважительная причина</option><option value="absent">Не был</option><option value="empty">Не указано</option></select>
+    </div>
+    <button id="reservoirExpandTable" type="button" class="secondary-button alliance-table-open-button">Открыть таблицу целиком</button>
+    <div id="reservoirTableContainer" class="alliance-table-wrap reservoir-table-wrap" data-horizontal-scroll>
+      <button id="reservoirCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button>
+      <table class="alliance-table reservoir-table">
+        <thead><tr><th>Участник</th><th>Ранг</th><th>Локальное время</th><th>Время</th><th>Статус</th><th>Состав</th><th>Посещение</th><th>Комментарий</th></tr></thead>
+        <tbody id="reservoirTableBody"></tbody>
+      </table>
+    </div>
+    <div id="reservoirEmptyState" class="alliance-empty-state" hidden>Участники не найдены.</div>
+  </section>
+
+  <section class="card reservoir-history-card">
+    <div class="card-header"><div><h3>История недель</h3></div></div>
+    <div class="reservoir-history-controls">
+      <button id="reservoirShowAllHistory" type="button" class="secondary-button">Всё время</button>
+      <label><span>С</span><input id="reservoirHistoryFrom" type="date" data-no-persist="true"></label>
+      <label><span>По</span><input id="reservoirHistoryTo" type="date" data-no-persist="true"></label>
+      <button id="reservoirApplyHistory" type="button" class="secondary-button">Показать период</button>
+    </div>
+    <div class="alliance-table-wrap" data-horizontal-scroll>
+      <table class="alliance-table reservoir-history-table"><thead><tr><th>Неделя</th><th>Время</th><th>Основа</th><th>Резерв</th><th>Сумма баллов</th><th></th></tr></thead><tbody id="reservoirHistoryBody"></tbody></table>
+    </div>
+    <div id="reservoirHistoryEmpty" class="alliance-empty-state" hidden>Прошлых недель пока нет.</div>
+  </section>
+</section>
