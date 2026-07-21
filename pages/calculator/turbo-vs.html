@@ -27,6 +27,57 @@
       <button type="button" data-turbo-mobile-tab="vs" role="tab" aria-selected="false">VS</button>
     </div>
 
+    <section class="card turbo-card results desktop-fixed-right turbo-summary-card">
+      <div class="card-header">
+        <h3>Цели и итоги</h3>
+      </div>
+
+      <details class="turbo-summary-section" open>
+        <summary class="turbo-summary-toggle">Цель на день</summary>
+
+        <div class="turbo-summary-body">
+          <div class="turbo-goal-input-grid">
+            <label class="turbo-goal-field">
+              <span>Цель Черепашки</span>
+              <input id="turtleGoalPoints" type="text" inputmode="decimal" value="5M" placeholder="5M или 5000000" autocomplete="off" data-no-persist="true">
+            </label>
+
+            <label class="turbo-goal-field">
+              <span>Цель VS</span>
+              <input id="vsGoalPoints" type="text" inputmode="decimal" value="5M" placeholder="5M или 5000000" autocomplete="off" data-no-persist="true">
+            </label>
+          </div>
+
+          <div class="turbo-goal-stats">
+            <div>
+              <span>Осталось Черепашки</span>
+              <strong id="turtleGoalMissing">0</strong>
+            </div>
+            <div>
+              <span>Осталось VS</span>
+              <strong id="vsGoalMissing">0</strong>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="turbo-summary-section" open>
+        <summary class="turbo-summary-toggle">Итоги</summary>
+
+        <div class="turbo-summary-body">
+          <div class="result-block">
+            <h4>Всего Турбочерепашка:</h4>
+            <div id="turtleTotal">0</div>
+          </div>
+
+          <div class="result-block">
+            <h4>Всего VS Дуэль союза:</h4>
+            <div id="vsTotal">0</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
     <section class="card turbo-card" data-turbo-panel="turtle">
       <div class="card-header">
         <h3>Черепашка</h3>
@@ -41,35 +92,6 @@
       </div>
 
       <div id="vsList" class="action-list"></div>
-    </section>
-
-    <section class="card turbo-card results desktop-fixed-right">
-      <div class="card-header">
-        <h3>Итоги</h3>
-      </div>
-
-      <div class="result-block">
-        <h4>Всего Турбочерепашка:</h4>
-        <div id="turtleTotal">0</div>
-      </div>
-
-      <div class="result-block">
-        <h4>Всего VS Дуэль союза:</h4>
-        <div id="vsTotal">0</div>
-      </div>
-
-      <div class="result-block turtle-goal-block">
-        <h4>Сколько нужно сделать</h4>
-
-        <label class="turtle-goal-field">
-          <span>Цель Черепашки за день</span>
-          <input id="turtleGoalPoints" type="text" inputmode="decimal" placeholder="15M или 15000000" autocomplete="off" data-no-persist="true">
-        </label>
-
-        <div id="turtleGoalResults" class="turtle-goal-results">
-          <p class="turtle-goal-empty">Введите нужную сумму очков.</p>
-        </div>
-      </div>
     </section>
 
   </div>
