@@ -1,6 +1,7 @@
 import { saveParticipant, deleteParticipant } from "../alliance/api.js?v=20260718-40";
 import { renderParticipantRows } from "../alliance/view.js?v=20260718-39";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
+import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const byId = id => document.getElementById(id);
 const state = { client: null, context: null };
@@ -122,8 +123,7 @@ async function tableClick(event) {
 }
 
 function toggleFullscreen(open) {
-  byId("rosterTableContainer").classList.toggle("is-alliance-table-fullscreen", open);
-  document.body.classList.toggle("alliance-table-fullscreen-open", open);
+  setAllianceTableFullscreen(byId("rosterTableContainer"), open);
 }
 
 export async function init() {

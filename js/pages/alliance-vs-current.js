@@ -5,6 +5,7 @@ import {
   canEditAlliance,
   getActiveAllianceId
 } from "../alliance/page-context.js?v=20260718-1";
+import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const byId = id => document.getElementById(id);
@@ -286,8 +287,7 @@ async function saveTarget(event) {
 }
 
 function toggleFullscreen(open) {
-  byId("vsCurrentTableContainer").classList.toggle("is-alliance-table-fullscreen", open);
-  document.body.classList.toggle("alliance-table-fullscreen-open", open);
+  setAllianceTableFullscreen(byId("vsCurrentTableContainer"), open);
 }
 
 export async function init() {

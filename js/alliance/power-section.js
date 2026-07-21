@@ -1,5 +1,6 @@
 import { fetchAllianceSquadPower, saveAllianceSquadPower, setAlliancePowerSeasonStart } from "./power-api.js?v=20260718-50";
 import { ACTIVE_ALLIANCE_STORAGE_KEY } from "./config.js";
+import { setAllianceTableFullscreen } from "./fullscreen-table.js?v=20260721-1";
 
 const state = { client: null, data: null, expanded: false };
 const byId = id => document.getElementById(id);
@@ -235,8 +236,10 @@ function toggleExpandedTable(forceOpen) {
   const button = byId("powerExpandTable");
   if (!card || !button) return;
   state.expanded = typeof forceOpen === "boolean" ? forceOpen : !state.expanded;
-  card.classList.toggle("is-expanded", state.expanded);
-  document.body.classList.toggle("power-table-open", state.expanded);
+  setAllianceTableFullscreen(card, state.expanded, {
+    elementClass: "is-expanded",
+    bodyClass: "power-table-open"
+  });
   button.textContent = state.expanded ? "Закрыть полный экран" : "Открыть таблицу целиком";
 }
 

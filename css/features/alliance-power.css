@@ -106,15 +106,20 @@
   z-index: 1200;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   margin: 0;
+  padding-top: calc(64px + env(safe-area-inset-top));
   background: var(--card);
   box-shadow: var(--shadow-heavy);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .power-statistics-card.is-expanded .power-table-wrap {
-  flex: 1;
-  overflow: auto;
+  flex: 0 0 auto;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .power-table-open {

@@ -123,7 +123,7 @@
 
   function hasBlockingDialog() {
     return Boolean(document.querySelector(
-      ".account-modal.is-open, .account-delete-modal:not([hidden]), .is-alliance-table-fullscreen"
+      ".account-modal.is-open, .account-delete-modal:not([hidden]), .alliance-fullscreen-open"
     ));
   }
 
