@@ -8,12 +8,18 @@ import {
   writeAllianceDuelBranchEnabled,
   writeWeekState
 } from "../turbo-vs/storage.js?v=20260720-1";
-import { createTurboVsView } from "../turbo-vs/view.js";
+import { createTurboVsView } from "../turbo-vs/view.js?v=20260718-turbo-goals-test-1";
 
 const moduleVersion = new URL(import.meta.url).searchParams.get("v") || "dev";
 const { database } = await import(`../../data/database.js?v=${encodeURIComponent(moduleVersion)}`);
 
 let allianceDuelBranchEnabled = false;
+let isSyncingControls = false;
+let currentDayId = "";
+let selectedManually = false;
+let timerId = null;
+let transferTimerId = null;
+let currentTotals = { turtle: 0, vs: 0 };
 
 const {
   calculateSavedItemTotal,
@@ -25,12 +31,6 @@ const {
 } = createTurboVsDataModel(database, {
   isAllianceDuelBranchEnabled: () => allianceDuelBranchEnabled && window.getAdvancedMode?.() === true
 });
-
-let isSyncingControls = false;
-let currentDayId = "";
-let selectedManually = false;
-let timerId = null;
-let transferTimerId = null;
 
 const {
   calculateRowTotal,
@@ -71,10 +71,6 @@ function parseTargetPoints(value) {
 
   const result = base * multiplier;
   return Number.isFinite(result) && result > 0 ? result : 0;
-}
-
-function getCategoryName(categoryId) {
-  return database.category.find(category => category.id === categoryId)?.name || "Прочее";
 }
 
 function getCurrentUtcDayId() {
@@ -151,6 +147,37 @@ function syncActionControls(actionId, sourceControl) {
   isSyncingControls = false;
 }
 
+function getGoalTarget(eventType) {
+  const input = document.getElementById(eventType === "turtle" ? "turtleGoalPoints" : "vsGoalPoints");
+  return parseTargetPoints(input?.value);
+}
+
+function getGoalMissing(eventType) {
+  return Math.max(getGoalTarget(eventType) - (currentTotals[eventType] || 0), 0);
+}
+
+function updateNeedOutputs() {
+  ["turtle", "vs"].forEach(eventType => {
+    const missing = getGoalMissing(eventType);
+    const missingElement = document.getElementById(eventType === "turtle" ? "turtleGoalMissing" : "vsGoalMissing");
+    if (missingElement) missingElement.textContent = formatNumber(missing);
+  });
+
+  document.querySelectorAll(".action-need-output").forEach(output => {
+    const eventType = output.dataset.eventType;
+    const actionId = output.dataset.actionId;
+    const line = output.closest(".action-multi-line");
+    const row = output.closest(".action-row");
+    const level = line?.querySelector("select")?.value || row?.querySelector(".action-level-select")?.value || line?.dataset.level || null;
+    const points = getPoints(actionId, eventType, level);
+    const target = getGoalTarget(eventType);
+    const missing = getGoalMissing(eventType);
+    const value = target > 0 && missing > 0 && points > 0 ? Math.ceil(missing / points) : 0;
+    const strong = output.querySelector("strong");
+    if (strong) strong.textContent = formatNumber(value);
+  });
+}
+
 function updateTotals() {
   let turtleTotal = 0;
   let vsTotal = 0;
@@ -163,11 +190,14 @@ function updateTotals() {
     if (eventType === "vs") vsTotal += total;
   });
 
+  currentTotals = { turtle: turtleTotal, vs: vsTotal };
+
   const turtleTotalElement = document.getElementById("turtleTotal");
   const vsTotalElement = document.getElementById("vsTotal");
 
   if (turtleTotalElement) turtleTotalElement.textContent = formatNumber(turtleTotal);
   if (vsTotalElement) vsTotalElement.textContent = formatNumber(vsTotal);
+  updateNeedOutputs();
 }
 
 function updateWeeklyTotals() {
@@ -204,101 +234,17 @@ function updateWeeklyTotals() {
   }
 }
 
-function getGoalVariants(action) {
-  const points = action.points?.turtle;
-  if (points == null) return [];
+function bindGoalInputs() {
+  ["turtleGoalPoints", "vsGoalPoints"].forEach(id => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    if (!input.value) input.value = "5M";
+    if (input.dataset.goalBound === "true") return;
 
-  if (typeof points === "object") {
-    return (action.options || [])
-      .map(option => ({
-        id: `${action.id}:${option.value}`,
-        name: `${action.name} — ${option.label}`,
-        category: getCategoryName(action.categoryId),
-        points: Number(points[option.value]) || 0
-      }))
-      .filter(item => item.points > 0);
-  }
-
-  const simplePoints = Number(points) || 0;
-  if (simplePoints <= 0) return [];
-
-  return [{
-    id: action.id,
-    name: action.name,
-    category: getCategoryName(action.categoryId),
-    points: simplePoints
-  }];
-}
-
-function getCurrentTurtleGoalItems() {
-  const day = database.days[currentDayId];
-  if (!day) return [];
-
-  const seen = new Set();
-
-  return sortDayItems(resolveDayList(day.turtle))
-    .filter(item => typeof item === "string")
-    .flatMap(actionId => {
-      const action = getActionById(actionId);
-      return action ? getGoalVariants(action) : [];
-    })
-    .filter(item => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
-    });
-}
-
-function renderTurtleGoalCalculator() {
-  const input = document.getElementById("turtleGoalPoints");
-  const container = document.getElementById("turtleGoalResults");
-  if (!input || !container) return;
-
-  const target = parseTargetPoints(input.value);
-  if (target <= 0) {
-    container.innerHTML = `<p class="turtle-goal-empty">Введите нужную сумму очков.</p>`;
-    return;
-  }
-
-  const items = getCurrentTurtleGoalItems();
-  if (!items.length) {
-    container.innerHTML = `<p class="turtle-goal-empty">Для выбранного дня нет действий Черепашки с очками.</p>`;
-    return;
-  }
-
-  container.innerHTML = `
-    <div class="turtle-goal-summary">
-      <span>Цель:</span>
-      <strong>${formatNumber(target)} очков</strong>
-    </div>
-    <div class="turtle-goal-list">
-      ${items.map(item => `
-        <div class="turtle-goal-row">
-          <div class="turtle-goal-name">
-            <strong>${item.name}</strong>
-            <span>${item.category}</span>
-          </div>
-          <div class="turtle-goal-points">
-            <span>за 1 раз</span>
-            <strong>${formatNumber(item.points)}</strong>
-          </div>
-          <div class="turtle-goal-count">
-            <span>нужно раз</span>
-            <strong>${formatNumber(Math.ceil(target / item.points))}</strong>
-          </div>
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-function bindTurtleGoalInput() {
-  const input = document.getElementById("turtleGoalPoints");
-  if (!input || input.dataset.turtleGoalBound === "true") return;
-
-  input.dataset.turtleGoalBound = "true";
-  input.addEventListener("input", renderTurtleGoalCalculator);
-  input.addEventListener("change", renderTurtleGoalCalculator);
+    input.dataset.goalBound = "true";
+    input.addEventListener("input", updateNeedOutputs);
+    input.addEventListener("change", updateNeedOutputs);
+  });
 }
 
 function findTransferDay(eventType, preferredDay) {
@@ -400,10 +346,9 @@ function renderDay(dayId, { skipSave = false } = {}) {
   renderEventList(vsList, day.vs, "vs");
 
   restoreDayState(dayId);
+  bindGoalInputs();
   updateTotals();
   updateWeeklyTotals();
-  bindTurtleGoalInput();
-  renderTurtleGoalCalculator();
 }
 
 function fillDaySelector() {
@@ -462,7 +407,7 @@ export function init() {
   fillDaySelector();
   initAllianceDuelBranchToggle();
   selectCurrentUtcDay();
-  bindTurtleGoalInput();
+  bindGoalInputs();
 
   transferTimerId = window.setTimeout(applyPendingTroopTransferAfterRestore, 300);
 
