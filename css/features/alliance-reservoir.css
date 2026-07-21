@@ -1,0 +1,88 @@
+.reservoir-week-summary,
+.reservoir-week-controls,
+.reservoir-filters,
+.reservoir-history-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+
+.reservoir-week-summary {
+  margin-bottom: 18px;
+}
+
+.reservoir-week-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 120px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.reservoir-week-summary span,
+.reservoir-history-controls label span {
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.reservoir-week-controls label,
+.reservoir-history-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reservoir-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) repeat(4, minmax(150px, 1fr));
+  margin-bottom: 14px;
+}
+
+.reservoir-table select,
+.reservoir-table input {
+  min-width: 130px;
+  width: 100%;
+}
+
+.reservoir-table input[data-field="comment"] {
+  min-width: 190px;
+}
+
+.reservoir-table td:nth-child(3),
+.reservoir-history-table td:not(:first-child) {
+  text-align: center;
+}
+
+.reservoir-history-controls {
+  margin-bottom: 14px;
+}
+
+.reservoir-history-table button {
+  width: auto;
+  min-width: 0;
+}
+
+@media (max-width: 899px) {
+  .reservoir-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .reservoir-week-controls,
+  .reservoir-history-controls {
+    align-items: stretch;
+  }
+
+  .reservoir-week-controls > *,
+  .reservoir-history-controls > * {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .reservoir-table {
+    min-width: 1180px;
+  }
+}
