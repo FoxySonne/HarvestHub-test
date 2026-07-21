@@ -38,7 +38,10 @@ export function saveParticipant(client, { id, allianceId, payload }) {
     participant_status: payload.member_status,
     participant_timezone: payload.timezone_offset,
     participant_birthday: payload.birthday || null,
-    participant_comment: payload.comment
+    participant_comment: payload.comment,
+    participant_is_twin: payload.is_twin,
+    participant_primary_id: payload.primary_participant_id || null,
+    participant_primary_nickname: payload.primary_nickname || null
   });
 }
 

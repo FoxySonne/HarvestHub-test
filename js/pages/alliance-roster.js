@@ -6,6 +6,15 @@ import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20
 const byId = id => document.getElementById(id);
 const state = { client: null, context: null };
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
   box.hidden = !text;
@@ -57,10 +66,32 @@ function render() {
   byId("participantEmptyState").hidden = participants.length > 0;
 }
 
+function fillPrimaryAccountOptions(selectedId = "") {
+  const participantId = byId("participantId").value;
+  const options = state.context.participants
+    .filter(item => item.id !== participantId)
+    .filter(item => item.member_status !== "left" || item.id === selectedId)
+    .sort((a, b) => a.nickname.localeCompare(b.nickname, "ru"));
+  byId("participantPrimaryAccount").innerHTML = `<option value="">Указать никнейм вручную</option>${options
+    .map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`)
+    .join("")}`;
+  byId("participantPrimaryAccount").value = options.some(item => item.id === selectedId) ? selectedId : "";
+}
+
+function syncTwinFields() {
+  const isTwin = byId("participantIsTwin").checked;
+  const hasLinkedPrimary = Boolean(byId("participantPrimaryAccount").value);
+  byId("participantTwinFields").hidden = !isTwin;
+  byId("participantPrimaryNicknameField").hidden = !isTwin || hasLinkedPrimary;
+  byId("participantPrimaryNickname").required = isTwin && !hasLinkedPrimary;
+}
+
 function resetForm() {
   byId("participantForm").reset();
   byId("participantId").value = "";
   byId("participantStatus").value = "main";
+  fillPrimaryAccountOptions();
+  syncTwinFields();
   byId("participantEditorTitle").textContent = "Добавить участника";
   byId("participantCancelButton").hidden = true;
 }
@@ -74,6 +105,10 @@ function fillForm(participant) {
   byId("participantBirthday").value = formatStoredBirthday(participant.birthday);
   byId("participantComment").value = participant.comment || "";
   byId("participantStatus").value = participant.member_status || "main";
+  byId("participantIsTwin").checked = Boolean(participant.is_twin);
+  fillPrimaryAccountOptions(participant.primary_participant_id || "");
+  byId("participantPrimaryNickname").value = participant.primary_participant_id ? "" : participant.primary_nickname || "";
+  syncTwinFields();
   byId("participantEditorTitle").textContent = `Изменить: ${participant.nickname}`;
   byId("participantCancelButton").hidden = false;
   byId("participantEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -82,12 +117,17 @@ function fillForm(participant) {
 async function reload() {
   state.context = await loadAlliancePageContext(state.client);
   render();
+  fillPrimaryAccountOptions(byId("participantPrimaryAccount")?.value || "");
 }
 
 async function submitParticipant(event) {
   event.preventDefault();
   const birthday = toStoredBirthday(byId("participantBirthday").value);
   if (birthday === undefined) return showMessage("Укажи день рождения в формате ДД.ММ.", "error");
+  const isTwin = byId("participantIsTwin").checked;
+  const primaryParticipantId = isTwin ? byId("participantPrimaryAccount").value : "";
+  const primaryNickname = isTwin && !primaryParticipantId ? byId("participantPrimaryNickname").value.trim() : "";
+  if (isTwin && !primaryParticipantId && !primaryNickname) return showMessage("Выбери основной аккаунт или укажи его никнейм.", "error");
   const button = event.submitter;
   button.disabled = true;
   const { error } = await saveParticipant(state.client, {
@@ -99,7 +139,10 @@ async function submitParticipant(event) {
       member_status: byId("participantStatus").value,
       timezone_offset: byId("participantTimezone").value === "" ? null : Number(byId("participantTimezone").value),
       birthday,
-      comment: byId("participantComment").value.trim()
+      comment: byId("participantComment").value.trim(),
+      is_twin: isTwin,
+      primary_participant_id: primaryParticipantId || null,
+      primary_nickname: primaryNickname || null
     }
   });
   button.disabled = false;
@@ -131,6 +174,8 @@ export async function init() {
   try { await reload(); } catch (error) { showMessage(error.message, "error"); return; }
   byId("participantForm")?.addEventListener("submit", submitParticipant);
   byId("participantCancelButton")?.addEventListener("click", resetForm);
+  byId("participantIsTwin")?.addEventListener("change", syncTwinFields);
+  byId("participantPrimaryAccount")?.addEventListener("change", syncTwinFields);
   byId("participantTableBody")?.addEventListener("click", tableClick);
   ["participantSearch", "participantRankFilter", "participantSort"].forEach(id => byId(id)?.addEventListener(id === "participantSearch" ? "input" : "change", render));
   byId("rosterExpandTable")?.addEventListener("click", () => toggleFullscreen(true));

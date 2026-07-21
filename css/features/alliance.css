@@ -157,6 +157,22 @@
 .participant-form-actions { grid-column: 1 / -1; }
 .participant-comment-field textarea { width: 100%; resize: vertical; }
 
+.participant-form .participant-twin-toggle {
+  flex-direction: row;
+  align-items: center;
+  align-self: end;
+  min-height: 48px;
+  margin: 0;
+}
+.participant-twin-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column: 1 / -1;
+  gap: 14px;
+}
+.participant-twin-fields[hidden],
+.participant-twin-fields label[hidden] { display: none !important; }
+
 .alliance-roster-header {
   display: flex;
   justify-content: space-between;
@@ -182,14 +198,29 @@
 .alliance-table th { color: var(--text-soft); font-size: 13px; font-weight: 600; }
 .alliance-table td { color: var(--text); }
 
-.participant-nickname.has-history {
-  cursor: help;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
+.participant-nickname-history::after { white-space: pre-line; }
+.participant-nickname-cell { display: grid; gap: 6px; min-width: 0; }
+.participant-twin-details { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--text-soft); }
+.participant-twin-badge {
+  padding: 2px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.participant-row-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.participant-row-actions button { min-height: 34px; padding: 6px 10px; font-size: 13px; }
+.participant-row-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.participant-row-actions button {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
 
 .alliance-empty-state {
   padding: 18px;
@@ -226,4 +257,5 @@
   .alliance-invite-box > span,
   .participant-comment-field,
   .participant-form-actions { grid-column: auto; }
+  .participant-twin-fields { grid-template-columns: 1fr; grid-column: auto; }
 }

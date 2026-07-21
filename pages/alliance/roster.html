@@ -11,6 +11,11 @@
       <label><span>Ранг</span><select id="participantRank" data-no-persist="true"><option value="">Не указан</option><option>Р5</option><option>Р4</option><option>Р3</option><option>Р2</option><option>Р1</option></select></label>
       <label><span>Часовой пояс от Москвы</span><input id="participantTimezone" type="number" min="-12" max="12" step="1" data-no-persist="true"></label>
       <label><span>День рождения</span><input id="participantBirthday" type="text" inputmode="numeric" maxlength="5" placeholder="ДД.ММ" data-no-persist="true"></label>
+      <label class="checkbox participant-twin-toggle"><input id="participantIsTwin" type="checkbox" data-no-persist="true"><span class="tooltip" data-tooltip="Твин — дополнительный игровой аккаунт того же игрока. Основной аккаунт при этом называют основой.">Твин</span></label>
+      <div id="participantTwinFields" class="participant-twin-fields" hidden>
+        <label><span>Основной аккаунт в союзе</span><select id="participantPrimaryAccount" data-no-persist="true"><option value="">Указать никнейм вручную</option></select></label>
+        <label id="participantPrimaryNicknameField"><span>Никнейм основного аккаунта</span><input id="participantPrimaryNickname" type="text" maxlength="80" data-no-persist="true"></label>
+      </div>
       <label class="participant-comment-field"><span>Комментарий</span><textarea id="participantComment" rows="3" maxlength="500" data-no-persist="true"></textarea></label>
       <div class="alliance-actions participant-form-actions"><button type="submit">Сохранить</button><button id="participantCancelButton" type="button" class="secondary-button" hidden>Отменить</button></div>
     </form>

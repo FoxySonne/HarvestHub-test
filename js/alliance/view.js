@@ -22,14 +22,19 @@ function formatTimezone(value) {
   return number === 0 ? "МСК" : `МСК${number > 0 ? "+" : ""}${number}`;
 }
 
-function nicknameHistoryTitle(history) {
+function nicknameHistoryTitle(history, currentNickname) {
   if (!Array.isArray(history) || history.length === 0) return "";
-  return history.slice(0, 6).map(item => {
-    const date = item.changed_at
-      ? new Date(item.changed_at).toLocaleDateString("ru-RU")
-      : "";
-    return `${item.old_nickname} → ${item.new_nickname}${date ? ` · ${date}` : ""}`;
-  }).join("\n");
+  const current = String(currentNickname || "").trim().toLowerCase();
+  const previous = [];
+  const seen = new Set();
+  history.forEach(item => {
+    const nickname = String(typeof item === "string" ? item : item?.old_nickname || "").trim();
+    const key = nickname.toLowerCase();
+    if (!nickname || key === current || seen.has(key)) return;
+    seen.add(key);
+    previous.push(nickname);
+  });
+  return previous.length ? `Предыдущие никнеймы:\n${previous.join("\n")}` : "";
 }
 
 export function renderMembershipOptions(members) {
@@ -44,12 +49,12 @@ export function renderMembershipOptions(members) {
 
 export function renderParticipantRows(participants, canEdit, canSeePrivate) {
   return participants.map(participant => {
-    const history = nicknameHistoryTitle(participant.nickname_history);
+    const history = nicknameHistoryTitle(participant.nickname_history, participant.nickname);
     const nicknameClass = history
-      ? "participant-nickname has-history"
+      ? "participant-nickname tooltip participant-nickname-history"
       : "participant-nickname";
     const nicknameAttributes = history
-      ? ` title="${escapeHtml(history)}" tabindex="0"`
+      ? ` data-tooltip="${escapeHtml(history)}" tabindex="0"`
       : "";
 
     const actions = canEdit
@@ -60,9 +65,12 @@ export function renderParticipantRows(participants, canEdit, canSeePrivate) {
       : "";
 
     const privateAttribute = canSeePrivate ? "" : " hidden";
+    const twinDetails = canSeePrivate && participant.is_twin
+      ? `<small class="participant-twin-details"><span class="participant-twin-badge">Твин</span><span>Основа: ${escapeHtml(participant.primary_nickname || "не указана")}</span></small>`
+      : "";
 
     return `<tr class="participant-row">
-      <td><strong class="${nicknameClass}"${nicknameAttributes}>${escapeHtml(participant.nickname)}</strong></td>
+      <td><div class="participant-nickname-cell"><strong class="${nicknameClass}"${nicknameAttributes}>${escapeHtml(participant.nickname)}</strong>${twinDetails}</div></td>
       <td>${escapeHtml(participant.rank_name || "—")}</td>
       <td>${formatBirthday(participant.birthday)}</td>
       <td class="participant-private-column"${privateAttribute}>${formatTimezone(participant.timezone_offset)}</td>
