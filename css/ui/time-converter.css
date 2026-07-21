@@ -70,3 +70,28 @@
     grid-template-columns: minmax(0, 1fr) 112px;
   }
 }
+
+@media (max-width: 420px) {
+  .time-converter-field {
+    grid-template-columns: minmax(0, 1fr) 70px;
+    gap: 8px;
+  }
+
+  .time-converter-field input {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .time-converter-result div {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .time-converter-result strong {
+    align-self: flex-end;
+    max-width: 100%;
+    font-size: clamp(14px, 4vw, 16px);
+    letter-spacing: -.03em;
+  }
+}

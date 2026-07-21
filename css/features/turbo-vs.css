@@ -252,9 +252,10 @@
 .action-need-output strong {
   max-width: 100%;
   margin: 0 auto;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
   color: var(--accent);
-  font-size: 14px;
+  font-size: clamp(12px, 3.3vw, 14px);
+  letter-spacing: -.03em;
   line-height: 1.15;
 }
 
@@ -339,7 +340,7 @@
 
   .action-row-with-need .action-controls,
   .action-multi-line {
-    grid-template-columns: 86px 78px 78px;
+    grid-template-columns: 82px 70px 90px;
     width: 260px;
     gap: 9px;
   }
@@ -380,7 +381,7 @@
   }
 
   .action-row-with-need .action-controls {
-    grid-template-columns: 86px 78px 78px;
+    grid-template-columns: 82px 70px 90px;
   }
 
   .action-row-multi-level {
@@ -403,7 +404,7 @@
     justify-self: end;
     width: 260px;
     max-width: 100%;
-    grid-template-columns: 86px 78px 78px;
+    grid-template-columns: 82px 70px 90px;
   }
 }
 
