@@ -35,10 +35,10 @@ const LOCATIONS = [
 ];
 
 const COLLECTORS = [
-  { key: "collectors_nw", x: 35, y: 43 },
-  { key: "collectors_ne", x: 74, y: 39 },
-  { key: "collectors_sw", x: 46, y: 67 },
-  { key: "collectors_se", x: 63, y: 68 }
+  { key: "collectors_north", x: 51, y: 35 },
+  { key: "collectors_east", x: 64, y: 48 },
+  { key: "collectors_south", x: 51, y: 61 },
+  { key: "collectors_west", x: 38, y: 48 }
 ];
 
 function showMessage(text, type = "info") {
@@ -117,10 +117,10 @@ function showLocationCard(locationKey, anchor) {
   const popover = byId("reservoirLocationPopover");
   popover.innerHTML = `<strong>${location.name}</strong><span>${location.points} очков · ${location.rate}</span>${location.effect ? `<span>${location.effect}</span>` : ""}${state.publishedAt && playerNames.length ? `<span>Игроки: ${playerNames.join(", ")}</span>` : ""}${note ? `<span>${note}</span>` : ""}`;
   popover.hidden = false;
-  const mapRect = byId("reservoirMap").getBoundingClientRect();
+  const viewportRect = byId("reservoirMapViewport").getBoundingClientRect();
   const rect = anchor.getBoundingClientRect();
-  popover.style.left = `${Math.max(8, Math.min(mapRect.width - 280, rect.left - mapRect.left))}px`;
-  popover.style.top = `${Math.max(8, rect.bottom - mapRect.top + 8)}px`;
+  popover.style.left = `${Math.max(8, Math.min(viewportRect.width - 288, rect.left - viewportRect.left))}px`;
+  popover.style.top = `${Math.max(8, rect.bottom - viewportRect.top + 8)}px`;
 }
 
 function renderPlayerPool() {
@@ -257,6 +257,14 @@ async function copyLayout() {
   showMessage("Расстановка скопирована.", "success");
 }
 
+function setMapFullscreen(open) {
+  const viewport = byId("reservoirMapViewport");
+  if (!viewport) return;
+  viewport.classList.toggle("is-reservoir-map-fullscreen", open);
+  document.body.classList.toggle("reservoir-map-fullscreen-open", open);
+  if (open) viewport.scrollTo({ left: Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2), top: 0 });
+}
+
 function bind() {
   byId("reservoirMap")?.addEventListener("click", event => {
     const location = event.target.closest("[data-location-key]");
@@ -296,6 +304,8 @@ function bind() {
     byId("reservoirPlayerPicker").hidden = true;
   });
   byId("reservoirPickerClose")?.addEventListener("click", () => { byId("reservoirPlayerPicker").hidden = true; });
+  byId("reservoirMapFullscreenOpen")?.addEventListener("click", () => setMapFullscreen(true));
+  byId("reservoirMapFullscreenClose")?.addEventListener("click", () => setMapFullscreen(false));
   byId("reservoirSaveDraft")?.addEventListener("click", () => save(false));
   byId("reservoirPublish")?.addEventListener("click", () => save(true));
   byId("reservoirCopy")?.addEventListener("click", copyLayout);
