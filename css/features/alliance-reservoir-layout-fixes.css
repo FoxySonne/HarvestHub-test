@@ -1,0 +1,27 @@
+@media (max-width: 899px) {
+  .reservoir-map-collectors {
+    display: grid !important;
+    grid-template-columns: repeat(3, 12px);
+    gap: 3px;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    appearance: none;
+  }
+
+  .reservoir-map-collectors:hover,
+  .reservoir-map-collectors:focus,
+  .reservoir-map-collectors:active {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
