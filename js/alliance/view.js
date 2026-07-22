@@ -60,7 +60,7 @@ export function renderParticipantRows(participants, canEdit, canSeePrivate) {
     const actions = canEdit
       ? `<div class="participant-row-actions">
           <button type="button" class="secondary-button" data-participant-edit="${escapeHtml(participant.id)}">Изменить</button>
-          ${participant.member_status !== "left" ? `<button type="button" class="danger-button" data-participant-delete="${escapeHtml(participant.id)}">Отметить вышедшим</button>` : ""}
+          ${participant.member_status !== "left" ? `<button type="button" class="danger-button" data-participant-delete="${escapeHtml(participant.id)}">Ушел</button>` : ""}
         </div>`
       : "";
 
