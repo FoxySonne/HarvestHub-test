@@ -1,3 +1,25 @@
+.reservoir-map {
+  background-color: #d8b68f;
+  background-image: url("../../assets/images/reservoir-map-background.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.reservoir-map::before {
+  display: none;
+}
+
+.reservoir-map-building {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  transform-origin: center bottom;
+}
+
+.reservoir-map-location:hover .reservoir-map-building,
+.reservoir-map-location:focus-visible .reservoir-map-building {
+  transform: translateY(-2px) scale(1.08);
+}
+
 .reservoir-map-location {
   width: 132px;
 }
