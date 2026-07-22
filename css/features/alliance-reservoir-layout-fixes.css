@@ -33,28 +33,28 @@
 }
 
 .reservoir-map [data-location-key="solar"] {
-  left: 12% !important;
-  top: 25% !important;
+  left: 18% !important;
+  top: 29% !important;
 }
 
 .reservoir-map [data-location-key="processing_3"] {
-  left: 27% !important;
-  top: 12% !important;
+  left: 32% !important;
+  top: 18% !important;
 }
 
 .reservoir-map [data-location-key="development"] {
-  left: 36% !important;
-  top: 31% !important;
+  left: 39% !important;
+  top: 34% !important;
 }
 
 .reservoir-map [data-location-key="treatment_2"] {
-  left: 67% !important;
-  top: 14% !important;
+  left: 64% !important;
+  top: 19% !important;
 }
 
 .reservoir-map [data-location-key="processing_2"] {
-  left: 88% !important;
-  top: 22% !important;
+  left: 81% !important;
+  top: 27% !important;
 }
 
 .reservoir-map [data-location-key="central"] {
@@ -63,48 +63,48 @@
 }
 
 .reservoir-map [data-location-key="processing_1"] {
-  left: 12% !important;
-  top: 79% !important;
+  left: 19% !important;
+  top: 75% !important;
 }
 
 .reservoir-map [data-location-key="treatment_1"] {
-  left: 30% !important;
-  top: 70% !important;
-}
-
-.reservoir-map [data-location-key="military"] {
-  left: 64% !important;
-  top: 61% !important;
-}
-
-.reservoir-map [data-location-key="helipad"] {
-  left: 88% !important;
+  left: 34% !important;
   top: 68% !important;
 }
 
+.reservoir-map [data-location-key="military"] {
+  left: 62% !important;
+  top: 60% !important;
+}
+
+.reservoir-map [data-location-key="helipad"] {
+  left: 81% !important;
+  top: 66% !important;
+}
+
 .reservoir-map [data-location-key="processing_4"] {
-  left: 72% !important;
-  top: 82% !important;
+  left: 69% !important;
+  top: 76% !important;
 }
 
 .reservoir-map [data-collector="collectors_north"] {
   left: 50% !important;
-  top: 28% !important;
+  top: 30% !important;
 }
 
 .reservoir-map [data-collector="collectors_west"] {
-  left: 31% !important;
+  left: 34% !important;
   top: 49% !important;
 }
 
 .reservoir-map [data-collector="collectors_east"] {
-  left: 69% !important;
+  left: 66% !important;
   top: 49% !important;
 }
 
 .reservoir-map [data-collector="collectors_south"] {
   left: 50% !important;
-  top: 70% !important;
+  top: 68% !important;
 }
 
 @media (min-width: 900px) {
