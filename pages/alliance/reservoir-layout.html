@@ -1,1 +1,54 @@
-<section class="page-section alliance-subpage"><button type="button" class="alliance-back-button secondary-button" data-page-path="alliance/members.html">← В штаб</button><section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section><div id="allianceMessage" class="alliance-message" hidden></div><section class="card"><div class="card-header"><div><h3>Резервуар: расстановка</h3><p>Раздел подготовлен для следующего этапа разработки.</p></div></div></section></section>
+<section class="page-section alliance-subpage reservoir-layout-page">
+  <button type="button" class="alliance-back-button secondary-button" data-page-path="alliance/members.html">← В штаб</button>
+  <section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section>
+  <div id="allianceMessage" class="alliance-message" hidden></div>
+
+  <section class="card reservoir-map-card">
+    <div class="card-header"><div><h3>Карта резервуара</h3><p id="reservoirLayoutWeek">—</p></div></div>
+    <div id="reservoirMap" class="reservoir-map" aria-label="Схема резервуара"></div>
+    <div id="reservoirLocationPopover" class="reservoir-location-popover" hidden></div>
+  </section>
+
+  <section id="reservoirLayoutEditor" class="reservoir-layout-editor" hidden>
+    <section class="card reservoir-player-pool-card">
+      <div class="card-header"><div><h3>Участники</h3></div></div>
+      <div class="reservoir-roster-switch" role="tablist">
+        <button type="button" class="is-active" data-roster-tab="main">Основа</button>
+        <button type="button" data-roster-tab="reserve">Резерв</button>
+      </div>
+      <input id="reservoirPlayerSearch" type="search" placeholder="Поиск по нику" data-no-persist="true">
+      <div id="reservoirPlayerPool" class="reservoir-player-pool"></div>
+    </section>
+
+    <section class="card reservoir-placement-card">
+      <div class="card-header"><div><h3>Расстановка по локациям</h3></div></div>
+      <div id="reservoirWarnings" class="reservoir-layout-warnings" hidden></div>
+      <div id="reservoirPlacementGrid" class="reservoir-placement-grid"></div>
+      <label class="reservoir-general-comment"><span>Общий комментарий</span><textarea id="reservoirGeneralComment" rows="3" placeholder="Комментарий для участников союза"></textarea></label>
+      <div class="reservoir-layout-actions">
+        <button id="reservoirSaveDraft" type="button">Сохранить черновик</button>
+        <button id="reservoirPublish" type="button" class="secondary-button">Опубликовать для союза</button>
+        <button id="reservoirCopy" type="button" class="secondary-button tooltip" data-tooltip="Позволяет скопировать расстановку в виде обычного текста для отправки сообщением в мессенджерах.">Скопировать расстановку</button>
+        <button id="reservoirReset" type="button" class="danger-button">Сбросить</button>
+      </div>
+    </section>
+  </section>
+
+  <section id="reservoirPublishedView" class="card reservoir-published-view" hidden>
+    <div class="card-header"><div><h3>Расстановка по локациям</h3></div></div>
+    <div id="reservoirPublishedGrid" class="reservoir-published-grid"></div>
+    <div id="reservoirPublishedComment" class="reservoir-published-comment" hidden></div>
+  </section>
+
+  <div id="reservoirPlayerPicker" class="reservoir-player-picker" hidden>
+    <div class="reservoir-player-picker-panel">
+      <div class="card-header"><div><h3 id="reservoirPickerTitle">Добавить игрока</h3></div><button id="reservoirPickerClose" type="button" class="secondary-button">×</button></div>
+      <div class="reservoir-roster-switch" role="tablist">
+        <button type="button" class="is-active" data-picker-tab="main">Основа</button>
+        <button type="button" data-picker-tab="reserve">Резерв</button>
+      </div>
+      <input id="reservoirPickerSearch" type="search" placeholder="Поиск по нику" data-no-persist="true">
+      <div id="reservoirPickerList" class="reservoir-picker-list"></div>
+    </div>
+  </div>
+</section>
