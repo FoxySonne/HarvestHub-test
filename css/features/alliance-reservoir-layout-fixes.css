@@ -85,6 +85,19 @@
   top: 70% !important;
 }
 
+@media (min-width: 900px) {
+  .reservoir-map-viewport:not(.is-reservoir-map-fullscreen) {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+
+  .reservoir-map-viewport:not(.is-reservoir-map-fullscreen) .reservoir-map {
+    width: 100%;
+    min-height: 0;
+  }
+}
+
 @media (max-width: 899px) {
   .reservoir-map-location {
     width: 126px;
