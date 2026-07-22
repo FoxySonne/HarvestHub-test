@@ -1,5 +1,5 @@
 import { saveParticipant, deleteParticipant } from "../alliance/api.js?v=20260718-40";
-import { renderParticipantRows } from "../alliance/view.js?v=20260718-39";
+import { renderParticipantRows } from "../alliance/view.js?v=20260722-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
