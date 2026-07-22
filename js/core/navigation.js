@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260721-roster-twins-1";
+  const SITE_ASSET_VERSION = "20260722-reservoir-layout-1";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -33,7 +33,7 @@
     vs: "../pages/alliance-vs-current.js",
     "vs-statistics": "../pages/alliance-vs-statistics.js",
     "reservoir-activity": "../pages/alliance-placeholder.js",
-    "reservoir-layout": "../pages/alliance-placeholder.js",
+    "reservoir-layout": "../pages/alliance-reservoir-layout.js",
     profile: "../pages/profile.js",
     settings: "../pages/settings.js",
     ipk: "../calculators/ipk.js",
