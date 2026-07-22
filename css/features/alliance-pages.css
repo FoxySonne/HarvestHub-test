@@ -3,6 +3,10 @@
   min-width: 0;
 }
 
+.alliance-subpage > .alliance-context-card {
+  display: none;
+}
+
 .alliance-entry-grid,
 .alliance-inline-form,
 .alliance-management-form,
