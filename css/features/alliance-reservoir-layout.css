@@ -9,9 +9,19 @@
   display: none !important;
 }
 
+.reservoir-map-viewport {
+  position: relative;
+  max-width: 100%;
+  overflow: auto;
+  border-radius: var(--radius);
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
+}
+
 .reservoir-map {
   position: relative;
   min-height: 620px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -351,26 +361,77 @@
   background: var(--panel);
 }
 
+.reservoir-map-fullscreen-open {
+  overflow: hidden;
+}
+
+.is-reservoir-map-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  max-width: none;
+  padding: 64px 12px 12px;
+  border-radius: 0;
+  background: var(--card);
+}
+
+.is-reservoir-map-fullscreen .reservoir-map {
+  width: max(100%, 1040px);
+  min-height: 620px;
+}
+
+.is-reservoir-map-fullscreen .alliance-fullscreen-close {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  z-index: 1402;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+}
+
 @media (max-width: 899px) {
+  .reservoir-map-card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .reservoir-map-viewport {
+    margin: 0 -2px;
+    border: 1px solid var(--border);
+  }
+
   .reservoir-map {
-    min-height: 500px;
+    width: 860px;
+    min-height: 484px;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: 0;
   }
 
   .reservoir-map-location {
-    width: 105px;
+    width: 132px;
   }
 
   .reservoir-map-building {
-    width: 34px;
-    height: 34px;
+    width: 42px;
+    height: 42px;
   }
 
   .reservoir-map-location-name {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .reservoir-map-count {
-    right: 18px;
+    right: 27px;
+  }
+
+  .reservoir-map-side {
+    font-size: 14px;
   }
 
   .reservoir-layout-editor {
@@ -389,5 +450,26 @@
   .reservoir-layout-actions > * {
     width: 100%;
     max-width: 100%;
+  }
+
+  .reservoir-location-popover {
+    position: fixed;
+    left: 12px !important;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    top: auto !important;
+    width: auto;
+    max-height: 42vh;
+    overflow: auto;
+    z-index: 1450;
+  }
+
+  .is-reservoir-map-fullscreen {
+    padding: 64px 0 0;
+  }
+
+  .is-reservoir-map-fullscreen .reservoir-map {
+    width: 1040px;
+    min-height: 585px;
   }
 }
