@@ -1,0 +1,386 @@
+.reservoir-map-card {
+  position: relative;
+}
+
+.reservoir-map {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 48%, rgba(58, 122, 58, 0.18), transparent 24%),
+    linear-gradient(145deg, var(--panel), var(--card));
+}
+
+.reservoir-map::before {
+  content: "";
+  position: absolute;
+  inset: 7% 8%;
+  border: 2px dashed var(--border);
+  border-radius: 35% 42% 38% 44%;
+  opacity: .75;
+}
+
+.reservoir-map-location,
+.reservoir-map-collectors {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.reservoir-map-location {
+  width: 150px;
+}
+
+.reservoir-map-building {
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 5px;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 0 18px rgba(58, 122, 58, .22);
+}
+
+.reservoir-map-location-name {
+  display: block;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.reservoir-map-count {
+  position: absolute;
+  top: -8px;
+  right: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+}
+
+.reservoir-map-location:hover .reservoir-map-building,
+.reservoir-map-location:focus-visible .reservoir-map-building {
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(58, 122, 58, .42);
+}
+
+.reservoir-map-collectors {
+  display: grid;
+  grid-template-columns: repeat(3, 12px);
+  gap: 3px;
+}
+
+.reservoir-map-collectors span {
+  width: 12px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--accent-soft, var(--panel));
+}
+
+.reservoir-map-side {
+  position: absolute;
+  z-index: 1;
+  color: var(--text-soft);
+  font-weight: 700;
+}
+
+.reservoir-map-side-blue {
+  top: 4%;
+  right: 4%;
+}
+
+.reservoir-map-side-red {
+  bottom: 4%;
+  left: 4%;
+}
+
+.reservoir-location-popover {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: min(280px, calc(100% - 24px));
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+}
+
+.reservoir-location-popover span {
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.reservoir-layout-editor {
+  display: grid;
+  grid-template-columns: minmax(240px, .75fr) minmax(0, 2.25fr);
+  gap: 16px;
+}
+
+.reservoir-roster-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reservoir-roster-switch button {
+  width: 100%;
+  min-width: 0;
+}
+
+.reservoir-roster-switch button.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.reservoir-player-pool {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.reservoir-player-chip,
+.reservoir-picker-list button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+}
+
+.reservoir-player-chip.is-assigned {
+  opacity: .62;
+}
+
+.reservoir-player-chip small,
+.reservoir-assigned-player small {
+  color: var(--text-soft);
+}
+
+.reservoir-placement-grid,
+.reservoir-published-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.reservoir-location-column,
+.reservoir-published-grid section {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.reservoir-location-column header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.reservoir-location-column header div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reservoir-location-column header span {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.reservoir-location-column header button {
+  width: auto;
+  min-width: 0;
+  padding: 8px 10px;
+}
+
+.reservoir-location-players {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 36px;
+  margin-bottom: 10px;
+}
+
+.reservoir-assigned-player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.reservoir-assigned-player button {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.reservoir-location-column textarea,
+.reservoir-general-comment textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reservoir-general-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.reservoir-layout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.reservoir-layout-warnings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reservoir-layout-warnings span {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.reservoir-player-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .62);
+}
+
+.reservoir-player-picker-panel {
+  width: min(560px, 100%);
+  max-height: 82vh;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.reservoir-player-picker-panel .card-header {
+  margin-bottom: 12px;
+}
+
+.reservoir-player-picker-panel .card-header button {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.reservoir-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.reservoir-picker-list small {
+  grid-column: 1 / -1;
+  color: var(--text-soft);
+}
+
+.reservoir-published-grid section p {
+  margin: 8px 0 0;
+}
+
+.reservoir-published-grid section small,
+.reservoir-published-comment {
+  color: var(--text-soft);
+}
+
+.reservoir-published-comment {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+@media (max-width: 899px) {
+  .reservoir-map {
+    min-height: 500px;
+  }
+
+  .reservoir-map-location {
+    width: 105px;
+  }
+
+  .reservoir-map-building {
+    width: 34px;
+    height: 34px;
+  }
+
+  .reservoir-map-location-name {
+    font-size: 10px;
+  }
+
+  .reservoir-map-count {
+    right: 18px;
+  }
+
+  .reservoir-layout-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .reservoir-player-pool-card {
+    position: static;
+  }
+
+  .reservoir-placement-grid,
+  .reservoir-published-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reservoir-layout-actions > * {
+    width: 100%;
+    max-width: 100%;
+  }
+}
