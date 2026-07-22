@@ -2,6 +2,13 @@
   position: relative;
 }
 
+.reservoir-layout-editor[hidden],
+.reservoir-published-view[hidden],
+.reservoir-location-popover[hidden],
+.reservoir-player-picker[hidden] {
+  display: none !important;
+}
+
 .reservoir-map {
   position: relative;
   min-height: 620px;
