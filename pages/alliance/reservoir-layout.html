@@ -5,8 +5,12 @@
 
   <section class="card reservoir-map-card">
     <div class="card-header"><div><h3>Карта резервуара</h3><p id="reservoirLayoutWeek">—</p></div></div>
-    <div id="reservoirMap" class="reservoir-map" aria-label="Схема резервуара"></div>
-    <div id="reservoirLocationPopover" class="reservoir-location-popover" hidden></div>
+    <button id="reservoirMapFullscreenOpen" type="button" class="secondary-button alliance-table-open-button">Открыть карту целиком</button>
+    <div id="reservoirMapViewport" class="reservoir-map-viewport" data-horizontal-scroll>
+      <button id="reservoirMapFullscreenClose" type="button" class="alliance-fullscreen-close" aria-label="Закрыть карту">×</button>
+      <div id="reservoirMap" class="reservoir-map" aria-label="Схема резервуара"></div>
+      <div id="reservoirLocationPopover" class="reservoir-location-popover" hidden></div>
+    </div>
   </section>
 
   <section id="reservoirLayoutEditor" class="reservoir-layout-editor" hidden>
