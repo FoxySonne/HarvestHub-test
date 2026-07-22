@@ -4,7 +4,10 @@
 
 .reservoir-map-location-name {
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .reservoir-map [data-location-key="solar"] {
