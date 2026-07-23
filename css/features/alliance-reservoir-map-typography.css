@@ -1,0 +1,19 @@
+/* Подписи и счётчики интерактивных локаций карты резервуара. */
+.reservoir-map .reservoir-map-location-name {
+  font-size: 14px !important;
+  text-shadow:
+    0 1px 2px rgba(255, 255, 255, .72),
+    0 0 4px rgba(255, 255, 255, .42),
+    0 1px 2px rgba(0, 0, 0, .34);
+}
+
+.reservoir-map .reservoir-map-count {
+  font-family: "Courier New", Courier, monospace !important;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow:
+    0 0 3px rgba(255, 255, 255, .85),
+    0 1px 2px rgba(0, 0, 0, .55);
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, .42));
+}
