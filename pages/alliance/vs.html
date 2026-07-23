@@ -20,9 +20,25 @@
     <form id="vsTargetForm" class="vs-target-form"><label><span>Норматив</span><input id="vsDailyTarget" type="text" inputmode="decimal" data-no-persist="true"></label><button type="submit">Сохранить</button></form>
   </section>
 
+  <section id="vsBulkCard" class="card" hidden>
+    <div class="card-header"><div><h3>Общее редактирование VS</h3><p id="vsBulkWeekLabel">Неделя</p></div></div>
+    <p class="vs-bulk-hint">Вводи очки в обычном формате или букву «О» для отпуска. Пустая ячейка не изменяется.</p>
+    <div class="alliance-table-wrap" data-horizontal-scroll>
+      <table class="alliance-table vs-bulk-table">
+        <thead><tr><th>Участник</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th></tr></thead>
+        <tbody id="vsBulkBody"></tbody>
+      </table>
+    </div>
+    <div class="alliance-actions"><button id="vsBulkSave" type="button">Сохранить изменения</button><button id="vsBulkClose" type="button" class="secondary-button">Закрыть</button></div>
+  </section>
+
   <section class="card alliance-list-card">
     <div class="card-header"><div><h3 id="vsTableWeekTitle">Текущая неделя</h3><p id="vsCount">0 участников</p></div></div>
-    <button id="vsExpandTable" type="button" class="secondary-button alliance-table-open-button">Открыть таблицу целиком</button>
+    <div class="vs-table-controls">
+      <label><span>Сортировка</span><select id="vsSort" data-no-persist="true"><option value="total">По сумме за неделю</option><option value="nickname">По имени</option><option value="rank">По рангу</option><option value="day-0">По понедельнику</option><option value="day-1">По вторнику</option><option value="day-2">По среде</option><option value="day-3">По четвергу</option><option value="day-4">По пятнице</option><option value="day-5">По субботе</option></select></label>
+      <button id="vsBulkOpen" type="button" class="secondary-button">Изменить общей таблицей</button>
+      <button id="vsExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button>
+    </div>
     <div id="vsCurrentTableContainer" class="alliance-table-wrap vs-table-wrap" data-horizontal-scroll><button id="vsCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button><table class="alliance-table vs-table"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
     <div id="vsEmptyState" class="alliance-empty-state">Пока нет участников.</div>
     <div id="vsSummary" class="vs-summary" hidden></div>
