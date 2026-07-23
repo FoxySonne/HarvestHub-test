@@ -7,7 +7,8 @@
 
 .vs-result-form label,
 .vs-target-form label,
-.vs-period-controls label {
+.vs-period-controls label,
+.vs-table-controls label {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -16,7 +17,8 @@
 .vs-result-form input,
 .vs-result-form select,
 .vs-target-form input,
-.vs-period-controls select {
+.vs-period-controls select,
+.vs-table-controls select {
   width: 100%;
 }
 
@@ -75,20 +77,56 @@
   margin-left: auto;
 }
 
-.vs-table {
+.vs-table-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) auto auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.vs-table-controls button {
+  width: auto;
+}
+
+.vs-table,
+.vs-bulk-table {
   min-width: 1080px;
 }
 
 .vs-table td:nth-child(2) strong,
 .vs-table td:nth-child(2) small,
 .vs-table td:first-child strong,
-.vs-table td:first-child small {
+.vs-table td:first-child small,
+.vs-bulk-table td:first-child strong,
+.vs-bulk-table td:first-child small {
   display: block;
 }
 
-.vs-table td small {
+.vs-table td small,
+.vs-bulk-table td small {
   margin-top: 4px;
   color: var(--text-soft);
+}
+
+.vs-bulk-hint {
+  margin: 0 0 14px;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.vs-bulk-table {
+  min-width: 900px;
+}
+
+.vs-bulk-table input {
+  width: 105px;
+  min-width: 105px;
+  padding: 8px;
+}
+
+.vs-bulk-table input:disabled {
+  opacity: .55;
 }
 
 .vs-cell-failed {
@@ -200,13 +238,15 @@
 @media (max-width: 899px) {
   .vs-result-form,
   .vs-target-form,
-  .vs-tools {
+  .vs-tools,
+  .vs-table-controls {
     grid-template-columns: 1fr;
   }
 
   .vs-result-form button,
   .vs-target-form button,
-  .vs-view-options button {
+  .vs-view-options button,
+  .vs-table-controls button {
     width: 100%;
     margin-left: 0;
   }
