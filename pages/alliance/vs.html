@@ -4,14 +4,14 @@
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
   <section id="vsEditorCard" class="card" hidden>
-    <div class="card-header"><div><h3>Внести результат VS</h3><p id="vsCurrentWeekLabel">Текущая неделя</p></div></div>
+    <div class="card-header"><div><h3 id="vsEditorTitle">Внести результат VS</h3><p id="vsCurrentWeekLabel">Текущая неделя</p></div></div>
     <form id="vsResultForm" class="vs-current-form">
       <label><span>Участник</span><select id="vsParticipant" data-no-persist="true" required></select></label>
       <label><span>День недели</span><select id="vsDay" data-no-persist="true"><option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option><option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option></select></label>
-      <label><span>Дата</span><strong id="vsCalculatedDate" class="vs-calculated-date">—</strong></label>
+      <label><span>Дата</span><input id="vsResultDate" type="date" data-no-persist="true" required></label>
       <label class="vs-score-label"><span class="tooltip" data-tooltip="Можно вводить точное число или использовать K, M, B, T. Например: 5720000, 5,72M, 897K, 1,4B или 2T.">Очки</span><input id="vsPoints" type="text" inputmode="decimal" data-no-persist="true"></label>
       <label class="checkbox vs-vacation-field"><input id="vsVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
-      <button type="submit">Сохранить результат</button>
+      <div class="alliance-actions"><button type="submit">Сохранить результат</button><button id="vsEditCancel" type="button" class="secondary-button" hidden>Отменить</button></div>
     </form>
   </section>
 
@@ -21,7 +21,7 @@
   </section>
 
   <section class="card alliance-list-card">
-    <div class="card-header"><div><h3>Текущая неделя</h3><p id="vsCount">0 участников</p></div></div>
+    <div class="card-header"><div><h3 id="vsTableWeekTitle">Текущая неделя</h3><p id="vsCount">0 участников</p></div></div>
     <button id="vsExpandTable" type="button" class="secondary-button alliance-table-open-button">Открыть таблицу целиком</button>
     <div id="vsCurrentTableContainer" class="alliance-table-wrap vs-table-wrap" data-horizontal-scroll><button id="vsCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button><table class="alliance-table vs-table"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
     <div id="vsEmptyState" class="alliance-empty-state">Пока нет участников.</div>
