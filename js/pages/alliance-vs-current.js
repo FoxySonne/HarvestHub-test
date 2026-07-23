@@ -55,7 +55,7 @@ function parseScore(value) {
   const normalized = String(value || "").trim().replace(/\s/g, "").replace(",", ".").toUpperCase();
   const match = normalized.match(/^(\d+(?:\.\d+)?)([KMBTКМВТ]?)$/);
   if (!match) return null;
-  const multiplier = { "": 1, K: 1e3, "К": 1e3, M: 1e6, "М": 1e6, B: 1e9, "В": 1e9, T: 1e12, "Т": 1e12 }[match[2]];
+  const multiplier = { "": 1e6, K: 1e3, "К": 1e3, M: 1e6, "М": 1e6, B: 1e9, "В": 1e9, T: 1e12, "Т": 1e12 }[match[2]];
   const points = Number(match[1]) * multiplier;
   return Number.isFinite(points) && points >= 0 ? Math.round(points) : null;
 }
@@ -63,7 +63,7 @@ function parseScore(value) {
 function formatScore(value) {
   const number = Number(value) || 0;
   if (!number) return "—";
-  const unit = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]].find(([size]) => Math.abs(number) >= size);
+  const unit = [[1e12, "Т"], [1e9, "В"], [1e6, "М"], [1e3, "k"]].find(([size]) => Math.abs(number) >= size);
   if (!unit) return new Intl.NumberFormat("ru-RU").format(number);
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
@@ -264,7 +264,7 @@ async function saveBulk() {
       const points = vacation ? null : parseScore(raw);
       if (!vacation && points === null) {
         input.focus();
-        return showMessage("Проверь значение в общей таблице. Можно вводить число, K/M/B/T или букву «О».", "error");
+        return showMessage("Проверь значение в общей таблице. Число без буквы считается миллионами; также можно использовать K/M/B/T или букву «О».", "error");
       }
       changes.push({
         participantId: row.dataset.vsBulkParticipant,
