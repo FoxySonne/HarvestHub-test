@@ -1,5 +1,39 @@
+function isTemporaryNetworkError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return error instanceof TypeError
+    || message.includes("failed to fetch")
+    || message.includes("networkerror")
+    || message.includes("load failed");
+}
+
+function wait(delay) {
+  return new Promise(resolve => window.setTimeout(resolve, delay));
+}
+
+async function rpcReadWithRetry(client, functionName, params, attempts = 3) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const result = await client.rpc(functionName, params);
+      if (!result.error || !isTemporaryNetworkError(result.error)) return result;
+      lastError = result.error;
+    } catch (error) {
+      if (!isTemporaryNetworkError(error)) throw error;
+      lastError = error;
+    }
+
+    if (attempt < attempts - 1) await wait(500 * (attempt + 1));
+  }
+
+  return {
+    data: null,
+    error: lastError || new Error("Не удалось связаться с сервером. Проверьте интернет и попробуйте ещё раз.")
+  };
+}
+
 export async function fetchMemberships(client) {
-  const result = await client.rpc("get_my_alliance_hubs_v2");
+  const result = await rpcReadWithRetry(client, "get_my_alliance_hubs_v2");
   return {
     data: Array.isArray(result.data) ? result.data : [],
     error: result.error
@@ -7,13 +41,13 @@ export async function fetchMemberships(client) {
 }
 
 export function fetchParticipants(client, allianceId) {
-  return client.rpc("get_alliance_participants", {
+  return rpcReadWithRetry(client, "get_alliance_participants", {
     target_alliance_id: allianceId
   });
 }
 
 export function fetchAllianceForGuest(client, code) {
-  return client.rpc("open_alliance_by_code", {
+  return rpcReadWithRetry(client, "open_alliance_by_code", {
     access_code: String(code || "").trim().toUpperCase()
   });
 }
