@@ -1,23 +1,14 @@
-import {
-  findDepartedParticipant,
-  markParticipantLeft,
-  restoreParticipant,
-  saveParticipant
-} from "../alliance/api.js?v=20260723-1";
+import { findDepartedParticipant, markParticipantLeft, restoreParticipant, saveParticipant } from "../alliance/api.js?v=20260723-1";
+import { fetchAllianceSquadPower, saveAllianceSquadPower } from "../alliance/power-api.js?v=20260723-roster-power-1";
 import { renderParticipantRows } from "../alliance/view.js?v=20260722-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260723-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const byId = id => document.getElementById(id);
-const state = { client: null, context: null };
+const state = { client: null, context: null, powerByParticipant: new Map() };
 
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 function showMessage(text, type = "info") {
@@ -43,6 +34,22 @@ function toStoredBirthday(value) {
   return `2000-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+function parsePower(value) {
+  const text = String(value ?? "").trim().replace(",", ".");
+  if (!text) return null;
+  const number = Number(text);
+  return Number.isFinite(number) && number >= 0 ? Math.round(number * 1000) / 1000 : undefined;
+}
+
+function inputPower(value) {
+  return value === null || value === undefined || value === "" ? "" : String(value).replace(".", ",");
+}
+
+function localDateValue() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 function rankWeight(rank) {
   return ({ "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 })[rank] || 0;
 }
@@ -55,9 +62,7 @@ function filteredParticipants() {
     .filter(item => item.member_status !== "left")
     .filter(item => !search || item.nickname.toLowerCase().includes(search))
     .filter(item => !rank || item.rank_name === rank)
-    .sort((a, b) => sort === "nickname"
-      ? a.nickname.localeCompare(b.nickname, "ru")
-      : rankWeight(b.rank_name) - rankWeight(a.rank_name) || a.nickname.localeCompare(b.nickname, "ru"));
+    .sort((a, b) => sort === "nickname" ? a.nickname.localeCompare(b.nickname, "ru") : rankWeight(b.rank_name) - rankWeight(a.rank_name) || a.nickname.localeCompare(b.nickname, "ru"));
 }
 
 function render() {
@@ -77,9 +82,7 @@ function fillPrimaryAccountOptions(selectedId = "") {
     .filter(item => item.id !== participantId)
     .filter(item => item.member_status !== "left" || item.id === selectedId)
     .sort((a, b) => a.nickname.localeCompare(b.nickname, "ru"));
-  byId("participantPrimaryAccount").innerHTML = `<option value="">Указать никнейм вручную</option>${options
-    .map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`)
-    .join("")}`;
+  byId("participantPrimaryAccount").innerHTML = `<option value="">Указать никнейм вручную</option>${options.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`).join("")}`;
   byId("participantPrimaryAccount").value = options.some(item => item.id === selectedId) ? selectedId : "";
 }
 
@@ -95,6 +98,8 @@ function resetForm() {
   byId("participantForm").reset();
   byId("participantId").value = "";
   byId("participantStatus").value = "main";
+  byId("participantTimezone").value = "0";
+  byId("participantSquad1").value = "";
   fillPrimaryAccountOptions();
   syncTwinFields();
   byId("participantEditorTitle").textContent = "Добавить участника";
@@ -106,8 +111,9 @@ function fillForm(participant) {
   byId("participantId").value = participant.id;
   byId("participantNickname").value = participant.nickname || "";
   byId("participantRank").value = participant.rank_name || "";
-  byId("participantTimezone").value = participant.timezone_offset ?? "";
+  byId("participantTimezone").value = participant.timezone_offset ?? 0;
   byId("participantBirthday").value = formatStoredBirthday(participant.birthday);
+  byId("participantSquad1").value = inputPower(state.powerByParticipant.get(participant.id));
   byId("participantComment").value = participant.comment || "";
   byId("participantStatus").value = participant.member_status || "main";
   byId("participantIsTwin").checked = Boolean(participant.is_twin);
@@ -121,14 +127,34 @@ function fillForm(participant) {
 
 async function reload() {
   state.context = await loadAlliancePageContext(state.client);
+  const powerResult = await fetchAllianceSquadPower(state.client, getActiveAllianceId());
+  state.powerByParticipant.clear();
+  if (!powerResult.error) {
+    (powerResult.data?.participants || []).forEach(item => state.powerByParticipant.set(item.participant_id, item.squad_1));
+  }
   render();
   fillPrimaryAccountOptions(byId("participantPrimaryAccount")?.value || "");
+}
+
+async function saveOptionalPower(participantId, value) {
+  if (value === null) return null;
+  return saveAllianceSquadPower(state.client, getActiveAllianceId(), {
+    participantId,
+    measuredOn: localDateValue(),
+    squad1: value,
+    squad2: null,
+    squad3: null,
+    squad4: null,
+    squad5: null
+  });
 }
 
 async function submitParticipant(event) {
   event.preventDefault();
   const birthday = toStoredBirthday(byId("participantBirthday").value);
   if (birthday === undefined) return showMessage("Укажи день рождения в формате ДД.ММ.", "error");
+  const squad1 = parsePower(byId("participantSquad1").value);
+  if (squad1 === undefined) return showMessage("Укажи силу 1-го отряда в миллионах, например 87,72.", "error");
   const isTwin = byId("participantIsTwin").checked;
   const primaryParticipantId = isTwin ? byId("participantPrimaryAccount").value : "";
   const primaryNickname = isTwin && !primaryParticipantId ? byId("participantPrimaryNickname").value.trim() : "";
@@ -141,36 +167,32 @@ async function submitParticipant(event) {
 
   if (!participantId) {
     const archivedResult = await findDepartedParticipant(state.client, { allianceId, nickname });
-    if (archivedResult.error) {
-      button.disabled = false;
-      return showMessage(archivedResult.error.message, "error");
-    }
-
+    if (archivedResult.error) { button.disabled = false; return showMessage(archivedResult.error.message, "error"); }
     const departed = archivedResult.data;
     if (departed?.id) {
       const shouldRestore = confirm(`Игрок «${departed.nickname}» недавно состоял в союзе. Восстановить его вместе с сохранёнными данными?`);
-      if (!shouldRestore) {
-        button.disabled = false;
-        return showMessage("Восстановление отменено. Новый участник не добавлен.");
-      }
-
+      if (!shouldRestore) { button.disabled = false; return showMessage("Восстановление отменено. Новый участник не добавлен."); }
       const restoreResult = await restoreParticipant(state.client, { id: departed.id, allianceId });
+      if (restoreResult.error) { button.disabled = false; return showMessage(restoreResult.error.message, "error"); }
+      if (squad1 !== null) {
+        const powerResult = await saveOptionalPower(departed.id, squad1);
+        if (powerResult?.error) { button.disabled = false; return showMessage(powerResult.error.message, "error"); }
+      }
       button.disabled = false;
-      if (restoreResult.error) return showMessage(restoreResult.error.message, "error");
       resetForm();
       await reload();
       return showMessage(`Участник «${departed.nickname}» восстановлен со старыми данными.`, "success");
     }
   }
 
-  const { error } = await saveParticipant(state.client, {
+  const saveResult = await saveParticipant(state.client, {
     id: participantId,
     allianceId,
     payload: {
       nickname,
       rank_name: byId("participantRank").value,
       member_status: byId("participantStatus").value,
-      timezone_offset: byId("participantTimezone").value === "" ? null : Number(byId("participantTimezone").value),
+      timezone_offset: byId("participantTimezone").value === "" ? 0 : Number(byId("participantTimezone").value),
       birthday,
       comment: byId("participantComment").value.trim(),
       is_twin: isTwin,
@@ -178,8 +200,18 @@ async function submitParticipant(event) {
       primary_nickname: primaryNickname || null
     }
   });
+  if (saveResult.error) { button.disabled = false; return showMessage(saveResult.error.message, "error"); }
+
+  await reload();
+  const savedParticipant = participantId
+    ? state.context.participants.find(item => item.id === participantId)
+    : state.context.participants.find(item => item.member_status !== "left" && item.nickname.toLowerCase() === nickname.toLowerCase());
+  if (squad1 !== null && savedParticipant?.id) {
+    const powerResult = await saveOptionalPower(savedParticipant.id, squad1);
+    if (powerResult?.error) { button.disabled = false; return showMessage(`Участник сохранён, но сила отряда не записалась: ${powerResult.error.message}`, "error"); }
+  }
+
   button.disabled = false;
-  if (error) return showMessage(error.message, "error");
   resetForm();
   await reload();
   showMessage("Данные участника сохранены.", "success");
