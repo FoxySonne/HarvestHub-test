@@ -12,6 +12,19 @@
     if (password !== confirmation) throw new Error("Пароли не совпадают.");
   }
 
+  async function syncCloudProfileWithRetry(user, attempts = 3) {
+    let lastError = null;
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      try {
+        return await window.harvestHubGameProfileManager.syncCloudProfile(user);
+      } catch (error) {
+        lastError = error;
+        if (attempt < attempts) await new Promise(resolve => window.setTimeout(resolve, 700 * attempt));
+      }
+    }
+    throw lastError;
+  }
+
   async function signUpWithPassword(email, password, confirmation, nickname, state) {
     const cleanEmail = String(email || "").trim();
     const cleanNickname = String(nickname || "").trim();
@@ -43,7 +56,20 @@
 
     const { data, error } = await client.auth.signInWithPassword({ email: cleanEmail, password });
     if (error) throw error;
-    if (data.user) await window.harvestHubGameProfileManager.syncCloudProfile(data.user);
+
+    if (data.user) {
+      try {
+        await syncCloudProfileWithRetry(data.user);
+      } catch (profileError) {
+        console.warn("Вход выполнен, но профиль пока не загрузился:", profileError);
+        window.setTimeout(() => {
+          syncCloudProfileWithRetry(data.user).catch(error => {
+            console.warn("Не удалось повторно загрузить игровой профиль аккаунта:", error);
+          });
+        }, 2000);
+      }
+    }
+
     return data;
   }
 
@@ -79,20 +105,23 @@
   async function refreshCloudProfile() {
     const client = getClient();
     if (!client) return;
-    const { data } = await client.auth.getSession();
-    if (data.session?.user) await window.harvestHubGameProfileManager.syncCloudProfile(data.session.user);
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    if (data.session?.user) await syncCloudProfileWithRetry(data.session.user);
   }
 
   async function init() {
     const client = getClient();
     if (!client) return;
 
-    await refreshCloudProfile();
+    await refreshCloudProfile().catch(error => {
+      console.warn("Не удалось восстановить профиль аккаунта при загрузке:", error);
+    });
 
     client.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") window.harvestHubAccountModal?.openRecoveryMode?.();
       if (session?.user) {
-        window.harvestHubGameProfileManager.syncCloudProfile(session.user).catch(error => {
+        syncCloudProfileWithRetry(session.user).catch(error => {
           console.warn("Не удалось обновить игровой профиль аккаунта:", error);
         });
       }
