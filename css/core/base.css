@@ -17,6 +17,11 @@
   box-sizing: border-box;
 }
 
+/* Атрибут hidden должен скрывать элементы даже при общих display-стилях кнопок и карточек. */
+[hidden] {
+  display: none !important;
+}
+
 /* Плавная прокрутка всей страницы */
 html {
   scroll-behavior: smooth;
