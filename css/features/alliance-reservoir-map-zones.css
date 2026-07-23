@@ -1,4 +1,4 @@
-/* Цветные границы команд проходят по краю внутреннего плато и растворяются к внешнему краю карты. */
+/* Цветные зоны находятся только СНАРУЖИ края внутреннего плато. */
 .reservoir-map::before,
 .reservoir-map::after {
   content: "";
@@ -6,33 +6,42 @@
   inset: 0;
   z-index: 0;
   display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
   pointer-events: none;
 }
 
-/* Красная сторона: нижний левый край плато. */
+/*
+ * Обе дуги построены по одной форме плато.
+ * Внутри плато цвет полностью отсутствует, максимум приходится на его край,
+ * затем дымка растворяется по направлению к внешней границе изображения.
+ */
 .reservoir-map::before {
-  background:
-    radial-gradient(ellipse 43% 54% at left bottom,
-      transparent 0%,
-      rgba(194, 48, 48, .04) 20%,
-      rgba(194, 48, 48, .14) 31%,
-      rgba(194, 48, 48, .36) 43%,
-      rgba(194, 48, 48, .20) 51%,
-      rgba(194, 48, 48, .07) 59%,
-      transparent 68%);
+  clip-path: polygon(0 43%, 18% 55%, 36% 72%, 53% 100%, 0 100%);
+  background: radial-gradient(
+    ellipse 73% 82% at 50% 49%,
+    transparent 0%,
+    transparent 70%,
+    rgba(190, 43, 43, .34) 74%,
+    rgba(190, 43, 43, .22) 79%,
+    rgba(190, 43, 43, .10) 87%,
+    rgba(190, 43, 43, .03) 95%,
+    transparent 100%
+  );
 }
 
-/* Синяя сторона: верхний правый край плато. */
 .reservoir-map::after {
-  background:
-    radial-gradient(ellipse 43% 54% at right top,
-      transparent 0%,
-      rgba(45, 105, 190, .04) 20%,
-      rgba(45, 105, 190, .14) 31%,
-      rgba(45, 105, 190, .34) 43%,
-      rgba(45, 105, 190, .19) 51%,
-      rgba(45, 105, 190, .06) 59%,
-      transparent 68%);
+  clip-path: polygon(47% 0, 100% 0, 100% 57%, 82% 45%, 64% 28%);
+  background: radial-gradient(
+    ellipse 73% 82% at 50% 49%,
+    transparent 0%,
+    transparent 70%,
+    rgba(45, 105, 190, .32) 74%,
+    rgba(45, 105, 190, .20) 79%,
+    rgba(45, 105, 190, .09) 87%,
+    rgba(45, 105, 190, .03) 95%,
+    transparent 100%
+  );
 }
 
 .reservoir-map-side,
