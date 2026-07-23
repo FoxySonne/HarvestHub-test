@@ -3,6 +3,7 @@ import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, ge
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+const RANK_WEIGHT = { "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 };
 const byId = id => document.getElementById(id);
 const pad = value => String(value).padStart(2, "0");
 const state = { client: null, context: null, data: null, weekStart: "" };
@@ -67,8 +68,13 @@ function formatScore(value) {
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
 
+function inputScore(entry) {
+  if (!entry) return "";
+  if (entry.is_vacation) return "О";
+  return entry.points ? formatScore(entry.points) : "0";
+}
+
 function participantMetrics(participantId, map) {
-  const start = state.weekStart;
   const today = dateValue(new Date());
   const target = Number(state.data?.daily_target) || 5000000;
   let total = 0;
@@ -76,7 +82,7 @@ function participantMetrics(participantId, map) {
   let counted = 0;
   let vacation = 0;
   const days = DAYS.map((label, index) => {
-    const date = addDays(start, index);
+    const date = addDays(state.weekStart, index);
     const future = date > today;
     const entry = map.get(`${participantId}:${date}`);
     const points = Number(entry?.points) || 0;
@@ -93,6 +99,19 @@ function participantMetrics(participantId, map) {
   return { total, completed, counted, vacation, days, allDone };
 }
 
+function sortRows(rows) {
+  const sort = byId("vsSort")?.value || "total";
+  return rows.sort((a, b) => {
+    if (sort === "nickname") return a.nickname.localeCompare(b.nickname, "ru");
+    if (sort === "rank") return (RANK_WEIGHT[b.rank_name] || 0) - (RANK_WEIGHT[a.rank_name] || 0) || a.nickname.localeCompare(b.nickname, "ru");
+    if (sort.startsWith("day-")) {
+      const index = Number(sort.slice(4));
+      return (b.metrics.days[index]?.points || 0) - (a.metrics.days[index]?.points || 0) || a.nickname.localeCompare(b.nickname, "ru");
+    }
+    return b.metrics.total - a.metrics.total || a.nickname.localeCompare(b.nickname, "ru");
+  });
+}
+
 function renderSummary(rows) {
   const summary = byId("vsSummary");
   if (!rows.length) {
@@ -102,16 +121,32 @@ function renderSummary(rows) {
   }
   const total = rows.reduce((sum, row) => sum + row.metrics.total, 0);
   const complete = rows.filter(row => row.metrics.allDone).length;
-  const best = [...rows].sort((a, b) => b.metrics.total - a.metrics.total)[0];
-  const worst = [...rows].sort((a, b) => a.metrics.total - b.metrics.total)[0];
+  const byTotal = [...rows].sort((a, b) => b.metrics.total - a.metrics.total);
   summary.hidden = false;
   summary.innerHTML = `
     <div><span>Общая сумма союза</span><strong>${formatScore(total)}</strong></div>
     <div><span>Выполнили все дни</span><strong>${complete}</strong></div>
     <div><span>Выполнили не все дни</span><strong>${rows.length - complete}</strong></div>
     <div><span>Выполнили полностью</span><strong>${Math.round(complete / rows.length * 100)}%</strong></div>
-    <div><span>Лучший участник</span><strong>${escapeHtml(best.nickname)}</strong></div>
-    <div><span>Худший участник</span><strong>${escapeHtml(worst.nickname)}</strong></div>`;
+    <div><span>Лучший участник</span><strong>${escapeHtml(byTotal[0].nickname)}</strong></div>
+    <div><span>Худший участник</span><strong>${escapeHtml(byTotal[byTotal.length - 1].nickname)}</strong></div>`;
+}
+
+function buildRows() {
+  const map = new Map((state.data?.results || []).map(item => [`${item.participant_id}:${item.result_date}`, item]));
+  const active = state.context.participants.filter(item => item.member_status !== "left");
+  return sortRows(active.map(item => ({ ...item, metrics: participantMetrics(item.id, map) })));
+}
+
+function renderBulk(rows) {
+  const body = byId("vsBulkBody");
+  if (!body) return;
+  body.innerHTML = rows.map(row => `
+    <tr data-vs-bulk-participant="${row.id}">
+      <td><strong>${escapeHtml(row.nickname)}</strong><small>${escapeHtml(row.rank_name || "—")}</small></td>
+      ${row.metrics.days.map((day, index) => `<td><input type="text" inputmode="decimal" data-vs-bulk-day="${index}" value="${escapeHtml(inputScore(day.entry))}" ${day.future ? "disabled" : ""} data-no-persist="true"></td>`).join("")}
+    </tr>`).join("");
+  byId("vsBulkWeekLabel").textContent = `Неделя ${weekLabel(state.weekStart)}`;
 }
 
 function render() {
@@ -128,9 +163,7 @@ function render() {
   participantSelect.innerHTML = activeParticipants.map(item => `<option value="${item.id}">${escapeHtml(item.nickname)}</option>`).join("");
   if ([...participantSelect.options].some(option => option.value === selectedParticipant)) participantSelect.value = selectedParticipant;
 
-  const map = new Map((state.data?.results || []).map(item => [`${item.participant_id}:${item.result_date}`, item]));
-  const rows = activeParticipants.map(item => ({ ...item, metrics: participantMetrics(item.id, map) })).sort((a, b) => b.metrics.total - a.metrics.total || a.nickname.localeCompare(b.nickname, "ru"));
-
+  const rows = buildRows();
   byId("vsTableHead").innerHTML = `<tr><th>Место</th><th>Участник</th>${DAYS.map(day => `<th>${day}</th>`).join("")}<th>Общая сумма</th><th>Выполнено дней</th><th></th></tr>`;
   byId("vsTableBody").innerHTML = rows.map((row, index) => `
     <tr>
@@ -144,6 +177,7 @@ function render() {
   byId("vsCount").textContent = `${rows.length} участников`;
   byId("vsEmptyState").hidden = rows.length > 0;
   renderSummary(rows);
+  renderBulk(rows);
 }
 
 function syncDateFromDay() {
@@ -153,12 +187,8 @@ function syncDateFromDay() {
 function syncDayFromDate() {
   const value = byId("vsResultDate").value;
   if (!value) return;
-  const date = parseDate(value);
-  const day = (date.getDay() || 7) - 1;
-  if (day > 5) {
-    showMessage("Для VS можно выбрать дату с понедельника по субботу.", "error");
-    return;
-  }
+  const day = (parseDate(value).getDay() || 7) - 1;
+  if (day > 5) return showMessage("Для VS можно выбрать дату с понедельника по субботу.", "error");
   byId("vsDay").value = String(day);
   const nextWeekStart = getWeekStart(value);
   if (nextWeekStart !== state.weekStart) {
@@ -203,8 +233,7 @@ async function saveResult(event) {
   event.preventDefault();
   const resultDate = byId("vsResultDate").value;
   if (!resultDate) return showMessage("Выбери дату.", "error");
-  const date = parseDate(resultDate);
-  const weekday = (date.getDay() || 7) - 1;
+  const weekday = (parseDate(resultDate).getDay() || 7) - 1;
   if (weekday > 5) return showMessage("Для VS можно выбрать дату с понедельника по субботу.", "error");
   if (resultDate > dateValue(new Date())) return showMessage("Будущую дату пока нельзя сохранить.", "error");
   const vacation = byId("vsVacation").checked;
@@ -219,6 +248,46 @@ async function saveResult(event) {
   resetEditor();
   await reload();
   showMessage("Результат сохранён.", "success");
+}
+
+async function saveBulk() {
+  const button = byId("vsBulkSave");
+  const rows = [...document.querySelectorAll("[data-vs-bulk-participant]")];
+  const changes = [];
+
+  for (const row of rows) {
+    for (const input of row.querySelectorAll("[data-vs-bulk-day]")) {
+      if (input.disabled) continue;
+      const raw = input.value.trim();
+      if (!raw) continue;
+      const vacation = raw.toUpperCase() === "О";
+      const points = vacation ? null : parseScore(raw);
+      if (!vacation && points === null) {
+        input.focus();
+        return showMessage("Проверь значение в общей таблице. Можно вводить число, K/M/B/T или букву «О».", "error");
+      }
+      changes.push({
+        participantId: row.dataset.vsBulkParticipant,
+        resultDate: addDays(state.weekStart, Number(input.dataset.vsBulkDay)),
+        points,
+        isVacation: vacation
+      });
+    }
+  }
+
+  if (!changes.length) return showMessage("В общей таблице нет заполненных значений.", "error");
+  button.disabled = true;
+  for (const change of changes) {
+    const { error } = await saveAllianceVsResult(state.client, getActiveAllianceId(), change);
+    if (error) {
+      button.disabled = false;
+      return showMessage(error.message, "error");
+    }
+  }
+  button.disabled = false;
+  byId("vsBulkCard").hidden = true;
+  await reload();
+  showMessage("Результаты недели сохранены.", "success");
 }
 
 async function saveTarget(event) {
@@ -252,10 +321,18 @@ export async function init() {
   byId("vsResultForm")?.addEventListener("submit", saveResult);
   byId("vsTargetForm")?.addEventListener("submit", saveTarget);
   byId("vsEditCancel")?.addEventListener("click", resetEditor);
+  byId("vsSort")?.addEventListener("change", render);
   byId("vsTableBody")?.addEventListener("click", event => {
     const button = event.target.closest("[data-vs-edit]");
     if (button) editParticipant(button.dataset.vsEdit);
   });
+  byId("vsBulkOpen")?.addEventListener("click", () => {
+    renderBulk(buildRows());
+    byId("vsBulkCard").hidden = false;
+    byId("vsBulkCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  byId("vsBulkClose")?.addEventListener("click", () => { byId("vsBulkCard").hidden = true; });
+  byId("vsBulkSave")?.addEventListener("click", saveBulk);
   byId("vsExpandTable")?.addEventListener("click", () => toggleFullscreen(true));
   byId("vsCloseTable")?.addEventListener("click", () => toggleFullscreen(false));
 }
