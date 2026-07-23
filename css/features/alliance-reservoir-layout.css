@@ -83,7 +83,7 @@
   height: 24px;
   border-radius: 50%;
   background: transparent;
-  color: #fff;
+  color: var(--text) !important;
   font-size: 14px;
 }
 
