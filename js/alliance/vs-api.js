@@ -22,3 +22,10 @@ export function setAllianceVsDailyTarget(client, allianceId, dailyTarget) {
     target_daily_target: dailyTarget
   });
 }
+
+export function setAllianceVsSaturdayTotal(client, allianceId, includeSaturday) {
+  return client.rpc("set_alliance_vs_saturday_total", {
+    target_alliance_id: allianceId,
+    target_include_saturday: includeSaturday
+  });
+}
