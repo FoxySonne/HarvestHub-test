@@ -22,22 +22,21 @@
 
   <section id="vsBulkCard" class="card" hidden>
     <div class="card-header"><div><h3>Общее редактирование VS</h3><p id="vsBulkWeekLabel">Неделя</p></div></div>
-
     <p class="vs-bulk-hint">Число без буквы считается миллионами. Например: 13 = 13М, 0,1 = 100k, 1280 = 1,28В. Буква «О» обозначает отпуск, пустая ячейка не изменяется.</p>
+    <div class="alliance-actions vs-bulk-actions"><button id="vsBulkSave" type="button">Сохранить изменения</button><button id="vsBulkClose" type="button" class="secondary-button">Закрыть</button></div>
     <div class="alliance-table-wrap" data-horizontal-scroll>
       <table class="alliance-table vs-bulk-table">
         <thead><tr><th>Участник</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th></tr></thead>
         <tbody id="vsBulkBody"></tbody>
       </table>
-<div class="alliance-actions"><button id="vsBulkSave" type="button">Сохранить изменения</button><button id="vsBulkClose" type="button" class="secondary-button">Закрыть</button></div>
     </div>
-  
   </section>
 
   <section class="card alliance-list-card">
     <div class="card-header"><div><h3 id="vsTableWeekTitle">Текущая неделя</h3><p id="vsCount">0 участников</p></div></div>
     <div class="vs-table-controls">
       <label><span>Сортировка</span><select id="vsSort" data-no-persist="true"><option value="nickname">По имени</option><option value="total">По сумме за неделю</option><option value="rank">По рангу</option><option value="day-0">По понедельнику</option><option value="day-1">По вторнику</option><option value="day-2">По среде</option><option value="day-3">По четвергу</option><option value="day-4">По пятнице</option><option value="day-5">По субботе</option></select></label>
+      <label class="checkbox vs-saturday-total-toggle tooltip" data-tooltip="Если отключить, общая сумма и выполнение недели считаются только по понедельнику–четвергу."><input id="vsIncludeSaturdayTotal" type="checkbox" data-no-persist="true"><span>Учитывать субботу</span></label>
       <button id="vsBulkOpen" type="button" class="secondary-button">Изменить таблицу</button>
       <button id="vsExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button>
     </div>
