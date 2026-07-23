@@ -39,9 +39,11 @@
   flex-direction: column !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  width: 220px;
-  min-height: 190px;
-  padding: 24px 0 0 !important;
+  width: 170px;
+  height: 170px;
+  min-height: 170px;
+  padding: 18px 0 0 !important;
+  box-sizing: border-box;
   overflow: visible;
   color: var(--text) !important;
   text-align: center;
@@ -50,8 +52,8 @@
 .reservoir-map-building {
   display: block;
   flex: 0 0 auto;
-  width: 190px;
-  height: 138px;
+  width: 150px;
+  height: 130px;
   margin: 0 auto;
   border: 0 !important;
   border-radius: 0 !important;
@@ -71,7 +73,7 @@
   position: static !important;
   display: block;
   width: 100%;
-  margin: 6px 0 0;
+  margin: 2px 0 0;
   color: var(--text) !important;
   font-size: 13px;
   line-height: 1.15;
@@ -94,14 +96,9 @@
 .reservoir-map [data-location-key="central"] {
   left: 50% !important;
   top: 49% !important;
-  width: 250px;
-  min-height: 220px;
 }
 
 .reservoir-map [data-location-key="central"] .reservoir-map-building {
-  width: 230px;
-  height: 172px;
-  margin: 0 auto;
   background-color: transparent !important;
   background-image: url("../../assets/images/reservoir/central-reservoir.png?v=20260723-1") !important;
   background-position: center 56% !important;
@@ -109,13 +106,8 @@
   background-size: 210% auto !important;
 }
 
-.reservoir-map [data-location-key="central"] .reservoir-map-count {
-  top: 0;
-}
-
 .reservoir-map [data-location-key="central"] .reservoir-map-location-name {
-  margin-top: 2px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -270,22 +262,18 @@
 
 @media (max-width: 899px) {
   .reservoir-map-location {
-    width: 216px;
-    min-height: 186px;
+    width: 170px;
+    height: 170px;
+    min-height: 170px;
+  }
+
+  .reservoir-map-building {
+    width: 150px;
+    height: 130px;
   }
 
   .reservoir-map-location-name {
     font-size: 12px;
-  }
-
-  .reservoir-map [data-location-key="central"] {
-    width: 245px;
-    min-height: 214px;
-  }
-
-  .reservoir-map [data-location-key="central"] .reservoir-map-building {
-    width: 225px;
-    height: 168px;
   }
 
   .reservoir-map-collectors {
