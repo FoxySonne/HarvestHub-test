@@ -41,10 +41,6 @@
 .account-message{min-height:24px;margin:14px 0 0}
 .account-message[data-type="error"],.settings-form-message[data-type="error"]{color:var(--danger-text)}
 .account-message[data-type="success"],.settings-form-message[data-type="success"]{color:var(--accent)}
-.advanced-mode-setting-row>span:first-child{display:flex;flex-direction:column;gap:4px}
-.advanced-mode-setting-row small{max-width:620px;color:var(--text-soft);font-size:12px;line-height:1.4}
-.advanced-mode-setting-row input:disabled+.ipk-switch-track{opacity:.45;cursor:not-allowed}
-#advancedModeAccountButton{margin-top:14px}
 .account-security-card h4{margin:0 0 14px}
 .settings-account-form{max-width:560px}
 .settings-form-message{min-height:20px;margin:10px 0 0;font-size:13px}
