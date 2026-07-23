@@ -1,4 +1,4 @@
-import { fetchAllianceVsStatistics, saveAllianceVsResult, setAllianceVsDailyTarget } from "../alliance/vs-api.js?v=20260718-1";
+import { fetchAllianceVsStatistics, saveAllianceVsResult, setAllianceVsDailyTarget, setAllianceVsSaturdayTotal } from "../alliance/vs-api.js?v=20260724-saturday-total-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
@@ -77,6 +77,7 @@ function inputScore(entry) {
 function participantMetrics(participantId, map) {
   const today = dateValue(new Date());
   const target = Number(state.data?.daily_target) || 5000000;
+  const includeSaturday = state.data?.include_saturday_in_total !== false;
   let total = 0;
   let completed = 0;
   let counted = 0;
@@ -84,15 +85,25 @@ function participantMetrics(participantId, map) {
   const days = DAYS.map((label, index) => {
     const date = addDays(state.weekStart, index);
     const future = date > today;
+    const included = includeSaturday || index < 4;
     const entry = map.get(`${participantId}:${date}`);
     const points = Number(entry?.points) || 0;
-    if (!future) {
+    if (!future && included) {
       counted += 1;
       total += points;
       if (entry?.is_vacation) vacation += 1;
       else if (points >= target) completed += 1;
     }
-    return { label, date, future, entry, points, failed: !future && !entry?.is_vacation && points < target, met: !future && !entry?.is_vacation && points >= target };
+    return {
+      label,
+      date,
+      future,
+      included,
+      entry,
+      points,
+      failed: included && !future && !entry?.is_vacation && points < target,
+      met: included && !future && !entry?.is_vacation && points >= target
+    };
   });
   const required = counted - vacation;
   const allDone = required > 0 ? completed === required : counted > 0 && vacation === counted;
@@ -100,7 +111,7 @@ function participantMetrics(participantId, map) {
 }
 
 function sortRows(rows) {
-  const sort = byId("vsSort")?.value || "total";
+  const sort = byId("vsSort")?.value || "nickname";
   return rows.sort((a, b) => {
     if (sort === "nickname") return a.nickname.localeCompare(b.nickname, "ru");
     if (sort === "rank") return (RANK_WEIGHT[b.rank_name] || 0) - (RANK_WEIGHT[a.rank_name] || 0) || a.nickname.localeCompare(b.nickname, "ru");
@@ -156,6 +167,7 @@ function render() {
   byId("vsCurrentWeekLabel").textContent = `Неделя ${weekLabel(state.weekStart)}`;
   byId("vsTableWeekTitle").textContent = `Неделя ${weekLabel(state.weekStart)}`;
   byId("vsDailyTarget").value = formatScore(state.data?.daily_target || 5000000);
+  byId("vsIncludeSaturdayTotal").checked = state.data?.include_saturday_in_total !== false;
 
   const activeParticipants = state.context.participants.filter(item => item.member_status !== "left");
   const participantSelect = byId("vsParticipant");
@@ -205,7 +217,7 @@ async function reload() {
   }
   const result = await fetchAllianceVsStatistics(state.client, getActiveAllianceId(), state.weekStart, addDays(state.weekStart, 5));
   if (result.error) throw result.error;
-  state.data = result.data || { results: [], daily_target: 5000000 };
+  state.data = result.data || { results: [], daily_target: 5000000, include_saturday_in_total: true };
   render();
 }
 
@@ -303,6 +315,19 @@ async function saveTarget(event) {
   showMessage("Норматив сохранён.", "success");
 }
 
+async function saveSaturdayTotal(event) {
+  const checkbox = event.currentTarget;
+  checkbox.disabled = true;
+  const { error } = await setAllianceVsSaturdayTotal(state.client, getActiveAllianceId(), checkbox.checked);
+  checkbox.disabled = false;
+  if (error) {
+    checkbox.checked = !checkbox.checked;
+    return showMessage(error.message, "error");
+  }
+  await reload();
+  showMessage(checkbox.checked ? "Субботний этап учитывается в общей сумме." : "Общая сумма считается только по понедельнику–четвергу.", "success");
+}
+
 function toggleFullscreen(open) {
   setAllianceTableFullscreen(byId("vsCurrentTableContainer"), open);
 }
@@ -322,6 +347,7 @@ export async function init() {
   byId("vsTargetForm")?.addEventListener("submit", saveTarget);
   byId("vsEditCancel")?.addEventListener("click", resetEditor);
   byId("vsSort")?.addEventListener("change", render);
+  byId("vsIncludeSaturdayTotal")?.addEventListener("change", saveSaturdayTotal);
   byId("vsTableBody")?.addEventListener("click", event => {
     const button = event.target.closest("[data-vs-edit]");
     if (button) editParticipant(button.dataset.vsEdit);
