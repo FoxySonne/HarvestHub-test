@@ -1,4 +1,4 @@
-import { fetchMemberships, fetchParticipants } from "./api.js?v=20260718-40";
+import { fetchMemberships, fetchParticipants } from "./api.js?v=20260723-1";
 import { ACTIVE_ALLIANCE_STORAGE_KEY } from "./config.js";
 
 export function getActiveAllianceId() {

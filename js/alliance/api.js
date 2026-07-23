@@ -45,12 +45,25 @@ export function saveParticipant(client, { id, allianceId, payload }) {
   });
 }
 
-export function deleteParticipant(client, { id, allianceId }) {
-  return client
-    .from("participants")
-    .update({ member_status: "left" })
-    .eq("id", id)
-    .eq("alliance_id", allianceId);
+export function findDepartedParticipant(client, { allianceId, nickname }) {
+  return client.rpc("find_recent_departed_participant", {
+    target_alliance_id: allianceId,
+    target_nickname: String(nickname || "").trim()
+  });
+}
+
+export function restoreParticipant(client, { id, allianceId }) {
+  return client.rpc("restore_alliance_participant", {
+    target_alliance_id: allianceId,
+    target_participant_id: id
+  });
+}
+
+export function markParticipantLeft(client, { id, allianceId }) {
+  return client.rpc("mark_alliance_participant_left", {
+    target_alliance_id: allianceId,
+    target_participant_id: id
+  });
 }
 
 export function linkParticipantAccount(client, allianceId, participantId, email) {

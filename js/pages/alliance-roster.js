@@ -1,6 +1,11 @@
-import { saveParticipant, deleteParticipant } from "../alliance/api.js?v=20260718-40";
+import {
+  findDepartedParticipant,
+  markParticipantLeft,
+  restoreParticipant,
+  saveParticipant
+} from "../alliance/api.js?v=20260723-1";
 import { renderParticipantRows } from "../alliance/view.js?v=20260722-1";
-import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
+import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260723-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const byId = id => document.getElementById(id);
@@ -128,13 +133,41 @@ async function submitParticipant(event) {
   const primaryParticipantId = isTwin ? byId("participantPrimaryAccount").value : "";
   const primaryNickname = isTwin && !primaryParticipantId ? byId("participantPrimaryNickname").value.trim() : "";
   if (isTwin && !primaryParticipantId && !primaryNickname) return showMessage("Выбери основной аккаунт или укажи его никнейм.", "error");
-  const button = event.submitter;
+  const button = event.submitter || byId("participantForm").querySelector('[type="submit"]');
   button.disabled = true;
+  const participantId = byId("participantId").value || null;
+  const allianceId = getActiveAllianceId();
+  const nickname = byId("participantNickname").value.trim();
+
+  if (!participantId) {
+    const archivedResult = await findDepartedParticipant(state.client, { allianceId, nickname });
+    if (archivedResult.error) {
+      button.disabled = false;
+      return showMessage(archivedResult.error.message, "error");
+    }
+
+    const departed = archivedResult.data;
+    if (departed?.id) {
+      const shouldRestore = confirm(`Игрок «${departed.nickname}» недавно состоял в союзе. Восстановить его вместе с сохранёнными данными?`);
+      if (!shouldRestore) {
+        button.disabled = false;
+        return showMessage("Восстановление отменено. Новый участник не добавлен.");
+      }
+
+      const restoreResult = await restoreParticipant(state.client, { id: departed.id, allianceId });
+      button.disabled = false;
+      if (restoreResult.error) return showMessage(restoreResult.error.message, "error");
+      resetForm();
+      await reload();
+      return showMessage(`Участник «${departed.nickname}» восстановлен со старыми данными.`, "success");
+    }
+  }
+
   const { error } = await saveParticipant(state.client, {
-    id: byId("participantId").value || null,
-    allianceId: getActiveAllianceId(),
+    id: participantId,
+    allianceId,
     payload: {
-      nickname: byId("participantNickname").value.trim(),
+      nickname,
       rank_name: byId("participantRank").value,
       member_status: byId("participantStatus").value,
       timezone_offset: byId("participantTimezone").value === "" ? null : Number(byId("participantTimezone").value),
@@ -159,7 +192,7 @@ async function tableClick(event) {
   if (!remove) return;
   const participant = state.context.participants.find(item => item.id === remove.dataset.participantDelete);
   if (!participant || !confirm(`Отметить «${participant.nickname}» как вышедшего?`)) return;
-  const { error } = await deleteParticipant(state.client, { id: participant.id, allianceId: getActiveAllianceId() });
+  const { error } = await markParticipantLeft(state.client, { id: participant.id, allianceId: getActiveAllianceId() });
   if (error) return showMessage(error.message, "error");
   await reload();
   showMessage("Участник отмечен как вышедший.", "success");
