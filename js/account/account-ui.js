@@ -17,6 +17,8 @@
   function openAccount() {
     if (getProfile()) window.loadPage?.("profile.html");
     else {
+      window.harvestHubAccountModal?.setTab?.("account");
+      window.harvestHubAccountModal?.setCloudMode?.("login");
       document.getElementById("accountModal")?.classList.add("is-open");
       document.body.classList.add("account-modal-open");
     }
