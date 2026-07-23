@@ -2,7 +2,7 @@ async function resetAllSiteData() {
     if (!confirm("Очистить все локальные данные HarvestHub на этом устройстве? Синхронизированные данные в аккаунте останутся без изменений. На этом устройстве потребуется войти в аккаунт заново.")) return;
 
     try {
-        // Завершаем только локальную сессию, чтобы облачные данные не восстановились
+        // Завшаем только локальную сессию, чтобы облачные данные не восстановились
         // сразу после очистки. Данные аккаунта и user_app_state в Supabase не меняются.
         if (window.harvestHubSupabase) {
             const { error } = await window.harvestHubSupabase.auth.signOut({ scope: "local" });
@@ -83,24 +83,40 @@ async function getRegisteredAccountSession() {
     return data.session || null;
 }
 
+function escapeSettingsHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
 async function initAdvancedModeSetting() {
     const toggle = document.getElementById("advancedModeToggle");
     const message = document.getElementById("advancedModeAccessMessage");
     const accountButton = document.getElementById("advancedModeAccountButton");
-    if (!toggle) return;
+    if (!toggle) return { loaded: true, hasAccess: false, isAdmin: false };
 
     const session = await getRegisteredAccountSession();
-    const allowed = Boolean(session?.user);
+    const accessManager = window.harvestHubAdvancedModeAccess;
+    const status = accessManager
+        ? await accessManager.refresh()
+        : { loaded: true, hasAccess: false, isAdmin: false };
+    const signedIn = Boolean(session?.user);
+    const allowed = signedIn && status.hasAccess;
 
     toggle.disabled = !allowed;
     toggle.checked = allowed && typeof window.getAdvancedMode === "function" && window.getAdvancedMode();
 
-    if (!allowed) {
-        if (typeof window.setAdvancedMode === "function") window.setAdvancedMode(false);
-        if (message) message.textContent = "Продвинутый режим доступен только пользователям с полноценным профилем.";
+    if (!signedIn) {
+        if (message) message.textContent = "Продвинутый режим доступен только зарегистрированным пользователям.";
         if (accountButton) accountButton.hidden = false;
+    } else if (!allowed) {
+        if (message) message.textContent = "Доступ пока не выдан администратором сайта.";
+        if (accountButton) accountButton.hidden = true;
     } else {
-        if (message) message.textContent = "Доступ включён для текущего аккаунта.";
+        if (message) message.textContent = "Доступ выдан. Режим можно включать и выключать.";
         if (accountButton) accountButton.hidden = true;
     }
 
@@ -109,7 +125,104 @@ async function initAdvancedModeSetting() {
             toggle.checked = false;
             return;
         }
-        if (typeof window.setAdvancedMode === "function") window.setAdvancedMode(toggle.checked);
+        if (typeof window.setAdvancedMode === "function") {
+            toggle.checked = window.setAdvancedMode(toggle.checked);
+        }
+    });
+
+    return status;
+}
+
+function renderAdvancedModeAccounts(accounts) {
+    const list = document.getElementById("advancedModeAccountList");
+    if (!list) return;
+
+    if (!accounts.length) {
+        list.innerHTML = '<p class="cloud-login-note">Зарегистрированных пользователей пока нет.</p>';
+        return;
+    }
+
+    list.innerHTML = accounts.map(account => {
+        const userId = escapeSettingsHtml(account.user_id);
+        const nickname = escapeSettingsHtml(account.nickname || account.email || "Пользователь");
+        const email = escapeSettingsHtml(account.email || "Email не указан");
+        const state = account.state ? ` · штат ${escapeSettingsHtml(account.state)}` : "";
+        const hasAccess = Boolean(account.has_access);
+        const isAdmin = Boolean(account.is_admin);
+        const badgeClass = hasAccess ? "game-profile-badge is-active" : "game-profile-badge";
+        const buttonClass = hasAccess && !isAdmin ? "game-profile-select danger-button" : "game-profile-select";
+        const buttonText = isAdmin ? "Администратор" : hasAccess ? "Отозвать" : "Выдать доступ";
+
+        return `
+            <article class="game-profile-card">
+                <div class="game-profile-card-copy">
+                    <div class="game-profile-card-title">
+                        <strong>${nickname}</strong>
+                        <span class="${badgeClass}">${hasAccess ? "Доступ выдан" : "Нет доступа"}</span>
+                    </div>
+                    <p>${email}${state}</p>
+                </div>
+                <div class="game-profile-actions">
+                    <button
+                        type="button"
+                        class="${buttonClass}"
+                        data-advanced-access-user="${userId}"
+                        data-advanced-access-enabled="${hasAccess ? "0" : "1"}"
+                        ${isAdmin ? "disabled" : ""}
+                    >${buttonText}</button>
+                </div>
+            </article>`;
+    }).join("");
+}
+
+async function loadAdvancedModeAccounts() {
+    const manager = window.harvestHubAdvancedModeAccess;
+    if (!manager) throw new Error("Управление доступом пока недоступно.");
+    const accounts = await manager.listAccounts();
+    renderAdvancedModeAccounts(accounts);
+}
+
+async function initAdvancedModeAdmin(status) {
+    const card = document.getElementById("advancedModeAdminCard");
+    const list = document.getElementById("advancedModeAccountList");
+    if (!card || !list || !status?.isAdmin) return;
+
+    card.hidden = false;
+    setSettingsMessage("advancedModeAdminMessage", "Загружаем пользователей…");
+
+    try {
+        await loadAdvancedModeAccounts();
+        setSettingsMessage("advancedModeAdminMessage", "");
+    } catch (error) {
+        console.error("Не удалось загрузить пользователей:", error);
+        setSettingsMessage("advancedModeAdminMessage", "Не удалось загрузить список пользователей.", "error");
+    }
+
+    list.addEventListener("click", async event => {
+        const button = event.target.closest?.("[data-advanced-access-user]");
+        if (!button || button.disabled) return;
+
+        const userId = button.dataset.advancedAccessUser;
+        const enabled = button.dataset.advancedAccessEnabled === "1";
+        const normalText = button.textContent;
+        button.disabled = true;
+        button.textContent = enabled ? "Выдаём…" : "Отзываем…";
+        setSettingsMessage("advancedModeAdminMessage", "");
+
+        try {
+            await window.harvestHubAdvancedModeAccess.setAccess(userId, enabled);
+            await loadAdvancedModeAccounts();
+            setSettingsMessage(
+                "advancedModeAdminMessage",
+                enabled ? "Доступ выдан." : "Доступ отозван.",
+                "success"
+            );
+        } catch (error) {
+            console.error("Не удалось изменить доступ:", error);
+            button.disabled = false;
+            button.textContent = normalText;
+            setSettingsMessage("advancedModeAdminMessage", error?.message || "Не удалось изменить доступ.", "error");
+        }
     });
 }
 
@@ -201,7 +314,8 @@ async function initAccountSecurity() {
 
 async function initSettingsPage() {
     document.getElementById("resetSiteDataButton")?.addEventListener("click", resetAllSiteData);
-    await initAdvancedModeSetting();
+    const accessStatus = await initAdvancedModeSetting();
+    await initAdvancedModeAdmin(accessStatus);
     await initAccountSecurity();
 }
 
