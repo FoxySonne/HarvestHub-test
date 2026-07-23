@@ -86,16 +86,20 @@
     readLocalState() {
       return {
         schemaVersion: 2,
-        advancedMode: typeof window.getAdvancedMode === "function"
-          ? window.getAdvancedMode()
+        advancedMode: typeof window.getAdvancedModePreference === "function"
+          ? window.getAdvancedModePreference()
           : localStorage.getItem(`${ADVANCED_MODE_LOCAL_KEY}:${getProfile()?.id || ""}`) === "1",
         theme: window.harvestHubTheme?.getTheme?.() || "dark"
       };
     },
 
     applyRemoteState(data) {
-      if (typeof data?.advancedMode === "boolean" && typeof window.setAdvancedMode === "function") {
-        window.setAdvancedMode(data.advancedMode);
+      if (typeof data?.advancedMode === "boolean") {
+        if (typeof window.setAdvancedModePreference === "function") {
+          window.setAdvancedModePreference(data.advancedMode);
+        } else if (typeof window.setAdvancedMode === "function") {
+          window.setAdvancedMode(data.advancedMode);
+        }
       }
       if ((data?.theme === "dark" || data?.theme === "light") && window.harvestHubTheme) {
         window.harvestHubTheme.setTheme(data.theme, { notify: false });
