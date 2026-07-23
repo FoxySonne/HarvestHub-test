@@ -49,6 +49,8 @@ async function openDashboard(allianceId) {
   byId("allianceDashboardRank").textContent = current?.rank_name || "—";
   byId("allianceDashboardRole").textContent = roleLabel(membership.role);
   document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
+  const ownPowerButton = byId("allianceOwnPowerButton");
+  if (ownPowerButton) ownPowerButton.hidden = canEdit || !current;
   showDashboard();
 }
 
@@ -130,6 +132,7 @@ export async function init() {
   byId("allianceHubCreateForm")?.addEventListener("submit", handleCreate);
   byId("allianceHubSelector")?.addEventListener("change", event => { state.choosingAlliance = false; openDashboard(event.target.value); });
   byId("allianceDashboardChangeButton")?.addEventListener("click", showEntry);
+  byId("allianceOwnPowerButton")?.addEventListener("click", () => window.loadPage?.("alliance/power.html"));
   const sessionResult = await state.client.auth.getSession();
   if (sessionResult.error) return showMessage(sessionResult.error.message, "error");
   await applySession(sessionResult.data.session);
