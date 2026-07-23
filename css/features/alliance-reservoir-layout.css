@@ -82,9 +82,9 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--accent);
+  background: transparent;
   color: #fff;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .reservoir-map-location:hover .reservoir-map-building,
