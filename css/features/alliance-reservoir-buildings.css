@@ -1,0 +1,44 @@
+/* Изображения обычных локаций карты резервуара. Один файл переиспользуется для одинаковых зданий. */
+.reservoir-map [data-location-key="treatment_1"] .reservoir-map-building,
+.reservoir-map [data-location-key="treatment_2"] .reservoir-map-building,
+.reservoir-map [data-location-key="processing_1"] .reservoir-map-building,
+.reservoir-map [data-location-key="processing_2"] .reservoir-map-building,
+.reservoir-map [data-location-key="processing_3"] .reservoir-map-building,
+.reservoir-map [data-location-key="processing_4"] .reservoir-map-building,
+.reservoir-map [data-location-key="solar"] .reservoir-map-building,
+.reservoir-map [data-location-key="helipad"] .reservoir-map-building,
+.reservoir-map [data-location-key="development"] .reservoir-map-building,
+.reservoir-map [data-location-key="military"] .reservoir-map-building {
+  background-color: transparent !important;
+  background-position: center 56% !important;
+  background-repeat: no-repeat !important;
+  background-size: 210% auto !important;
+}
+
+.reservoir-map [data-location-key="treatment_1"] .reservoir-map-building,
+.reservoir-map [data-location-key="treatment_2"] .reservoir-map-building {
+  background-image: url("../../assets/images/reservoir/water-treatment-center.png?v=20260723-1") !important;
+}
+
+.reservoir-map [data-location-key="processing_1"] .reservoir-map-building,
+.reservoir-map [data-location-key="processing_2"] .reservoir-map-building,
+.reservoir-map [data-location-key="processing_3"] .reservoir-map-building,
+.reservoir-map [data-location-key="processing_4"] .reservoir-map-building {
+  background-image: url("../../assets/images/reservoir/water-processing-plant.png?v=20260723-1") !important;
+}
+
+.reservoir-map [data-location-key="solar"] .reservoir-map-building {
+  background-image: url("../../assets/images/reservoir/solar-power-plant.png?v=20260723-1") !important;
+}
+
+.reservoir-map [data-location-key="helipad"] .reservoir-map-building {
+  background-image: url("../../assets/images/reservoir/abandoned-helipad.png?v=20260723-1") !important;
+}
+
+.reservoir-map [data-location-key="development"] .reservoir-map-building {
+  background-image: url("../../assets/images/reservoir/development-complex.png?v=20260723-1") !important;
+}
+
+.reservoir-map [data-location-key="military"] .reservoir-map-building {
+  background-image: url("../../assets/images/reservoir/military-factory.png?v=20260723-1") !important;
+}
