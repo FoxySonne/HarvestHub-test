@@ -123,11 +123,11 @@
 .reservoir-map-collectors {
   position: absolute;
   display: block !important;
-  width: 210px;
-  min-width: 210px;
-  max-width: 210px;
-  height: 160px;
-  min-height: 160px;
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+  height: 84px;
+  min-height: 84px;
   padding: 0 !important;
   margin: 0 !important;
   overflow: visible;
@@ -137,8 +137,8 @@
 .reservoir-map-collectors span {
   position: absolute;
   display: block;
-  width: 96px;
-  height: 112px;
+  width: 48px;
+  height: 56px;
   border: 0 !important;
   border-radius: 0 !important;
   background-color: transparent !important;
@@ -170,7 +170,7 @@
 
 .reservoir-map-collectors:hover span,
 .reservoir-map-collectors:focus-visible span {
-  filter: drop-shadow(0 8px 8px rgba(0, 0, 0, .23));
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .22));
 }
 
 .reservoir-map-collectors:hover span:nth-child(1),
@@ -289,18 +289,18 @@
   }
 
   .reservoir-map-collectors {
-    width: 204px !important;
-    min-width: 204px !important;
-    max-width: 204px !important;
-    height: 156px !important;
-    min-height: 156px !important;
+    width: 108px !important;
+    min-width: 108px !important;
+    max-width: 108px !important;
+    height: 82px !important;
+    min-height: 82px !important;
   }
 
   .reservoir-map-collectors span {
-    width: 94px !important;
-    min-width: 94px !important;
-    height: 110px !important;
-    min-height: 110px !important;
+    width: 47px !important;
+    min-width: 47px !important;
+    height: 55px !important;
+    min-height: 55px !important;
   }
 
   .reservoir-map-collectors:active span:nth-child(1),
