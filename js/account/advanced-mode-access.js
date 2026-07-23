@@ -53,9 +53,34 @@
     return applied;
   }
 
+  function statusesDiffer(previous, next) {
+    return previous.loaded !== next.loaded
+      || previous.hasAccess !== next.hasAccess
+      || previous.isAdmin !== next.isAdmin
+      || previous.requestStatus !== next.requestStatus
+      || previous.requestedAt !== next.requestedAt
+      || previous.grantedAt !== next.grantedAt
+      || previous.expiresOn !== next.expiresOn
+      || previous.isExpired !== next.isExpired;
+  }
+
+  function refreshOpenProfile(previous, next) {
+    if (!previous.loaded || !statusesDiffer(previous, next)) return;
+    if (window.harvestHubNavigation?.getCurrentPage?.() !== "profile.html") return;
+
+    window.setTimeout(() => {
+      if (window.harvestHubNavigation?.getCurrentPage?.() !== "profile.html") return;
+      window.loadPage?.("profile.html", {
+        skipCurrentSave: true,
+        skipProfileRefresh: true,
+        skipVisit: true
+      });
+    }, 0);
+  }
+
   function updateStatus(nextStatus) {
-    const previouslyAllowed = status.hasAccess;
-    status = {
+    const previousStatus = status;
+    const next = {
       loaded: true,
       hasAccess: Boolean(nextStatus?.has_access ?? nextStatus?.hasAccess),
       isAdmin: Boolean(nextStatus?.is_admin ?? nextStatus?.isAdmin),
@@ -65,17 +90,20 @@
       expiresOn: nextStatus?.expires_on ?? nextStatus?.expiresOn ?? null,
       isExpired: Boolean(nextStatus?.is_expired ?? nextStatus?.isExpired)
     };
+    status = next;
 
     const enabled = applyAuthorizedMode();
     window.dispatchEvent(new CustomEvent("harvesthub:advanced-mode-access-change", {
       detail: { ...status, enabled }
     }));
 
-    if (previouslyAllowed && !status.hasAccess) {
+    if (previousStatus.hasAccess && !status.hasAccess) {
       window.dispatchEvent(new CustomEvent("harvesthub:advanced-mode-change", {
         detail: { enabled: false, preference: getPreference(), accessGranted: false }
       }));
     }
+
+    refreshOpenProfile(previousStatus, status);
     return { ...status };
   }
 
