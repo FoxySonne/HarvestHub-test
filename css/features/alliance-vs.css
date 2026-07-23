@@ -79,7 +79,7 @@
 
 .vs-table-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 340px) auto auto;
+  grid-template-columns: minmax(220px, 340px) minmax(180px, auto) auto auto;
   gap: 12px;
   align-items: end;
   margin-bottom: 16px;
@@ -87,6 +87,23 @@
 
 .vs-table-controls button {
   width: auto;
+}
+
+.vs-saturday-total-toggle {
+  flex-direction: row !important;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.vs-saturday-total-toggle input {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.vs-bulk-actions {
+  margin-bottom: 14px;
 }
 
 .vs-table,
@@ -233,6 +250,10 @@
   .vs-tools {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .vs-table-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 899px) {
@@ -249,6 +270,10 @@
   .vs-table-controls button {
     width: 100%;
     margin-left: 0;
+  }
+
+  .vs-saturday-total-toggle {
+    width: 100%;
   }
 
   .vs-period-controls label {
