@@ -41,12 +41,14 @@ async function openDashboard(allianceId) {
   const participants = Array.isArray(result.data) ? result.data : [];
   const current = participants.find(item => item.linked_user_id === state.session?.user?.id) || null;
   const alliance = membership.alliances || {};
+  const canEdit = membership.role === "owner" || membership.role === "editor";
 
   byId("allianceDashboardName").textContent = alliance.name || "Союз";
   byId("allianceDashboardState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
   byId("allianceDashboardNickname").textContent = current?.nickname || "Аккаунт не связан";
   byId("allianceDashboardRank").textContent = current?.rank_name || "—";
   byId("allianceDashboardRole").textContent = roleLabel(membership.role);
+  document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
   showDashboard();
 }
 
@@ -54,22 +56,17 @@ function renderMemberships() {
   const field = byId("allianceHubSelectorField");
   const select = byId("allianceHubSelector");
   field.hidden = state.memberships.length === 0;
-
   if (!state.memberships.length) {
     showEntry();
     return;
   }
-
   select.innerHTML = state.memberships.map(item => {
     const alliance = item.alliances || {};
     return `<option value="${item.alliance_id}">${alliance.name || "Без названия"}${alliance.state_number ? ` · штат ${alliance.state_number}` : ""}</option>`;
   }).join("");
-
   const stored = localStorage.getItem("harvesthub_active_alliance_id");
-  const active = state.memberships.find(item => item.alliance_id === stored)?.alliance_id
-    || state.memberships[0].alliance_id;
+  const active = state.memberships.find(item => item.alliance_id === stored)?.alliance_id || state.memberships[0].alliance_id;
   select.value = active;
-
   if (state.choosingAlliance) showEntry();
   else openDashboard(active);
 }
@@ -89,13 +86,9 @@ async function handleJoin(event) {
   }
   const button = event.submitter;
   button.disabled = true;
-  const result = await joinAlliance(
-    state.client,
-    byId("allianceHubJoinCode").value.trim().toUpperCase()
-  );
+  const result = await joinAlliance(state.client, byId("allianceHubJoinCode").value.trim().toUpperCase());
   button.disabled = false;
   if (result.error) return showMessage(result.error.message, "error");
-
   byId("allianceHubJoinCode").value = "";
   setActiveAllianceId(result.data);
   state.choosingAlliance = false;
@@ -107,13 +100,9 @@ async function handleCreate(event) {
   event.preventDefault();
   const button = event.submitter;
   button.disabled = true;
-  const result = await createAlliance(state.client, {
-    name: byId("allianceHubCreateName").value,
-    stateNumber: byId("allianceHubCreateState").value
-  });
+  const result = await createAlliance(state.client, { name: byId("allianceHubCreateName").value, stateNumber: byId("allianceHubCreateState").value });
   button.disabled = false;
   if (result.error) return showMessage(result.error.message, "error");
-
   byId("allianceHubCreateName").value = "";
   byId("allianceHubCreateState").value = "";
   setActiveAllianceId(result.data);
@@ -137,15 +126,10 @@ async function applySession(session) {
 export async function init() {
   state.client = window.harvestHubSupabase;
   if (!state.client) return showMessage("Не удалось подключить Supabase.", "error");
-
   byId("allianceHubJoinForm")?.addEventListener("submit", handleJoin);
   byId("allianceHubCreateForm")?.addEventListener("submit", handleCreate);
-  byId("allianceHubSelector")?.addEventListener("change", event => {
-    state.choosingAlliance = false;
-    openDashboard(event.target.value);
-  });
+  byId("allianceHubSelector")?.addEventListener("change", event => { state.choosingAlliance = false; openDashboard(event.target.value); });
   byId("allianceDashboardChangeButton")?.addEventListener("click", showEntry);
-
   const sessionResult = await state.client.auth.getSession();
   if (sessionResult.error) return showMessage(sessionResult.error.message, "error");
   await applySession(sessionResult.data.session);
