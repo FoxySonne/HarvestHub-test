@@ -157,5 +157,9 @@
     if (document.visibilityState === "visible") refresh().catch(() => {});
   });
 
+  window.setInterval(() => {
+    if (document.visibilityState === "visible") refresh().catch(() => {});
+  }, 60000);
+
   refresh().catch(() => updateStatus(null));
 })();
