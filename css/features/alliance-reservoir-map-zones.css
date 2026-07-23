@@ -1,0 +1,39 @@
+/* Лёгкая цветная дымка только по краям зон команд. */
+.reservoir-map::before,
+.reservoir-map::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  display: block !important;
+  width: 42%;
+  height: 48%;
+  pointer-events: none;
+}
+
+.reservoir-map::before {
+  left: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse at left bottom,
+      rgba(194, 48, 48, .34) 0%,
+      rgba(194, 48, 48, .18) 36%,
+      rgba(194, 48, 48, .07) 56%,
+      transparent 74%);
+}
+
+.reservoir-map::after {
+  top: 0;
+  right: 0;
+  background:
+    radial-gradient(ellipse at right top,
+      rgba(45, 105, 190, .32) 0%,
+      rgba(45, 105, 190, .17) 36%,
+      rgba(45, 105, 190, .06) 56%,
+      transparent 74%);
+}
+
+.reservoir-map-side,
+.reservoir-map-location,
+.reservoir-map-collectors {
+  position: absolute;
+}
