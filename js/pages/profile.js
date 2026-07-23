@@ -11,8 +11,15 @@ function maskProfileEmail(email) {
   return email ? email.replace(/^(.{2}).*(@.*)$/, "$1***$2") : "";
 }
 
-function getAdvancedAccessDraft() {
-  return window.harvestHubAdvancedAccessDraft || null;
+function formatProfileDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" }).format(date);
+}
+
+function getAdvancedAccessStore() {
+  return window.harvestHubAdvancedAccessStore || null;
 }
 
 async function getAdvancedAccessStatus() {
@@ -50,14 +57,10 @@ function renderQuickProfileAccessCard() {
     </aside>`;
 }
 
-function renderAccountAccessCard(accountProfile, status) {
-  const store = getAdvancedAccessDraft();
-  store?.ensureAccount(accountProfile);
-
+function renderAccountAccessCard(status, summary = {}) {
   if (status.isAdmin) {
-    store?.ensureOwner(accountProfile);
     if (typeof window.setAdvancedMode === "function") window.setAdvancedMode(true);
-    const requestCount = store?.getRequests?.().length || 0;
+    const requestCount = Number(summary.pendingRequests) || 0;
     return `
       <aside class="profile-side-column">
         <section class="profile-access-card">
@@ -74,23 +77,23 @@ function renderAccountAccessCard(accountProfile, status) {
 
   if (status.hasAccess) {
     const enabled = typeof window.getAdvancedMode === "function" && window.getAdvancedMode();
+    const expiration = status.expiresOn ? `Доступ действует до ${formatProfileDate(status.expiresOn)} включительно.` : "Доступ выдан бессрочно.";
     return `
       <aside class="profile-side-column">
         <section class="profile-access-card">
           ${renderAdvancedModeSwitch({ checked: enabled, statusText: "Доступ активен" })}
           <p class="profile-access-description">Продвинутый режим открывает отслеживание игрового прогресса, создание и использование союзного штаба и дополнительные возможности калькуляторов.</p>
-          <p class="profile-access-status">Доступ выдан</p>
+          <p class="profile-access-status">${escapeProfileHtml(expiration)}</p>
         </section>
       </aside>`;
   }
 
-  const request = store?.getRequest?.(accountProfile);
   return `
     <aside class="profile-side-column">
       <section class="profile-access-card">
-        ${renderAdvancedModeSwitch({ disabled: true, statusText: "Доступ пока не выдан" })}
+        ${renderAdvancedModeSwitch({ disabled: true, statusText: status.isExpired ? "Срок доступа закончился" : "Доступ пока не выдан" })}
         <p class="profile-access-description">Продвинутый режим открывает отслеживание собственного игрового прогресса, создание и использование союзного штаба и полезные дополнительные возможности в калькуляторах.</p>
-        ${request
+        ${status.requestStatus === "pending"
           ? '<p class="profile-access-status">Заявка ожидает одобрения</p>'
           : '<button type="button" class="profile-access-request" id="requestAdvancedAccessButton">Оставить заявку</button>'}
       </section>
@@ -138,13 +141,12 @@ function renderGameProfileCards(profiles, activeProfileId) {
   }).join("");
 }
 
-function renderAccountProfile(container, accountProfile, profiles, accessStatus) {
+function renderAccountProfile(container, accountProfile, profiles, accessStatus, accessSummary) {
   const active = profiles.find(profile => profile.id === accountProfile.gameProfileId)
     || profiles.find(profile => profile.is_active)
     || profiles[0];
   if (!active) throw new Error("Игровой профиль не найден.");
 
-  const currentAccount = { ...accountProfile, nickname: active.nickname, state: active.state };
   container.innerHTML = `
     <div class="profile-layout">
       <div class="profile-main-column">
@@ -184,19 +186,17 @@ function renderAccountProfile(container, accountProfile, profiles, accessStatus)
 
         <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти из аккаунта</button></div>
       </div>
-      ${renderAccountAccessCard(currentAccount, accessStatus)}
+      ${renderAccountAccessCard(accessStatus, accessSummary)}
     </div>`;
 
   bindAccountProfileEvents(active);
-  bindProfileAccessEvents(currentAccount, accessStatus);
+  bindProfileAccessEvents(accessStatus);
 }
 
-function bindProfileAccessEvents(accountProfile, status) {
+function bindProfileAccessEvents(status) {
   document.getElementById("profileAdvancedModeToggle")?.addEventListener("change", event => {
     if (!status.hasAccess || status.isAdmin) return;
-    if (typeof window.setAdvancedMode === "function") {
-      event.target.checked = window.setAdvancedMode(event.target.checked);
-    }
+    if (typeof window.setAdvancedMode === "function") event.target.checked = window.setAdvancedMode(event.target.checked);
   });
 
   document.getElementById("requestAdvancedAccessButton")?.addEventListener("click", async event => {
@@ -204,18 +204,19 @@ function bindProfileAccessEvents(accountProfile, status) {
     button.disabled = true;
     button.textContent = "Отправляем…";
     try {
-      getAdvancedAccessDraft()?.requestAccess(accountProfile);
+      await getAdvancedAccessStore()?.requestAccess();
+      await window.harvestHubAdvancedModeAccess?.refresh?.();
       await renderProfilePage();
     } catch (error) {
       button.disabled = false;
       button.textContent = "Оставить заявку";
-      window.alert(error.message || "Не удалось сохранить заявку.");
+      window.alert(error.message || "Не удалось отправить заявку.");
     }
   });
 
   document.querySelectorAll("[data-advanced-admin-page]").forEach(button => {
     button.addEventListener("click", () => {
-      getAdvancedAccessDraft()?.setAdminTab(button.dataset.advancedAdminPage);
+      getAdvancedAccessStore()?.setAdminTab(button.dataset.advancedAdminPage);
       window.loadPage?.("advanced-access.html");
     });
   });
@@ -340,7 +341,9 @@ async function renderProfilePage() {
         window.harvestHubGameProfileManager.listGameProfiles(),
         getAdvancedAccessStatus()
       ]);
-      renderAccountProfile(container, window.harvestHubAccount?.getProfile?.() || profile, profiles, accessStatus);
+      let accessSummary = { pendingRequests: 0, activeAccessTotal: 0 };
+      if (accessStatus.isAdmin) accessSummary = await getAdvancedAccessStore()?.getAdminSummary?.() || accessSummary;
+      renderAccountProfile(container, window.harvestHubAccount?.getProfile?.() || profile, profiles, accessStatus, accessSummary);
       window.harvestHubSyncStatus?.markSynced?.();
     } catch (error) {
       container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>${escapeProfileHtml(profile.nickname)}</h1></header><p class="account-warning profile-warning">Не удалось загрузить профили: ${escapeProfileHtml(error.message || "неизвестная ошибка")}</p><div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
