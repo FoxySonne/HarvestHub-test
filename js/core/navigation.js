@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260723-roster-archive-1";
+  const SITE_ASSET_VERSION = "20260723-access-profile-1";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -35,6 +35,7 @@
     "reservoir-activity": "../pages/alliance-placeholder.js",
     "reservoir-layout": "../pages/alliance-reservoir-layout.js",
     profile: "../pages/profile.js",
+    "advanced-access": "../pages/advanced-access.js",
     settings: "../pages/settings.js",
     ipk: "../calculators/ipk.js",
     "turbo-vs": "../calculators/turbo-vs.js",

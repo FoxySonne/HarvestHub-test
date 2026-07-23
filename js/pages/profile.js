@@ -11,15 +11,106 @@ function maskProfileEmail(email) {
   return email ? email.replace(/^(.{2}).*(@.*)$/, "$1***$2") : "";
 }
 
+function getAdvancedAccessDraft() {
+  return window.harvestHubAdvancedAccessDraft || null;
+}
+
+async function getAdvancedAccessStatus() {
+  const manager = window.harvestHubAdvancedModeAccess;
+  if (!manager) return { loaded: true, hasAccess: false, isAdmin: false };
+  try {
+    return await manager.refresh();
+  } catch {
+    return manager.getStatus?.() || { loaded: true, hasAccess: false, isAdmin: false };
+  }
+}
+
+function renderAdvancedModeSwitch({ checked = false, disabled = false, statusText = "" } = {}) {
+  return `
+    <label class="profile-access-switch-row">
+      <span class="profile-access-switch-copy">
+        <strong>Продвинутый режим</strong>
+        <small>${escapeProfileHtml(statusText)}</small>
+      </span>
+      <span class="ipk-switch">
+        <input id="profileAdvancedModeToggle" type="checkbox" data-no-persist="true" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}>
+        <span class="ipk-switch-track"><span class="ipk-switch-thumb">✓</span></span>
+      </span>
+    </label>`;
+}
+
+function renderQuickProfileAccessCard() {
+  return `
+    <aside class="profile-side-column">
+      <section class="profile-access-card">
+        ${renderAdvancedModeSwitch({ disabled: true, statusText: "Требуется зарегистрированный аккаунт" })}
+        <p class="profile-access-description">Продвинутый режим открывает отслеживание игрового прогресса, создание и использование союзного штаба и дополнительные возможности калькуляторов.</p>
+        <button type="button" class="profile-access-request" data-account-button>Войти или создать аккаунт</button>
+      </section>
+    </aside>`;
+}
+
+function renderAccountAccessCard(accountProfile, status) {
+  const store = getAdvancedAccessDraft();
+  store?.ensureAccount(accountProfile);
+
+  if (status.isAdmin) {
+    store?.ensureOwner(accountProfile);
+    if (typeof window.setAdvancedMode === "function") window.setAdvancedMode(true);
+    const requestCount = store?.getRequests?.().length || 0;
+    return `
+      <aside class="profile-side-column">
+        <section class="profile-access-card">
+          ${renderAdvancedModeSwitch({ checked: true, disabled: true, statusText: "Включён постоянно для владельца сайта" })}
+          <p class="profile-access-owner-note">Доступ владельца бессрочный.</p>
+          <div class="profile-access-owner-actions">
+            <button type="button" data-advanced-admin-page="requests">Заявки${requestCount ? ` (${requestCount})` : ""}</button>
+            <button type="button" data-advanced-admin-page="search">Выдать доступ</button>
+            <button type="button" data-advanced-admin-page="granted">Проверить список</button>
+          </div>
+        </section>
+      </aside>`;
+  }
+
+  if (status.hasAccess) {
+    const enabled = typeof window.getAdvancedMode === "function" && window.getAdvancedMode();
+    return `
+      <aside class="profile-side-column">
+        <section class="profile-access-card">
+          ${renderAdvancedModeSwitch({ checked: enabled, statusText: "Доступ активен" })}
+          <p class="profile-access-description">Продвинутый режим открывает отслеживание игрового прогресса, создание и использование союзного штаба и дополнительные возможности калькуляторов.</p>
+          <p class="profile-access-status">Доступ выдан</p>
+        </section>
+      </aside>`;
+  }
+
+  const request = store?.getRequest?.(accountProfile);
+  return `
+    <aside class="profile-side-column">
+      <section class="profile-access-card">
+        ${renderAdvancedModeSwitch({ disabled: true, statusText: "Доступ пока не выдан" })}
+        <p class="profile-access-description">Продвинутый режим открывает отслеживание собственного игрового прогресса, создание и использование союзного штаба и полезные дополнительные возможности в калькуляторах.</p>
+        ${request
+          ? '<p class="profile-access-status">Заявка ожидает одобрения</p>'
+          : '<button type="button" class="profile-access-request" id="requestAdvancedAccessButton">Оставить заявку</button>'}
+      </section>
+    </aside>`;
+}
+
 function renderQuickProfile(container, profile) {
   container.innerHTML = `
-    <header class="profile-hero">
-      <p class="profile-eyebrow">Быстрый профиль</p>
-      <h1>${escapeProfileHtml(profile.nickname)}</h1>
-      <p class="profile-state">Штат ${escapeProfileHtml(profile.state)}</p>
-    </header>
-    <p class="account-warning profile-warning">Данные этого профиля хранятся только на текущем устройстве. Для синхронизации между устройствами создайте полноценный профиль.</p>
-    <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
+    <div class="profile-layout">
+      <div class="profile-main-column">
+        <header class="profile-hero">
+          <p class="profile-eyebrow">Быстрый профиль</p>
+          <h1>${escapeProfileHtml(profile.nickname)}</h1>
+          <p class="profile-state">Штат ${escapeProfileHtml(profile.state)}</p>
+        </header>
+        <p class="account-warning profile-warning">Данные этого профиля хранятся только на текущем устройстве. Для синхронизации между устройствами создайте полноценный профиль.</p>
+        <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>
+      </div>
+      ${renderQuickProfileAccessCard()}
+    </div>`;
 }
 
 function renderGameProfileCards(profiles, activeProfileId) {
@@ -47,50 +138,87 @@ function renderGameProfileCards(profiles, activeProfileId) {
   }).join("");
 }
 
-function renderAccountProfile(container, accountProfile, profiles) {
+function renderAccountProfile(container, accountProfile, profiles, accessStatus) {
   const active = profiles.find(profile => profile.id === accountProfile.gameProfileId)
     || profiles.find(profile => profile.is_active)
     || profiles[0];
   if (!active) throw new Error("Игровой профиль не найден.");
 
+  const currentAccount = { ...accountProfile, nickname: active.nickname, state: active.state };
   container.innerHTML = `
-    <header class="profile-hero">
-      <p class="profile-eyebrow">Профиль HarvestHub</p>
-      <div class="profile-title-row">
-        <h1>${escapeProfileHtml(active.nickname)}</h1>
-        <button type="button" class="profile-edit-button" id="editAccountProfileButton" aria-label="Изменить игровой профиль" title="Изменить игровой профиль">✎</button>
+    <div class="profile-layout">
+      <div class="profile-main-column">
+        <header class="profile-hero">
+          <p class="profile-eyebrow">Профиль HarvestHub</p>
+          <div class="profile-title-row">
+            <h1>${escapeProfileHtml(active.nickname)}</h1>
+            <button type="button" class="profile-edit-button" id="editAccountProfileButton" aria-label="Изменить игровой профиль" title="Изменить игровой профиль">✎</button>
+          </div>
+          <p class="profile-state">Штат ${escapeProfileHtml(active.state)}</p>
+          <p class="profile-email">Аккаунт: ${escapeProfileHtml(maskProfileEmail(accountProfile.email))}</p>
+          <p class="profile-sync-status"></p>
+        </header>
+
+        <form id="accountProfileEditForm" class="profile-edit-form" hidden>
+          <h2>Изменить выбранный профиль</h2>
+          <label class="form-group"><span>Никнейм</span><input id="accountProfileNickname" value="${escapeProfileHtml(active.nickname)}" required></label>
+          <label class="form-group"><span>Номер штата</span><input id="accountProfileState" value="${escapeProfileHtml(active.state)}" inputmode="numeric" required></label>
+          <div class="profile-edit-actions"><button type="button" id="cancelAccountProfileEdit">Отмена</button><button type="submit" id="saveAccountProfileEdit">Сохранить</button></div>
+          <p id="profileEditMessage" class="settings-form-message"></p>
+        </form>
+
+        <section class="game-profiles-section">
+          <div class="game-profiles-heading">
+            <div><h2>Игровые профили</h2><p>Данные калькуляторов сохраняются отдельно. Продвинутый режим действует на весь аккаунт.</p></div>
+            <button type="button" id="showCreateGameProfile">Добавить профиль</button>
+          </div>
+          <div class="game-profile-list">${renderGameProfileCards(profiles, active.id)}</div>
+          <form id="createGameProfileForm" class="profile-edit-form game-profile-create-form" hidden>
+            <h3>Новый игровой профиль</h3>
+            <label class="form-group"><span>Никнейм</span><input id="newGameProfileNickname" required></label>
+            <label class="form-group"><span>Номер штата</span><input id="newGameProfileState" inputmode="numeric" required></label>
+            <div class="profile-edit-actions"><button type="button" id="cancelCreateGameProfile">Отмена</button><button type="submit" id="createGameProfileButton">Создать и переключиться</button></div>
+            <p id="createGameProfileMessage" class="settings-form-message"></p>
+          </form>
+        </section>
+
+        <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти из аккаунта</button></div>
       </div>
-      <p class="profile-state">Штат ${escapeProfileHtml(active.state)}</p>
-      <p class="profile-email">Аккаунт: ${escapeProfileHtml(maskProfileEmail(accountProfile.email))}</p>
-      <p class="profile-sync-status"></p>
-    </header>
-
-    <form id="accountProfileEditForm" class="profile-edit-form" hidden>
-      <h2>Изменить выбранный профиль</h2>
-      <label class="form-group"><span>Никнейм</span><input id="accountProfileNickname" value="${escapeProfileHtml(active.nickname)}" required></label>
-      <label class="form-group"><span>Номер штата</span><input id="accountProfileState" value="${escapeProfileHtml(active.state)}" inputmode="numeric" required></label>
-      <div class="profile-edit-actions"><button type="button" id="cancelAccountProfileEdit">Отмена</button><button type="submit" id="saveAccountProfileEdit">Сохранить</button></div>
-      <p id="profileEditMessage" class="settings-form-message"></p>
-    </form>
-
-    <section class="game-profiles-section">
-      <div class="game-profiles-heading">
-        <div><h2>Игровые профили</h2><p>Данные калькуляторов сохраняются отдельно. Продвинутый режим действует на весь аккаунт.</p></div>
-        <button type="button" id="showCreateGameProfile">Добавить профиль</button>
-      </div>
-      <div class="game-profile-list">${renderGameProfileCards(profiles, active.id)}</div>
-      <form id="createGameProfileForm" class="profile-edit-form game-profile-create-form" hidden>
-        <h3>Новый игровой профиль</h3>
-        <label class="form-group"><span>Никнейм</span><input id="newGameProfileNickname" required></label>
-        <label class="form-group"><span>Номер штата</span><input id="newGameProfileState" inputmode="numeric" required></label>
-        <div class="profile-edit-actions"><button type="button" id="cancelCreateGameProfile">Отмена</button><button type="submit" id="createGameProfileButton">Создать и переключиться</button></div>
-        <p id="createGameProfileMessage" class="settings-form-message"></p>
-      </form>
-    </section>
-
-    <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти из аккаунта</button></div>`;
+      ${renderAccountAccessCard(currentAccount, accessStatus)}
+    </div>`;
 
   bindAccountProfileEvents(active);
+  bindProfileAccessEvents(currentAccount, accessStatus);
+}
+
+function bindProfileAccessEvents(accountProfile, status) {
+  document.getElementById("profileAdvancedModeToggle")?.addEventListener("change", event => {
+    if (!status.hasAccess || status.isAdmin) return;
+    if (typeof window.setAdvancedMode === "function") {
+      event.target.checked = window.setAdvancedMode(event.target.checked);
+    }
+  });
+
+  document.getElementById("requestAdvancedAccessButton")?.addEventListener("click", async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = "Отправляем…";
+    try {
+      getAdvancedAccessDraft()?.requestAccess(accountProfile);
+      await renderProfilePage();
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "Оставить заявку";
+      window.alert(error.message || "Не удалось сохранить заявку.");
+    }
+  });
+
+  document.querySelectorAll("[data-advanced-admin-page]").forEach(button => {
+    button.addEventListener("click", () => {
+      getAdvancedAccessDraft()?.setAdminTab(button.dataset.advancedAdminPage);
+      window.loadPage?.("advanced-access.html");
+    });
+  });
 }
 
 function setFormBusy(button, busy, busyText, normalText) {
@@ -208,8 +336,11 @@ async function renderProfilePage() {
   } else {
     container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>Загружаем профили…</h1></header>`;
     try {
-      const { profiles } = await window.harvestHubGameProfileManager.listGameProfiles();
-      renderAccountProfile(container, window.harvestHubAccount?.getProfile?.() || profile, profiles);
+      const [{ profiles }, accessStatus] = await Promise.all([
+        window.harvestHubGameProfileManager.listGameProfiles(),
+        getAdvancedAccessStatus()
+      ]);
+      renderAccountProfile(container, window.harvestHubAccount?.getProfile?.() || profile, profiles, accessStatus);
       window.harvestHubSyncStatus?.markSynced?.();
     } catch (error) {
       container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>${escapeProfileHtml(profile.nickname)}</h1></header><p class="account-warning profile-warning">Не удалось загрузить профили: ${escapeProfileHtml(error.message || "неизвестная ошибка")}</p><div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
