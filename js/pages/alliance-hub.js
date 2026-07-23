@@ -1,4 +1,4 @@
-import { createAlliance, fetchMemberships, fetchParticipants, joinAlliance } from "../alliance/api.js?v=20260718-40";
+import { createAlliance, fetchMemberships, fetchParticipants, joinAlliance } from "../alliance/api.js?v=20260724-network-retry-1";
 import { setActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
 
 const byId = id => document.getElementById(id);
@@ -10,6 +10,14 @@ function showMessage(text, type = "info") {
   box.hidden = !text;
   box.textContent = text;
   box.dataset.type = type;
+}
+
+function getReadableError(error) {
+  const message = String(error?.message || error || "");
+  if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    return "Не удалось связаться с сервером. Проверьте интернет и повторите попытку.";
+  }
+  return message || "Не удалось загрузить союзный штаб.";
 }
 
 function roleLabel(role) {
@@ -36,22 +44,29 @@ async function openDashboard(allianceId) {
   const membership = state.memberships.find(item => item.alliance_id === allianceId);
   if (!membership) return;
   setActiveAllianceId(allianceId);
-  const result = await fetchParticipants(state.client, allianceId);
-  if (result.error) return showMessage(result.error.message, "error");
-  const participants = Array.isArray(result.data) ? result.data : [];
-  const current = participants.find(item => item.linked_user_id === state.session?.user?.id) || null;
-  const alliance = membership.alliances || {};
-  const canEdit = membership.role === "owner" || membership.role === "editor";
 
-  byId("allianceDashboardName").textContent = alliance.name || "Союз";
-  byId("allianceDashboardState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
-  byId("allianceDashboardNickname").textContent = current?.nickname || "Аккаунт не связан";
-  byId("allianceDashboardRank").textContent = current?.rank_name || "—";
-  byId("allianceDashboardRole").textContent = roleLabel(membership.role);
-  document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
-  const ownPowerButton = byId("allianceOwnPowerButton");
-  if (ownPowerButton) ownPowerButton.hidden = canEdit || !current;
-  showDashboard();
+  try {
+    const result = await fetchParticipants(state.client, allianceId);
+    if (result.error) return showMessage(getReadableError(result.error), "error");
+
+    const participants = Array.isArray(result.data) ? result.data : [];
+    const current = participants.find(item => item.linked_user_id === state.session?.user?.id) || null;
+    const alliance = membership.alliances || {};
+    const canEdit = membership.role === "owner" || membership.role === "editor";
+
+    byId("allianceDashboardName").textContent = alliance.name || "Союз";
+    byId("allianceDashboardState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
+    byId("allianceDashboardNickname").textContent = current?.nickname || "Аккаунт не связан";
+    byId("allianceDashboardRank").textContent = current?.rank_name || "—";
+    byId("allianceDashboardRole").textContent = roleLabel(membership.role);
+    document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
+    const ownPowerButton = byId("allianceOwnPowerButton");
+    if (ownPowerButton) ownPowerButton.hidden = canEdit || !current;
+    showDashboard();
+    showMessage("");
+  } catch (error) {
+    showMessage(getReadableError(error), "error");
+  }
 }
 
 function renderMemberships() {
@@ -74,10 +89,14 @@ function renderMemberships() {
 }
 
 async function loadMemberships() {
-  const result = await fetchMemberships(state.client);
-  if (result.error) return showMessage(result.error.message, "error");
-  state.memberships = result.data || [];
-  renderMemberships();
+  try {
+    const result = await fetchMemberships(state.client);
+    if (result.error) return showMessage(getReadableError(result.error), "error");
+    state.memberships = result.data || [];
+    renderMemberships();
+  } catch (error) {
+    showMessage(getReadableError(error), "error");
+  }
 }
 
 async function handleJoin(event) {
@@ -88,29 +107,39 @@ async function handleJoin(event) {
   }
   const button = event.submitter;
   button.disabled = true;
-  const result = await joinAlliance(state.client, byId("allianceHubJoinCode").value.trim().toUpperCase());
-  button.disabled = false;
-  if (result.error) return showMessage(result.error.message, "error");
-  byId("allianceHubJoinCode").value = "";
-  setActiveAllianceId(result.data);
-  state.choosingAlliance = false;
-  await loadMemberships();
-  showMessage("Союзный штаб подключён.", "success");
+  try {
+    const result = await joinAlliance(state.client, byId("allianceHubJoinCode").value.trim().toUpperCase());
+    if (result.error) return showMessage(getReadableError(result.error), "error");
+    byId("allianceHubJoinCode").value = "";
+    setActiveAllianceId(result.data);
+    state.choosingAlliance = false;
+    await loadMemberships();
+    showMessage("Союзный штаб подключён.", "success");
+  } catch (error) {
+    showMessage(getReadableError(error), "error");
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function handleCreate(event) {
   event.preventDefault();
   const button = event.submitter;
   button.disabled = true;
-  const result = await createAlliance(state.client, { name: byId("allianceHubCreateName").value, stateNumber: byId("allianceHubCreateState").value });
-  button.disabled = false;
-  if (result.error) return showMessage(result.error.message, "error");
-  byId("allianceHubCreateName").value = "";
-  byId("allianceHubCreateState").value = "";
-  setActiveAllianceId(result.data);
-  state.choosingAlliance = false;
-  await loadMemberships();
-  showMessage("Союзный штаб создан.", "success");
+  try {
+    const result = await createAlliance(state.client, { name: byId("allianceHubCreateName").value, stateNumber: byId("allianceHubCreateState").value });
+    if (result.error) return showMessage(getReadableError(result.error), "error");
+    byId("allianceHubCreateName").value = "";
+    byId("allianceHubCreateState").value = "";
+    setActiveAllianceId(result.data);
+    state.choosingAlliance = false;
+    await loadMemberships();
+    showMessage("Союзный штаб создан.", "success");
+  } catch (error) {
+    showMessage(getReadableError(error), "error");
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function applySession(session) {
@@ -133,8 +162,16 @@ export async function init() {
   byId("allianceHubSelector")?.addEventListener("change", event => { state.choosingAlliance = false; openDashboard(event.target.value); });
   byId("allianceDashboardChangeButton")?.addEventListener("click", showEntry);
   byId("allianceOwnPowerButton")?.addEventListener("click", () => window.loadPage?.("alliance/power.html"));
-  const sessionResult = await state.client.auth.getSession();
-  if (sessionResult.error) return showMessage(sessionResult.error.message, "error");
-  await applySession(sessionResult.data.session);
-  state.client.auth.onAuthStateChange((_event, session) => applySession(session));
+
+  try {
+    const sessionResult = await state.client.auth.getSession();
+    if (sessionResult.error) return showMessage(getReadableError(sessionResult.error), "error");
+    await applySession(sessionResult.data.session);
+  } catch (error) {
+    showMessage(getReadableError(error), "error");
+  }
+
+  state.client.auth.onAuthStateChange((_event, session) => {
+    window.setTimeout(() => applySession(session).catch(error => showMessage(getReadableError(error), "error")), 0);
+  });
 }
