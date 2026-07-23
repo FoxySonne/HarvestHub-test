@@ -21,10 +21,11 @@ function parsePower(value) {
 
 function formatPower(value) {
   if (value === null || value === undefined || value === "") return "—";
-  return new Intl.NumberFormat("ru-RU", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3
-  }).format(Number(value));
+  return new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 3 }).format(Number(value));
+}
+
+function inputPower(value) {
+  return value === null || value === undefined || value === "" ? "" : String(value).replace(".", ",");
 }
 
 function formatDelta(value) {
@@ -58,15 +59,12 @@ function growthPercent(latest, previous) {
 }
 
 function selectedColumns() {
-  return new Set([...document.querySelectorAll("[data-power-column]:checked")]
-    .map(input => input.dataset.powerColumn));
+  return new Set([...document.querySelectorAll("[data-power-column]:checked")].map(input => input.dataset.powerColumn));
 }
 
 function applyColumnVisibility() {
   const visible = selectedColumns();
-  document.querySelectorAll("[data-power-col]").forEach(cell => {
-    cell.hidden = !visible.has(cell.dataset.powerCol);
-  });
+  document.querySelectorAll("[data-power-col]").forEach(cell => { cell.hidden = !visible.has(cell.dataset.powerCol); });
 }
 
 function renderSummary(rows) {
@@ -78,13 +76,11 @@ function renderSummary(rows) {
     summary.innerHTML = "";
     return;
   }
-
   const totalPower = measured.reduce((sum, item) => sum + (Number(item.latest_power) || 0), 0);
   const totalPrevious = measured.reduce((sum, item) => sum + (Number(item.previous_power) || 0), 0);
   const totalWeek = measured.reduce((sum, item) => sum + (Number(item.week_power) || 0), 0);
   const totalMonth = measured.reduce((sum, item) => sum + (Number(item.month_power) || 0), 0);
   const totalSeason = measured.reduce((sum, item) => sum + (Number(item.season_power) || 0), 0);
-
   summary.hidden = false;
   summary.innerHTML = `
     <div><span>Участников с замерами</span><strong>${measured.length}</strong></div>
@@ -92,8 +88,16 @@ function renderSummary(rows) {
     <div data-power-col="previous"><span>Общий прирост с прошлого замера</span><strong>${formatDelta(totalPower - totalPrevious)} млн</strong></div>
     <div data-power-col="week"><span>Общий прирост за неделю</span><strong>${formatDelta(totalPower - totalWeek)} млн</strong></div>
     <div data-power-col="month"><span>Общий прирост за месяц</span><strong>${formatDelta(totalPower - totalMonth)} млн</strong></div>
-    <div data-power-col="season"><span>Общий прирост за сезон</span><strong>${formatDelta(totalPower - totalSeason)} млн</strong></div>
-  `;
+    <div data-power-col="season"><span>Общий прирост за сезон</span><strong>${formatDelta(totalPower - totalSeason)} млн</strong></div>`;
+}
+
+function renderBulkTable(rows) {
+  const body = byId("powerBulkBody");
+  if (!body) return;
+  body.innerHTML = rows.map(item => `<tr data-bulk-participant="${item.participant_id}">
+    <td><strong>${item.nickname}</strong><small>${item.rank_name || "—"}</small></td>
+    ${[1, 2, 3, 4, 5].map(index => `<td><input type="text" inputmode="decimal" data-bulk-squad="${index}" value="${inputPower(item[`squad_${index}`])}" data-no-persist="true"></td>`).join("")}
+  </tr>`).join("");
 }
 
 function render() {
@@ -101,15 +105,10 @@ function render() {
   const search = (byId("powerSearch")?.value || "").trim().toLowerCase();
   const sort = byId("powerSort")?.value || "power";
   const filtered = rows.filter(item => !search || String(item.nickname || "").toLowerCase().includes(search));
-
   filtered.sort((a, b) => {
     if (sort === "nickname") return String(a.nickname).localeCompare(String(b.nickname), "ru");
-    if (sort === "growth") {
-      return (Number(b.latest_power) - Number(b.previous_power))
-        - (Number(a.latest_power) - Number(a.previous_power));
-    }
-    return Number(b.latest_power) - Number(a.latest_power)
-      || String(a.nickname).localeCompare(String(b.nickname), "ru");
+    if (sort === "growth") return (Number(b.latest_power) - Number(b.previous_power)) - (Number(a.latest_power) - Number(a.previous_power));
+    return Number(b.latest_power) - Number(a.latest_power) || String(a.nickname).localeCompare(String(b.nickname), "ru");
   });
 
   const tbody = byId("powerTableBody");
@@ -129,6 +128,7 @@ function render() {
         <td data-power-col="month">${formatDelta(month)}</td>
         <td data-power-col="season">${formatDelta(season)}</td>
         <td data-power-col="percent">${growthPercent(item.latest_power, item.previous_power).toFixed(1).replace(".", ",")}%</td>
+        <td><button type="button" class="secondary-button power-row-edit" data-power-edit="${item.participant_id}">Изменить</button></td>
       </tr>`;
     }).join("");
   }
@@ -141,19 +141,15 @@ function render() {
   const select = byId("powerParticipant");
   if (select) {
     const selected = select.value;
-    const available = rows.filter(item => state.data?.can_manage || item.is_own);
-    select.innerHTML = available
-      .map(item => `<option value="${item.participant_id}">${item.nickname}</option>`)
-      .join("");
+    select.innerHTML = rows.map(item => `<option value="${item.participant_id}">${item.nickname}</option>`).join("");
     if ([...select.options].some(option => option.value === selected)) select.value = selected;
-    byId("powerEditorCard").hidden = available.length === 0;
+    byId("powerEditorCard").hidden = rows.length === 0;
   }
 
   const seasonInput = byId("powerSeasonStart");
   if (seasonInput) seasonInput.value = state.data?.season_start || "";
-  if (byId("powerSeasonSettings")) {
-    byId("powerSeasonSettings").hidden = !state.data?.can_manage;
-  }
+  if (byId("powerSeasonSettings")) byId("powerSeasonSettings").hidden = !state.data?.can_manage;
+  renderBulkTable(rows);
 }
 
 async function load() {
@@ -162,10 +158,7 @@ async function load() {
   const { data, error } = await fetchAllianceSquadPower(state.client, allianceId);
   const errorBox = byId("powerSectionError");
   if (error) {
-    if (errorBox) {
-      errorBox.hidden = false;
-      errorBox.textContent = error.message;
-    }
+    if (errorBox) { errorBox.hidden = false; errorBox.textContent = error.message; }
     return;
   }
   if (errorBox) errorBox.hidden = true;
@@ -173,12 +166,29 @@ async function load() {
   render();
 }
 
+function resetEditor() {
+  byId("powerEditorTitle").textContent = "Добавить замер силы";
+  byId("powerEditCancel").hidden = true;
+  [1, 2, 3, 4, 5].forEach(index => { byId(`powerSquad${index}`).value = ""; });
+  byId("powerDate").value = localDateValue();
+}
+
+function editParticipant(participantId) {
+  const item = state.data?.participants?.find(row => row.participant_id === participantId);
+  if (!item) return;
+  byId("powerParticipant").value = item.participant_id;
+  byId("powerDate").value = item.latest_date || localDateValue();
+  [1, 2, 3, 4, 5].forEach(index => { byId(`powerSquad${index}`).value = inputPower(item[`squad_${index}`]); });
+  byId("powerEditorTitle").textContent = `Изменить: ${item.nickname}`;
+  byId("powerEditCancel").hidden = false;
+  byId("powerEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 async function submitPower(event) {
   event.preventDefault();
   const participantId = byId("powerParticipant")?.value;
   const allianceId = activeAllianceId();
   if (!participantId || !allianceId) return;
-
   const fields = [1, 2, 3, 4, 5].map(index => byId(`powerSquad${index}`));
   const values = fields.map(field => parsePower(field?.value));
   const invalidIndex = values.findIndex(value => value === undefined);
@@ -188,47 +198,56 @@ async function submitPower(event) {
     return;
   }
   fields.forEach(field => field.setCustomValidity(""));
-
   const button = event.submitter;
   if (button) button.disabled = true;
   const { error } = await saveAllianceSquadPower(state.client, allianceId, {
     participantId,
     measuredOn: byId("powerDate").value,
-    squad1: values[0],
-    squad2: values[1],
-    squad3: values[2],
-    squad4: values[3],
-    squad5: values[4]
+    squad1: values[0], squad2: values[1], squad3: values[2], squad4: values[3], squad5: values[4]
   });
   if (button) button.disabled = false;
   if (error) return showMessage(error.message, "error");
-
-  fields.forEach(field => { field.value = ""; });
-  byId("powerDate").value = localDateValue();
+  resetEditor();
   await load();
   showMessage("Замер силы сохранён.", "success");
 }
 
+async function saveBulk() {
+  const date = byId("powerBulkDate").value || localDateValue();
+  const rows = [...document.querySelectorAll("[data-bulk-participant]")];
+  const payloads = [];
+  for (const row of rows) {
+    const values = [1, 2, 3, 4, 5].map(index => parsePower(row.querySelector(`[data-bulk-squad="${index}"]`)?.value));
+    if (values.some(value => value === undefined)) return showMessage("Проверь значения в общей таблице.", "error");
+    if (values.every(value => value === null)) continue;
+    payloads.push({ participantId: row.dataset.bulkParticipant, values });
+  }
+  if (!payloads.length) return showMessage("Заполни хотя бы одну строку.", "error");
+  const button = byId("powerBulkSave");
+  button.disabled = true;
+  for (const item of payloads) {
+    const { error } = await saveAllianceSquadPower(state.client, activeAllianceId(), {
+      participantId: item.participantId,
+      measuredOn: date,
+      squad1: item.values[0], squad2: item.values[1], squad3: item.values[2], squad4: item.values[3], squad5: item.values[4]
+    });
+    if (error) {
+      button.disabled = false;
+      return showMessage(error.message, "error");
+    }
+  }
+  button.disabled = false;
+  byId("powerBulkCard").hidden = true;
+  await load();
+  showMessage("Заполненные замеры сохранены.", "success");
+}
+
 async function saveSeason(event) {
   event.preventDefault();
-  const { error } = await setAlliancePowerSeasonStart(
-    state.client,
-    activeAllianceId(),
-    byId("powerSeasonStart")?.value || null
-  );
+  const { error } = await setAlliancePowerSeasonStart(state.client, activeAllianceId(), byId("powerSeasonStart")?.value || null);
   if (error) return showMessage(error.message, "error");
   await load();
   showMessage("Дата начала сезона сохранена.", "success");
-}
-
-function switchTab(target) {
-  document.querySelectorAll("[data-alliance-tab]").forEach(button => {
-    button.classList.toggle("is-active", button.dataset.allianceTab === target);
-  });
-  if (byId("allianceRosterSection")) byId("allianceRosterSection").hidden = target !== "roster";
-  if (byId("alliancePowerSection")) byId("alliancePowerSection").hidden = target !== "power";
-  if (byId("allianceVsSection")) byId("allianceVsSection").hidden = target !== "vs";
-  if (target === "power") load();
 }
 
 function toggleExpandedTable(forceOpen) {
@@ -236,10 +255,7 @@ function toggleExpandedTable(forceOpen) {
   const button = byId("powerExpandTable");
   if (!card || !button) return;
   state.expanded = typeof forceOpen === "boolean" ? forceOpen : !state.expanded;
-  setAllianceTableFullscreen(card, state.expanded, {
-    elementClass: "is-expanded",
-    bodyClass: "power-table-open"
-  });
+  setAllianceTableFullscreen(card, state.expanded, { elementClass: "is-expanded", bodyClass: "power-table-open" });
   button.textContent = state.expanded ? "Закрыть полный экран" : "Открыть таблицу целиком";
 }
 
@@ -247,18 +263,21 @@ export function initPowerSection() {
   state.client = window.harvestHubSupabase;
   const date = byId("powerDate");
   if (date && !date.value) date.value = localDateValue();
-
-  document.querySelectorAll("[data-alliance-tab]").forEach(button => {
-    button.addEventListener("click", () => switchTab(button.dataset.allianceTab));
-  });
+  if (byId("powerBulkDate")) byId("powerBulkDate").value = localDateValue();
   byId("powerForm")?.addEventListener("submit", submitPower);
+  byId("powerEditCancel")?.addEventListener("click", resetEditor);
   byId("powerSeasonForm")?.addEventListener("submit", saveSeason);
   byId("powerSearch")?.addEventListener("input", render);
   byId("powerSort")?.addEventListener("change", render);
-  document.querySelectorAll("[data-power-column]")
-    .forEach(input => input.addEventListener("change", applyColumnVisibility));
+  byId("powerTableBody")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-power-edit]");
+    if (button) editParticipant(button.dataset.powerEdit);
+  });
+  document.querySelectorAll("[data-power-column]").forEach(input => input.addEventListener("change", applyColumnVisibility));
+  byId("powerBulkOpen")?.addEventListener("click", () => { byId("powerBulkCard").hidden = false; byId("powerBulkCard").scrollIntoView({ behavior: "smooth" }); });
+  byId("powerBulkClose")?.addEventListener("click", () => { byId("powerBulkCard").hidden = true; });
+  byId("powerBulkSave")?.addEventListener("click", saveBulk);
   byId("powerExpandTable")?.addEventListener("click", () => toggleExpandedTable());
   byId("powerCloseTable")?.addEventListener("click", () => toggleExpandedTable(false));
-
-  if (byId("alliancePowerSection") && !byId("alliancePowerSection").hidden) load();
+  load();
 }
