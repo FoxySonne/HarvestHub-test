@@ -14,6 +14,29 @@
     return window.harvestHubSupabase || null;
   }
 
+  function getActiveAccount() {
+    const profile = window.harvestHubAccount?.getProfile?.();
+    return profile?.type === "account" ? profile : null;
+  }
+
+  function hasDraftAccess() {
+    const account = getActiveAccount();
+    return Boolean(account && window.harvestHubAdvancedAccessDraft?.getGrant?.(account));
+  }
+
+  function hasEffectiveAccess() {
+    return status.hasAccess || hasDraftAccess();
+  }
+
+  function getPublicStatus() {
+    return {
+      ...status,
+      hasAccess: hasEffectiveAccess(),
+      serverHasAccess: status.hasAccess,
+      draftHasAccess: hasDraftAccess()
+    };
+  }
+
   function getPreference() {
     return typeof baseGetAdvancedMode === "function" && baseGetAdvancedMode() === true;
   }
@@ -32,11 +55,11 @@
 
   function applyAuthorizedMode() {
     if (typeof baseApplyAdvancedMode === "function") baseApplyAdvancedMode();
-    return forceDocumentState(status.loaded && status.hasAccess && getPreference());
+    return forceDocumentState(status.loaded && hasEffectiveAccess() && getPreference());
   }
 
   function getAdvancedMode() {
-    return status.loaded && status.hasAccess && getPreference();
+    return status.loaded && hasEffectiveAccess() && getPreference();
   }
 
   function setAdvancedModePreference(enabled) {
@@ -48,7 +71,7 @@
         detail: {
           enabled: applied,
           preference: Boolean(enabled),
-          accessGranted: status.hasAccess
+          accessGranted: hasEffectiveAccess()
         }
       }));
     }
@@ -56,8 +79,14 @@
     return applied;
   }
 
+  function emitAccessChange(enabled = applyAuthorizedMode()) {
+    window.dispatchEvent(new CustomEvent("harvesthub:advanced-mode-access-change", {
+      detail: { ...getPublicStatus(), enabled }
+    }));
+  }
+
   function updateStatus(nextStatus) {
-    const previous = status;
+    const previousEffectiveAccess = hasEffectiveAccess();
     status = {
       loaded: true,
       hasAccess: Boolean(nextStatus?.has_access ?? nextStatus?.hasAccess),
@@ -65,11 +94,9 @@
     };
 
     const enabled = applyAuthorizedMode();
-    window.dispatchEvent(new CustomEvent("harvesthub:advanced-mode-access-change", {
-      detail: { ...status, enabled }
-    }));
+    emitAccessChange(enabled);
 
-    if (previous.hasAccess && !status.hasAccess) {
+    if (previousEffectiveAccess && !hasEffectiveAccess()) {
       window.dispatchEvent(new CustomEvent("harvesthub:advanced-mode-change", {
         detail: {
           enabled: false,
@@ -79,7 +106,7 @@
       }));
     }
 
-    return { ...status };
+    return getPublicStatus();
   }
 
   async function refresh() {
@@ -137,9 +164,9 @@
     refresh,
     listAccounts,
     setAccess,
-    getStatus: () => ({ ...status }),
+    getStatus: getPublicStatus,
     get ready() {
-      return refreshPromise || Promise.resolve({ ...status });
+      return refreshPromise || Promise.resolve(getPublicStatus());
     }
   };
 
@@ -151,6 +178,10 @@
 
   window.addEventListener("harvesthub:profile-change", () => {
     refresh().catch(() => {});
+  });
+
+  window.addEventListener("harvesthub:advanced-access-draft-change", () => {
+    emitAccessChange();
   });
 
   document.addEventListener("visibilitychange", () => {
