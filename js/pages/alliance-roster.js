@@ -82,7 +82,7 @@ function fillPrimaryAccountOptions(selectedId = "") {
     .filter(item => item.id !== participantId)
     .filter(item => item.member_status !== "left" || item.id === selectedId)
     .sort((a, b) => a.nickname.localeCompare(b.nickname, "ru"));
-  byId("participantPrimaryAccount").innerHTML = `<option value="">Указать никнейм вручную</option>${options.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`).join("")}`;
+  byId("participantPrimaryAccount").innerHTML = `<option value="">Неизвестно или указать вручную</option>${options.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`).join("")}`;
   byId("participantPrimaryAccount").value = options.some(item => item.id === selectedId) ? selectedId : "";
 }
 
@@ -91,7 +91,7 @@ function syncTwinFields() {
   const hasLinkedPrimary = Boolean(byId("participantPrimaryAccount").value);
   byId("participantTwinFields").hidden = !isTwin;
   byId("participantPrimaryNicknameField").hidden = !isTwin || hasLinkedPrimary;
-  byId("participantPrimaryNickname").required = isTwin && !hasLinkedPrimary;
+  byId("participantPrimaryNickname").required = false;
 }
 
 function resetForm() {
@@ -158,7 +158,6 @@ async function submitParticipant(event) {
   const isTwin = byId("participantIsTwin").checked;
   const primaryParticipantId = isTwin ? byId("participantPrimaryAccount").value : "";
   const primaryNickname = isTwin && !primaryParticipantId ? byId("participantPrimaryNickname").value.trim() : "";
-  if (isTwin && !primaryParticipantId && !primaryNickname) return showMessage("Выбери основной аккаунт или укажи его никнейм.", "error");
   const button = event.submitter || byId("participantForm").querySelector('[type="submit"]');
   button.disabled = true;
   const participantId = byId("participantId").value || null;
