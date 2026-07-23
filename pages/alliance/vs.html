@@ -9,7 +9,7 @@
       <label><span>Участник</span><select id="vsParticipant" data-no-persist="true" required></select></label>
       <label><span>День недели</span><select id="vsDay" data-no-persist="true"><option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option><option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option></select></label>
       <label><span>Дата</span><input id="vsResultDate" type="date" data-no-persist="true" required></label>
-      <label class="vs-score-label"><span class="tooltip" data-tooltip="Можно вводить точное число или использовать K, M, B, T. Например: 5720000, 5,72M, 897K, 1,4B или 2T.">Очки</span><input id="vsPoints" type="text" inputmode="decimal" data-no-persist="true"></label>
+      <label class="vs-score-label"><span class="tooltip" data-tooltip="Число без буквы считается миллионами: 13 = 13М, 0,1 = 100k, 1280 = 1,28В. При необходимости можно использовать K, M, B или T.">Очки</span><input id="vsPoints" type="text" inputmode="decimal" data-no-persist="true"></label>
       <label class="checkbox vs-vacation-field"><input id="vsVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
       <div class="alliance-actions"><button type="submit">Сохранить результат</button><button id="vsEditCancel" type="button" class="secondary-button" hidden>Отменить</button></div>
     </form>
@@ -22,7 +22,7 @@
 
   <section id="vsBulkCard" class="card" hidden>
     <div class="card-header"><div><h3>Общее редактирование VS</h3><p id="vsBulkWeekLabel">Неделя</p></div></div>
-    <p class="vs-bulk-hint">Вводи очки в обычном формате или букву «О» для отпуска. Пустая ячейка не изменяется.</p>
+    <p class="vs-bulk-hint">Число без буквы считается миллионами. Например: 13 = 13М, 0,1 = 100k, 1280 = 1,28В. Буква «О» обозначает отпуск, пустая ячейка не изменяется.</p>
     <div class="alliance-table-wrap" data-horizontal-scroll>
       <table class="alliance-table vs-bulk-table">
         <thead><tr><th>Участник</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th></tr></thead>
