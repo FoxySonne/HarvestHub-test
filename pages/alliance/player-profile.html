@@ -43,15 +43,44 @@
     <div id="playerProfileVsEmpty" class="alliance-empty-state" hidden>Результатов за текущую неделю пока нет.</div>
   </section>
 
-  <section class="card">
-    <div class="card-header"><div><h3>Ближайший резервуар</h3><p id="playerProfileReservoirDate">—</p></div></div>
-    <div class="alliance-player-profile-facts">
+  <section class="card alliance-player-reservoir-card">
+    <div class="card-header alliance-player-reservoir-header">
+      <div><h3>Ближайший резервуар</h3><p id="playerProfileReservoirDate">—</p></div>
+      <button id="playerProfileReservoirEditButton" type="button" class="secondary-button alliance-player-reservoir-edit-button" hidden>Внести изменения</button>
+    </div>
+    <div id="playerProfileReservoirFacts" class="alliance-player-profile-facts">
       <div><span>Утверждённое время</span><strong id="playerProfileReservoirTime">—</strong></div>
-      <div><span>Время подходит</span><strong id="playerProfileReservoirMatch">—</strong></div>
-      <div><span>Статус</span><strong id="playerProfileReservoirIntent">—</strong></div>
-      <div><span>Состав</span><strong id="playerProfileReservoirAssignment">—</strong></div>
+      <div>
+        <span>Время подходит</span>
+        <strong id="playerProfileReservoirMatch">—</strong>
+        <select id="playerProfileReservoirMatchInput" class="alliance-player-reservoir-input" data-no-persist="true" hidden>
+          <option value="">Не указано</option>
+          <option value="yes">Подходит</option>
+          <option value="no">Не подходит</option>
+        </select>
+      </div>
+      <div>
+        <span>Статус</span>
+        <strong id="playerProfileReservoirIntent">—</strong>
+        <select id="playerProfileReservoirIntentInput" class="alliance-player-reservoir-input" data-no-persist="true" hidden>
+          <option value="">Не указано</option>
+          <option value="willing">Желающий</option>
+          <option value="refused">Отказник</option>
+        </select>
+      </div>
+      <div>
+        <span>Предпочтение</span>
+        <strong id="playerProfileReservoirPreference">—</strong>
+        <select id="playerProfileReservoirPreferenceInput" class="alliance-player-reservoir-input" data-no-persist="true" hidden>
+          <option value="">Не указано</option>
+          <option value="main">Основа</option>
+          <option value="reserve">Резерв</option>
+        </select>
+      </div>
+      <div><span>Назначенный состав</span><strong id="playerProfileReservoirAssignment">—</strong></div>
       <div><span>Локация</span><strong id="playerProfileReservoirLocation">—</strong></div>
     </div>
+    <p id="playerProfileReservoirMessage" class="alliance-form-message" aria-live="polite"></p>
     <div id="playerProfileReservoirEmpty" class="alliance-empty-state" hidden>Ближайшая неделя резервуара ещё не создана.</div>
   </section>
 
