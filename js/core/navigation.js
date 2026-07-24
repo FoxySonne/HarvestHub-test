@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260723-access-profile-1";
+  const SITE_ASSET_VERSION = "20260724-player-profile-1";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -13,6 +13,7 @@
     { title: "Настройки", path: "settings.html", group: "Основное" },
     { title: "Союзный штаб", path: "alliance/members.html", group: "Союз" },
     { title: "Управление союзом", path: "alliance/management.html", group: "Союз" },
+    { title: "Профиль игрока", path: "alliance/player-profile.html", group: "Союз" },
     { title: "Состав союза", path: "alliance/roster.html", group: "Союз" },
     { title: "Сила отрядов", path: "alliance/power.html", group: "Союз" },
     { title: "VS", path: "alliance/vs.html", group: "Союз" },
@@ -28,6 +29,7 @@
     home: "../pages/home.js",
     members: "../pages/alliance-hub.js",
     management: "../pages/alliance-management.js",
+    "player-profile": "../pages/alliance-player-profile.js",
     roster: "../pages/alliance-roster.js",
     power: "../pages/alliance-power.js",
     vs: "../pages/alliance-vs-current.js",
