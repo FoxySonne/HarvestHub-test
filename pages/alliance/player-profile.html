@@ -46,8 +46,7 @@
     </div>
     <form id="playerProfileVsProposalForm" class="alliance-player-vs-proposal-form" hidden>
       <label><span>День</span><select id="playerProfileVsProposalDate" data-no-persist="true"></select></label>
-      <label><span>Очки</span><input id="playerProfileVsProposalPoints" type="number" min="0" step="0.01" inputmode="decimal" data-no-persist="true"></label>
-      <label><span>Единица</span><select id="playerProfileVsProposalUnit" data-no-persist="true"><option value="1000">K</option><option value="1000000" selected>M</option><option value="1000000000">B</option><option value="1000000000000">T</option></select></label>
+      <label><span>Очки, млн</span><input id="playerProfileVsProposalPoints" type="number" min="0" step="0.001" inputmode="decimal" data-no-persist="true"></label>
       <label class="alliance-player-vs-vacation"><input id="playerProfileVsProposalVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
       <button id="playerProfileVsProposalSubmit" type="submit">Отправить заявку</button>
     </form>
