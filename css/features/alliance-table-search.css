@@ -1,0 +1,103 @@
+.vs-search-open,
+.vs-floating-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vs-search-open {
+  width: 44px !important;
+  min-width: 44px;
+  padding: 0 !important;
+}
+
+.vs-search-open::before,
+.vs-floating-search::before {
+  content: "⌕";
+  font-size: 24px;
+  line-height: 1;
+}
+
+.vs-player-search {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto 44px;
+  gap: 10px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.vs-player-search[hidden] {
+  display: none !important;
+}
+
+.vs-player-search input,
+.vs-player-search button {
+  min-height: 44px;
+}
+
+.vs-player-search button {
+  width: auto;
+  white-space: nowrap;
+}
+
+.vs-player-search [data-vs-search-close] {
+  min-width: 44px;
+  padding: 0;
+  font-size: 20px;
+}
+
+.vs-player-search [data-vs-search-status] {
+  grid-column: 1 / -1;
+  min-height: 18px;
+  color: var(--text-soft);
+}
+
+.vs-search-match > td {
+  animation: vs-search-highlight 2.6s ease;
+}
+
+@keyframes vs-search-highlight {
+  0%, 70% {
+    background: color-mix(in srgb, var(--accent) 22%, var(--card));
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  100% {
+    background: inherit;
+    box-shadow: none;
+  }
+}
+
+.vs-floating-search {
+  display: none;
+  position: fixed;
+  right: 18px;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  z-index: 1150;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: var(--shadow-heavy);
+}
+
+@media (max-width: 899px) {
+  .vs-player-search {
+    grid-template-columns: 1fr auto;
+  }
+
+  .vs-player-search input {
+    grid-column: 1 / -1;
+  }
+
+  .vs-player-search button[type="submit"] {
+    width: 100%;
+  }
+
+  .vs-floating-search {
+    display: inline-flex;
+  }
+}
