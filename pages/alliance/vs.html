@@ -23,7 +23,13 @@
   <section id="vsBulkCard" class="card" hidden>
     <div class="card-header"><div><h3>Общее редактирование VS</h3><p id="vsBulkWeekLabel">Неделя</p></div></div>
     <p class="vs-bulk-hint">Число без буквы считается миллионами. Например: 13 = 13М, 0,1 = 100k, 1280 = 1,28В. Буква «О» обозначает отпуск, пустая ячейка не изменяется.</p>
-    <div class="alliance-actions vs-bulk-actions"><button id="vsBulkSave" type="button">Сохранить изменения</button><button id="vsBulkClose" type="button" class="secondary-button">Закрыть</button></div>
+    <div class="alliance-actions vs-bulk-actions"><button id="vsBulkSave" type="button">Сохранить изменения</button><button id="vsBulkClose" type="button" class="secondary-button">Закрыть</button><button type="button" class="secondary-button vs-search-open" data-vs-search-open="bulk" aria-label="Найти игрока"></button></div>
+    <form id="vsBulkSearch" class="vs-player-search" data-vs-search="bulk" hidden>
+      <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока">
+      <button type="submit">Найти</button>
+      <button type="button" class="secondary-button" data-vs-search-close aria-label="Закрыть поиск">×</button>
+      <small data-vs-search-status></small>
+    </form>
     <div class="alliance-table-wrap" data-horizontal-scroll>
       <table class="alliance-table vs-bulk-table">
         <thead><tr><th>Участник</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th></tr></thead>
@@ -39,9 +45,18 @@
       <label class="checkbox vs-saturday-total-toggle tooltip" data-tooltip="Если отключить, общая сумма и выполнение недели считаются только по понедельнику–пятницу."><input id="vsIncludeSaturdayTotal" type="checkbox" data-no-persist="true"><span>Учитывать субботу</span></label>
       <button id="vsBulkOpen" type="button" class="secondary-button">Изменить таблицу</button>
       <button id="vsExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button>
+      <button type="button" class="secondary-button vs-search-open" data-vs-search-open="main" aria-label="Найти игрока"></button>
     </div>
+    <form id="vsMainSearch" class="vs-player-search" data-vs-search="main" hidden>
+      <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока">
+      <button type="submit">Найти</button>
+      <button type="button" class="secondary-button" data-vs-search-close aria-label="Закрыть поиск">×</button>
+      <small data-vs-search-status></small>
+    </form>
     <div id="vsCurrentTableContainer" class="alliance-table-wrap vs-table-wrap" data-horizontal-scroll><button id="vsCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button><table class="alliance-table vs-table"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
     <div id="vsEmptyState" class="alliance-empty-state">Пока нет участников.</div>
     <div id="vsSummary" class="vs-summary" hidden></div>
   </section>
+
+  <button id="vsFloatingSearch" type="button" class="vs-floating-search" aria-label="Найти игрока"></button>
 </section>
