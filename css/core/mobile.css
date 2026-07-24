@@ -11,6 +11,10 @@ MOBILE: до 899px
     overscroll-behavior-x: none;
   }
 
+  body {
+    font-size: clamp(15px, 4vw, 18px);
+  }
+
   .container {
     display: block;
     width: 100%;
@@ -92,14 +96,119 @@ MOBILE: до 899px
     height: 100%;
   }
 
+  .page-section,
+  .card,
+  .box,
+  .card-header,
+  form,
+  fieldset,
+  label,
+  .alliance-actions,
+  .button-group,
+  .calculator-data-actions,
+  [class*="-grid"],
+  [class*="-row"],
+  [class*="-controls"],
+  [class*="-actions"] {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .card-header,
+  .alliance-actions,
+  .calculator-data-actions,
+  [class*="-actions"],
+  [class*="-controls"] {
+    flex-wrap: wrap;
+  }
+
   .button,
   button,
   input[type=submit],
   input[type=button] {
     width: 100%;
-    min-width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    min-height: 44px;
+    padding: 10px 16px;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    line-height: 1.25;
+    font-size: clamp(13px, 3.7vw, 17px);
   }
 
+  .alliance-actions > *,
+  .calculator-data-actions > *,
+  [class*="-actions"] > button,
+  [class*="-controls"] > button {
+    flex: 1 1 170px;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  span,
+  strong,
+  small,
+  label,
+  th,
+  td,
+  button,
+  a {
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+
+  .mobile-overflow-warning {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(8, 20, 21, .58);
+  }
+
+  .mobile-overflow-warning[hidden] {
+    display: none !important;
+  }
+
+  .mobile-overflow-warning__dialog {
+    width: min(100%, 520px);
+    max-height: calc(100dvh - 36px);
+    overflow: auto;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    background: var(--card);
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .mobile-overflow-warning__dialog h3 {
+    margin-bottom: 10px;
+  }
+
+  .mobile-overflow-warning__dialog p {
+    font-size: 14px;
+  }
+
+  .mobile-overflow-warning__dialog button {
+    margin-top: 12px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -139,4 +248,14 @@ MOBILE: до 899px
     font-size: 13px;
   }
 
+  .main,
+  .right {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .card,
+  .box {
+    padding: 16px;
+  }
 }
