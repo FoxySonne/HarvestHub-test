@@ -1,0 +1,49 @@
+<section class="page-section alliance-subpage alliance-player-profile-page">
+  <button type="button" class="alliance-back-button secondary-button" data-page-path="alliance/members.html">← В штаб</button>
+  <div id="allianceMessage" class="alliance-message" hidden></div>
+
+  <section class="card alliance-player-profile-hero">
+    <div class="card-header">
+      <div>
+        <p class="alliance-player-profile-kicker">Профиль игрока</p>
+        <h1 id="playerProfileNickname">—</h1>
+        <p><span id="playerProfileRank">—</span> · <span id="playerProfileStatus">—</span></p>
+      </div>
+    </div>
+    <div class="alliance-player-profile-facts">
+      <div><span>Дата рождения</span><strong id="playerProfileBirthday">—</strong></div>
+      <div><span>Часовой пояс</span><strong id="playerProfileTimezone">—</strong></div>
+      <div><span>Тип профиля</span><strong id="playerProfileType">—</strong></div>
+      <div><span>Аккаунт HarvestHub</span><strong id="playerProfileLinked">—</strong></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><div><h3>Актуальная сила отрядов</h3><p id="playerProfilePowerDate">Последний замер: —</p></div></div>
+    <div id="playerProfilePower" class="alliance-player-profile-power"></div>
+    <div id="playerProfilePowerEmpty" class="alliance-empty-state" hidden>Замеров силы пока нет.</div>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><div><h3>VS — текущая неделя</h3><p id="playerProfileVsPeriod">—</p></div></div>
+    <div id="playerProfileVs" class="alliance-player-profile-vs"></div>
+    <div id="playerProfileVsEmpty" class="alliance-empty-state" hidden>Результатов за текущую неделю пока нет.</div>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><div><h3>Ближайший резервуар</h3><p id="playerProfileReservoirDate">—</p></div></div>
+    <div class="alliance-player-profile-facts">
+      <div><span>Утверждённое время</span><strong id="playerProfileReservoirTime">—</strong></div>
+      <div><span>Время подходит</span><strong id="playerProfileReservoirMatch">—</strong></div>
+      <div><span>Статус</span><strong id="playerProfileReservoirIntent">—</strong></div>
+      <div><span>Состав</span><strong id="playerProfileReservoirAssignment">—</strong></div>
+      <div><span>Локация</span><strong id="playerProfileReservoirLocation">—</strong></div>
+    </div>
+    <div id="playerProfileReservoirEmpty" class="alliance-empty-state" hidden>Ближайшая неделя резервуара ещё не создана.</div>
+  </section>
+
+  <section id="playerProfileTwinsCard" class="card" hidden>
+    <div class="card-header"><div><h3>Связанные твины</h3><p>Дополнительные игровые профили этого участника.</p></div></div>
+    <div id="playerProfileTwins" class="alliance-player-profile-twins"></div>
+  </section>
+</section>
