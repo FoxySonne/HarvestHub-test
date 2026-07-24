@@ -21,7 +21,13 @@ const LOCATION_NAMES = {
   collectors_west: "Водосборники — запад"
 };
 
-const state = { client: null, context: null, participant: null };
+const state = {
+  client: null,
+  context: null,
+  participant: null,
+  reservoirWeek: null,
+  reservoirEntry: null
+};
 
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
@@ -29,6 +35,13 @@ function showMessage(text, type = "info") {
   box.hidden = !text;
   box.textContent = text;
   box.dataset.type = type;
+}
+
+function setFormMessage(id, text, type = "info") {
+  const message = byId(id);
+  if (!message) return;
+  message.textContent = text;
+  message.dataset.type = type;
 }
 
 function escapeHtml(value) {
@@ -79,6 +92,13 @@ function formatScore(value) {
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
 
+function parseMillions(value, required = false) {
+  const text = String(value ?? "").trim().replace(",", ".");
+  if (!text) return required ? undefined : null;
+  const number = Number(text);
+  return Number.isFinite(number) && number >= 0 ? number : undefined;
+}
+
 function timezoneLabel(offset) {
   const number = Number(offset);
   if (!Number.isFinite(number) || number === 0) return "МСК";
@@ -97,6 +117,10 @@ function resolveParticipant() {
   return state.context.participants.find(item => item.id === requestedId)
     || state.context.currentParticipant
     || null;
+}
+
+function isOwnProfile() {
+  return Boolean(state.participant?.linked_user_id && state.participant.linked_user_id === state.context?.session?.user?.id);
 }
 
 function inheritedPersonalData(participant) {
@@ -118,6 +142,15 @@ function renderHeader(participant) {
   byId("playerProfileTimezone").textContent = timezoneLabel(personal.timezone_offset);
   byId("playerProfileType").textContent = participant.is_twin ? `Твин${participant.primary_nickname ? ` игрока ${participant.primary_nickname}` : ""}` : "Основной игрок";
   byId("playerProfileLinked").textContent = participant.linked_user_id ? "Аккаунт связан" : "Не связан";
+  byId("playerProfilePowerForm").hidden = !isOwnProfile();
+}
+
+function fillPowerForm(measurement) {
+  byId("playerProfilePowerMeasuredOn").value = dateValue(new Date());
+  [1, 2, 3, 4, 5].forEach(index => {
+    const input = byId(`playerProfileSquad${index}`);
+    if (input) input.value = measurement?.[`squad_${index}`] ?? "";
+  });
 }
 
 async function loadPower(participantId) {
@@ -134,9 +167,11 @@ async function loadPower(participantId) {
   const measurement = result.data;
   const container = byId("playerProfilePower");
   const empty = byId("playerProfilePowerEmpty");
+  fillPowerForm(measurement);
   if (!measurement) {
     container.innerHTML = "";
     empty.hidden = false;
+    byId("playerProfilePowerDate").textContent = "Последний замер: —";
     return;
   }
 
@@ -144,6 +179,33 @@ async function loadPower(participantId) {
   byId("playerProfilePowerDate").textContent = `Последний замер: ${formatDate(measurement.measured_on)}`;
   container.innerHTML = [1, 2, 3, 4, 5].map(index => `
     <div><span>${index}-й отряд</span><strong>${formatNumber(measurement[`squad_${index}`])} млн</strong></div>`).join("");
+}
+
+async function savePower(event) {
+  event.preventDefault();
+  if (!isOwnProfile()) return;
+  const measuredOn = byId("playerProfilePowerMeasuredOn")?.value;
+  const squads = [1, 2, 3, 4, 5].map(index => parseMillions(byId(`playerProfileSquad${index}`)?.value, index === 1));
+  if (!measuredOn) return setFormMessage("playerProfilePowerMessage", "Укажи дату замера.", "error");
+  if (squads.some(value => value === undefined)) return setFormMessage("playerProfilePowerMessage", "Проверь значения силы. Для 1-го отряда значение обязательно.", "error");
+
+  const button = event.submitter;
+  button.disabled = true;
+  setFormMessage("playerProfilePowerMessage", "Сохраняем…");
+  const { error } = await state.client.rpc("save_alliance_squad_power", {
+    target_alliance_id: getActiveAllianceId(),
+    target_participant_id: state.participant.id,
+    target_measured_on: measuredOn,
+    target_squad_1: squads[0],
+    target_squad_2: squads[1],
+    target_squad_3: squads[2],
+    target_squad_4: squads[3],
+    target_squad_5: squads[4]
+  });
+  button.disabled = false;
+  if (error) return setFormMessage("playerProfilePowerMessage", error.message || "Не удалось сохранить силу.", "error");
+  await loadPower(state.participant.id);
+  setFormMessage("playerProfilePowerMessage", "Актуальная сила отрядов сохранена.", "success");
 }
 
 async function loadVs(participantId) {
@@ -182,6 +244,18 @@ function reservoirAssignmentLabel(value) {
   return "Не назначен";
 }
 
+function reservoirPreferenceLabel(value) {
+  if (value === "main") return "Предпочитает основу";
+  if (value === "reserve") return "Предпочитает резерв";
+  return "Не указано";
+}
+
+function fillReservoirForm(entry) {
+  byId("playerProfileReservoirMatchInput").value = entry?.time_match === true ? "yes" : entry?.time_match === false ? "no" : "";
+  byId("playerProfileReservoirIntentInput").value = entry?.intent || "";
+  byId("playerProfileReservoirPreferenceInput").value = entry?.preferred_assignment || "";
+}
+
 async function loadReservoir(participantId) {
   const today = dateValue(new Date());
   const weekResult = await state.client
@@ -195,13 +269,17 @@ async function loadReservoir(participantId) {
   if (weekResult.error) throw weekResult.error;
 
   const week = weekResult.data;
+  state.reservoirWeek = week;
   const empty = byId("playerProfileReservoirEmpty");
+  const form = byId("playerProfileReservoirForm");
   if (!week) {
     empty.hidden = false;
+    form.hidden = true;
     return;
   }
 
   empty.hidden = true;
+  form.hidden = !isOwnProfile();
   byId("playerProfileReservoirDate").textContent = `Дата события: ${formatDate(week.event_date)}`;
   byId("playerProfileReservoirTime").textContent = `${pad(week.event_hour_msk ?? 14)}:00 МСК`;
 
@@ -213,10 +291,37 @@ async function loadReservoir(participantId) {
   if (assignmentResult.error) throw assignmentResult.error;
 
   const entry = entryResult.data;
+  state.reservoirEntry = entry;
+  fillReservoirForm(entry);
   byId("playerProfileReservoirMatch").textContent = entry?.time_match === true ? "Подходит" : entry?.time_match === false ? "Не подходит" : "Не указано";
   byId("playerProfileReservoirIntent").textContent = reservoirIntentLabel(entry?.intent);
+  byId("playerProfileReservoirPreference").textContent = reservoirPreferenceLabel(entry?.preferred_assignment);
   byId("playerProfileReservoirAssignment").textContent = reservoirAssignmentLabel(entry?.assignment);
   byId("playerProfileReservoirLocation").textContent = LOCATION_NAMES[assignmentResult.data?.location_key] || "Не назначена";
+}
+
+async function saveReservoirPreferences(event) {
+  event.preventDefault();
+  if (!isOwnProfile() || !state.reservoirWeek) return;
+  const timeValue = byId("playerProfileReservoirMatchInput")?.value || "";
+  const intent = byId("playerProfileReservoirIntentInput")?.value || null;
+  const preference = byId("playerProfileReservoirPreferenceInput")?.value || null;
+  const timeMatch = timeValue === "yes" ? true : timeValue === "no" ? false : null;
+
+  const button = event.submitter;
+  button.disabled = true;
+  setFormMessage("playerProfileReservoirMessage", "Сохраняем…");
+  const { error } = await state.client.rpc("save_my_reservoir_preferences", {
+    target_week_id: state.reservoirWeek.id,
+    target_participant_id: state.participant.id,
+    target_time_match: timeMatch,
+    target_intent: intent,
+    target_preferred_assignment: preference
+  });
+  button.disabled = false;
+  if (error) return setFormMessage("playerProfileReservoirMessage", error.message || "Не удалось сохранить данные резервуара.", "error");
+  await loadReservoir(state.participant.id);
+  setFormMessage("playerProfileReservoirMessage", "Данные резервуара сохранены.", "success");
 }
 
 async function loadTwins(participant) {
@@ -263,6 +368,8 @@ export async function init() {
 
     localStorage.setItem("harvesthub_active_participant_profile_id", state.participant.id);
     renderHeader(state.participant);
+    byId("playerProfilePowerForm")?.addEventListener("submit", savePower);
+    byId("playerProfileReservoirForm")?.addEventListener("submit", saveReservoirPreferences);
     await Promise.all([
       loadPower(state.participant.id),
       loadVs(state.participant.id),
