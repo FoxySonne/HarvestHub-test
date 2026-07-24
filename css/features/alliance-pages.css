@@ -58,10 +58,42 @@
   box-sizing: border-box;
 }
 
-.alliance-user-summary-grid {
+.alliance-user-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  grid-template-areas:
+    "header actions"
+    "details actions";
+  column-gap: 32px;
+  row-gap: 14px;
+  align-items: start;
+}
+
+.alliance-user-summary > .card-header {
+  grid-area: header;
+}
+
+.alliance-user-summary-grid {
+  grid-area: details;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(110px, max-content));
+  justify-content: start;
+  gap: 12px 32px;
+}
+
+.alliance-user-summary > .alliance-actions {
+  grid-area: actions;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-self: start;
+}
+
+.alliance-user-summary > .alliance-actions button {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
 }
 
 .alliance-user-summary-grid > div,
@@ -224,6 +256,19 @@
   .vs-statistics-controls,
   .vs-statistics-filters,
   .alliance-user-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-user-summary {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "details"
+      "actions";
+    gap: 14px;
+  }
+
+  .alliance-user-summary > .alliance-actions {
     grid-template-columns: 1fr;
   }
 
