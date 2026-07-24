@@ -138,7 +138,7 @@ function render() {
   const participants = activeParticipants().sort((a, b) => a.nickname.localeCompare(b.nickname, "ru"));
   select.innerHTML = `<option value=""></option>${participants.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(participantLabel(item))}</option>`).join("")}`;
   datalist.innerHTML = participants.map(item => `<option value="${escapeHtml(participantLabel(item))}"></option>`).join("");
-  const selected = participants.find(item => item.id === selectedId) || participants[0] || null;
+  const selected = participants.find(item => item.id === selectedId) || null;
   selectParticipant(selected);
   renderPrivilegedAccounts();
 }
