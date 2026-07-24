@@ -21,7 +21,13 @@ const LOCATION_NAMES = {
   collectors_west: "Водосборники — запад"
 };
 
-const state = { client: null, context: null, participant: null };
+const state = {
+  client: null,
+  context: null,
+  participant: null,
+  powerMeasurement: null,
+  powerEditing: false
+};
 
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
@@ -29,6 +35,13 @@ function showMessage(text, type = "info") {
   box.hidden = !text;
   box.textContent = text;
   box.dataset.type = type;
+}
+
+function setPowerMessage(text, type = "info") {
+  const message = byId("playerProfilePowerMessage");
+  if (!message) return;
+  message.textContent = text;
+  message.dataset.type = type;
 }
 
 function escapeHtml(value) {
@@ -79,6 +92,13 @@ function formatScore(value) {
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
 
+function parseMillions(value, required = false) {
+  const text = String(value ?? "").trim().replace(",", ".");
+  if (!text) return required ? undefined : null;
+  const number = Number(text);
+  return Number.isFinite(number) && number >= 0 ? number : undefined;
+}
+
 function timezoneLabel(offset) {
   const number = Number(offset);
   if (!Number.isFinite(number) || number === 0) return "МСК";
@@ -125,17 +145,44 @@ function renderHeader(participant) {
   byId("playerProfileTimezone").textContent = timezoneLabel(personal.timezone_offset);
   byId("playerProfileType").textContent = participant.is_twin ? `Твин${participant.primary_nickname ? ` игрока ${participant.primary_nickname}` : ""}` : "Основной игрок";
   byId("playerProfileLinked").textContent = participant.linked_user_id ? "Аккаунт связан" : "Не связан";
-  const powerFormCard = byId("playerProfilePowerFormCard");
-  if (powerFormCard) powerFormCard.hidden = !isOwnProfile();
+  const editButton = byId("playerProfilePowerEditButton");
+  if (editButton) editButton.hidden = !isOwnProfile();
 }
 
-function fillPowerForm(measurement) {
-  const measuredOn = byId("playerProfilePowerMeasuredOn");
-  if (measuredOn) measuredOn.value = dateValue(new Date());
-  [1, 2, 3, 4, 5].forEach(index => {
-    const input = byId(`playerProfileSquad${index}`);
-    if (input) input.value = measurement?.[`squad_${index}`] ?? "";
-  });
+function renderPower() {
+  const measurement = state.powerMeasurement;
+  const container = byId("playerProfilePower");
+  const empty = byId("playerProfilePowerEmpty");
+  const dateField = byId("playerProfilePowerDateField");
+  const button = byId("playerProfilePowerEditButton");
+
+  if (dateField) dateField.hidden = !state.powerEditing;
+  if (button) button.textContent = state.powerEditing ? "Сохранить" : "Внести изменения";
+  container.classList.toggle("is-editing", state.powerEditing);
+
+  if (state.powerEditing) {
+    empty.hidden = true;
+    container.innerHTML = [1, 2, 3, 4, 5].map(index => `
+      <label>
+        <span>${index}-й отряд, млн</span>
+        <input id="playerProfileSquad${index}" type="number" min="0" step="0.001" inputmode="decimal" data-no-persist="true" value="${measurement?.[`squad_${index}`] ?? ""}">
+      </label>`).join("");
+    const measuredOn = byId("playerProfilePowerMeasuredOn");
+    if (measuredOn && !measuredOn.value) measuredOn.value = dateValue(new Date());
+    return;
+  }
+
+  if (!measurement) {
+    container.innerHTML = "";
+    empty.hidden = false;
+    byId("playerProfilePowerDate").textContent = "Последний замер: —";
+    return;
+  }
+
+  empty.hidden = true;
+  byId("playerProfilePowerDate").textContent = `Последний замер: ${formatDate(measurement.measured_on)}`;
+  container.innerHTML = [1, 2, 3, 4, 5].map(index => `
+    <div><span>${index}-й отряд</span><strong>${formatNumber(measurement[`squad_${index}`])} млн</strong></div>`).join("");
 }
 
 async function loadPower(participantId) {
@@ -148,21 +195,46 @@ async function loadPower(participantId) {
     .limit(1)
     .maybeSingle();
   if (result.error) throw result.error;
+  state.powerMeasurement = result.data;
+  renderPower();
+}
 
-  const measurement = result.data;
-  const container = byId("playerProfilePower");
-  const empty = byId("playerProfilePowerEmpty");
-  fillPowerForm(measurement);
-  if (!measurement) {
-    container.innerHTML = "";
-    empty.hidden = false;
+async function savePower() {
+  const measuredOn = byId("playerProfilePowerMeasuredOn")?.value;
+  const squads = [1, 2, 3, 4, 5].map(index => parseMillions(byId(`playerProfileSquad${index}`)?.value, index === 1));
+  if (!measuredOn) return setPowerMessage("Укажи дату замера.", "error");
+  if (squads.some(value => value === undefined)) return setPowerMessage("Проверь значения силы. Для 1-го отряда значение обязательно.", "error");
+
+  const button = byId("playerProfilePowerEditButton");
+  button.disabled = true;
+  setPowerMessage("Сохраняем…");
+  const { error } = await state.client.rpc("save_alliance_squad_power", {
+    target_alliance_id: getActiveAllianceId(),
+    target_participant_id: state.participant.id,
+    target_measured_on: measuredOn,
+    target_squad_1: squads[0],
+    target_squad_2: squads[1],
+    target_squad_3: squads[2],
+    target_squad_4: squads[3],
+    target_squad_5: squads[4]
+  });
+  button.disabled = false;
+  if (error) return setPowerMessage(error.message || "Не удалось сохранить силу.", "error");
+
+  state.powerEditing = false;
+  await loadPower(state.participant.id);
+  setPowerMessage("Сила отрядов сохранена.", "success");
+}
+
+async function handlePowerButton() {
+  if (!isOwnProfile()) return;
+  if (!state.powerEditing) {
+    state.powerEditing = true;
+    setPowerMessage("");
+    renderPower();
     return;
   }
-
-  empty.hidden = true;
-  byId("playerProfilePowerDate").textContent = `Последний замер: ${formatDate(measurement.measured_on)}`;
-  container.innerHTML = [1, 2, 3, 4, 5].map(index => `
-    <div><span>${index}-й отряд</span><strong>${formatNumber(measurement[`squad_${index}`])} млн</strong></div>`).join("");
+  await savePower();
 }
 
 async function loadVs(participantId) {
@@ -282,6 +354,7 @@ export async function init() {
 
     localStorage.setItem("harvesthub_active_participant_profile_id", state.participant.id);
     renderHeader(state.participant);
+    byId("playerProfilePowerEditButton")?.addEventListener("click", handlePowerButton);
     await Promise.all([
       loadPower(state.participant.id),
       loadVs(state.participant.id),
