@@ -74,7 +74,8 @@
     const header = table.querySelectorAll("thead th")[index];
     if (!header) return;
     const type = columnType(header.textContent);
-    const sorted = rows(table).sort((a, b) => {
+    const currentRows = rows(table);
+    const sortedRows = [...currentRows].sort((a, b) => {
       const left = cellSortValue(a, index, type);
       const right = cellSortValue(b, index, type);
       const result = typeof left === "string" ? left.localeCompare(right, "ru", { numeric: true }) : left - right;
@@ -82,7 +83,9 @@
     });
     const body = table.tBodies[0];
     if (!body) return;
-    sorted.forEach(row => body.append(row));
+    if (sortedRows.some((row, rowIndex) => row !== currentRows[rowIndex])) {
+      sortedRows.forEach(row => body.append(row));
+    }
     table.dataset.sortColumn = String(index);
     table.dataset.sortDirection = direction;
 
@@ -118,12 +121,17 @@
       table.dataset.sortInitialized = "true";
       const nicknameIndex = nicknameColumn(table);
       window.setTimeout(() => sortTable(table, nicknameIndex, "asc"), 0);
+      return;
+    }
+
+    if (table.dataset.sortColumn !== undefined) {
+      window.setTimeout(() => sortTable(table, Number(table.dataset.sortColumn), table.dataset.sortDirection || "asc", false), 0);
     }
   }
 
   function createSearchForm(table) {
     const wrapper = tableWrapper(table);
-    if (!wrapper || wrapper.previousElementSibling?.dataset?.allianceTableSearchFor === tableId(table)) return;
+    if (!wrapper || document.querySelector(`[data-alliance-table-search-for="${CSS.escape(tableId(table))}"]`)) return;
 
     const form = document.createElement("form");
     form.className = "alliance-table-search";
@@ -142,7 +150,7 @@
     trigger.dataset.allianceSearchOpen = tableId(table);
     trigger.setAttribute("aria-label", "Найти игрока");
 
-    const controls = wrapper.previousElementSibling === form ? form.previousElementSibling : null;
+    const controls = form.previousElementSibling;
     if (controls?.classList?.contains("alliance-actions") || controls?.classList?.contains("vs-table-controls") || controls?.classList?.contains("alliance-roster-tools")) {
       controls.append(trigger);
     } else {
@@ -233,9 +241,9 @@
   }
 
   function ensureFloatingButton() {
-    if (!document.querySelector(TABLE_SELECTOR)) return;
+    const hasTables = Boolean(document.querySelector(TABLE_SELECTOR));
     let button = document.getElementById("allianceFloatingSearch");
-    if (!button) {
+    if (!button && hasTables) {
       button = document.createElement("button");
       button.id = "allianceFloatingSearch";
       button.type = "button";
@@ -243,6 +251,7 @@
       button.setAttribute("aria-label", "Найти игрока");
       document.body.append(button);
     }
+    if (button) button.hidden = !hasTables;
   }
 
   document.addEventListener("click", event => {
