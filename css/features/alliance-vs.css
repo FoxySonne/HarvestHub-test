@@ -78,22 +78,33 @@
 }
 
 .vs-table-controls {
-  display: grid;
-  grid-template-columns: minmax(220px, 340px) minmax(180px, auto) auto auto;
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
   align-items: end;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.vs-table-controls > label:first-child {
+  flex: 0 1 270px;
+  min-width: 220px;
 }
 
 .vs-table-controls button {
   width: auto;
+  min-height: 44px;
+  padding-inline: 16px;
+  white-space: nowrap;
 }
 
 .vs-saturday-total-toggle {
+  flex: 0 0 auto;
   flex-direction: row !important;
   align-items: center;
+  gap: 8px !important;
   min-height: 44px;
   margin: 0;
+  padding: 0 8px;
   white-space: nowrap;
 }
 
@@ -250,18 +261,24 @@
   .vs-tools {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .vs-table-controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 899px) {
   .vs-result-form,
   .vs-target-form,
-  .vs-tools,
-  .vs-table-controls {
+  .vs-tools {
     grid-template-columns: 1fr;
+  }
+
+  .vs-table-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .vs-table-controls > label:first-child,
+  .vs-saturday-total-toggle {
+    width: 100%;
+    min-width: 0;
   }
 
   .vs-result-form button,
@@ -270,10 +287,6 @@
   .vs-table-controls button {
     width: 100%;
     margin-left: 0;
-  }
-
-  .vs-saturday-total-toggle {
-    width: 100%;
   }
 
   .vs-period-controls label {
