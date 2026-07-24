@@ -16,6 +16,10 @@ function dateValue(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+function utcDateValue(date = new Date()) {
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+}
+
 function parseDate(value) {
   const [year, month, day] = String(value).split("-").map(Number);
   return new Date(year, month - 1, day);
@@ -75,7 +79,7 @@ function inputScore(entry) {
 }
 
 function participantMetrics(participantId, map) {
-  const today = dateValue(new Date());
+  const currentUtcDate = utcDateValue();
   const target = Number(state.data?.daily_target) || 5000000;
   const includeSaturday = state.data?.include_saturday_in_total !== false;
   let total = 0;
@@ -84,11 +88,12 @@ function participantMetrics(participantId, map) {
   let vacation = 0;
   const days = DAYS.map((label, index) => {
     const date = addDays(state.weekStart, index);
-    const future = date > today;
+    const future = date > currentUtcDate;
+    const ended = date < currentUtcDate;
     const included = includeSaturday || index < 5;
     const entry = map.get(`${participantId}:${date}`);
     const points = Number(entry?.points) || 0;
-    if (!future && included) {
+    if (ended && included) {
       counted += 1;
       total += points;
       if (entry?.is_vacation) vacation += 1;
@@ -98,11 +103,12 @@ function participantMetrics(participantId, map) {
       label,
       date,
       future,
+      ended,
       included,
       entry,
       points,
-      failed: included && !future && !entry?.is_vacation && points < target,
-      met: included && !future && !entry?.is_vacation && points >= target
+      failed: included && ended && !entry?.is_vacation && points < target,
+      met: included && ended && !entry?.is_vacation && points >= target
     };
   });
   const required = counted - vacation;
@@ -247,7 +253,7 @@ async function saveResult(event) {
   if (!resultDate) return showMessage("Выбери дату.", "error");
   const weekday = (parseDate(resultDate).getDay() || 7) - 1;
   if (weekday > 5) return showMessage("Для VS можно выбрать дату с понедельника по субботу.", "error");
-  if (resultDate > dateValue(new Date())) return showMessage("Будущую дату пока нельзя сохранить.", "error");
+  if (resultDate > utcDateValue()) return showMessage("Будущую дату пока нельзя сохранить.", "error");
   const vacation = byId("vsVacation").checked;
   const points = vacation ? null : parseScore(byId("vsPoints").value);
   if (!vacation && points === null) return showMessage("Проверь формат очков.", "error");
@@ -334,11 +340,11 @@ function toggleFullscreen(open) {
 
 export async function init() {
   state.client = window.harvestHubSupabase;
-  const today = new Date();
-  const todayDay = (today.getDay() || 7) - 1;
-  state.weekStart = getWeekStart(today);
+  const utcToday = parseDate(utcDateValue());
+  const todayDay = (utcToday.getDay() || 7) - 1;
+  state.weekStart = getWeekStart(utcToday);
   byId("vsDay").value = String(Math.min(5, Math.max(0, todayDay)));
-  byId("vsResultDate").value = dateValue(todayDay > 5 ? parseDate(addDays(state.weekStart, 5)) : today);
+  byId("vsResultDate").value = dateValue(todayDay > 5 ? parseDate(addDays(state.weekStart, 5)) : utcToday);
   try { await reload(); } catch (error) { showMessage(error.message, "error"); return; }
   byId("vsDay")?.addEventListener("change", syncDateFromDay);
   byId("vsResultDate")?.addEventListener("change", syncDayFromDate);
