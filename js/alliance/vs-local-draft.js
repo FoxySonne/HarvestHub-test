@@ -1,9 +1,10 @@
 (() => {
   const STORAGE_PREFIX = "harvesthub_vs_draft_v1";
   const AUTOSAVE_INTERVAL = 60_000;
-  let intervalId = null;
-  let observer = null;
-  let restoreTimer = null;
+  let currentForm = null;
+  let lastMessage = "";
+  let dirtyRegular = false;
+  const dirtyBulk = new Set();
 
   function byId(id) {
     return document.getElementById(id);
@@ -39,17 +40,17 @@
     if (!draft) return;
     delete draft[section];
     if (!draft.regular && !draft.bulk) localStorage.removeItem(storageKey());
-    else writeDraft(draft);
+    else localStorage.setItem(storageKey(), JSON.stringify(draft));
     updateStatus();
   }
 
   function collectRegular() {
+    if (!dirtyRegular) return null;
     const participant = byId("vsParticipant");
     const date = byId("vsResultDate");
     const points = byId("vsPoints");
     const vacation = byId("vsVacation");
     if (!participant || !date || !points || !vacation) return null;
-    if (!points.value.trim() && !vacation.checked) return null;
     return {
       participantId: participant.value,
       resultDate: date.value,
@@ -58,18 +59,23 @@
     };
   }
 
+  function bulkCellKey(input) {
+    const row = input.closest("[data-vs-bulk-participant]");
+    return row ? `${row.dataset.vsBulkParticipant}:${input.dataset.vsBulkDay}` : "";
+  }
+
   function collectBulk() {
     const card = byId("vsBulkCard");
-    if (!card || card.hidden) return null;
+    if (!card || card.hidden || !dirtyBulk.size) return null;
     const values = [];
-    card.querySelectorAll("[data-vs-bulk-participant]").forEach(row => {
-      row.querySelectorAll("[data-vs-bulk-day]").forEach(input => {
-        if (!input.value.trim()) return;
-        values.push({
-          participantId: row.dataset.vsBulkParticipant,
-          day: input.dataset.vsBulkDay,
-          value: input.value
-        });
+    card.querySelectorAll("[data-vs-bulk-day]").forEach(input => {
+      const key = bulkCellKey(input);
+      if (!key || !dirtyBulk.has(key)) return;
+      const row = input.closest("[data-vs-bulk-participant]");
+      values.push({
+        participantId: row.dataset.vsBulkParticipant,
+        day: input.dataset.vsBulkDay,
+        value: input.value
       });
     });
     if (!values.length) return null;
@@ -84,13 +90,10 @@
     const existing = readDraft() || {};
     const regular = collectRegular();
     const bulk = collectBulk();
-    const draft = {
-      ...existing,
-      savedAt: new Date().toISOString()
-    };
+    if (!regular && !bulk) return;
+    const draft = { ...existing, savedAt: new Date().toISOString() };
     if (regular) draft.regular = regular;
     if (bulk) draft.bulk = bulk;
-    if (!regular && !bulk && !existing.regular && !existing.bulk) return;
     writeDraft(draft);
   }
 
@@ -106,6 +109,7 @@
     points.value = regular.points || "";
     vacation.checked = Boolean(regular.vacation);
     points.disabled = vacation.checked;
+    dirtyRegular = true;
   }
 
   function restoreBulk(draft) {
@@ -116,7 +120,9 @@
     bulk.values.forEach(item => {
       const row = card.querySelector(`[data-vs-bulk-participant="${CSS.escape(item.participantId)}"]`);
       const input = row?.querySelector(`[data-vs-bulk-day="${CSS.escape(String(item.day))}"]`);
-      if (input && !input.disabled) input.value = item.value;
+      if (!input || input.disabled) return;
+      input.value = item.value;
+      dirtyBulk.add(`${item.participantId}:${item.day}`);
     });
   }
 
@@ -154,38 +160,52 @@
 
   function handleSuccessMessage() {
     const message = byId("allianceMessage")?.textContent || "";
-    if (message === "Результат сохранён.") removeDraftSection("regular");
-    if (message === "Результаты недели сохранены.") removeDraftSection("bulk");
+    if (!message || message === lastMessage) return;
+    lastMessage = message;
+    if (message === "Результат сохранён.") {
+      dirtyRegular = false;
+      removeDraftSection("regular");
+    }
+    if (message === "Результаты недели сохранены.") {
+      dirtyBulk.clear();
+      removeDraftSection("bulk");
+    }
   }
 
-  function scheduleRestore() {
-    clearTimeout(restoreTimer);
-    restoreTimer = setTimeout(restoreDraft, 50);
-  }
-
-  function start() {
-    if (!byId("vsResultForm")) return;
+  function detectPage() {
+    const form = byId("vsResultForm");
+    if (!form) {
+      currentForm = null;
+      return;
+    }
     ensureStatus();
-    scheduleRestore();
-    clearInterval(intervalId);
-    intervalId = setInterval(saveDraft, AUTOSAVE_INTERVAL);
+    handleSuccessMessage();
+    if (form === currentForm) return;
+    currentForm = form;
+    lastMessage = "";
+    dirtyRegular = false;
+    dirtyBulk.clear();
+    setTimeout(restoreDraft, 100);
   }
 
   document.addEventListener("input", event => {
-    if (event.target.closest("#vsResultForm, #vsBulkCard")) saveDraft();
+    if (event.target.closest("#vsResultForm")) dirtyRegular = true;
+    if (event.target.matches("[data-vs-bulk-day]")) {
+      const key = bulkCellKey(event.target);
+      if (key) dirtyBulk.add(key);
+    }
   });
 
   document.addEventListener("change", event => {
-    if (event.target.closest("#vsResultForm, #vsBulkCard")) saveDraft();
+    if (event.target.closest("#vsResultForm")) dirtyRegular = true;
+  });
+
+  document.addEventListener("click", event => {
+    if (event.target.closest("#vsBulkOpen")) setTimeout(restoreDraft, 150);
   });
 
   window.addEventListener("pagehide", saveDraft);
-
-  observer = new MutationObserver(() => {
-    start();
-    scheduleRestore();
-    handleSuccessMessage();
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
-  start();
+  setInterval(saveDraft, AUTOSAVE_INTERVAL);
+  setInterval(detectPage, 1000);
+  detectPage();
 })();
