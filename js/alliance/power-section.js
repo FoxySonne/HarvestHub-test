@@ -2,8 +2,12 @@ import { fetchAllianceSquadPower, saveAllianceSquadPower, setAlliancePowerSeason
 import { ACTIVE_ALLIANCE_STORAGE_KEY } from "./config.js";
 import { setAllianceTableFullscreen } from "./fullscreen-table.js?v=20260721-1";
 
-const state = { client: null, data: null, expanded: false };
+const state = { client: null, data: null, expanded: false, loadToken: 0 };
 const byId = id => document.getElementById(id);
+
+function isMounted() {
+  return Boolean(byId("alliancePowerSection"));
+}
 
 function localDateValue(date = new Date()) {
   const year = date.getFullYear();
@@ -101,6 +105,7 @@ function renderBulkTable(rows) {
 }
 
 function render() {
+  if (!isMounted()) return;
   const rows = Array.isArray(state.data?.participants) ? [...state.data.participants] : [];
   const search = (byId("powerSearch")?.value || "").trim().toLowerCase();
   const sort = byId("powerSort")?.value || "power";
@@ -133,8 +138,10 @@ function render() {
     }).join("");
   }
 
-  if (byId("powerEmptyState")) byId("powerEmptyState").hidden = filtered.length > 0;
-  if (byId("powerCount")) byId("powerCount").textContent = `${rows.length} участников`;
+  const emptyState = byId("powerEmptyState");
+  const count = byId("powerCount");
+  if (emptyState) emptyState.hidden = filtered.length > 0;
+  if (count) count.textContent = `${rows.length} участников`;
   renderSummary(filtered);
   applyColumnVisibility();
 
@@ -143,19 +150,23 @@ function render() {
     const selected = select.value;
     select.innerHTML = rows.map(item => `<option value="${item.participant_id}">${item.nickname}</option>`).join("");
     if ([...select.options].some(option => option.value === selected)) select.value = selected;
-    byId("powerEditorCard").hidden = rows.length === 0;
+    const editorCard = byId("powerEditorCard");
+    if (editorCard) editorCard.hidden = rows.length === 0;
   }
 
   const seasonInput = byId("powerSeasonStart");
+  const seasonSettings = byId("powerSeasonSettings");
   if (seasonInput) seasonInput.value = state.data?.season_start || "";
-  if (byId("powerSeasonSettings")) byId("powerSeasonSettings").hidden = !state.data?.can_manage;
+  if (seasonSettings) seasonSettings.hidden = !state.data?.can_manage;
   renderBulkTable(rows);
 }
 
 async function load() {
   const allianceId = activeAllianceId();
-  if (!allianceId || !state.client) return;
+  if (!allianceId || !state.client || !isMounted()) return;
+  const token = ++state.loadToken;
   const { data, error } = await fetchAllianceSquadPower(state.client, allianceId);
+  if (token !== state.loadToken || !isMounted()) return;
   const errorBox = byId("powerSectionError");
   if (error) {
     if (errorBox) { errorBox.hidden = false; errorBox.textContent = error.message; }
@@ -167,21 +178,35 @@ async function load() {
 }
 
 function resetEditor() {
-  byId("powerEditorTitle").textContent = "Добавить замер силы";
-  byId("powerEditCancel").hidden = true;
-  [1, 2, 3, 4, 5].forEach(index => { byId(`powerSquad${index}`).value = ""; });
-  byId("powerDate").value = localDateValue();
+  const title = byId("powerEditorTitle");
+  const cancel = byId("powerEditCancel");
+  const date = byId("powerDate");
+  if (title) title.textContent = "Добавить замер силы";
+  if (cancel) cancel.hidden = true;
+  [1, 2, 3, 4, 5].forEach(index => {
+    const field = byId(`powerSquad${index}`);
+    if (field) field.value = "";
+  });
+  if (date) date.value = localDateValue();
 }
 
 function editParticipant(participantId) {
   const item = state.data?.participants?.find(row => row.participant_id === participantId);
-  if (!item) return;
-  byId("powerParticipant").value = item.participant_id;
-  byId("powerDate").value = item.latest_date || localDateValue();
-  [1, 2, 3, 4, 5].forEach(index => { byId(`powerSquad${index}`).value = inputPower(item[`squad_${index}`]); });
-  byId("powerEditorTitle").textContent = `Изменить: ${item.nickname}`;
-  byId("powerEditCancel").hidden = false;
-  byId("powerEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (!item || !isMounted()) return;
+  const participant = byId("powerParticipant");
+  const date = byId("powerDate");
+  const title = byId("powerEditorTitle");
+  const cancel = byId("powerEditCancel");
+  const editor = byId("powerEditorCard");
+  if (participant) participant.value = item.participant_id;
+  if (date) date.value = item.latest_date || localDateValue();
+  [1, 2, 3, 4, 5].forEach(index => {
+    const field = byId(`powerSquad${index}`);
+    if (field) field.value = inputPower(item[`squad_${index}`]);
+  });
+  if (title) title.textContent = `Изменить: ${item.nickname}`;
+  if (cancel) cancel.hidden = false;
+  editor?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function submitPower(event) {
@@ -193,16 +218,16 @@ async function submitPower(event) {
   const values = fields.map(field => parsePower(field?.value));
   const invalidIndex = values.findIndex(value => value === undefined);
   if (invalidIndex >= 0) {
-    fields[invalidIndex].setCustomValidity("Укажи БМ в миллионах, например 87,72");
-    fields[invalidIndex].reportValidity();
+    fields[invalidIndex]?.setCustomValidity("Укажи БМ в миллионах, например 87,72");
+    fields[invalidIndex]?.reportValidity();
     return;
   }
-  fields.forEach(field => field.setCustomValidity(""));
+  fields.forEach(field => field?.setCustomValidity(""));
   const button = event.submitter;
   if (button) button.disabled = true;
   const { error } = await saveAllianceSquadPower(state.client, allianceId, {
     participantId,
-    measuredOn: byId("powerDate").value,
+    measuredOn: byId("powerDate")?.value,
     squad1: values[0], squad2: values[1], squad3: values[2], squad4: values[3], squad5: values[4]
   });
   if (button) button.disabled = false;
@@ -213,7 +238,7 @@ async function submitPower(event) {
 }
 
 async function saveBulk() {
-  const date = byId("powerBulkDate").value || localDateValue();
+  const date = byId("powerBulkDate")?.value || localDateValue();
   const rows = [...document.querySelectorAll("[data-bulk-participant]")];
   const payloads = [];
   for (const row of rows) {
@@ -224,7 +249,7 @@ async function saveBulk() {
   }
   if (!payloads.length) return showMessage("Заполни хотя бы одну строку.", "error");
   const button = byId("powerBulkSave");
-  button.disabled = true;
+  if (button) button.disabled = true;
   for (const item of payloads) {
     const { error } = await saveAllianceSquadPower(state.client, activeAllianceId(), {
       participantId: item.participantId,
@@ -232,12 +257,13 @@ async function saveBulk() {
       squad1: item.values[0], squad2: item.values[1], squad3: item.values[2], squad4: item.values[3], squad5: item.values[4]
     });
     if (error) {
-      button.disabled = false;
+      if (button) button.disabled = false;
       return showMessage(error.message, "error");
     }
   }
-  button.disabled = false;
-  byId("powerBulkCard").hidden = true;
+  if (button) button.disabled = false;
+  const bulkCard = byId("powerBulkCard");
+  if (bulkCard) bulkCard.hidden = true;
   await load();
   showMessage("Заполненные замеры сохранены.", "success");
 }
@@ -261,9 +287,11 @@ function toggleExpandedTable(forceOpen) {
 
 export function initPowerSection() {
   state.client = window.harvestHubSupabase;
+  state.loadToken += 1;
   const date = byId("powerDate");
+  const bulkDate = byId("powerBulkDate");
   if (date && !date.value) date.value = localDateValue();
-  if (byId("powerBulkDate")) byId("powerBulkDate").value = localDateValue();
+  if (bulkDate) bulkDate.value = localDateValue();
   byId("powerForm")?.addEventListener("submit", submitPower);
   byId("powerEditCancel")?.addEventListener("click", resetEditor);
   byId("powerSeasonForm")?.addEventListener("submit", saveSeason);
@@ -274,8 +302,16 @@ export function initPowerSection() {
     if (button) editParticipant(button.dataset.powerEdit);
   });
   document.querySelectorAll("[data-power-column]").forEach(input => input.addEventListener("change", applyColumnVisibility));
-  byId("powerBulkOpen")?.addEventListener("click", () => { byId("powerBulkCard").hidden = false; byId("powerBulkCard").scrollIntoView({ behavior: "smooth" }); });
-  byId("powerBulkClose")?.addEventListener("click", () => { byId("powerBulkCard").hidden = true; });
+  byId("powerBulkOpen")?.addEventListener("click", () => {
+    const card = byId("powerBulkCard");
+    if (!card) return;
+    card.hidden = false;
+    card.scrollIntoView({ behavior: "smooth" });
+  });
+  byId("powerBulkClose")?.addEventListener("click", () => {
+    const card = byId("powerBulkCard");
+    if (card) card.hidden = true;
+  });
   byId("powerBulkSave")?.addEventListener("click", saveBulk);
   byId("powerExpandTable")?.addEventListener("click", () => toggleExpandedTable());
   byId("powerCloseTable")?.addEventListener("click", () => toggleExpandedTable(false));
