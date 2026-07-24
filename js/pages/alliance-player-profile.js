@@ -26,7 +26,10 @@ const state = {
   context: null,
   participant: null,
   powerMeasurement: null,
-  powerEditing: false
+  powerEditing: false,
+  reservoirWeek: null,
+  reservoirEntry: null,
+  reservoirEditing: false
 };
 
 function showMessage(text, type = "info") {
@@ -37,8 +40,8 @@ function showMessage(text, type = "info") {
   box.dataset.type = type;
 }
 
-function setPowerMessage(text, type = "info") {
-  const message = byId("playerProfilePowerMessage");
+function setFormMessage(id, text, type = "info") {
+  const message = byId(id);
   if (!message) return;
   message.textContent = text;
   message.dataset.type = type;
@@ -202,12 +205,12 @@ async function loadPower(participantId) {
 async function savePower() {
   const measuredOn = byId("playerProfilePowerMeasuredOn")?.value;
   const squads = [1, 2, 3, 4, 5].map(index => parseMillions(byId(`playerProfileSquad${index}`)?.value, index === 1));
-  if (!measuredOn) return setPowerMessage("Укажи дату замера.", "error");
-  if (squads.some(value => value === undefined)) return setPowerMessage("Проверь значения силы. Для 1-го отряда значение обязательно.", "error");
+  if (!measuredOn) return setFormMessage("playerProfilePowerMessage", "Укажи дату замера.", "error");
+  if (squads.some(value => value === undefined)) return setFormMessage("playerProfilePowerMessage", "Проверь значения силы. Для 1-го отряда значение обязательно.", "error");
 
   const button = byId("playerProfilePowerEditButton");
   button.disabled = true;
-  setPowerMessage("Сохраняем…");
+  setFormMessage("playerProfilePowerMessage", "Сохраняем…");
   const { error } = await state.client.rpc("save_alliance_squad_power", {
     target_alliance_id: getActiveAllianceId(),
     target_participant_id: state.participant.id,
@@ -219,18 +222,18 @@ async function savePower() {
     target_squad_5: squads[4]
   });
   button.disabled = false;
-  if (error) return setPowerMessage(error.message || "Не удалось сохранить силу.", "error");
+  if (error) return setFormMessage("playerProfilePowerMessage", error.message || "Не удалось сохранить силу.", "error");
 
   state.powerEditing = false;
   await loadPower(state.participant.id);
-  setPowerMessage("Сила отрядов сохранена.", "success");
+  setFormMessage("playerProfilePowerMessage", "Сила отрядов сохранена.", "success");
 }
 
 async function handlePowerButton() {
   if (!isOwnProfile()) return;
   if (!state.powerEditing) {
     state.powerEditing = true;
-    setPowerMessage("");
+    setFormMessage("playerProfilePowerMessage", "");
     renderPower();
     return;
   }
@@ -267,10 +270,51 @@ function reservoirIntentLabel(value) {
   return "Не указано";
 }
 
+function reservoirPreferenceLabel(value) {
+  if (value === "main") return "Основа";
+  if (value === "reserve") return "Резерв";
+  return "Не указано";
+}
+
 function reservoirAssignmentLabel(value) {
   if (value === "main") return "Основа";
   if (value === "reserve") return "Резерв";
   return "Не назначен";
+}
+
+function renderReservoirEditor() {
+  const entry = state.reservoirEntry;
+  const button = byId("playerProfileReservoirEditButton");
+  const inputIds = [
+    "playerProfileReservoirMatchInput",
+    "playerProfileReservoirIntentInput",
+    "playerProfileReservoirPreferenceInput"
+  ];
+  const valueIds = [
+    "playerProfileReservoirMatch",
+    "playerProfileReservoirIntent",
+    "playerProfileReservoirPreference"
+  ];
+
+  if (button) {
+    button.hidden = !isOwnProfile() || !state.reservoirWeek;
+    button.textContent = state.reservoirEditing ? "Сохранить" : "Внести изменения";
+  }
+
+  inputIds.forEach(id => {
+    const input = byId(id);
+    if (input) input.hidden = !state.reservoirEditing;
+  });
+  valueIds.forEach(id => {
+    const value = byId(id);
+    if (value) value.hidden = state.reservoirEditing;
+  });
+
+  if (state.reservoirEditing) {
+    byId("playerProfileReservoirMatchInput").value = entry?.time_match === true ? "yes" : entry?.time_match === false ? "no" : "";
+    byId("playerProfileReservoirIntentInput").value = entry?.intent || "";
+    byId("playerProfileReservoirPreferenceInput").value = entry?.preferred_assignment || "";
+  }
 }
 
 async function loadReservoir(participantId) {
@@ -286,9 +330,12 @@ async function loadReservoir(participantId) {
   if (weekResult.error) throw weekResult.error;
 
   const week = weekResult.data;
+  state.reservoirWeek = week;
   const empty = byId("playerProfileReservoirEmpty");
   if (!week) {
+    state.reservoirEntry = null;
     empty.hidden = false;
+    renderReservoirEditor();
     return;
   }
 
@@ -304,10 +351,48 @@ async function loadReservoir(participantId) {
   if (assignmentResult.error) throw assignmentResult.error;
 
   const entry = entryResult.data;
+  state.reservoirEntry = entry;
   byId("playerProfileReservoirMatch").textContent = entry?.time_match === true ? "Подходит" : entry?.time_match === false ? "Не подходит" : "Не указано";
   byId("playerProfileReservoirIntent").textContent = reservoirIntentLabel(entry?.intent);
+  byId("playerProfileReservoirPreference").textContent = reservoirPreferenceLabel(entry?.preferred_assignment);
   byId("playerProfileReservoirAssignment").textContent = reservoirAssignmentLabel(entry?.assignment);
   byId("playerProfileReservoirLocation").textContent = LOCATION_NAMES[assignmentResult.data?.location_key] || "Не назначена";
+  renderReservoirEditor();
+}
+
+async function saveReservoirPreferences() {
+  const timeValue = byId("playerProfileReservoirMatchInput")?.value || "";
+  const intent = byId("playerProfileReservoirIntentInput")?.value || null;
+  const preference = byId("playerProfileReservoirPreferenceInput")?.value || null;
+  const timeMatch = timeValue === "yes" ? true : timeValue === "no" ? false : null;
+  const button = byId("playerProfileReservoirEditButton");
+
+  button.disabled = true;
+  setFormMessage("playerProfileReservoirMessage", "Сохраняем…");
+  const { error } = await state.client.rpc("save_my_reservoir_preferences", {
+    target_week_id: state.reservoirWeek.id,
+    target_participant_id: state.participant.id,
+    target_time_match: timeMatch,
+    target_intent: intent,
+    target_preferred_assignment: preference
+  });
+  button.disabled = false;
+  if (error) return setFormMessage("playerProfileReservoirMessage", error.message || "Не удалось сохранить данные резервуара.", "error");
+
+  state.reservoirEditing = false;
+  await loadReservoir(state.participant.id);
+  setFormMessage("playerProfileReservoirMessage", "Настройки резервуара сохранены.", "success");
+}
+
+async function handleReservoirButton() {
+  if (!isOwnProfile() || !state.reservoirWeek) return;
+  if (!state.reservoirEditing) {
+    state.reservoirEditing = true;
+    setFormMessage("playerProfileReservoirMessage", "");
+    renderReservoirEditor();
+    return;
+  }
+  await saveReservoirPreferences();
 }
 
 async function loadTwins(participant) {
@@ -355,6 +440,7 @@ export async function init() {
     localStorage.setItem("harvesthub_active_participant_profile_id", state.participant.id);
     renderHeader(state.participant);
     byId("playerProfilePowerEditButton")?.addEventListener("click", handlePowerButton);
+    byId("playerProfileReservoirEditButton")?.addEventListener("click", handleReservoirButton);
     await Promise.all([
       loadPower(state.participant.id),
       loadVs(state.participant.id),
