@@ -1,18 +1,23 @@
 /* COLLAPSIBLE CARDS */
 .collapsible-card-header {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  padding-right: 40px;
   cursor: default;
 }
 
 .collapsible-card-header > :first-child {
   min-width: 0;
+  max-width: 100%;
 }
 
 .collapsible-card-toggle {
-  position: relative !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -36,7 +41,7 @@
   box-shadow: none !important;
   appearance: none !important;
   overflow: hidden !important;
-  flex: 0 0 28px !important;
+  flex: none !important;
 }
 
 .collapsible-card-toggle::before {
@@ -76,6 +81,11 @@
 }
 
 @media (max-width: 899px) {
+  .collapsible-card-header {
+    display: block !important;
+    padding-right: 38px !important;
+  }
+
   .collapsible-card-toggle {
     width: 26px !important;
     height: 26px !important;
@@ -83,24 +93,10 @@
     max-width: 26px !important;
     min-height: 26px !important;
     max-height: 26px !important;
-    flex-basis: 26px !important;
   }
 
   .collapsible-card-toggle::before {
     width: 6px;
     height: 6px;
-  }
-
-  .season-compact-card > .season-card-header.collapsible-card-header {
-    position: relative !important;
-    display: block !important;
-    padding-right: 42px !important;
-  }
-
-  .season-compact-card > .season-card-header.collapsible-card-header > .collapsible-card-toggle {
-    position: absolute !important;
-    top: 0 !important;
-    right: 0 !important;
-    margin: 0 !important;
   }
 }
