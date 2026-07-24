@@ -53,27 +53,33 @@
   overflow-wrap: anywhere;
 }
 
-.alliance-player-power-header,
-.alliance-player-reservoir-header {
+.alliance-player-action-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
-  align-items: start;
+  margin: 0 0 12px;
 }
 
-.alliance-player-power-header > div,
-.alliance-player-reservoir-header > div {
-  grid-column: 1 / 5;
-  min-width: 0;
+.alliance-player-action-row-power {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.alliance-player-action-row-reservoir {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.alliance-player-power-edit-button {
+  grid-column: 4 / 6;
+}
+
+.alliance-player-reservoir-edit-button {
+  grid-column: 3 / 5;
 }
 
 .alliance-player-power-edit-button,
 .alliance-player-reservoir-edit-button {
-  grid-column: 5;
   width: 100%;
   min-width: 0;
   margin: 0;
-  justify-self: stretch;
 }
 
 .alliance-player-power-date-field {
@@ -150,14 +156,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .alliance-player-power-header,
-  .alliance-player-reservoir-header {
+  .alliance-player-action-row-power,
+  .alliance-player-action-row-reservoir {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .alliance-player-power-header > div,
-  .alliance-player-reservoir-header > div {
-    grid-column: 1;
   }
 
   .alliance-player-power-edit-button,
@@ -171,13 +172,11 @@
 }
 
 @media (max-width: 520px) {
-  .alliance-player-power-header,
-  .alliance-player-reservoir-header {
+  .alliance-player-action-row-power,
+  .alliance-player-action-row-reservoir {
     grid-template-columns: 1fr;
   }
 
-  .alliance-player-power-header > div,
-  .alliance-player-reservoir-header > div,
   .alliance-player-power-edit-button,
   .alliance-player-reservoir-edit-button {
     grid-column: 1;
