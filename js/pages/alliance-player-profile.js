@@ -99,6 +99,13 @@ function resolveParticipant() {
     || null;
 }
 
+function isOwnProfile() {
+  return Boolean(
+    state.participant?.linked_user_id
+    && state.participant.linked_user_id === state.context?.session?.user?.id
+  );
+}
+
 function inheritedPersonalData(participant) {
   if (!participant?.is_twin || !participant.primary_participant_id) return participant;
   const primary = state.context.participants.find(item => item.id === participant.primary_participant_id);
@@ -118,6 +125,17 @@ function renderHeader(participant) {
   byId("playerProfileTimezone").textContent = timezoneLabel(personal.timezone_offset);
   byId("playerProfileType").textContent = participant.is_twin ? `Твин${participant.primary_nickname ? ` игрока ${participant.primary_nickname}` : ""}` : "Основной игрок";
   byId("playerProfileLinked").textContent = participant.linked_user_id ? "Аккаунт связан" : "Не связан";
+  const powerFormCard = byId("playerProfilePowerFormCard");
+  if (powerFormCard) powerFormCard.hidden = !isOwnProfile();
+}
+
+function fillPowerForm(measurement) {
+  const measuredOn = byId("playerProfilePowerMeasuredOn");
+  if (measuredOn) measuredOn.value = dateValue(new Date());
+  [1, 2, 3, 4, 5].forEach(index => {
+    const input = byId(`playerProfileSquad${index}`);
+    if (input) input.value = measurement?.[`squad_${index}`] ?? "";
+  });
 }
 
 async function loadPower(participantId) {
@@ -134,6 +152,7 @@ async function loadPower(participantId) {
   const measurement = result.data;
   const container = byId("playerProfilePower");
   const empty = byId("playerProfilePowerEmpty");
+  fillPowerForm(measurement);
   if (!measurement) {
     container.innerHTML = "";
     empty.hidden = false;
