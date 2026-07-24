@@ -1,13 +1,30 @@
 (() => {
   const HIGHLIGHT_CLASS = "alliance-table-search-match";
-  const TABLE_SELECTOR = ".alliance-subpage .alliance-table";
+  const TABLE_SELECTOR = "#page-content .alliance-table";
   const RANK_WEIGHT = { "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 };
+  const sortState = new Map();
   let highlightTimer = null;
   let activeTable = null;
   let observerTimer = null;
 
   function normalize(value) {
     return String(value || "").trim().toLocaleLowerCase("ru-RU");
+  }
+
+  function currentPageName() {
+    return window.harvestHubNavigation?.getCurrentPage?.() || localStorage.getItem("currentPage") || "alliance";
+  }
+
+  function stableTableKey(table) {
+    if (table.dataset.allianceStableTableKey) return table.dataset.allianceStableTableKey;
+    const tables = [...document.querySelectorAll(TABLE_SELECTOR)];
+    const index = Math.max(0, tables.indexOf(table));
+    const headers = [...table.querySelectorAll("thead th")]
+      .map(header => normalize(header.childNodes[0]?.textContent || header.textContent))
+      .join("|");
+    const key = `${currentPageName()}::${table.id || index}::${headers}`;
+    table.dataset.allianceStableTableKey = key;
+    return key;
   }
 
   function tableId(table) {
@@ -17,13 +34,17 @@
     return table.dataset.allianceTableId;
   }
 
+  function tableBySearchId(id) {
+    return [...document.querySelectorAll(TABLE_SELECTOR)].find(table => table.dataset.allianceTableId === id) || null;
+  }
+
   function tableWrapper(table) {
     return table.closest(".alliance-table-wrap") || table.parentElement;
   }
 
   function nicknameColumn(table) {
     const headers = [...table.querySelectorAll("thead th")];
-    let index = headers.findIndex(th => /^(участник|никнейм|игрок)$/i.test(th.textContent.trim()));
+    let index = headers.findIndex(th => /^(участник|никнейм|игрок)$/i.test(th.childNodes[0]?.textContent?.trim() || th.textContent.trim()));
     if (index < 0) index = headers.findIndex(th => /(участник|никнейм|игрок)/i.test(th.textContent));
     return index >= 0 ? index : Math.min(1, headers.length - 1);
   }
@@ -70,10 +91,22 @@
     return normalize(text);
   }
 
+  function updateSortButtons(table, index, direction) {
+    table.querySelectorAll(".alliance-column-sort").forEach(button => {
+      button.dataset.direction = "";
+      button.setAttribute("aria-pressed", "false");
+    });
+    const button = table.querySelectorAll("thead th")[index]?.querySelector(".alliance-column-sort");
+    if (button) {
+      button.dataset.direction = direction;
+      button.setAttribute("aria-pressed", "true");
+    }
+  }
+
   function sortTable(table, index, direction, updateButton = true) {
     const header = table.querySelectorAll("thead th")[index];
     if (!header) return;
-    const type = columnType(header.textContent);
+    const type = columnType(header.childNodes[0]?.textContent || header.textContent);
     const currentRows = rows(table);
     const sortedRows = [...currentRows].sort((a, b) => {
       const left = cellSortValue(a, index, type);
@@ -83,30 +116,18 @@
     });
     const body = table.tBodies[0];
     if (!body) return;
-    if (sortedRows.some((row, rowIndex) => row !== currentRows[rowIndex])) {
-      sortedRows.forEach(row => body.append(row));
-    }
+    sortedRows.forEach(row => body.append(row));
     table.dataset.sortColumn = String(index);
     table.dataset.sortDirection = direction;
-
-    if (updateButton) {
-      table.querySelectorAll(".alliance-column-sort").forEach(button => {
-        button.dataset.direction = "";
-        button.setAttribute("aria-pressed", "false");
-      });
-      const button = header.querySelector(".alliance-column-sort");
-      if (button) {
-        button.dataset.direction = direction;
-        button.setAttribute("aria-pressed", "true");
-      }
-    }
+    sortState.set(stableTableKey(table), { index, direction });
+    if (updateButton) updateSortButtons(table, index, direction);
   }
 
   function setupSorting(table) {
     const headers = [...table.querySelectorAll("thead th")];
     if (!headers.length) return;
     headers.forEach((header, index) => {
-      const label = header.textContent.trim();
+      const label = (header.childNodes[0]?.textContent || header.textContent).trim();
       if (!label || header.querySelector(".alliance-column-sort") || /^(действия)?$/i.test(label)) return;
       const button = document.createElement("button");
       button.type = "button";
@@ -117,15 +138,22 @@
       header.append(button);
     });
 
-    if (!table.dataset.sortInitialized) {
-      table.dataset.sortInitialized = "true";
-      const nicknameIndex = nicknameColumn(table);
-      window.setTimeout(() => sortTable(table, nicknameIndex, "asc"), 0);
+    const saved = sortState.get(stableTableKey(table));
+    if (saved) {
+      window.setTimeout(() => {
+        sortTable(table, saved.index, saved.direction, false);
+        updateSortButtons(table, saved.index, saved.direction);
+      }, 0);
       return;
     }
 
-    if (table.dataset.sortColumn !== undefined) {
-      window.setTimeout(() => sortTable(table, Number(table.dataset.sortColumn), table.dataset.sortDirection || "asc", false), 0);
+    if (!table.dataset.sortInitialized) {
+      table.dataset.sortInitialized = "true";
+      const nicknameIndex = nicknameColumn(table);
+      window.setTimeout(() => {
+        sortTable(table, nicknameIndex, "asc", false);
+        updateSortButtons(table, nicknameIndex, "asc");
+      }, 0);
     }
   }
 
@@ -199,7 +227,7 @@
   }
 
   function runSearch(form) {
-    const table = document.querySelector(`${TABLE_SELECTOR}[data-alliance-table-id="${CSS.escape(form.dataset.allianceTableSearchFor)}"]`);
+    const table = tableBySearchId(form.dataset.allianceTableSearchFor);
     const input = form.querySelector('input[type="search"]');
     const status = form.querySelector("[data-alliance-search-status]");
     const query = normalize(input?.value);
@@ -226,11 +254,12 @@
   function openSearch(table) {
     if (!table) return;
     activeTable = table;
+    createSearchForm(table);
     const form = document.querySelector(`[data-alliance-table-search-for="${CSS.escape(tableId(table))}"]`);
     if (!form) return;
     form.hidden = false;
     form.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => form.querySelector('input[type="search"]')?.focus(), 250);
+    window.setTimeout(() => form.querySelector('input[type="search"]')?.focus(), 100);
   }
 
   function nearestVisibleTable() {
@@ -257,6 +286,7 @@
   document.addEventListener("click", event => {
     const sortButton = event.target.closest(".alliance-column-sort");
     if (sortButton) {
+      event.preventDefault();
       const table = sortButton.closest("table");
       const index = Number(sortButton.dataset.column);
       const next = sortButton.dataset.direction === "asc" ? "desc" : "asc";
@@ -266,8 +296,7 @@
 
     const trigger = event.target.closest("[data-alliance-search-open]");
     if (trigger) {
-      const table = document.querySelector(`${TABLE_SELECTOR}[data-alliance-table-id="${CSS.escape(trigger.dataset.allianceSearchOpen)}"]`);
-      openSearch(table);
+      openSearch(tableBySearchId(trigger.dataset.allianceSearchOpen));
       return;
     }
 
@@ -290,10 +319,12 @@
     runSearch(form);
   });
 
-  document.addEventListener("keydown", event => {
+  window.addEventListener("keydown", event => {
     if (!document.querySelector(TABLE_SELECTOR)) return;
-    if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "f") {
+    const isFindShortcut = (event.ctrlKey || event.metaKey) && (event.code === "KeyF" || event.key.toLocaleLowerCase() === "f");
+    if (isFindShortcut) {
       event.preventDefault();
+      event.stopImmediatePropagation();
       openSearch(nearestVisibleTable());
       return;
     }
@@ -304,7 +335,7 @@
         form.hidden = true;
       }
     }
-  });
+  }, true);
 
   const observer = new MutationObserver(() => {
     clearTimeout(observerTimer);
