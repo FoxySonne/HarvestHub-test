@@ -53,14 +53,16 @@
   overflow-wrap: anywhere;
 }
 
-.alliance-player-power-header {
+.alliance-player-power-header,
+.alliance-player-reservoir-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
   align-items: start;
 }
 
-.alliance-player-power-edit-button {
+.alliance-player-power-edit-button,
+.alliance-player-reservoir-edit-button {
   min-width: 190px;
   margin-right: 42px;
 }
@@ -72,9 +74,14 @@
 }
 
 .alliance-player-power-date-field input,
-.alliance-player-profile-power input {
+.alliance-player-profile-power input,
+.alliance-player-reservoir-input {
   width: 100%;
   box-sizing: border-box;
+}
+
+.alliance-player-reservoir-input {
+  margin: 0;
 }
 
 .alliance-player-profile-power {
@@ -140,11 +147,13 @@
 }
 
 @media (max-width: 520px) {
-  .alliance-player-power-header {
+  .alliance-player-power-header,
+  .alliance-player-reservoir-header {
     grid-template-columns: 1fr;
   }
 
-  .alliance-player-power-edit-button {
+  .alliance-player-power-edit-button,
+  .alliance-player-reservoir-edit-button {
     width: 100%;
     min-width: 0;
     margin: 0;
