@@ -1,4 +1,4 @@
-import { initPowerSection } from "../alliance/power-section.js?v=20260723-editing-1";
+import { initPowerSection } from "../alliance/power-section.js?v=20260725-null-guard-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance } from "../alliance/page-context.js?v=20260718-1";
 
 function applyOwnPowerMode(participantId) {
