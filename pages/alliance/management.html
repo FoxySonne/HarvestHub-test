@@ -16,7 +16,13 @@
   <section class="card" id="allianceRoleManagementCard">
     <div class="card-header"><div><h3>Аккаунты и права</h3><p>Связь участника с аккаунтом, роли, Р5 и владелец.</p></div></div>
     <div class="alliance-role-management-grid">
-      <label><span>Участник</span><select id="allianceRoleParticipant" data-no-persist="true"></select></label>
+      <label class="alliance-participant-search-field">
+        <span>Участник</span>
+        <input id="allianceRoleParticipantSearch" type="search" list="allianceRoleParticipantOptions" placeholder="Начните вводить никнейм" autocomplete="off" data-no-persist="true">
+        <datalist id="allianceRoleParticipantOptions"></datalist>
+        <select id="allianceRoleParticipant" data-no-persist="true" hidden></select>
+        <small>Поиск работает по первым буквам и не учитывает регистр.</small>
+      </label>
       <label><span>Email аккаунта</span><input id="allianceRoleEmail" type="email" autocomplete="email" data-no-persist="true"></label>
       <div class="alliance-role-management-actions"><button id="allianceLinkAccountButton" type="button">Связать аккаунт</button><button id="allianceUnlinkAccountButton" type="button" class="secondary-button">Отвязать</button></div>
       <label><span>Права аккаунта</span><select id="allianceLinkedRole" data-no-persist="true"><option value="editor">Редактор</option><option value="viewer">Наблюдатель</option></select></label>
@@ -27,5 +33,16 @@
       <button id="allianceTransferOwnerButton" type="button" class="danger-button">Передать владельца</button>
     </div>
     <p id="allianceRoleParticipantStatus" class="alliance-role-participant-status"></p>
+  </section>
+
+  <section class="card" id="alliancePrivilegedAccountsCard">
+    <div class="card-header"><div><h3>Пользователи с повышенными правами</h3><p>Владелец, Р5 и редакторы союза.</p></div></div>
+    <div class="alliance-table-wrap" data-horizontal-scroll>
+      <table class="alliance-table alliance-privileged-table">
+        <thead><tr><th>Участник</th><th>Ранг</th><th>Текущие права</th><th>Изменить</th></tr></thead>
+        <tbody id="alliancePrivilegedAccountsBody"></tbody>
+      </table>
+    </div>
+    <div id="alliancePrivilegedAccountsEmpty" class="alliance-empty-state" hidden>Пользователей с повышенными правами пока нет.</div>
   </section>
 </section>
