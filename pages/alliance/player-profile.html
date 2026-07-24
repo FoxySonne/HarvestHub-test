@@ -22,21 +22,6 @@
     <div class="card-header"><div><h3>Актуальная сила отрядов</h3><p id="playerProfilePowerDate">Последний замер: —</p></div></div>
     <div id="playerProfilePower" class="alliance-player-profile-power"></div>
     <div id="playerProfilePowerEmpty" class="alliance-empty-state" hidden>Замеров силы пока нет.</div>
-
-    <form id="playerProfilePowerForm" class="alliance-player-profile-edit-form" hidden>
-      <h4>Добавить актуальный замер</h4>
-      <p>Значения вводятся в миллионах. Обязательно заполнить только силу 1-го отряда.</p>
-      <div class="alliance-player-profile-power-fields">
-        <label><span>Дата замера</span><input id="playerProfilePowerMeasuredOn" type="date" data-no-persist="true" required></label>
-        <label><span>1-й отряд</span><input id="playerProfileSquad1" type="text" inputmode="decimal" data-no-persist="true" required></label>
-        <label><span>2-й отряд</span><input id="playerProfileSquad2" type="text" inputmode="decimal" data-no-persist="true"></label>
-        <label><span>3-й отряд</span><input id="playerProfileSquad3" type="text" inputmode="decimal" data-no-persist="true"></label>
-        <label><span>4-й отряд</span><input id="playerProfileSquad4" type="text" inputmode="decimal" data-no-persist="true"></label>
-        <label><span>5-й отряд</span><input id="playerProfileSquad5" type="text" inputmode="decimal" data-no-persist="true"></label>
-      </div>
-      <button type="submit">Сохранить силу отрядов</button>
-      <p id="playerProfilePowerMessage" class="settings-form-message"></p>
-    </form>
   </section>
 
   <section class="card">
@@ -51,23 +36,10 @@
       <div><span>Утверждённое время</span><strong id="playerProfileReservoirTime">—</strong></div>
       <div><span>Время подходит</span><strong id="playerProfileReservoirMatch">—</strong></div>
       <div><span>Статус</span><strong id="playerProfileReservoirIntent">—</strong></div>
-      <div><span>Предпочтение</span><strong id="playerProfileReservoirPreference">—</strong></div>
       <div><span>Состав</span><strong id="playerProfileReservoirAssignment">—</strong></div>
       <div><span>Локация</span><strong id="playerProfileReservoirLocation">—</strong></div>
     </div>
     <div id="playerProfileReservoirEmpty" class="alliance-empty-state" hidden>Ближайшая неделя резервуара ещё не создана.</div>
-
-    <form id="playerProfileReservoirForm" class="alliance-player-profile-edit-form" hidden>
-      <h4>Мои данные для резервуара</h4>
-      <p>Это ваши пожелания. Окончательное назначение в основу или резерв определяет руководство союза.</p>
-      <div class="alliance-player-profile-reservoir-fields">
-        <label><span>Подходит ли время</span><select id="playerProfileReservoirMatchInput" data-no-persist="true"><option value="">Не указано</option><option value="yes">Подходит</option><option value="no">Не подходит</option></select></label>
-        <label><span>Участие</span><select id="playerProfileReservoirIntentInput" data-no-persist="true"><option value="">Не указано</option><option value="willing">Желающий</option><option value="refused">Отказник</option></select></label>
-        <label><span>Предпочтение состава</span><select id="playerProfileReservoirPreferenceInput" data-no-persist="true"><option value="">Не указано</option><option value="main">Основа</option><option value="reserve">Резерв</option></select></label>
-      </div>
-      <button type="submit">Сохранить данные резервуара</button>
-      <p id="playerProfileReservoirMessage" class="settings-form-message"></p>
-    </form>
   </section>
 
   <section id="playerProfileTwinsCard" class="card" hidden>
