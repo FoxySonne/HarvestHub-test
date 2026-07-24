@@ -85,7 +85,7 @@ function participantMetrics(participantId, map) {
   const days = DAYS.map((label, index) => {
     const date = addDays(state.weekStart, index);
     const future = date > today;
-    const included = includeSaturday || index < 4;
+    const included = includeSaturday || index < 5;
     const entry = map.get(`${participantId}:${date}`);
     const points = Number(entry?.points) || 0;
     if (!future && included) {
@@ -325,7 +325,7 @@ async function saveSaturdayTotal(event) {
     return showMessage(error.message, "error");
   }
   await reload();
-  showMessage(checkbox.checked ? "Субботний этап учитывается в общей сумме." : "Общая сумма считается только по понедельнику–четвергу.", "success");
+  showMessage(checkbox.checked ? "Субботний этап учитывается в общей сумме." : "Общая сумма считается только по понедельнику–пятницу.", "success");
 }
 
 function toggleFullscreen(open) {
