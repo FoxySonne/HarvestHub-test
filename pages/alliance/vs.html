@@ -3,6 +3,13 @@
   <section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section>
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
+  <section id="vsReviewCard" class="card" hidden>
+    <div class="card-header"><div><h3>Заявки VS</h3><p>Результаты, которые игроки отправили на подтверждение.</p></div></div>
+    <div id="vsReviewList" class="alliance-player-vs-review-list"></div>
+    <div id="vsReviewEmpty" class="alliance-empty-state" hidden>Новых заявок VS пока нет.</div>
+    <p id="vsReviewMessage" class="alliance-form-message" aria-live="polite"></p>
+  </section>
+
   <section id="vsEditorCard" class="card" hidden>
     <div class="card-header"><div><h3 id="vsEditorTitle">Внести результат VS</h3><p id="vsCurrentWeekLabel">Текущая неделя</p></div></div>
     <form id="vsResultForm" class="vs-current-form">
