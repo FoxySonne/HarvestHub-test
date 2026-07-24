@@ -33,9 +33,11 @@ function formatDate(value) {
   return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
 }
 
-function formatScore(value) {
-  const number = Number(value) || 0;
-  if (!number) return "—";
+function formatScore(value, emptyLabel = "—") {
+  if (value === null || value === undefined || value === "") return emptyLabel;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return emptyLabel;
+  if (number === 0) return "0";
   const unit = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]].find(([size]) => Math.abs(number) >= size);
   if (!unit) return new Intl.NumberFormat("ru-RU").format(number);
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
@@ -83,8 +85,9 @@ async function loadMyProposals(client, allianceId) {
   renderMyProposalStatus(Array.isArray(data) ? data : []);
 }
 
-function proposalValue(item, prefix) {
-  return item[`${prefix}_is_vacation`] ? "Отпуск" : formatScore(item[`${prefix}_points`]);
+function proposalValue(item, prefix, emptyLabel = "Нет данных") {
+  if (item[`${prefix}_is_vacation`]) return "Отпуск";
+  return formatScore(item[`${prefix}_points`], emptyLabel);
 }
 
 function renderReviewList(items) {
@@ -95,7 +98,7 @@ function renderReviewList(items) {
   list.innerHTML = items.map(item => `<article data-vs-proposal-id="${escapeHtml(item.id)}">
     <div><strong>${escapeHtml(item.nickname)}</strong><span>${escapeHtml(item.rank_name || "—")} · ${formatDate(item.result_date)}</span></div>
     <div><span>Сейчас</span><strong>${proposalValue(item, "current")}</strong></div>
-    <div><span>Предложено</span><strong>${proposalValue(item, "proposed")}</strong></div>
+    <div><span>Предложено</span><strong>${proposalValue(item, "proposed", "—")}</strong></div>
     <div class="alliance-player-vs-review-actions"><button type="button" data-vs-review="approve">Принять</button><button type="button" class="danger-button" data-vs-review="reject">Отклонить</button></div>
   </article>`).join("");
 }
@@ -131,7 +134,6 @@ async function initProfileVsProposals() {
 
   byId("playerProfileVsProposalVacation")?.addEventListener("change", event => {
     byId("playerProfileVsProposalPoints").disabled = event.target.checked;
-    byId("playerProfileVsProposalUnit").disabled = event.target.checked;
   });
 
   form.addEventListener("submit", async event => {
@@ -139,8 +141,8 @@ async function initProfileVsProposals() {
     const submit = byId("playerProfileVsProposalSubmit");
     const vacation = byId("playerProfileVsProposalVacation").checked;
     const raw = String(byId("playerProfileVsProposalPoints").value || "").replace(",", ".");
-    const number = raw ? Number(raw) : null;
-    if (!vacation && (!Number.isFinite(number) || number < 0)) return setMessage("playerProfileVsProposalMessage", "Укажи корректное количество очков.", "error");
+    const millions = raw ? Number(raw) : null;
+    if (!vacation && (!Number.isFinite(millions) || millions < 0)) return setMessage("playerProfileVsProposalMessage", "Укажи корректное количество очков в миллионах.", "error");
 
     submit.disabled = true;
     setMessage("playerProfileVsProposalMessage", "Отправляем…");
@@ -148,7 +150,7 @@ async function initProfileVsProposals() {
       target_alliance_id: allianceId,
       target_participant_id: participant.id,
       target_result_date: byId("playerProfileVsProposalDate").value,
-      target_points: vacation ? null : Math.round(number * Number(byId("playerProfileVsProposalUnit").value)),
+      target_points: vacation ? null : Math.round(millions * 1e6),
       target_is_vacation: vacation
     });
     submit.disabled = false;
