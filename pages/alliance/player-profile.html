@@ -39,10 +39,29 @@
     <div id="playerProfilePowerEmpty" class="alliance-empty-state" hidden>Замеров силы пока нет.</div>
   </section>
 
-  <section class="card">
+  <section class="card alliance-player-vs-card">
     <div class="card-header"><div><h3>VS — текущая неделя</h3><p id="playerProfileVsPeriod">—</p></div></div>
+    <div id="playerProfileVsActionRow" class="alliance-player-action-row alliance-player-action-row-vs" hidden>
+      <button id="playerProfileVsProposalButton" type="button" class="secondary-button">Предложить результат</button>
+    </div>
+    <form id="playerProfileVsProposalForm" class="alliance-player-vs-proposal-form" hidden>
+      <label><span>День</span><select id="playerProfileVsProposalDate" data-no-persist="true"></select></label>
+      <label><span>Очки</span><input id="playerProfileVsProposalPoints" type="number" min="0" step="0.01" inputmode="decimal" data-no-persist="true"></label>
+      <label><span>Единица</span><select id="playerProfileVsProposalUnit" data-no-persist="true"><option value="1000">K</option><option value="1000000" selected>M</option><option value="1000000000">B</option><option value="1000000000000">T</option></select></label>
+      <label class="alliance-player-vs-vacation"><input id="playerProfileVsProposalVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
+      <button id="playerProfileVsProposalSubmit" type="submit">Отправить заявку</button>
+    </form>
+    <p id="playerProfileVsProposalMessage" class="alliance-form-message" aria-live="polite"></p>
+    <div id="playerProfileVsProposalStatus" class="alliance-player-vs-proposal-status" hidden></div>
     <div id="playerProfileVs" class="alliance-player-profile-vs"></div>
     <div id="playerProfileVsEmpty" class="alliance-empty-state" hidden>Результатов за текущую неделю пока нет.</div>
+  </section>
+
+  <section id="playerProfileVsReviewCard" class="card" hidden>
+    <div class="card-header"><div><h3>Заявки VS</h3><p>Предложенные игроками результаты, ожидающие подтверждения.</p></div></div>
+    <div id="playerProfileVsReviewList" class="alliance-player-vs-review-list"></div>
+    <div id="playerProfileVsReviewEmpty" class="alliance-empty-state" hidden>Новых заявок VS пока нет.</div>
+    <p id="playerProfileVsReviewMessage" class="alliance-form-message" aria-live="polite"></p>
   </section>
 
   <section class="card alliance-player-reservoir-card">
