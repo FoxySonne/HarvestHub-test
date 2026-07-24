@@ -36,8 +36,7 @@ function formatDate(value) {
 function formatScore(value) {
   const number = Number(value) || 0;
   if (!number) return "—";
-  const units = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
-  const unit = units.find(([size]) => Math.abs(number) >= size);
+  const unit = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]].find(([size]) => Math.abs(number) >= size);
   if (!unit) return new Intl.NumberFormat("ru-RU").format(number);
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
@@ -89,8 +88,8 @@ function proposalValue(item, prefix) {
 }
 
 function renderReviewList(items) {
-  const list = byId("playerProfileVsReviewList");
-  const empty = byId("playerProfileVsReviewEmpty");
+  const list = byId("vsReviewList");
+  const empty = byId("vsReviewEmpty");
   if (!list || !empty) return;
   empty.hidden = items.length > 0;
   list.innerHTML = items.map(item => `<article data-vs-proposal-id="${escapeHtml(item.id)}">
@@ -158,40 +157,53 @@ async function initProfileVsProposals() {
     byId("playerProfileVsProposalButton").textContent = "Предложить результат";
     setMessage("playerProfileVsProposalMessage", "Заявка отправлена руководству.", "success");
     await loadMyProposals(client, allianceId);
-    if (canReview(context)) await loadReviewQueue(client, allianceId);
   });
 
   if (ownProfile) await loadMyProposals(client, allianceId);
+}
 
-  const reviewCard = byId("playerProfileVsReviewCard");
-  if (reviewCard) reviewCard.hidden = !canReview(context);
-  if (canReview(context)) {
-    await loadReviewQueue(client, allianceId);
-    byId("playerProfileVsReviewList")?.addEventListener("click", async event => {
-      const button = event.target.closest("[data-vs-review]");
-      const article = button?.closest("[data-vs-proposal-id]");
-      if (!button || !article) return;
-      button.disabled = true;
-      const { error } = await client.rpc("review_alliance_vs_proposal", {
-        target_proposal_id: article.dataset.vsProposalId,
-        target_decision: button.dataset.vsReview
-      });
-      if (error) {
-        button.disabled = false;
-        return setMessage("playerProfileVsReviewMessage", error.message || "Не удалось обработать заявку.", "error");
-      }
-      setMessage("playerProfileVsReviewMessage", button.dataset.vsReview === "approve" ? "Результат принят." : "Заявка отклонена.", "success");
-      await loadReviewQueue(client, allianceId);
-      if (typeof window.loadPage === "function" && button.dataset.vsReview === "approve") {
-        window.setTimeout(() => window.loadPage("alliance/player-profile.html", { skipCurrentSave: true }), 250);
-      }
+async function initVsReviewQueue() {
+  const card = byId("vsReviewCard");
+  if (!card || card.dataset.initialized === "true") return;
+  card.dataset.initialized = "true";
+
+  const client = window.harvestHubSupabase;
+  if (!client) return;
+  const context = await loadAlliancePageContext(client);
+  const allowed = canReview(context);
+  card.hidden = !allowed;
+  if (!allowed) return;
+
+  const allianceId = getActiveAllianceId();
+  await loadReviewQueue(client, allianceId);
+  byId("vsReviewList")?.addEventListener("click", async event => {
+    const button = event.target.closest("[data-vs-review]");
+    const article = button?.closest("[data-vs-proposal-id]");
+    if (!button || !article) return;
+    button.disabled = true;
+    const { error } = await client.rpc("review_alliance_vs_proposal", {
+      target_proposal_id: article.dataset.vsProposalId,
+      target_decision: button.dataset.vsReview
     });
-  }
+    if (error) {
+      button.disabled = false;
+      return setMessage("vsReviewMessage", error.message || "Не удалось обработать заявку.", "error");
+    }
+    setMessage("vsReviewMessage", button.dataset.vsReview === "approve" ? "Результат принят." : "Заявка отклонена.", "success");
+    await loadReviewQueue(client, allianceId);
+    if (button.dataset.vsReview === "approve" && typeof window.loadPage === "function") {
+      window.setTimeout(() => window.loadPage("alliance/vs.html", { skipCurrentSave: true }), 250);
+    }
+  });
 }
 
 function startForPage(pageName = window.harvestHubNavigation?.getCurrentPage?.()) {
-  if (pageName !== "alliance/player-profile.html") return;
-  window.setTimeout(() => initProfileVsProposals().catch(error => setMessage("playerProfileVsProposalMessage", error.message || "Не удалось загрузить заявки VS.", "error")), 0);
+  if (pageName === "alliance/player-profile.html") {
+    window.setTimeout(() => initProfileVsProposals().catch(error => setMessage("playerProfileVsProposalMessage", error.message || "Не удалось загрузить заявки VS.", "error")), 0);
+  }
+  if (pageName === "alliance/vs.html") {
+    window.setTimeout(() => initVsReviewQueue().catch(error => setMessage("vsReviewMessage", error.message || "Не удалось загрузить заявки VS.", "error")), 0);
+  }
 }
 
 document.addEventListener("harvesthub:page-loaded", event => startForPage(event.detail?.pageName));
