@@ -18,22 +18,23 @@
     </div>
   </section>
 
-  <section class="card">
-    <div class="card-header"><div><h3>Актуальная сила отрядов</h3><p id="playerProfilePowerDate">Последний замер: —</p></div></div>
-    <div id="playerProfilePower" class="alliance-player-profile-power"></div>
-    <div id="playerProfilePowerEmpty" class="alliance-empty-state" hidden>Замеров силы пока нет.</div>
-  </section>
-
-  <section id="playerProfilePowerFormCard" class="card" hidden>
-    <div class="card-header"><div><h3>Внести новую силу</h3><p>Пока проверяем только отображение формы. Сохранение подключим следующим шагом.</p></div></div>
-    <form id="playerProfilePowerForm" class="profile-edit-form">
-      <label class="form-group"><span>Дата замера</span><input id="playerProfilePowerMeasuredOn" type="date" data-no-persist="true"></label>
-      <label class="form-group"><span>1-й отряд, млн</span><input id="playerProfileSquad1" type="number" min="0" step="0.001" inputmode="decimal" data-no-persist="true"></label>
-      <label class="form-group"><span>2-й отряд, млн</span><input id="playerProfileSquad2" type="number" min="0" step="0.001" inputmode="decimal" data-no-persist="true"></label>
-      <label class="form-group"><span>3-й отряд, млн</span><input id="playerProfileSquad3" type="number" min="0" step="0.001" inputmode="decimal" data-no-persist="true"></label>
-      <label class="form-group"><span>4-й отряд, млн</span><input id="playerProfileSquad4" type="number" min="0" step="0.001" inputmode="decimal" data-no-persist="true"></label>
-      <label class="form-group"><span>5-й отряд, млн</span><input id="playerProfileSquad5" type="number" min="0" step="0.001" inputmode="decimal" data-no-persist="true"></label>
+  <section class="card alliance-player-power-card">
+    <div class="card-header alliance-player-power-header">
+      <div>
+        <h3>Актуальная сила отрядов</h3>
+        <p id="playerProfilePowerDate">Последний замер: —</p>
+      </div>
+      <button id="playerProfilePowerEditButton" type="button" class="secondary-button alliance-player-power-edit-button" hidden>Внести изменения</button>
+    </div>
+    <form id="playerProfilePowerForm">
+      <label id="playerProfilePowerDateField" class="alliance-player-power-date-field" hidden>
+        <span>Дата замера</span>
+        <input id="playerProfilePowerMeasuredOn" type="date" data-no-persist="true">
+      </label>
+      <div id="playerProfilePower" class="alliance-player-profile-power"></div>
+      <p id="playerProfilePowerMessage" class="alliance-form-message" aria-live="polite"></p>
     </form>
+    <div id="playerProfilePowerEmpty" class="alliance-empty-state" hidden>Замеров силы пока нет.</div>
   </section>
 
   <section class="card">
