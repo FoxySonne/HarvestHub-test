@@ -174,7 +174,9 @@
   }
 
   async function loadPage(pageName, options = {}) {
-    if (!options.skipCurrentSave) window.savePageFormState(currentLoadedPage);
+    if (!options.skipCurrentSave && typeof window.savePageFormState === "function") {
+      window.savePageFormState(currentLoadedPage);
+    }
     const previousPage = currentLoadedPage;
     localStorage.setItem("currentPage", pageName);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
@@ -186,6 +188,11 @@
     document.dispatchEvent(new CustomEvent("harvesthub:page-loaded", { detail: { pageName, previousPage } }));
   }
 
+  window.harvestHubNavigation = {
+    getCurrentPage: () => currentLoadedPage,
+    pages: pagesDatabase
+  };
+  window.loadBlock = loadBlock;
   window.loadPage = loadPage;
   window.renderQuickLinks = renderQuickLinks;
 })();
