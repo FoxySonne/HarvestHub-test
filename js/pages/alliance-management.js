@@ -23,10 +23,30 @@ function showMessage(text, type = "info") {
   box.dataset.type = type;
 }
 
+function setValue(id, value) {
+  const element = byId(id);
+  if (element) element.value = value ?? "";
+}
+
+function setText(id, value) {
+  const element = byId(id);
+  if (element) element.textContent = value ?? "";
+}
+
+function setHidden(id, hidden) {
+  const element = byId(id);
+  if (element) element.hidden = hidden;
+}
+
+function setDisabled(id, disabled) {
+  const element = byId(id);
+  if (element) element.disabled = disabled;
+}
+
 function selectedParticipant() {
-  return state.context?.participants.find(
-    item => item.id === byId("allianceRoleParticipant")?.value
-  ) || null;
+  const participantSelect = byId("allianceRoleParticipant");
+  if (!participantSelect) return null;
+  return state.context?.participants?.find(item => item.id === participantSelect.value) || null;
 }
 
 function roleLabel(role) {
@@ -47,38 +67,48 @@ function updateParticipantStatus() {
     linkedRole.value = participant.account_role;
   }
 
-  byId("allianceRoleParticipantStatus").textContent = participant
-    ? `${participant.nickname}: ${linked ? `аккаунт связан · ${isR5 ? "полные права Р5" : roleLabel(participant.account_role)}` : "аккаунт не связан"}${isOwner ? " · владелец штаба" : ""}`
-    : "Выбери участника.";
+  setText(
+    "allianceRoleParticipantStatus",
+    participant
+      ? `${participant.nickname}: ${linked ? `аккаунт связан · ${isR5 ? "полные права Р5" : roleLabel(participant.account_role)}` : "аккаунт не связан"}${isOwner ? " · владелец штаба" : ""}`
+      : "Выбери участника."
+  );
 
-  byId("allianceUnlinkAccountButton").disabled = !linked || isR5 || isOwner;
-  byId("allianceSaveLinkedRoleButton").disabled = !linked || isR5 || isOwner;
-  byId("allianceTransferR5Button").disabled = !linked || isR5;
-  byId("allianceTransferOwnerButton").disabled = !linked || isOwner;
+  setDisabled("allianceUnlinkAccountButton", !linked || isR5 || isOwner);
+  setDisabled("allianceSaveLinkedRoleButton", !linked || isR5 || isOwner);
+  setDisabled("allianceTransferR5Button", !linked || isR5);
+  setDisabled("allianceTransferOwnerButton", !linked || isOwner);
   if (linkedRole) linkedRole.disabled = !linked || isR5 || isOwner;
 }
 
 function render() {
+  if (!state.context) return;
   fillAllianceCompactHeader(state.context);
   const alliance = state.context.alliance || {};
-  byId("allianceManagementName").value = alliance.name || "";
-  byId("allianceManagementState").value = alliance.state_number || "";
-  byId("allianceManagementInvite").textContent = alliance.invite_code || "—";
+  setValue("allianceManagementName", alliance.name || "");
+  setValue("allianceManagementState", alliance.state_number || "");
+  setText("allianceManagementInvite", alliance.invite_code || "—");
 
   const canManage = canManageAllianceRoles(state.context);
-  byId("allianceDetailsCard").hidden = !canManage;
-  byId("allianceRoleManagementCard").hidden = !canManage;
+  setHidden("allianceDetailsCard", !canManage);
+  setHidden("allianceRoleManagementCard", !canManage);
   if (!canManage) {
     showMessage("Управление союзом доступно владельцу и связанному Р5.", "info");
     return;
   }
 
   const select = byId("allianceRoleParticipant");
+  if (!select) {
+    showMessage("Не удалось загрузить блок управления аккаунтами. Обнови страницу.", "error");
+    return;
+  }
+
   const selected = select.value;
-  select.innerHTML = state.context.participants
+  select.innerHTML = (state.context.participants || [])
     .filter(item => item.member_status !== "left")
     .map(item => `<option value="${item.id}">${item.nickname}${item.rank_name ? ` · ${item.rank_name}` : ""}</option>`)
     .join("");
+
   if ([...select.options].some(option => option.value === selected)) {
     select.value = selected;
   }
@@ -93,10 +123,13 @@ async function reload() {
 async function saveDetails(event) {
   event.preventDefault();
   const button = event.submitter;
+  const name = byId("allianceManagementName")?.value.trim() || "";
+  const stateNumber = byId("allianceManagementState")?.value.trim() || "";
+  if (!button) return;
   button.disabled = true;
   const { error } = await state.client.from("alliances").update({
-    name: byId("allianceManagementName").value.trim(),
-    state_number: byId("allianceManagementState").value.trim()
+    name,
+    state_number: stateNumber
   }).eq("id", getActiveAllianceId());
   button.disabled = false;
   if (error) return showMessage(error.message, "error");
@@ -106,7 +139,7 @@ async function saveDetails(event) {
 
 async function linkAccount(event) {
   const participant = selectedParticipant();
-  const email = byId("allianceRoleEmail").value.trim();
+  const email = byId("allianceRoleEmail")?.value.trim() || "";
   if (!participant || !email) {
     return showMessage("Выбери участника и укажи email.", "error");
   }
@@ -119,7 +152,7 @@ async function linkAccount(event) {
   );
   event.currentTarget.disabled = false;
   if (error) return showMessage(error.message, "error");
-  byId("allianceRoleEmail").value = "";
+  setValue("allianceRoleEmail", "");
   await reload();
   showMessage("Аккаунт связан.", "success");
 }
@@ -142,9 +175,11 @@ async function unlinkAccount(event) {
 
 async function saveRole(event) {
   const participant = selectedParticipant();
+  const linkedRole = byId("allianceLinkedRole")?.value;
   if (!participant?.linked_user_id) {
     return showMessage("Сначала свяжи участника с аккаунтом.", "error");
   }
+  if (!linkedRole) return showMessage("Не удалось определить выбранные права.", "error");
   if (participant.rank_name === "Р5" || participant.account_role === "owner") {
     return showMessage("Права Р5 и владельца меняются только через передачу роли.", "error");
   }
@@ -153,7 +188,7 @@ async function saveRole(event) {
     state.client,
     getActiveAllianceId(),
     participant.linked_user_id,
-    byId("allianceLinkedRole").value
+    linkedRole
   );
   event.currentTarget.disabled = false;
   if (error) return showMessage(error.message, "error");
@@ -163,16 +198,18 @@ async function saveRole(event) {
 
 async function transferR5(event) {
   const participant = selectedParticipant();
+  const previousRole = byId("alliancePreviousR5Role")?.value;
   if (!participant?.linked_user_id) {
     return showMessage("Сначала свяжи нового Р5 с аккаунтом.", "error");
   }
+  if (!previousRole) return showMessage("Не удалось определить права прежнего Р5.", "error");
   if (!confirm(`Назначить «${participant.nickname}» новым Р5?`)) return;
   event.currentTarget.disabled = true;
   const { error } = await transferAllianceR5(
     state.client,
     getActiveAllianceId(),
     participant.id,
-    byId("alliancePreviousR5Role").value
+    previousRole
   );
   event.currentTarget.disabled = false;
   if (error) return showMessage(error.message, "error");
@@ -182,16 +219,18 @@ async function transferR5(event) {
 
 async function transferOwner(event) {
   const participant = selectedParticipant();
+  const previousRole = byId("alliancePreviousOwnerRole")?.value;
   if (!participant?.linked_user_id) {
     return showMessage("Сначала свяжи нового владельца с аккаунтом.", "error");
   }
+  if (!previousRole) return showMessage("Не удалось определить права прежнего владельца.", "error");
   if (!confirm(`Передать «${participant.nickname}» права владельца штаба?`)) return;
   event.currentTarget.disabled = true;
   const { error } = await transferAllianceOwner(
     state.client,
     getActiveAllianceId(),
     participant.linked_user_id,
-    byId("alliancePreviousOwnerRole").value
+    previousRole
   );
   event.currentTarget.disabled = false;
   if (error) return showMessage(error.message, "error");
@@ -212,7 +251,7 @@ export async function init() {
   byId("allianceManagementCopyInvite")?.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(
-        byId("allianceManagementInvite").textContent.trim()
+        byId("allianceManagementInvite")?.textContent.trim() || ""
       );
       showMessage("Код приглашения скопирован.", "success");
     } catch {
