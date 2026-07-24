@@ -37,7 +37,8 @@
 .alliance-player-profile-facts span,
 .alliance-player-profile-power span,
 .alliance-player-profile-vs span,
-.alliance-player-profile-twins span {
+.alliance-player-profile-twins span,
+.alliance-player-profile-edit-form label > span {
   display: block;
   margin-bottom: 6px;
   color: var(--text-soft);
@@ -57,6 +58,44 @@
 
 .alliance-player-profile-vs {
   grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.alliance-player-profile-edit-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.alliance-player-profile-edit-form[hidden] {
+  display: none !important;
+}
+
+.alliance-player-profile-edit-form h4,
+.alliance-player-profile-edit-form p {
+  margin: 0;
+}
+
+.alliance-player-profile-edit-form > p {
+  color: var(--text-soft);
+}
+
+.alliance-player-profile-power-fields,
+.alliance-player-profile-reservoir-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alliance-player-profile-power-fields label,
+.alliance-player-profile-reservoir-fields label {
+  min-width: 0;
+}
+
+.alliance-player-profile-edit-form > button {
+  width: fit-content;
+  min-width: 220px;
 }
 
 .alliance-player-profile-twins {
@@ -82,8 +121,15 @@
 @media (max-width: 899px) {
   .alliance-player-profile-facts,
   .alliance-player-profile-power,
-  .alliance-player-profile-vs {
+  .alliance-player-profile-vs,
+  .alliance-player-profile-power-fields,
+  .alliance-player-profile-reservoir-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .alliance-player-profile-edit-form > button {
+    width: 100%;
+    min-width: 0;
   }
 
   .alliance-player-profile-twins article {
@@ -94,7 +140,9 @@
 @media (max-width: 420px) {
   .alliance-player-profile-facts,
   .alliance-player-profile-power,
-  .alliance-player-profile-vs {
+  .alliance-player-profile-vs,
+  .alliance-player-profile-power-fields,
+  .alliance-player-profile-reservoir-fields {
     grid-template-columns: 1fr;
   }
 }
