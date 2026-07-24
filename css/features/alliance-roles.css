@@ -11,6 +11,11 @@
   gap: 8px;
 }
 
+.alliance-participant-search-field small {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
 .alliance-role-management-actions {
   display: flex;
   flex-wrap: wrap;
@@ -22,6 +27,25 @@
   color: var(--text-soft);
 }
 
+.alliance-privileged-table {
+  min-width: 760px;
+}
+
+.alliance-inline-role-change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alliance-inline-role-change select {
+  min-width: 150px;
+}
+
+.alliance-inline-role-change button {
+  width: auto;
+  white-space: nowrap;
+}
+
 @media (max-width: 899px) {
   .alliance-role-management-grid {
     grid-template-columns: 1fr;
@@ -29,6 +53,16 @@
 
   .alliance-role-management-grid button,
   .alliance-role-management-actions button {
+    width: 100%;
+  }
+
+  .alliance-inline-role-change {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .alliance-inline-role-change select,
+  .alliance-inline-role-change button {
     width: 100%;
   }
 }
