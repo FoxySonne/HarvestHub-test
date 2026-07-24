@@ -1,0 +1,100 @@
+.alliance-player-profile-page {
+  display: grid;
+  gap: 18px;
+}
+
+.alliance-player-profile-hero h1 {
+  margin: 4px 0 6px;
+}
+
+.alliance-player-profile-kicker {
+  margin: 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.alliance-player-profile-facts,
+.alliance-player-profile-power,
+.alliance-player-profile-vs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alliance-player-profile-facts > div,
+.alliance-player-profile-power > div,
+.alliance-player-profile-vs > div {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.alliance-player-profile-facts span,
+.alliance-player-profile-power span,
+.alliance-player-profile-vs span,
+.alliance-player-profile-twins span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.alliance-player-profile-facts strong,
+.alliance-player-profile-power strong,
+.alliance-player-profile-vs strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.alliance-player-profile-power {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.alliance-player-profile-vs {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.alliance-player-profile-twins {
+  display: grid;
+  gap: 10px;
+}
+
+.alliance-player-profile-twins article {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.5fr) repeat(2, minmax(120px, 1fr));
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.alliance-player-profile-twins article > div {
+  min-width: 0;
+}
+
+@media (max-width: 899px) {
+  .alliance-player-profile-facts,
+  .alliance-player-profile-power,
+  .alliance-player-profile-vs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .alliance-player-profile-twins article {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .alliance-player-profile-facts,
+  .alliance-player-profile-power,
+  .alliance-player-profile-vs {
+    grid-template-columns: 1fr;
+  }
+}
