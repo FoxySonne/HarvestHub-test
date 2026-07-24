@@ -58,15 +58,27 @@
       }
     });
 
-    button.disabled = false;
-    button.textContent = "Сохранить";
     if (error) {
+      button.disabled = false;
+      button.textContent = "Сохранить";
       message.textContent = error.message || "Не удалось сохранить данные.";
       message.dataset.type = "error";
       return;
     }
 
-    message.textContent = "Данные сохранены. При следующей привязке к участнику союза они подставятся автоматически.";
+    const syncResult = await window.harvestHubSupabase.rpc("sync_my_alliance_personal_data");
+    button.disabled = false;
+    button.textContent = "Сохранить";
+
+    if (syncResult.error) {
+      message.textContent = "Данные аккаунта сохранены, но не удалось обновить связанный профиль игрока. Попробуй сохранить ещё раз.";
+      message.dataset.type = "error";
+      return;
+    }
+
+    message.textContent = syncResult.data > 0
+      ? "Данные сохранены и обновлены в связанном профиле игрока."
+      : "Данные сохранены. При привязке аккаунта они подставятся в профиль игрока автоматически.";
     message.dataset.type = "success";
   }
 
