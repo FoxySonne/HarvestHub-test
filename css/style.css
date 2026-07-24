@@ -16,7 +16,7 @@
 @import url("features/troop-training.css?v=20260721-light-theme-1");
 @import url("features/troop-training-note.css?v=20260721-light-theme-1");
 @import url("features/turbo-vs.css?v=20260721-mobile-fit-1");
-@import url("ui/cards.css?v=20260721-light-theme-1");
+@import url("ui/cards.css?v=20260724-fixed-toggle-1");
 @import url("core/desktop.css?v=20260721-light-theme-1");
 @import url("ui/time-converter.css?v=20260721-mobile-fit-1");
 @import url("features/alliance.css?v=20260721-roster-twins-1");
@@ -24,7 +24,7 @@
 @import url("features/alliance-power.css?v=20260723-editing-1");
 @import url("features/alliance-vs.css?v=20260724-compact-controls-1");
 @import url("features/alliance-table-search.css?v=20260724-alliance-tables-2");
-@import url("features/alliance-roles.css?v=20260724-management-fit-4");
+@import url("features/alliance-roles.css?v=20260724-management-fit-5");
 @import url("features/alliance-pages.css?v=20260722-context-1");
 @import url("features/alliance-reservoir.css?v=20260721-1");
 @import url("features/alliance-reservoir-layout.css?v=20260722-3");
