@@ -68,7 +68,24 @@
 }
 
 .power-tools {
-  grid-template-columns: minmax(180px, 1fr) minmax(150px, auto);
+  grid-template-columns: minmax(180px, 1fr) minmax(150px, 190px) auto auto auto;
+}
+
+.power-controls-row {
+  display: grid;
+  width: 100%;
+  margin: 0 0 14px;
+  gap: 10px;
+  align-items: center;
+}
+
+.power-controls-row input,
+.power-controls-row select,
+.power-controls-row button {
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  white-space: nowrap;
 }
 
 .power-view-options {
@@ -87,8 +104,33 @@
   flex: 0 0 auto;
 }
 
-.power-view-options button:last-child {
-  margin-left: auto;
+.power-table th.is-power-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.power-table th.is-power-sortable::after {
+  content: "↕";
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 12px;
+  opacity: .55;
+}
+
+.power-table th.is-power-sort-active[data-power-sort-direction="asc"]::after {
+  content: "↑";
+  opacity: 1;
+}
+
+.power-table th.is-power-sort-active[data-power-sort-direction="desc"]::after {
+  content: "↓";
+  opacity: 1;
+}
+
+.power-table th.is-power-sortable:hover::after,
+.power-table th.is-power-sortable:focus-visible::after {
+  opacity: 1;
 }
 
 .power-bulk-date {
@@ -158,6 +200,10 @@
   .power-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .power-tools {
+    grid-template-columns: minmax(180px, 1fr) minmax(150px, 190px) repeat(3, auto);
+  }
 }
 
 @media (max-width: 899px) {
@@ -166,9 +212,13 @@
     grid-template-columns: 1fr;
   }
 
+  .power-tools {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .power-controls-row button,
   .power-form button,
-  .power-season-form button,
-  .power-view-options button {
+  .power-season-form button {
     width: 100%;
     margin-left: 0;
   }
@@ -176,5 +226,11 @@
   .power-statistics-card.is-expanded {
     inset: 0;
     border-radius: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .power-tools {
+    grid-template-columns: 1fr;
   }
 }
