@@ -26,6 +26,7 @@
 
 .alliance-player-profile-facts > div,
 .alliance-player-profile-power > div,
+.alliance-player-profile-power > label,
 .alliance-player-profile-vs > div {
   min-width: 0;
   padding: 14px;
@@ -37,7 +38,8 @@
 .alliance-player-profile-facts span,
 .alliance-player-profile-power span,
 .alliance-player-profile-vs span,
-.alliance-player-profile-twins span {
+.alliance-player-profile-twins span,
+.alliance-player-power-date-field span {
   display: block;
   margin-bottom: 6px;
   color: var(--text-soft);
@@ -51,12 +53,58 @@
   overflow-wrap: anywhere;
 }
 
+.alliance-player-power-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.alliance-player-power-edit-button {
+  min-width: 190px;
+  margin-right: 42px;
+}
+
+.alliance-player-power-date-field {
+  display: block;
+  max-width: 220px;
+  margin: 0 0 12px;
+}
+
+.alliance-player-power-date-field input,
+.alliance-player-profile-power input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .alliance-player-profile-power {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.alliance-player-profile-power.is-editing > label {
+  padding: 12px;
+}
+
 .alliance-player-profile-vs {
   grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.alliance-form-message {
+  min-height: 20px;
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.alliance-form-message:empty {
+  display: none;
+}
+
+.alliance-form-message[data-type="error"] {
+  color: var(--danger);
+}
+
+.alliance-form-message[data-type="success"] {
+  color: var(--accent);
 }
 
 .alliance-player-profile-twins {
@@ -88,6 +136,18 @@
 
   .alliance-player-profile-twins article {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .alliance-player-power-header {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-player-power-edit-button {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
   }
 }
 
