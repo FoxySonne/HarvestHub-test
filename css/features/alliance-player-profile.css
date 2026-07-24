@@ -57,14 +57,16 @@
 .alliance-player-reservoir-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 12px;
   align-items: start;
 }
 
 .alliance-player-power-edit-button,
 .alliance-player-reservoir-edit-button {
-  min-width: 190px;
+  width: calc((100% - 48px) / 5);
+  min-width: 0;
   margin-right: 42px;
+  justify-self: end;
 }
 
 .alliance-player-power-date-field {
@@ -141,6 +143,11 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .alliance-player-power-edit-button,
+  .alliance-player-reservoir-edit-button {
+    width: calc((100% - 12px) / 2);
+  }
+
   .alliance-player-profile-twins article {
     grid-template-columns: 1fr;
   }
@@ -155,8 +162,8 @@
   .alliance-player-power-edit-button,
   .alliance-player-reservoir-edit-button {
     width: 100%;
-    min-width: 0;
     margin: 0;
+    justify-self: stretch;
   }
 }
 
