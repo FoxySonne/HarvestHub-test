@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260724-player-profile-1";
+  const SITE_ASSET_VERSION = "20260724-player-profile-editing-2";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -178,30 +178,14 @@
     const previousPage = currentLoadedPage;
     localStorage.setItem("currentPage", pageName);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
-    if (!isLoaded) {
-      if (previousPage) localStorage.setItem("currentPage", previousPage);
-      else localStorage.removeItem("currentPage");
-      return;
-    }
-
+    if (!isLoaded) return;
     currentLoadedPage = pageName;
-
-    window.harvestHubStorage.restorePageFormState(pageName);
-    window.harvestHubStorage.bindPageFormPersistence(pageName);
-    window.savePageFormState(pageName);
-    window.applyAdvancedModeSetting();
-    if (!options.skipProfileRefresh) window.applyActiveProfileSetting();
-    if (!options.skipVisit) trackPageVisit(pageName);
+    trackPageVisit(pageName);
     renderQuickLinks(pageName);
-
-    if (window.innerWidth < 900 && typeof window.closeMenu === "function") window.closeMenu();
+    window.scrollTo({ top: 0, behavior: options.behavior || "auto" });
+    document.dispatchEvent(new CustomEvent("harvesthub:page-loaded", { detail: { pageName, previousPage } }));
   }
 
-  window.harvestHubNavigation = {
-    getCurrentPage: () => currentLoadedPage,
-    pages: pagesDatabase
-  };
   window.loadPage = loadPage;
-  window.loadBlock = loadBlock;
   window.renderQuickLinks = renderQuickLinks;
 })();
