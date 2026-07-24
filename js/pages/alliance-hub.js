@@ -2,7 +2,7 @@ import { createAlliance, fetchMemberships, fetchParticipants, joinAlliance } fro
 import { setActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
 
 const byId = id => document.getElementById(id);
-const state = { client: null, session: null, memberships: [], choosingAlliance: false };
+const state = { client: null, session: null, memberships: [], choosingAlliance: false, currentParticipant: null };
 
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
@@ -51,8 +51,10 @@ async function openDashboard(allianceId) {
 
     const participants = Array.isArray(result.data) ? result.data : [];
     const current = participants.find(item => item.linked_user_id === state.session?.user?.id) || null;
+    state.currentParticipant = current;
     const alliance = membership.alliances || {};
     const canEdit = membership.role === "owner" || membership.role === "editor";
+    const canManageRoles = membership.role === "owner" || current?.rank_name === "Р5";
 
     byId("allianceDashboardName").textContent = alliance.name || "Союз";
     byId("allianceDashboardState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
@@ -60,8 +62,16 @@ async function openDashboard(allianceId) {
     byId("allianceDashboardRank").textContent = current?.rank_name || "—";
     byId("allianceDashboardRole").textContent = roleLabel(membership.role);
     document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
+
+    const manageButton = byId("allianceManageButton");
+    if (manageButton) manageButton.hidden = !canManageRoles;
+
+    const profileButton = byId("alliancePlayerProfileButton");
+    if (profileButton) profileButton.hidden = !current;
+
     const ownPowerButton = byId("allianceOwnPowerButton");
     if (ownPowerButton) ownPowerButton.hidden = canEdit || !current;
+
     showDashboard();
     showMessage("");
   } catch (error) {
@@ -147,6 +157,7 @@ async function applySession(session) {
   byId("allianceHubAccountHint").hidden = Boolean(session);
   if (!session) {
     state.memberships = [];
+    state.currentParticipant = null;
     state.choosingAlliance = true;
     renderMemberships();
     return;
@@ -161,6 +172,12 @@ export async function init() {
   byId("allianceHubCreateForm")?.addEventListener("submit", handleCreate);
   byId("allianceHubSelector")?.addEventListener("change", event => { state.choosingAlliance = false; openDashboard(event.target.value); });
   byId("allianceDashboardChangeButton")?.addEventListener("click", showEntry);
+  byId("allianceManageButton")?.addEventListener("click", () => window.loadPage?.("alliance/management.html"));
+  byId("alliancePlayerProfileButton")?.addEventListener("click", () => {
+    if (!state.currentParticipant?.id) return;
+    localStorage.setItem("harvesthub_active_participant_profile_id", state.currentParticipant.id);
+    window.loadPage?.("alliance/player-profile.html");
+  });
   byId("allianceOwnPowerButton")?.addEventListener("click", () => window.loadPage?.("alliance/power.html"));
 
   try {
