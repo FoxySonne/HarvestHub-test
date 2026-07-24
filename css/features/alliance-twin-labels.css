@@ -1,0 +1,14 @@
+.alliance-twin-context {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.reservoir-player-chip .alliance-twin-context,
+.reservoir-assigned-player .alliance-twin-context,
+[data-picker-player] .alliance-twin-context {
+  width: 100%;
+}
