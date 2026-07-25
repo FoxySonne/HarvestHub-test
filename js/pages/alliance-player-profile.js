@@ -266,7 +266,7 @@ async function loadVs(participantId) {
 
 function reservoirIntentLabel(value) {
   if (value === "willing") return "Желающий";
-  if (value === "refused") return "Отказник";
+  if (value === "refusing" || value === "refused") return "Отказник";
   return "Не указано";
 }
 
@@ -312,7 +312,7 @@ function renderReservoirEditor() {
 
   if (state.reservoirEditing) {
     byId("playerProfileReservoirMatchInput").value = entry?.time_match === true ? "yes" : entry?.time_match === false ? "no" : "";
-    byId("playerProfileReservoirIntentInput").value = entry?.intent || "";
+    byId("playerProfileReservoirIntentInput").value = entry?.intent === "refused" ? "refusing" : entry?.intent || "";
     byId("playerProfileReservoirPreferenceInput").value = entry?.preferred_assignment || "";
   }
 }

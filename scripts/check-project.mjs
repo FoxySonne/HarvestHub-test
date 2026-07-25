@@ -28,6 +28,8 @@ const files = collectFiles(root);
 const javascriptFiles = files.filter(file => file.endsWith(".js") || file.endsWith(".mjs"));
 const cssFiles = files.filter(file => file.endsWith(".css"));
 const htmlFiles = files.filter(file => file.endsWith(".html"));
+const sqlFiles = files.filter(file => file.endsWith(".sql"));
+const migrationFiles = sqlFiles.filter(file => relative(file).startsWith("supabase/migrations/"));
 const errors = [];
 
 function validateCssBraces(file, source) {
@@ -122,7 +124,71 @@ for (const file of htmlFiles) {
   }
 }
 
-const duplicateCandidates = [...javascriptFiles, ...cssFiles];
+const migrationVersions = new Map();
+const sqlFunctionDefinitions = new Set();
+for (const file of sqlFiles) {
+  const source = fs.readFileSync(file, "utf8");
+  const dollarTags = new Map();
+
+  for (const match of source.matchAll(/\$[A-Za-z_][A-Za-z0-9_]*\$|\$\$/g)) {
+    dollarTags.set(match[0], (dollarTags.get(match[0]) || 0) + 1);
+  }
+  for (const [tag, count] of dollarTags) {
+    if (count % 2 !== 0) errors.push(`${relative(file)}: незакрытый SQL-блок ${tag}`);
+  }
+
+  for (const match of source.matchAll(/create\s+(?:or\s+replace\s+)?function\s+(?:public\.)?([A-Za-z_][A-Za-z0-9_]*)/gi)) {
+    sqlFunctionDefinitions.add(match[1]);
+  }
+}
+
+for (const file of migrationFiles) {
+  const fileName = path.basename(file);
+  const match = fileName.match(/^(\d{8,14})_[a-z0-9_]+\.sql$/);
+  if (!match) {
+    errors.push(`${relative(file)}: имя миграции должно начинаться с уникальной даты или времени`);
+    continue;
+  }
+  const duplicate = migrationVersions.get(match[1]);
+  if (duplicate) errors.push(`${relative(file)}: версия миграции совпадает с ${relative(duplicate)}`);
+  else migrationVersions.set(match[1], file);
+}
+
+const rpcManifestPath = path.join(root, "supabase", "rpc-manifest.json");
+if (!fs.existsSync(rpcManifestPath)) {
+  errors.push("supabase/rpc-manifest.json: отсутствует перечень RPC Supabase");
+} else {
+  let rpcManifest = [];
+  try {
+    rpcManifest = JSON.parse(fs.readFileSync(rpcManifestPath, "utf8"));
+  } catch (error) {
+    errors.push(`supabase/rpc-manifest.json: некорректный JSON — ${error.message}`);
+  }
+
+  if (!Array.isArray(rpcManifest) || rpcManifest.some(name => typeof name !== "string" || !name)) {
+    errors.push("supabase/rpc-manifest.json: ожидается массив непустых имён функций");
+  } else {
+    const declaredRpc = new Set(rpcManifest);
+    if (declaredRpc.size !== rpcManifest.length) errors.push("supabase/rpc-manifest.json: есть повторяющиеся имена RPC");
+
+    for (const rpcName of declaredRpc) {
+      if (!sqlFunctionDefinitions.has(rpcName)) {
+        errors.push(`supabase/rpc-manifest.json: функция ${rpcName} не найдена ни в одном SQL-файле`);
+      }
+    }
+
+    for (const file of javascriptFiles) {
+      const source = fs.readFileSync(file, "utf8");
+      for (const match of source.matchAll(/\.rpc\(\s*["']([A-Za-z_][A-Za-z0-9_]*)["']/g)) {
+        if (!declaredRpc.has(match[1])) {
+          errors.push(`${relative(file)}: RPC ${match[1]} отсутствует в supabase/rpc-manifest.json`);
+        }
+      }
+    }
+  }
+}
+
+const duplicateCandidates = [...javascriptFiles, ...cssFiles, ...sqlFiles];
 const contentHashes = new Map();
 for (const file of duplicateCandidates) {
   const source = fs.readFileSync(file);
@@ -138,4 +204,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log(`Проверено: ${javascriptFiles.length} JS, ${cssFiles.length} CSS, ${htmlFiles.length} HTML.`);
+console.log(`Проверено: ${javascriptFiles.length} JS, ${cssFiles.length} CSS, ${htmlFiles.length} HTML, ${sqlFiles.length} SQL, ${migrationFiles.length} миграций.`);
