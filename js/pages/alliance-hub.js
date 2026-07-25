@@ -194,7 +194,7 @@ async function handleCreate(event) {
 
 async function applySession(session) {
   state.session = session;
-  byId("allianceHubAccountHint").hidden = true;
+  byId("allianceHubAccountHint").hidden = Boolean(session);
   if (!session) {
     state.memberships = [];
     state.currentParticipant = null;
