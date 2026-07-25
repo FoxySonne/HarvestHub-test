@@ -21,22 +21,50 @@ jobs:
         with:
           ref: fix/critical-roles-vs-reservoir-batch-7
 
-      - name: Diagnose batch 7 client package
-        run: |
-          set +e
-          mkdir -p tmp
-          wc -c tmp/batch7-client.part* > tmp/batch7-debug.txt 2>&1
-          cat tmp/batch7-client.part* | base64 -d > /tmp/batch7-client.tar.gz 2>> tmp/batch7-debug.txt
-          echo "decoded_size=$(wc -c < /tmp/batch7-client.tar.gz)" >> tmp/batch7-debug.txt
-          gzip -t /tmp/batch7-client.tar.gz >> tmp/batch7-debug.txt 2>&1
-          echo "gzip_status=$?" >> tmp/batch7-debug.txt
-          tar -tzf /tmp/batch7-client.tar.gz >> tmp/batch7-debug.txt 2>&1
-          echo "tar_status=$?" >> tmp/batch7-debug.txt
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-      - name: Commit diagnostics
+      - name: Apply batch 7 client files
         run: |
+          set -euxo pipefail
+          cat tmp/batch7-client.part* | base64 -d > /tmp/batch7-client.tar.gz
+          gzip -t /tmp/batch7-client.tar.gz
+          tar -xzf /tmp/batch7-client.tar.gz
+          python <<'PY'
+          import json
+          from pathlib import Path
+          manifest = Path('supabase/rpc-manifest.json')
+          names = json.loads(manifest.read_text())
+          names.extend([
+            'can_edit_alliance', 'delete_alliance_vs_result', 'save_alliance_vs_results_batch',
+            'get_or_create_reservoir_week', 'save_reservoir_week_roster',
+            'close_reservoir_week', 'get_reservoir_activity'
+          ])
+          manifest.write_text(json.dumps(sorted(set(names)), ensure_ascii=False, indent=2) + '\n')
+          navigation = Path('js/core/navigation.js')
+          source = navigation.read_text()
+          source = source.replace('const SITE_ASSET_VERSION = "20260725-profile-sync-1";', 'const SITE_ASSET_VERSION = "20260726-critical-batch-7";')
+          navigation.write_text(source)
+          PY
+
+      - name: Check JavaScript and assets
+        run: npm run check 2> project-check-errors.txt
+
+      - name: Commit generated files
+        run: |
+          if git diff --quiet; then exit 0; fi
           git config user.name "HarvestHub automation"
           git config user.email "actions@users.noreply.github.com"
-          git add tmp/batch7-debug.txt
-          git commit -m "Добавить диагностику клиентского пакета"
+          git add js pages supabase/rpc-manifest.json
+          git commit -m "Исправить роли массовый VS и активность резервуара"
           git push origin HEAD:fix/critical-roles-vs-reservoir-batch-7
+
+      - name: Upload check report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-check-errors
+          path: project-check-errors.txt
+          if-no-files-found: ignore
