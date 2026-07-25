@@ -28,8 +28,14 @@ jobs:
 
       - name: Apply batch 7 client files
         run: |
+          set -euxo pipefail
           if compgen -G "tmp/batch7-client.part*" > /dev/null; then
-            cat tmp/batch7-client.part* | base64 -d | tar -xz
+            wc -c tmp/batch7-client.part*
+            cat tmp/batch7-client.part* | base64 -d > /tmp/batch7-client.tar.gz
+            wc -c /tmp/batch7-client.tar.gz
+            gzip -t /tmp/batch7-client.tar.gz
+            tar -tzf /tmp/batch7-client.tar.gz
+            tar -xzf /tmp/batch7-client.tar.gz
           fi
           python <<'PY'
           import json
