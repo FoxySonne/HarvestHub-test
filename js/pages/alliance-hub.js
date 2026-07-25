@@ -1,5 +1,5 @@
-import { createAlliance, fetchMemberships, fetchParticipants, joinAlliance } from "../alliance/api.js?v=20260724-network-retry-1";
-import { setActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
+import { createAlliance, fetchMemberships, fetchParticipants, joinAlliance } from "../alliance/api.js?v=20260725-critical-access-2";
+import { setActiveAllianceId } from "../alliance/page-context.js?v=20260725-r5-access-1";
 
 const byId = id => document.getElementById(id);
 const state = { client: null, session: null, memberships: [], choosingAlliance: false, currentParticipant: null };
@@ -20,8 +20,9 @@ function getReadableError(error) {
   return message || "Не удалось загрузить союзный штаб.";
 }
 
-function roleLabel(role) {
-  if (role === "owner") return "Полные права";
+function roleLabel(role, currentParticipant) {
+  if (role === "owner") return "Владелец";
+  if (currentParticipant?.rank_name === "Р5") return "Р5 · полные права";
   if (role === "editor") return "Редактор";
   return "Наблюдатель";
 }
@@ -50,17 +51,18 @@ async function openDashboard(allianceId) {
     if (result.error) return showMessage(getReadableError(result.error), "error");
 
     const participants = Array.isArray(result.data) ? result.data : [];
-    const current = participants.find(item => item.linked_user_id === state.session?.user?.id) || null;
+    const current = participants.find(item => item.linked_user_id === state.session?.user?.id && item.member_status !== "left") || null;
     state.currentParticipant = current;
     const alliance = membership.alliances || {};
-    const canEdit = membership.role === "owner" || membership.role === "editor";
-    const canManageRoles = membership.role === "owner" || current?.rank_name === "Р5";
+    const isR5 = current?.rank_name === "Р5";
+    const canEdit = membership.role === "owner" || membership.role === "editor" || isR5;
+    const canManageRoles = membership.role === "owner" || isR5;
 
     byId("allianceDashboardName").textContent = alliance.name || "Союз";
     byId("allianceDashboardState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
     byId("allianceDashboardNickname").textContent = current?.nickname || "Аккаунт не связан";
     byId("allianceDashboardRank").textContent = current?.rank_name || "—";
-    byId("allianceDashboardRole").textContent = roleLabel(membership.role);
+    byId("allianceDashboardRole").textContent = roleLabel(membership.role, current);
     document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
 
     const manageButton = byId("allianceManageButton");

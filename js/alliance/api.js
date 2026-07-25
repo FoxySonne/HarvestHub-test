@@ -59,6 +59,14 @@ export function createAlliance(client, { name, stateNumber }) {
   });
 }
 
+export function updateAllianceDetails(client, { allianceId, name, stateNumber }) {
+  return client.rpc("update_alliance_details", {
+    target_alliance_id: allianceId,
+    target_name: String(name || "").trim(),
+    target_state_number: String(stateNumber || "").trim()
+  });
+}
+
 export function joinAlliance(client, code) {
   return client.rpc("join_alliance_by_code", { join_code: code });
 }
