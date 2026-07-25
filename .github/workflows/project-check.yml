@@ -34,3 +34,21 @@ jobs:
           name: project-check-errors
           path: project-check-errors.txt
           if-no-files-found: ignore
+
+      - name: Prepare guest access source snapshot
+        run: |
+          mkdir -p guest-source/js/alliance guest-source/js/pages guest-source/pages/alliance guest-source/supabase
+          cp js/alliance/config.js guest-source/js/alliance/
+          cp js/alliance/api.js guest-source/js/alliance/
+          cp js/alliance/page-context.js guest-source/js/alliance/
+          cp js/pages/alliance-hub.js guest-source/js/pages/
+          cp js/pages/alliance-roster.js guest-source/js/pages/
+          cp js/pages/alliance-reservoir-layout.js guest-source/js/pages/
+          cp pages/alliance/members.html guest-source/pages/alliance/
+          cp supabase/rpc-manifest.json guest-source/supabase/
+
+      - name: Upload guest access source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: guest-access-source-snapshot
+          path: guest-source
