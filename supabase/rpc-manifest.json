@@ -4,6 +4,7 @@
   "create_and_activate_game_profile",
   "delete_advanced_mode_request",
   "delete_game_profile",
+  "ensure_initial_game_profile",
   "find_advanced_mode_account_by_email",
   "find_recent_departed_participant",
   "get_advanced_mode_admin_summary",
