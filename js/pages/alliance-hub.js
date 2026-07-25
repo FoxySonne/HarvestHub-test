@@ -1,8 +1,8 @@
-import { createAlliance, fetchMemberships, fetchParticipants, joinAlliance } from "../alliance/api.js?v=20260725-critical-access-2";
-import { setActiveAllianceId } from "../alliance/page-context.js?v=20260725-r5-access-1";
+import { createAlliance, fetchAllianceForGuest, fetchMemberships, fetchParticipants } from "../alliance/api.js?v=20260725-guest-access-1";
+import { clearGuestAllianceContext, getGuestAllianceContext, setActiveAllianceId, setGuestAllianceContext } from "../alliance/page-context.js?v=20260725-guest-access-1";
 
 const byId = id => document.getElementById(id);
-const state = { client: null, session: null, memberships: [], choosingAlliance: false, currentParticipant: null };
+const state = { client: null, session: null, memberships: [], choosingAlliance: false, currentParticipant: null, guestData: null };
 
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
@@ -41,9 +41,36 @@ function showDashboard() {
   byId("allianceDashboard").hidden = false;
 }
 
+function setDashboardActions({ canEdit = false, canManageRoles = false, hasProfile = false } = {}) {
+  document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
+  const manageButton = byId("allianceManageButton");
+  if (manageButton) manageButton.hidden = !canManageRoles;
+  const profileButton = byId("alliancePlayerProfileButton");
+  if (profileButton) profileButton.hidden = !hasProfile;
+  const ownPowerButton = byId("allianceOwnPowerButton");
+  if (ownPowerButton) ownPowerButton.hidden = canEdit || !hasProfile;
+}
+
+function openGuestDashboard(guestData = state.guestData) {
+  const alliance = guestData?.alliance;
+  if (!alliance?.id) return showEntry();
+  state.guestData = guestData;
+  state.currentParticipant = null;
+  setActiveAllianceId(alliance.id);
+  byId("allianceDashboardName").textContent = alliance.name || "Союз";
+  byId("allianceDashboardState").textContent = alliance.state_number ? `Штат ${alliance.state_number}` : "";
+  byId("allianceDashboardNickname").textContent = "Гостевой просмотр";
+  byId("allianceDashboardRank").textContent = "—";
+  byId("allianceDashboardRole").textContent = "Гость";
+  setDashboardActions();
+  showDashboard();
+}
+
 async function openDashboard(allianceId) {
   const membership = state.memberships.find(item => item.alliance_id === allianceId);
   if (!membership) return;
+  clearGuestAllianceContext();
+  state.guestData = null;
   setActiveAllianceId(allianceId);
 
   try {
@@ -63,16 +90,7 @@ async function openDashboard(allianceId) {
     byId("allianceDashboardNickname").textContent = current?.nickname || "Аккаунт не связан";
     byId("allianceDashboardRank").textContent = current?.rank_name || "—";
     byId("allianceDashboardRole").textContent = roleLabel(membership.role, current);
-    document.querySelectorAll("[data-alliance-edit-only]").forEach(card => { card.hidden = !canEdit; });
-
-    const manageButton = byId("allianceManageButton");
-    if (manageButton) manageButton.hidden = !canManageRoles;
-
-    const profileButton = byId("alliancePlayerProfileButton");
-    if (profileButton) profileButton.hidden = !current;
-
-    const ownPowerButton = byId("allianceOwnPowerButton");
-    if (ownPowerButton) ownPowerButton.hidden = canEdit || !current;
+    setDashboardActions({ canEdit, canManageRoles, hasProfile: Boolean(current) });
 
     showDashboard();
     showMessage("");
@@ -81,26 +99,45 @@ async function openDashboard(allianceId) {
   }
 }
 
+function fillMembershipOptions(select) {
+  select.replaceChildren(...state.memberships.map(item => {
+    const alliance = item.alliances || {};
+    const label = `${alliance.name || "Без названия"}${alliance.state_number ? ` · штат ${alliance.state_number}` : ""}`;
+    return new Option(label, item.alliance_id);
+  }));
+}
+
 function renderMemberships() {
   const field = byId("allianceHubSelectorField");
   const select = byId("allianceHubSelector");
   field.hidden = state.memberships.length === 0;
+
   if (!state.memberships.length) {
-    showEntry();
+    if (!state.choosingAlliance && state.guestData?.alliance?.id) openGuestDashboard();
+    else showEntry();
     return;
   }
-  select.innerHTML = state.memberships.map(item => {
-    const alliance = item.alliances || {};
-    return `<option value="${item.alliance_id}">${alliance.name || "Без названия"}${alliance.state_number ? ` · штат ${alliance.state_number}` : ""}</option>`;
-  }).join("");
+
+  fillMembershipOptions(select);
   const stored = localStorage.getItem("harvesthub_active_alliance_id");
-  const active = state.memberships.find(item => item.alliance_id === stored)?.alliance_id || state.memberships[0].alliance_id;
+  const activeMembership = state.memberships.find(item => item.alliance_id === stored);
+  if (!state.choosingAlliance && !activeMembership && state.guestData?.alliance?.id === stored) {
+    openGuestDashboard();
+    return;
+  }
+
+  const active = activeMembership?.alliance_id || state.memberships[0].alliance_id;
   select.value = active;
   if (state.choosingAlliance) showEntry();
   else openDashboard(active);
 }
 
 async function loadMemberships() {
+  if (!state.session) {
+    state.memberships = [];
+    renderMemberships();
+    return;
+  }
   try {
     const result = await fetchMemberships(state.client);
     if (result.error) return showMessage(getReadableError(result.error), "error");
@@ -113,20 +150,19 @@ async function loadMemberships() {
 
 async function handleJoin(event) {
   event.preventDefault();
-  if (!state.session) {
-    byId("allianceHubAccountHint").hidden = false;
-    return showMessage("Сначала войди в аккаунт HarvestHub.", "error");
-  }
   const button = event.submitter;
   button.disabled = true;
   try {
-    const result = await joinAlliance(state.client, byId("allianceHubJoinCode").value.trim().toUpperCase());
+    const result = await fetchAllianceForGuest(state.client, byId("allianceHubJoinCode").value);
     if (result.error) return showMessage(getReadableError(result.error), "error");
+    if (!result.data?.alliance?.id) return showMessage("Союз с таким кодом не найден.", "error");
+
+    state.guestData = result.data;
+    setGuestAllianceContext(result.data);
+    setActiveAllianceId(result.data.alliance.id);
     byId("allianceHubJoinCode").value = "";
-    setActiveAllianceId(result.data);
-    state.choosingAlliance = false;
-    await loadMemberships();
-    showMessage("Союзный штаб подключён.", "success");
+    openGuestDashboard(result.data);
+    showMessage("Штаб открыт в гостевом режиме. Доступны состав и опубликованная расстановка.", "success");
   } catch (error) {
     showMessage(getReadableError(error), "error");
   } finally {
@@ -143,6 +179,8 @@ async function handleCreate(event) {
     if (result.error) return showMessage(getReadableError(result.error), "error");
     byId("allianceHubCreateName").value = "";
     byId("allianceHubCreateState").value = "";
+    clearGuestAllianceContext();
+    state.guestData = null;
     setActiveAllianceId(result.data);
     state.choosingAlliance = false;
     await loadMemberships();
@@ -156,23 +194,27 @@ async function handleCreate(event) {
 
 async function applySession(session) {
   state.session = session;
-  byId("allianceHubAccountHint").hidden = Boolean(session);
+  byId("allianceHubAccountHint").hidden = true;
   if (!session) {
     state.memberships = [];
     state.currentParticipant = null;
-    state.choosingAlliance = true;
-    renderMemberships();
-    return;
   }
   await loadMemberships();
 }
 
 export async function init() {
   state.client = window.harvestHubSupabase;
+  state.guestData = getGuestAllianceContext();
+  state.choosingAlliance = !state.guestData?.alliance?.id;
   if (!state.client) return showMessage("Не удалось подключить Supabase.", "error");
   byId("allianceHubJoinForm")?.addEventListener("submit", handleJoin);
   byId("allianceHubCreateForm")?.addEventListener("submit", handleCreate);
-  byId("allianceHubSelector")?.addEventListener("change", event => { state.choosingAlliance = false; openDashboard(event.target.value); });
+  byId("allianceHubSelector")?.addEventListener("change", event => {
+    state.choosingAlliance = false;
+    clearGuestAllianceContext();
+    state.guestData = null;
+    openDashboard(event.target.value);
+  });
   byId("allianceDashboardChangeButton")?.addEventListener("click", showEntry);
   byId("allianceManageButton")?.addEventListener("click", () => window.loadPage?.("alliance/management.html"));
   byId("alliancePlayerProfileButton")?.addEventListener("click", () => {
