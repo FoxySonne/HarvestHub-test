@@ -39,6 +39,7 @@
     let isUploading = false;
     let isPulling = false;
     let dirty = false;
+    let changeVersion = 0;
     let started = false;
     let uploadPromise = null;
     let pullPromise = null;
@@ -78,7 +79,14 @@
     function writeMeta(values, stateKey = getStateKey()) {
       const key = getMetaKey(activeUserId, stateKey);
       if (!key) return;
-      localStorage.setItem(key, JSON.stringify({ ...readJson(key, {}), ...values }));
+      const serialized = JSON.stringify({ ...readJson(key, {}), ...values });
+      if (window.harvestHubStorage?.writeStorageValue) {
+        window.harvestHubStorage.writeStorageValue(key, serialized);
+      } else {
+        try { localStorage.setItem(key, serialized); } catch (error) {
+          console.warn(`Не удалось сохранить состояние синхронизации: ${key}`, error);
+        }
+      }
     }
 
     function hasPendingMeta(meta) {
@@ -170,32 +178,39 @@
           emitStatus("syncing");
           const context = activeContext;
           const stateKey = getStateKey(context);
-          const localState = await config.readLocalState(context);
-          let stateToSave = localState || {};
-          let result = await saveState(stateToSave, remoteRevision, stateKey);
+          let mustSave = force || dirty;
 
-          if (result.conflict) {
-            remoteRevision = Number(result.revision) || 0;
-            const remoteState = result.data || {};
-            stateToSave = config.mergeConflictStates
-              ? await config.mergeConflictStates(remoteState, stateToSave, context)
-              : mergeStateValues(remoteState, stateToSave);
-            result = await saveState(stateToSave, remoteRevision, stateKey);
+          while (mustSave) {
+            const uploadVersion = changeVersion;
+            const localState = await config.readLocalState(context);
+            let stateToSave = localState || {};
+            let result = await saveState(stateToSave, remoteRevision, stateKey);
+
             if (result.conflict) {
-              throw new Error("Данные изменились на другом устройстве. Повтори синхронизацию.");
+              remoteRevision = Number(result.revision) || 0;
+              const remoteState = result.data || {};
+              stateToSave = config.mergeConflictStates
+                ? await config.mergeConflictStates(remoteState, stateToSave, context)
+                : mergeStateValues(remoteState, stateToSave);
+              result = await saveState(stateToSave, remoteRevision, stateKey);
+              if (result.conflict) {
+                throw new Error("Данные изменились на другом устройстве. Повтори синхронизацию.");
+              }
+              if (!sameState(stateToSave, localState)) await applyStateLocally(stateToSave, context);
             }
-            if (!sameState(stateToSave, localState)) await applyStateLocally(stateToSave, context);
+
+            if (!result.saved) throw new Error("Сервер не подтвердил сохранение данных.");
+            remoteRevision = Number(result.revision) || Math.max(remoteRevision + 1, 1);
+            dirty = changeVersion !== uploadVersion;
+            writeMeta({
+              revision: remoteRevision,
+              syncedAt: result.updated_at || new Date().toISOString(),
+              pending: dirty,
+              lastError: ""
+            }, stateKey);
+            mustSave = dirty;
           }
 
-          if (!result.saved) throw new Error("Сервер не подтвердил сохранение данных.");
-          remoteRevision = Number(result.revision) || Math.max(remoteRevision + 1, 1);
-          dirty = false;
-          writeMeta({
-            revision: remoteRevision,
-            syncedAt: result.updated_at || new Date().toISOString(),
-            pending: false,
-            lastError: ""
-          }, stateKey);
           emitStatus("synced");
           return true;
         } catch (error) {
@@ -223,6 +238,7 @@
       if (!activeUserId || !activeContext) return;
 
       dirty = true;
+      changeVersion += 1;
       writeMeta({ changedAt: new Date().toISOString(), pending: true });
       emitStatus("pending");
       window.clearTimeout(uploadTimer);
@@ -307,6 +323,7 @@
         activeContext = activeUserId ? await config.resolveContext(nextUser) : null;
         remoteRevision = 0;
         dirty = false;
+        changeVersion = 0;
         uploadPromise = null;
         pullPromise = null;
 
@@ -316,6 +333,7 @@
         }
 
         dirty = hasPendingMeta(readMeta());
+        if (dirty) changeVersion = 1;
         await pullRemote({ initial: true });
         return true;
       })().catch(error => {
@@ -364,6 +382,7 @@
       initializeForSession,
       forceUpload: () => {
         dirty = true;
+        changeVersion += 1;
         writeMeta({ changedAt: new Date().toISOString(), pending: true });
         return uploadNow({ force: true });
       },

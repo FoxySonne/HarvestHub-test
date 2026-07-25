@@ -123,11 +123,20 @@
     const profile = profiles[profileId];
     if (!profile) return null;
     const previousDataProfileId = getDataProfileId();
-    const wasActive = getActiveProfileId() === profileId;
+    const previousActiveId = getActiveProfileId();
+    const wasActive = previousActiveId === profileId;
     const nextProfiles = { ...profiles };
     delete nextProfiles[profileId];
-    writeProfiles(nextProfiles);
-    if (wasActive) writeActiveProfileId("");
+    try {
+      writeProfiles(nextProfiles);
+      if (wasActive) writeActiveProfileId("");
+    } catch (error) {
+      try {
+        writeProfiles(profiles);
+        writeActiveProfileId(previousActiveId);
+      } catch {}
+      throw error;
+    }
     if (clearData) clearDataProfileStorage(getDataProfileId(profile), profile.supabaseUserId || "");
 
     if (wasActive) dispatchChange(null, previousDataProfileId);

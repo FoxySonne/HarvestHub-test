@@ -9,7 +9,7 @@ export function createIpkCloudSync({ serialize, apply }) {
   let activeProfileData = {};
   let saveTimer = null;
   let savePromise = null;
-  let saveQueued = false;
+  let saveRequested = false;
   let clearInProgress = false;
   let flusherRegistered = false;
 
@@ -18,7 +18,7 @@ export function createIpkCloudSync({ serialize, apply }) {
     activeProfileId = "";
     activeProfileData = {};
     savePromise = null;
-    saveQueued = false;
+    saveRequested = false;
     clearInProgress = false;
   }
 
@@ -56,31 +56,29 @@ export function createIpkCloudSync({ serialize, apply }) {
   function saveNow({ throwOnError = false } = {}) {
     window.clearTimeout(saveTimer);
     if (!activeProfileId || !window.harvestHubSupabase || clearInProgress) return Promise.resolve(true);
-    if (savePromise) {
-      saveQueued = true;
-      return throwOnError ? savePromise : savePromise.catch(() => false);
-    }
+    saveRequested = true;
 
-    savePromise = (async () => {
-      const nextData = { ...activeProfileData, ipk: serialize() };
-      const { error } = await window.harvestHubSupabase
-        .from("game_profiles")
-        .update({ data: nextData })
-        .eq("id", activeProfileId)
-        .eq("user_id", getLocalAccountProfile()?.supabaseUserId || "");
-      if (error) throw error;
-      activeProfileData = nextData;
-      return true;
-    })().catch(error => {
-      console.warn("Не удалось сохранить данные ИПК в профиле:", error);
-      throw error;
-    }).finally(() => {
-      savePromise = null;
-      if (saveQueued) {
-        saveQueued = false;
-        saveNow().catch(() => {});
-      }
-    });
+    if (!savePromise) {
+      savePromise = (async () => {
+        while (saveRequested) {
+          saveRequested = false;
+          const nextData = { ...activeProfileData, ipk: serialize() };
+          const { error } = await window.harvestHubSupabase
+            .from("game_profiles")
+            .update({ data: nextData })
+            .eq("id", activeProfileId)
+            .eq("user_id", getLocalAccountProfile()?.supabaseUserId || "");
+          if (error) throw error;
+          activeProfileData = nextData;
+        }
+        return true;
+      })().catch(error => {
+        console.warn("Не удалось сохранить данные ИПК в профиле:", error);
+        throw error;
+      }).finally(() => {
+        savePromise = null;
+      });
+    }
 
     return throwOnError ? savePromise : savePromise.catch(() => false);
   }
@@ -93,7 +91,7 @@ export function createIpkCloudSync({ serialize, apply }) {
 
   async function clear() {
     window.clearTimeout(saveTimer);
-    saveQueued = false;
+    saveRequested = false;
     if (!activeProfileId || !window.harvestHubSupabase) return false;
 
     clearInProgress = true;
