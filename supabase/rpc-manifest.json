@@ -1,6 +1,9 @@
 [
+  "activate_game_profile",
   "create_alliance_hub",
+  "create_and_activate_game_profile",
   "delete_advanced_mode_request",
+  "delete_game_profile",
   "find_advanced_mode_account_by_email",
   "find_recent_departed_participant",
   "get_advanced_mode_admin_summary",
@@ -32,6 +35,7 @@
   "save_alliance_vs_result",
   "save_my_reservoir_preferences",
   "save_reservoir_layout",
+  "save_user_app_state_if_revision",
   "set_advanced_mode_access",
   "set_alliance_member_role",
   "set_alliance_power_season_start",
