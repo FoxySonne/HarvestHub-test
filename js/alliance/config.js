@@ -1,4 +1,5 @@
 export const ACTIVE_ALLIANCE_STORAGE_KEY = "harvesthub_active_alliance_id";
+export const GUEST_ALLIANCE_STORAGE_KEY = "harvesthub_guest_alliance_context";
 
 export const STATUS_LABELS = {
   active: "Активен",
