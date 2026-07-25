@@ -69,7 +69,7 @@
 
     async afterRemoteApplied() {
       if (localStorage.getItem("currentPage") === "calculator/turbo-vs.html" && typeof window.loadPage === "function") {
-        await window.loadPage("calculator/turbo-vs.html");
+        await window.loadPage("calculator/turbo-vs.html", { skipCurrentSave: true, trackVisit: false });
       }
     }
   });
@@ -184,7 +184,7 @@
       if (!CALCULATOR_PAGES.has(currentPage) || typeof window.loadPage !== "function") return;
       const container = document.getElementById("page-content");
       if (container) container.innerHTML = "";
-      await window.loadPage(currentPage);
+      await window.loadPage(currentPage, { skipCurrentSave: true, trackVisit: false });
     }
   });
 
