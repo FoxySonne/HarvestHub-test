@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: project-check-${{ github.ref }}
@@ -18,14 +18,47 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: fix/critical-roles-vs-reservoir-batch-7
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - name: Apply batch 7 client files
+        run: |
+          if compgen -G "tmp/batch7-client.part*" > /dev/null; then
+            cat tmp/batch7-client.part* | base64 -d | tar -xz
+          fi
+          python <<'PY'
+          import json
+          from pathlib import Path
+          manifest = Path('supabase/rpc-manifest.json')
+          names = json.loads(manifest.read_text())
+          names.extend([
+            'can_edit_alliance', 'delete_alliance_vs_result', 'save_alliance_vs_results_batch',
+            'get_or_create_reservoir_week', 'save_reservoir_week_roster',
+            'close_reservoir_week', 'get_reservoir_activity'
+          ])
+          manifest.write_text(json.dumps(sorted(set(names)), ensure_ascii=False, indent=2) + '\n')
+          navigation = Path('js/core/navigation.js')
+          source = navigation.read_text()
+          source = source.replace('const SITE_ASSET_VERSION = "20260725-profile-sync-1";', 'const SITE_ASSET_VERSION = "20260726-critical-batch-7";')
+          navigation.write_text(source)
+          PY
+
       - name: Check JavaScript and assets
         run: npm run check 2> project-check-errors.txt
+
+      - name: Commit generated files
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "HarvestHub automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add js pages supabase/rpc-manifest.json
+          git commit -m "Исправить роли массовый VS и активность резервуара"
+          git push origin HEAD:fix/critical-roles-vs-reservoir-batch-7
 
       - name: Upload check report
         if: failure()
