@@ -1,12 +1,24 @@
-import { fetchAllianceVsStatistics, saveAllianceVsResult, setAllianceVsDailyTarget, setAllianceVsSaturdayTotal } from "../alliance/vs-api.js?v=20260724-saturday-total-1";
-import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260718-1";
+import {
+  fetchAllianceVsStatistics,
+  saveAllianceVsResult,
+  deleteAllianceVsResult,
+  saveAllianceVsResultsBatch,
+  setAllianceVsDailyTarget,
+  setAllianceVsSaturdayTotal
+} from "../alliance/vs-api.js?v=20260726-role-batch-1";
+import {
+  loadAlliancePageContext,
+  fillAllianceCompactHeader,
+  canEditAlliance,
+  getActiveAllianceId
+} from "../alliance/page-context.js?v=20260726-role-batch-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const RANK_WEIGHT = { "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 };
 const byId = id => document.getElementById(id);
 const pad = value => String(value).padStart(2, "0");
-const state = { client: null, context: null, data: null, weekStart: "" };
+const state = { client: null, context: null, data: null, weekStart: "", editing: null };
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -131,6 +143,7 @@ function sortRows(rows) {
 
 function renderSummary(rows) {
   const summary = byId("vsSummary");
+  if (!summary) return;
   if (!rows.length) {
     summary.hidden = true;
     summary.innerHTML = "";
@@ -159,9 +172,12 @@ function renderBulk(rows) {
   const body = byId("vsBulkBody");
   if (!body) return;
   body.innerHTML = rows.map(row => `
-    <tr data-vs-bulk-participant="${row.id}">
+    <tr data-vs-bulk-participant="${escapeHtml(row.id)}">
       <td><strong>${escapeHtml(row.nickname)}</strong><small>${escapeHtml(row.rank_name || "—")}</small></td>
-      ${row.metrics.days.map((day, index) => `<td><input type="text" inputmode="decimal" data-vs-bulk-day="${index}" value="${escapeHtml(inputScore(day.entry))}" ${day.future ? "disabled" : ""} data-no-persist="true"></td>`).join("")}
+      ${row.metrics.days.map((day, index) => {
+        const original = inputScore(day.entry);
+        return `<td><input type="text" inputmode="decimal" data-vs-bulk-day="${index}" data-original="${escapeHtml(original)}" value="${escapeHtml(original)}" ${day.future ? "disabled" : ""} data-no-persist="true"></td>`;
+      }).join("")}
     </tr>`).join("");
   byId("vsBulkWeekLabel").textContent = `Неделя ${weekLabel(state.weekStart)}`;
 }
@@ -178,7 +194,7 @@ function render() {
   const activeParticipants = state.context.participants.filter(item => item.member_status !== "left");
   const participantSelect = byId("vsParticipant");
   const selectedParticipant = participantSelect.value;
-  participantSelect.innerHTML = activeParticipants.map(item => `<option value="${item.id}">${escapeHtml(item.nickname)}</option>`).join("");
+  participantSelect.innerHTML = activeParticipants.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`).join("");
   if ([...participantSelect.options].some(option => option.value === selectedParticipant)) participantSelect.value = selectedParticipant;
 
   const rows = buildRows();
@@ -190,7 +206,7 @@ function render() {
       ${row.metrics.days.map(day => `<td class="${day.failed ? "vs-cell-failed" : day.met ? "vs-cell-met" : ""}">${day.future ? "" : day.entry?.is_vacation ? "О" : formatScore(day.points)}</td>`).join("")}
       <td><strong>${formatScore(row.metrics.total)}</strong></td>
       <td>${row.metrics.completed} из ${row.metrics.counted - row.metrics.vacation}</td>
-      <td><button type="button" class="secondary-button vs-row-edit" data-vs-edit="${row.id}">Изменить</button></td>
+      <td><button type="button" class="secondary-button vs-row-edit" data-vs-edit="${escapeHtml(row.id)}">Изменить</button></td>
     </tr>`).join("");
   byId("vsCount").textContent = `${rows.length} участников`;
   byId("vsEmptyState").hidden = rows.length > 0;
@@ -200,6 +216,8 @@ function render() {
 
 function syncDateFromDay() {
   byId("vsResultDate").value = addDays(state.weekStart, Number(byId("vsDay").value));
+  state.editing = null;
+  byId("vsDeleteResult").hidden = true;
 }
 
 function syncDayFromDate() {
@@ -208,15 +226,17 @@ function syncDayFromDate() {
   const day = (parseDate(value).getDay() || 7) - 1;
   if (day > 5) return showMessage("Для VS можно выбрать дату с понедельника по субботу.", "error");
   byId("vsDay").value = String(day);
+  state.editing = null;
+  byId("vsDeleteResult").hidden = true;
   const nextWeekStart = getWeekStart(value);
   if (nextWeekStart !== state.weekStart) {
     state.weekStart = nextWeekStart;
-    reload();
+    reload().catch(error => showMessage(error.message, "error"));
   }
 }
 
 async function reload() {
-  state.context = await loadAlliancePageContext(state.client);
+  state.context = await loadAlliancePageContext(state.client, { force: true });
   if (!canEditAlliance(state.context)) {
     window.loadPage?.("alliance/members.html");
     return;
@@ -230,18 +250,22 @@ async function reload() {
 function editParticipant(participantId) {
   byId("vsParticipant").value = participantId;
   const resultDate = byId("vsResultDate").value || addDays(state.weekStart, Number(byId("vsDay").value));
-  const entry = state.data?.results?.find(item => item.participant_id === participantId && item.result_date === resultDate);
+  const entry = state.data?.results?.find(item => item.participant_id === participantId && item.result_date === resultDate) || null;
+  state.editing = entry ? { participantId, resultDate } : null;
   byId("vsPoints").value = entry?.points ? formatScore(entry.points) : "";
   byId("vsVacation").checked = Boolean(entry?.is_vacation);
   byId("vsPoints").disabled = byId("vsVacation").checked;
   byId("vsEditorTitle").textContent = `Изменить: ${byId("vsParticipant").selectedOptions[0]?.textContent || "участник"}`;
   byId("vsEditCancel").hidden = false;
+  byId("vsDeleteResult").hidden = !entry;
   byId("vsEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function resetEditor() {
+  state.editing = null;
   byId("vsEditorTitle").textContent = "Внести результат VS";
   byId("vsEditCancel").hidden = true;
+  byId("vsDeleteResult").hidden = true;
   byId("vsPoints").value = "";
   byId("vsVacation").checked = false;
   byId("vsPoints").disabled = false;
@@ -258,14 +282,48 @@ async function saveResult(event) {
   const points = vacation ? null : parseScore(byId("vsPoints").value);
   if (!vacation && points === null) return showMessage("Проверь формат очков.", "error");
   const button = event.submitter;
+  if (button) button.disabled = true;
+  try {
+    const { error } = await saveAllianceVsResult(state.client, getActiveAllianceId(), {
+      participantId: byId("vsParticipant").value,
+      resultDate,
+      points,
+      isVacation: vacation
+    });
+    if (error) throw error;
+    state.weekStart = getWeekStart(resultDate);
+    resetEditor();
+    await reload();
+    showMessage("Результат сохранён.", "success");
+  } catch (error) {
+    showMessage(error?.message || "Не удалось сохранить результат.", "error");
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function deleteCurrentResult(event) {
+  if (!state.editing) return;
+  const participant = state.context?.participants?.find(item => item.id === state.editing.participantId);
+  if (!confirm(`Удалить результат «${participant?.nickname || "участника"}» за ${formatDate(state.editing.resultDate)}?`)) return;
+  const button = event.currentTarget;
   button.disabled = true;
-  const { error } = await saveAllianceVsResult(state.client, getActiveAllianceId(), { participantId: byId("vsParticipant").value, resultDate, points, isVacation: vacation });
-  button.disabled = false;
-  if (error) return showMessage(error.message, "error");
-  state.weekStart = getWeekStart(resultDate);
-  resetEditor();
-  await reload();
-  showMessage("Результат сохранён.", "success");
+  try {
+    const { error } = await deleteAllianceVsResult(
+      state.client,
+      getActiveAllianceId(),
+      state.editing.participantId,
+      state.editing.resultDate
+    );
+    if (error) throw error;
+    resetEditor();
+    await reload();
+    showMessage("Результат удалён.", "success");
+  } catch (error) {
+    showMessage(error?.message || "Не удалось удалить результат.", "error");
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function saveBulk() {
@@ -277,7 +335,21 @@ async function saveBulk() {
     for (const input of row.querySelectorAll("[data-vs-bulk-day]")) {
       if (input.disabled) continue;
       const raw = input.value.trim();
-      if (!raw) continue;
+      const original = input.dataset.original || "";
+      if (raw === original) continue;
+      const resultDate = addDays(state.weekStart, Number(input.dataset.vsBulkDay));
+      if (!raw) {
+        if (original) {
+          changes.push({
+            participant_id: row.dataset.vsBulkParticipant,
+            result_date: resultDate,
+            points: null,
+            is_vacation: false,
+            delete_result: true
+          });
+        }
+        continue;
+      }
       const vacation = raw.toUpperCase() === "О";
       const points = vacation ? null : parseScore(raw);
       if (!vacation && points === null) {
@@ -285,27 +357,28 @@ async function saveBulk() {
         return showMessage("Проверь значение в общей таблице. Число без буквы считается миллионами; также можно использовать K/M/B/T или букву «О».", "error");
       }
       changes.push({
-        participantId: row.dataset.vsBulkParticipant,
-        resultDate: addDays(state.weekStart, Number(input.dataset.vsBulkDay)),
+        participant_id: row.dataset.vsBulkParticipant,
+        result_date: resultDate,
         points,
-        isVacation: vacation
+        is_vacation: vacation,
+        delete_result: false
       });
     }
   }
 
-  if (!changes.length) return showMessage("В общей таблице нет заполненных значений.", "error");
+  if (!changes.length) return showMessage("В общей таблице нет изменений.", "info");
   button.disabled = true;
-  for (const change of changes) {
-    const { error } = await saveAllianceVsResult(state.client, getActiveAllianceId(), change);
-    if (error) {
-      button.disabled = false;
-      return showMessage(error.message, "error");
-    }
+  try {
+    const { error } = await saveAllianceVsResultsBatch(state.client, getActiveAllianceId(), changes);
+    if (error) throw error;
+    byId("vsBulkCard").hidden = true;
+    await reload();
+    showMessage(`Сохранено изменений: ${changes.length}.`, "success");
+  } catch (error) {
+    showMessage(error?.message || "Не удалось сохранить общую таблицу VS.", "error");
+  } finally {
+    button.disabled = false;
   }
-  button.disabled = false;
-  byId("vsBulkCard").hidden = true;
-  await reload();
-  showMessage("Результаты недели сохранены.", "success");
 }
 
 async function saveTarget(event) {
@@ -313,25 +386,34 @@ async function saveTarget(event) {
   const target = parseScore(byId("vsDailyTarget").value);
   if (!target) return showMessage("Укажи норматив больше нуля.", "error");
   const button = event.submitter;
-  button.disabled = true;
-  const { error } = await setAllianceVsDailyTarget(state.client, getActiveAllianceId(), target);
-  button.disabled = false;
-  if (error) return showMessage(error.message, "error");
-  await reload();
-  showMessage("Норматив сохранён.", "success");
+  if (button) button.disabled = true;
+  try {
+    const { error } = await setAllianceVsDailyTarget(state.client, getActiveAllianceId(), target);
+    if (error) throw error;
+    await reload();
+    showMessage("Норматив сохранён.", "success");
+  } catch (error) {
+    showMessage(error?.message || "Не удалось сохранить норматив.", "error");
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 async function saveSaturdayTotal(event) {
   const checkbox = event.currentTarget;
+  const nextValue = checkbox.checked;
   checkbox.disabled = true;
-  const { error } = await setAllianceVsSaturdayTotal(state.client, getActiveAllianceId(), checkbox.checked);
-  checkbox.disabled = false;
-  if (error) {
-    checkbox.checked = !checkbox.checked;
-    return showMessage(error.message, "error");
+  try {
+    const { error } = await setAllianceVsSaturdayTotal(state.client, getActiveAllianceId(), nextValue);
+    if (error) throw error;
+    await reload();
+    showMessage(nextValue ? "Субботний этап учитывается в общей сумме." : "Общая сумма считается только по понедельнику–пятницу.", "success");
+  } catch (error) {
+    checkbox.checked = !nextValue;
+    showMessage(error?.message || "Не удалось изменить учёт субботы.", "error");
+  } finally {
+    checkbox.disabled = false;
   }
-  await reload();
-  showMessage(checkbox.checked ? "Субботний этап учитывается в общей сумме." : "Общая сумма считается только по понедельнику–пятницу.", "success");
 }
 
 function toggleFullscreen(open) {
@@ -345,6 +427,7 @@ export async function init() {
   state.weekStart = getWeekStart(utcToday);
   byId("vsDay").value = String(Math.min(5, Math.max(0, todayDay)));
   byId("vsResultDate").value = dateValue(todayDay > 5 ? parseDate(addDays(state.weekStart, 5)) : utcToday);
+  byId("vsResultDate").max = utcDateValue();
   try { await reload(); } catch (error) { showMessage(error.message, "error"); return; }
   byId("vsDay")?.addEventListener("change", syncDateFromDay);
   byId("vsResultDate")?.addEventListener("change", syncDayFromDate);
@@ -352,6 +435,7 @@ export async function init() {
   byId("vsResultForm")?.addEventListener("submit", saveResult);
   byId("vsTargetForm")?.addEventListener("submit", saveTarget);
   byId("vsEditCancel")?.addEventListener("click", resetEditor);
+  byId("vsDeleteResult")?.addEventListener("click", deleteCurrentResult);
   byId("vsSort")?.addEventListener("change", render);
   byId("vsIncludeSaturdayTotal")?.addEventListener("change", saveSaturdayTotal);
   byId("vsTableBody")?.addEventListener("click", event => {

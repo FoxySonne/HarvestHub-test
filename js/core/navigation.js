@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260725-profile-sync-1";
+  const SITE_ASSET_VERSION = "20260726-critical-batch-7";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
