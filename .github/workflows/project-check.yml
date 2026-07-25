@@ -1,54 +1,82 @@
-name: Project check
+name: Apply guest access patch
 
 on:
-  push:
-    branches: [main]
   pull_request:
 
 permissions:
-  contents: read
-
-concurrency:
-  group: project-check-${{ github.ref }}
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  check:
+  apply:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Check JavaScript and assets
-        run: npm run check 2> project-check-errors.txt
-
-      - name: Upload check report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: project-check-errors
-          path: project-check-errors.txt
-          if-no-files-found: ignore
-
-      - name: Prepare guest access source snapshot
+      - name: Apply exact guest access changes
         run: |
-          mkdir -p guest-source/js/alliance guest-source/js/pages guest-source/pages/alliance guest-source/supabase
-          cp js/alliance/config.js guest-source/js/alliance/
-          cp js/alliance/api.js guest-source/js/alliance/
-          cp js/alliance/page-context.js guest-source/js/alliance/
-          cp js/pages/alliance-hub.js guest-source/js/pages/
-          cp js/pages/alliance-roster.js guest-source/js/pages/
-          cp js/pages/alliance-reservoir-layout.js guest-source/js/pages/
-          cp pages/alliance/members.html guest-source/pages/alliance/
-          cp supabase/rpc-manifest.json guest-source/supabase/
+          python <<'PY'
+          from pathlib import Path
+          import json
 
-      - name: Upload guest access source snapshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: guest-access-source-snapshot
-          path: guest-source
+          layout = Path('js/pages/alliance-reservoir-layout.js')
+          source = layout.read_text()
+          replacements = [
+              ('import { loadAlliancePageContext, fillAllianceCompactHeader, getActiveAllianceId, canEditAlliance } from "../alliance/page-context.js?v=20260718-1";', 'import { loadAlliancePageContext, fillAllianceCompactHeader, getActiveAllianceId, canEditAlliance } from "../alliance/page-context.js?v=20260725-guest-access-1";'),
+              ('const byId = id => document.getElementById(id);\n', '''const byId = id => document.getElementById(id);\n\nfunction escapeHtml(value) {\n  return String(value ?? "")\n    .replaceAll("&", "&amp;")\n    .replaceAll("<", "&lt;")\n    .replaceAll(">", "&gt;")\n    .replaceAll('"', "&quot;")\n    .replaceAll("'", "&#039;");\n}\n'''),
+              ('${state.publishedAt && playerNames.length ? `<span>Игроки: ${playerNames.join(", ")}</span>` : ""}${note ? `<span>${note}</span>` : ""}', '${state.publishedAt && playerNames.length ? `<span>Игроки: ${playerNames.map(escapeHtml).join(", ")}</span>` : ""}${note ? `<span>${escapeHtml(note)}</span>` : ""}'),
+              ('data-player-id="${item.participant_id}"><span>${item.nickname}</span>', 'data-player-id="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}</span>'),
+              ('<span>${player.nickname}</span><strong>', '<span>${escapeHtml(player.nickname)}</span><strong>'),
+              ('<textarea data-location-note="${location.key}" rows="2" placeholder="Комментарий к локации">${state.notes.get(location.key) || ""}</textarea>', '<textarea data-location-note="${location.key}" rows="2" placeholder="Комментарий к локации">${escapeHtml(state.notes.get(location.key) || "")}</textarea>'),
+              ('${names.length ? names.join(", ") : "—"}</p>${note ? `<small>${note}</small>` : ""}', '${names.length ? names.map(escapeHtml).join(", ") : "—"}</p>${note ? `<small>${escapeHtml(note)}</small>` : ""}'),
+              ('box.innerHTML = warnings.map(text => `<span>${text}</span>`).join("");', 'box.innerHTML = warnings.map(text => `<span>${escapeHtml(text)}</span>`).join("");'),
+              ('data-picker-player="${item.participant_id}"><span>${item.nickname}${item.assignment === "reserve" ? " · резерв" : ""}</span>', 'data-picker-player="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}${item.assignment === "reserve" ? " · резерв" : ""}</span>'),
+              ('popover.innerHTML = `<strong>Водосборники</strong><span>${state.notes.get(collectors.dataset.collector) || "Комментарий не добавлен"}</span>`;', 'popover.innerHTML = `<strong>Водосборники</strong><span>${escapeHtml(state.notes.get(collectors.dataset.collector) || "Комментарий не добавлен")}</span>`;')
+          ]
+          for old, new in replacements:
+              if old not in source:
+                  raise SystemExit(f'Expected layout fragment not found: {old[:80]}')
+              source = source.replace(old, new, 1)
+
+          old_load = '''async function load() {\n  state.context = await loadAlliancePageContext(state.client);\n  fillAllianceCompactHeader(state.context);\n  state.canEdit = canEditAlliance(state.context);\n  const allianceId = getActiveAllianceId();\n  const weeksResult = await fetchReservoirWeeks(state.client, allianceId);\n'''
+          new_load = '''function loadGuestLayout(layoutData) {\n  if (!layoutData?.week?.id || !layoutData.published_at) {\n    throw new Error("Расстановка резервуара ещё не опубликована.");\n  }\n  state.week = layoutData.week;\n  state.canEdit = false;\n  state.roster = Array.isArray(layoutData.roster) ? layoutData.roster : [];\n  state.publishedAt = layoutData.published_at;\n  state.generalComment = layoutData.general_comment || "";\n  byId("reservoirLayoutWeek").textContent = `${formatDate(state.week.event_date)} · ${String(state.week.event_hour_msk).padStart(2, "0")} МСК`;\n  byId("reservoirGeneralComment").value = state.generalComment;\n  (layoutData.assignments || []).forEach(item => {\n    const ids = state.assignments.get(item.location_key) || [];\n    ids.push(item.participant_id);\n    state.assignments.set(item.location_key, ids);\n  });\n  (layoutData.notes || []).forEach(item => state.notes.set(item.location_key, item.comment));\n  byId("reservoirLayoutEditor").hidden = true;\n  renderAll();\n}\n\nasync function load() {\n  state.context = await loadAlliancePageContext(state.client);\n  fillAllianceCompactHeader(state.context);\n  state.canEdit = canEditAlliance(state.context);\n  if (state.context.isGuest) {\n    loadGuestLayout(state.context.guestData?.published_layout);\n    return;\n  }\n\n  const allianceId = getActiveAllianceId();\n  const weeksResult = await fetchReservoirWeeks(state.client, allianceId);\n'''
+          if old_load not in source:
+              raise SystemExit('Expected layout load block not found')
+          layout.write_text(source.replace(old_load, new_load, 1))
+
+          members = Path('pages/alliance/members.html')
+          source = members.read_text()
+          source = source.replace('Выбери подключённый союз или введи пригласительный код.', 'Выбери подключённый союз или открой гостевой просмотр по коду.')
+          source = source.replace('Чтобы подключить или создать союзный штаб, войди в HarvestHub.', 'Чтобы создать штаб и получить права участника, войди в HarvestHub.')
+          members.write_text(source)
+
+          manifest = Path('supabase/rpc-manifest.json')
+          rpc = json.loads(manifest.read_text())
+          manifest.write_text(json.dumps([name for name in rpc if name != 'join_alliance_by_code'], ensure_ascii=False, indent=2) + '\n')
+
+          migration = Path('supabase/migrations/20260725202530_critical_guest_access_payload.sql')
+          migration.write_text('''-- Critical guest access batch 4: safe code-based view without persistent data exposure.\n\ncreate or replace function public.open_alliance_by_code(access_code text)\nreturns jsonb\nlanguage plpgsql\nsecurity definer\nset search_path = ''\nas $$\ndeclare\n  target_alliance_id uuid;\n  target_alliance_name text;\n  target_state_number text;\n  participant_list jsonb;\n  published_layout jsonb;\nbegin\n  select a.id, a.name, a.state_number\n  into target_alliance_id, target_alliance_name, target_state_number\n  from public.alliances a\n  where a.invite_code = upper(trim(access_code))\n  limit 1;\n\n  if target_alliance_id is null then\n    return null;\n  end if;\n\n  select coalesce(\n    jsonb_agg(jsonb_build_object('id', p.id, 'nickname', p.nickname, 'rank_name', p.rank_name) order by p.nickname),\n    '[]'::jsonb\n  )\n  into participant_list\n  from public.participants p\n  where p.alliance_id = target_alliance_id\n    and p.member_status <> 'left';\n\n  select jsonb_build_object(\n    'week', jsonb_build_object('id', latest.id, 'event_date', latest.event_date, 'event_hour_msk', latest.event_hour_msk),\n    'published_at', latest.published_at,\n    'general_comment', coalesce(latest.general_comment, ''),\n    'roster', (\n      select coalesce(jsonb_agg(jsonb_build_object('participant_id', p.id, 'nickname', p.nickname, 'assignment', rp.assignment) order by case rp.assignment when 'main' then 0 else 1 end, p.nickname), '[]'::jsonb)\n      from public.alliance_reservoir_participants rp\n      join public.participants p on p.id = rp.participant_id\n      where rp.week_id = latest.id\n        and rp.assignment in ('main', 'reserve')\n        and p.alliance_id = target_alliance_id\n        and p.member_status <> 'left'\n    ),\n    'assignments', (\n      select coalesce(jsonb_agg(jsonb_build_object('location_key', assignment.location_key, 'participant_id', assignment.participant_id, 'sort_order', assignment.sort_order) order by assignment.location_key, assignment.sort_order), '[]'::jsonb)\n      from public.alliance_reservoir_assignments assignment\n      join public.participants p on p.id = assignment.participant_id\n      join public.alliance_reservoir_participants rp on rp.week_id = assignment.week_id and rp.participant_id = assignment.participant_id and rp.assignment in ('main', 'reserve')\n      where assignment.week_id = latest.id\n        and p.alliance_id = target_alliance_id\n        and p.member_status <> 'left'\n    ),\n    'notes', (\n      select coalesce(jsonb_agg(jsonb_build_object('location_key', note.location_key, 'comment', note.comment) order by note.location_key), '[]'::jsonb)\n      from public.alliance_reservoir_location_notes note\n      where note.week_id = latest.id\n    )\n  )\n  into published_layout\n  from (\n    select w.id, w.event_date, w.event_hour_msk, layout.general_comment, layout.published_at\n    from public.alliance_reservoir_weeks w\n    join public.alliance_reservoir_layouts layout on layout.week_id = w.id\n    where w.alliance_id = target_alliance_id\n      and layout.published_at is not null\n    order by w.event_date desc, layout.published_at desc\n    limit 1\n  ) latest;\n\n  return jsonb_build_object(\n    'alliance', jsonb_build_object('id', target_alliance_id, 'name', target_alliance_name, 'state_number', target_state_number),\n    'participants', participant_list,\n    'published_layout', published_layout\n  );\nend;\n$$;\n\nrevoke execute on function public.open_alliance_by_code(text) from public;\ngrant execute on function public.open_alliance_by_code(text) to anon, authenticated;\n\ndelete from public.alliance_members m\nwhere m.role = 'viewer'\n  and not exists (\n    select 1\n    from public.participants p\n    where p.alliance_id = m.alliance_id\n      and p.linked_user_id = m.user_id\n      and p.member_status <> 'left'\n  );\n''')
+
+          Path('.github/workflows/project-check.yml').write_text('''name: Project check\n\non:\n  push:\n    branches: [main]\n  pull_request:\n\npermissions:\n  contents: read\n\nconcurrency:\n  group: project-check-${{ github.ref }}\n  cancel-in-progress: true\n\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n\n      - name: Set up Node.js\n        uses: actions/setup-node@v4\n        with:\n          node-version: 22\n\n      - name: Check JavaScript and assets\n        run: npm run check 2> project-check-errors.txt\n\n      - name: Upload check report\n        if: failure()\n        uses: actions/upload-artifact@v4\n        with:\n          name: project-check-errors\n          path: project-check-errors.txt\n          if-no-files-found: ignore\n''')
+          PY
+
+      - name: Check project
+        run: npm run check
+
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "HarvestHub automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add .github/workflows/project-check.yml js/pages/alliance-reservoir-layout.js pages/alliance/members.html supabase/rpc-manifest.json supabase/migrations/20260725202530_critical_guest_access_payload.sql
+          git commit -m "Завершить гостевой просмотр по коду"
+          git push origin HEAD:${{ github.head_ref }}
