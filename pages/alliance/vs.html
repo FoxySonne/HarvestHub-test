@@ -18,7 +18,7 @@
       <label><span>Дата</span><input id="vsResultDate" type="date" data-no-persist="true" required></label>
       <label class="vs-score-label"><span class="tooltip" data-tooltip="Число без буквы считается миллионами: 13 = 13М, 0,1 = 100k, 1280 = 1,28В. При необходимости можно использовать K, M, B или T.">Очки</span><input id="vsPoints" type="text" inputmode="decimal" data-no-persist="true"></label>
       <label class="checkbox vs-vacation-field"><input id="vsVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
-      <div class="alliance-actions"><button type="submit">Сохранить результат</button><button id="vsEditCancel" type="button" class="secondary-button" hidden>Отменить</button></div>
+      <div class="alliance-actions"><button type="submit">Сохранить результат</button><button id="vsEditCancel" type="button" class="secondary-button" hidden>Отменить</button><button id="vsDeleteResult" type="button" class="danger-button" hidden>Удалить результат</button></div>
     </form>
   </section>
 
@@ -29,7 +29,7 @@
 
   <section id="vsBulkCard" class="card" hidden>
     <div class="card-header"><div><h3>Общее редактирование VS</h3><p id="vsBulkWeekLabel">Неделя</p></div></div>
-    <p class="vs-bulk-hint">Число без буквы считается миллионами. Например: 13 = 13М, 0,1 = 100k, 1280 = 1,28В. Буква «О» обозначает отпуск, пустая ячейка не изменяется.</p>
+    <p class="vs-bulk-hint">Сохраняются только изменённые ячейки. Число без буквы считается миллионами. Буква «О» обозначает отпуск. Если очистить ранее заполненную ячейку, существующий результат будет удалён.</p>
     <div class="alliance-actions vs-bulk-actions"><button id="vsBulkSave" type="button">Сохранить изменения</button><button id="vsBulkClose" type="button" class="secondary-button">Закрыть</button><button type="button" class="secondary-button vs-search-open" data-vs-search-open="bulk" aria-label="Найти игрока"></button></div>
     <form id="vsBulkSearch" class="vs-player-search" data-vs-search="bulk" hidden>
       <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока">
