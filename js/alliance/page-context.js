@@ -1,5 +1,7 @@
-import { fetchMemberships, fetchParticipants } from "./api.js?v=20260725-guest-access-1";
+import { fetchMemberships, fetchParticipants } from "./api.js?v=20260726-role-batch-1";
 import { ACTIVE_ALLIANCE_STORAGE_KEY, GUEST_ALLIANCE_STORAGE_KEY } from "./config.js";
+
+let contextLoadPromise = null;
 
 export function getActiveAllianceId() {
   return localStorage.getItem(ACTIVE_ALLIANCE_STORAGE_KEY) || "";
@@ -46,7 +48,11 @@ function guestPageContext(session, memberships, guestData) {
   };
 }
 
-export async function loadAlliancePageContext(client, { requireAlliance = true } = {}) {
+function effectiveMembershipRole(membership) {
+  return membership?.effective_role || membership?.role || null;
+}
+
+async function loadContext(client, { requireAlliance }) {
   if (!client) throw new Error("Не удалось подключить Supabase.");
 
   const sessionResult = await client.auth.getSession();
@@ -57,7 +63,10 @@ export async function loadAlliancePageContext(client, { requireAlliance = true }
   if (session) {
     const membershipsResult = await fetchMemberships(client);
     if (membershipsResult.error) throw membershipsResult.error;
-    memberships = membershipsResult.data || [];
+    memberships = (membershipsResult.data || []).map(item => ({
+      ...item,
+      effective_role: effectiveMembershipRole(item)
+    }));
   }
 
   let allianceId = getActiveAllianceId();
@@ -77,13 +86,24 @@ export async function loadAlliancePageContext(client, { requireAlliance = true }
 
   if (!membership) {
     if (requireAlliance) window.loadPage?.("alliance/members.html");
-    return { session, memberships, membership: null, alliance: null, participants: [], currentParticipant: null, isGuest: false, guestData: null };
+    return {
+      session,
+      memberships,
+      membership: null,
+      alliance: null,
+      participants: [],
+      currentParticipant: null,
+      isGuest: false,
+      guestData: null
+    };
   }
 
   const participantsResult = await fetchParticipants(client, allianceId);
   if (participantsResult.error) throw participantsResult.error;
   const participants = Array.isArray(participantsResult.data) ? participantsResult.data : [];
-  const currentParticipant = participants.find(item => item.linked_user_id === session.user.id && item.member_status !== "left") || null;
+  const currentParticipant = participants.find(item =>
+    item.linked_user_id === session?.user?.id && item.member_status !== "left"
+  ) || null;
 
   return {
     session,
@@ -97,12 +117,31 @@ export async function loadAlliancePageContext(client, { requireAlliance = true }
   };
 }
 
+export function loadAlliancePageContext(client, { requireAlliance = true, force = false } = {}) {
+  if (!force && contextLoadPromise) return contextLoadPromise;
+  const task = loadContext(client, { requireAlliance }).finally(() => {
+    if (contextLoadPromise === task) contextLoadPromise = null;
+  });
+  contextLoadPromise = task;
+  return task;
+}
+
+export function invalidateAlliancePageContext() {
+  contextLoadPromise = null;
+}
+
+export function getEffectiveAllianceRole(context) {
+  if (context?.isGuest) return null;
+  return effectiveMembershipRole(context?.membership);
+}
+
 export function fillAllianceCompactHeader(context) {
   const allianceName = document.getElementById("allianceContextName");
   const participantName = document.getElementById("allianceContextNickname");
   const participantRank = document.getElementById("allianceContextRank");
   const role = document.getElementById("allianceContextRole");
-  const isR5 = context.currentParticipant?.rank_name === "Р5";
+  const effectiveRole = getEffectiveAllianceRole(context);
+
   if (allianceName) allianceName.textContent = context.alliance?.name || "Союзный штаб";
   if (participantName) participantName.textContent = context.isGuest
     ? "Гостевой просмотр"
@@ -110,24 +149,19 @@ export function fillAllianceCompactHeader(context) {
   if (participantRank) participantRank.textContent = context.currentParticipant?.rank_name || "—";
   if (role) role.textContent = context.isGuest
     ? "Гость"
-    : context.membership?.role === "owner"
+    : effectiveRole === "owner"
       ? "Владелец"
-      : isR5
-        ? "Р5 · полные права"
-        : context.membership?.role === "editor"
-          ? "Редактор"
+      : effectiveRole === "r5"
+        ? "Р5 · полные рабочие права"
+        : effectiveRole === "editor"
+          ? "Р4 / редактор"
           : "Наблюдатель";
 }
 
 export function canEditAlliance(context) {
-  if (context.isGuest) return false;
-  return context.membership?.role === "owner"
-    || context.membership?.role === "editor"
-    || context.currentParticipant?.rank_name === "Р5";
+  return ["owner", "r5", "editor"].includes(getEffectiveAllianceRole(context));
 }
 
 export function canManageAllianceRoles(context) {
-  if (context.isGuest) return false;
-  return context.membership?.role === "owner"
-    || context.currentParticipant?.rank_name === "Р5";
+  return ["owner", "r5"].includes(getEffectiveAllianceRole(context));
 }
