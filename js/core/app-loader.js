@@ -24,8 +24,8 @@
         console.warn("Не удалось полностью обновить облачный контекст профиля:", error);
       }
 
-      const currentPage = window.harvestHubNavigation?.getCurrentPage?.()
-        || localStorage.getItem("currentPage")
+      const currentPage = localStorage.getItem("currentPage")
+        || window.harvestHubNavigation?.getCurrentPage?.()
         || "home.html";
       if (typeof window.loadPage === "function") {
         await window.loadPage(currentPage, {
