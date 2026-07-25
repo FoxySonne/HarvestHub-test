@@ -1,7 +1,7 @@
 import { findDepartedParticipant, markParticipantLeft, restoreParticipant, saveParticipant } from "../alliance/api.js?v=20260723-1";
 import { fetchAllianceSquadPower, saveAllianceSquadPower } from "../alliance/power-api.js?v=20260723-roster-power-1";
 import { renderParticipantRows } from "../alliance/view.js?v=20260722-1";
-import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260723-1";
+import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260725-guest-access-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const byId = id => document.getElementById(id);
@@ -127,13 +127,14 @@ function fillForm(participant) {
 
 async function reload() {
   state.context = await loadAlliancePageContext(state.client);
-  const powerResult = await fetchAllianceSquadPower(state.client, getActiveAllianceId());
   state.powerByParticipant.clear();
-  if (!powerResult.error) {
-    (powerResult.data?.participants || []).forEach(item => state.powerByParticipant.set(item.participant_id, item.squad_1));
+  if (!state.context.isGuest) {
+    const powerResult = await fetchAllianceSquadPower(state.client, getActiveAllianceId());
+    if (powerResult.error) showMessage("Состав загружен, но данные силы сейчас недоступны.", "warning");
+    else (powerResult.data?.participants || []).forEach(item => state.powerByParticipant.set(item.participant_id, item.squad_1));
   }
   render();
-  fillPrimaryAccountOptions(byId("participantPrimaryAccount")?.value || "");
+  if (!state.context.isGuest) fillPrimaryAccountOptions(byId("participantPrimaryAccount")?.value || "");
 }
 
 async function saveOptionalPower(participantId, value) {

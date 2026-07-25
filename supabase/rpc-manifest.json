@@ -14,7 +14,6 @@
   "grant_advanced_mode_access",
   "has_advanced_mode_access",
   "is_alliance_member",
-  "join_alliance_by_code",
   "link_alliance_participant_account",
   "list_advanced_mode_accounts",
   "list_advanced_mode_grants",
