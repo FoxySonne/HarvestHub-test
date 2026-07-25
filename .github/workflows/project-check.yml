@@ -25,4 +25,12 @@ jobs:
           node-version: 22
 
       - name: Check JavaScript and assets
-        run: npm run check
+        run: npm run check 2> project-check-errors.txt
+
+      - name: Upload check report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-check-errors
+          path: project-check-errors.txt
+          if-no-files-found: ignore
