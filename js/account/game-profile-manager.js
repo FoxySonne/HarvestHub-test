@@ -1,6 +1,6 @@
 (() => {
   const PROFILE_COLUMNS = "id,nickname,state,is_primary,is_active,data,created_at,updated_at";
-  let cloudSyncPromise = null;
+  let cloudSyncTask = { userId: "", promise: null };
 
   function getClient() {
     return window.harvestHubSupabase || null;
@@ -19,6 +19,8 @@
     const cleanNickname = String(nickname || "").trim();
     const cleanState = String(state || "").trim();
     if (!cleanNickname || !cleanState) throw new Error("Заполни никнейм и номер штата.");
+    if (cleanNickname.length > 80) throw new Error("Никнейм не должен быть длиннее 80 символов.");
+    if (cleanState.length > 20) throw new Error("Номер штата не должен быть длиннее 20 символов.");
     return { nickname: cleanNickname, state: cleanState };
   }
 
@@ -33,37 +35,35 @@
     return data || [];
   }
 
+  async function callProfileRpc(name, args) {
+    const { data, error } = await getClient().rpc(name, args);
+    if (error) throw error;
+    return data;
+  }
+
   async function createInitialProfile(user) {
     const profile = normalizeProfileInput(
       user.user_metadata?.nickname || user.email?.split("@")[0] || "Пользователь",
       user.user_metadata?.state || "—"
     );
-    const { data, error } = await getClient()
-      .from("game_profiles")
-      .insert({
-        user_id: user.id,
-        ...profile,
-        is_primary: true,
-        is_active: true,
-        data: {}
-      })
-      .select(PROFILE_COLUMNS)
-      .single();
-    if (error) throw error;
-    return data;
+    return callProfileRpc("create_and_activate_game_profile", {
+      profile_nickname: profile.nickname,
+      profile_state: profile.state
+    });
   }
 
-  function toLocalAccountProfile(user, gameProfile, count) {
+  function toLocalAccountProfile(user, gameProfile, profiles) {
     const current = window.harvestHubAccountStorage.getActiveProfile();
     return {
       id: `account:${user.id}`,
       type: "account",
       supabaseUserId: user.id,
       gameProfileId: gameProfile.id,
+      gameProfileIds: profiles.map(profile => profile.id),
       nickname: gameProfile.nickname,
       state: gameProfile.state,
       email: user.email || "",
-      gameProfilesCount: count,
+      gameProfilesCount: profiles.length,
       isPrimaryGameProfile: Boolean(gameProfile.is_primary),
       createdAt: current?.type === "account" && current.supabaseUserId === user.id
         ? current.createdAt
@@ -71,9 +71,9 @@
     };
   }
 
-  function saveActiveProfile(user, gameProfile, count, options) {
+  function saveActiveProfile(user, gameProfile, profiles, options) {
     return window.harvestHubAccountStorage.saveProfile(
-      toLocalAccountProfile(user, gameProfile, count),
+      toLocalAccountProfile(user, gameProfile, profiles),
       options
     );
   }
@@ -114,66 +114,55 @@
     localStorage.setItem(marker, gameProfile.id);
   }
 
-  async function markActiveProfile(userId, profileId) {
-    const client = getClient();
-    const { error: clearError } = await client
-      .from("game_profiles")
-      .update({ is_active: false })
-      .eq("user_id", userId)
-      .eq("is_active", true);
-    if (clearError) throw clearError;
-
-    const { data, error } = await client
-      .from("game_profiles")
-      .update({ is_active: true })
-      .eq("user_id", userId)
-      .eq("id", profileId)
-      .select(PROFILE_COLUMNS)
-      .single();
-    if (error) throw error;
-    return data;
+  async function markActiveProfile(profileId) {
+    return callProfileRpc("activate_game_profile", { target_profile_id: profileId });
   }
 
   async function listGameProfiles() {
     const user = await getAuthenticatedUser();
     let profiles = await fetchProfiles(user.id);
-    if (profiles.length === 0) profiles = [await createInitialProfile(user)];
+    if (profiles.length === 0) {
+      await createInitialProfile(user);
+      profiles = await fetchProfiles(user.id);
+    }
     return { user, profiles };
   }
 
   async function syncCloudProfileNow(user) {
     let profiles = await fetchProfiles(user.id);
-    if (profiles.length === 0) profiles = [await createInitialProfile(user)];
+    if (profiles.length === 0) {
+      await createInitialProfile(user);
+      profiles = await fetchProfiles(user.id);
+    }
 
     const current = window.harvestHubAccountStorage.getActiveProfile();
-    let active = profiles.find(profile => profile.is_active);
-    if (!active && current?.supabaseUserId === user.id) {
-      active = profiles.find(profile => profile.id === current.gameProfileId);
-    }
-    active ||= profiles.find(profile => profile.is_primary) || profiles[0];
+    let active = profiles.find(profile => profile.is_active)
+      || profiles.find(profile => profile.is_primary)
+      || profiles[0];
 
     if (!active.is_active) {
-      active = await markActiveProfile(user.id, active.id);
-      profiles = profiles.map(profile => ({
-        ...profile,
-        is_active: profile.id === active.id
-      }));
+      active = await markActiveProfile(active.id);
+      profiles = profiles.map(profile => ({ ...profile, is_active: profile.id === active.id }));
     }
 
-    if (current?.type === "account" && current.gameProfileId && current.gameProfileId !== active.id) {
+    if (current?.type === "account"
+      && current.supabaseUserId === user.id
+      && current.gameProfileId
+      && current.gameProfileId !== active.id) {
       await window.harvestHubCloudSync?.flushAll?.();
     }
     migrateLegacyLocalData(user.id, active);
-    return saveActiveProfile(user, active, profiles.length);
+    return saveActiveProfile(user, active, profiles);
   }
 
   function syncCloudProfile(user) {
     if (!user) return Promise.resolve(null);
-    if (cloudSyncPromise) return cloudSyncPromise;
-    cloudSyncPromise = syncCloudProfileNow(user).finally(() => {
-      cloudSyncPromise = null;
+    if (cloudSyncTask.promise && cloudSyncTask.userId === user.id) return cloudSyncTask.promise;
+    const promise = syncCloudProfileNow(user).finally(() => {
+      if (cloudSyncTask.promise === promise) cloudSyncTask = { userId: "", promise: null };
     });
-    return cloudSyncPromise;
+    cloudSyncTask = { userId: user.id, promise };
+    return promise;
   }
 
   async function activateGameProfile(profileId) {
@@ -182,33 +171,24 @@
     if (!requested) throw new Error("Игровой профиль не найден.");
 
     const current = window.harvestHubAccountStorage.getActiveProfile();
-    if (current?.gameProfileId !== profileId) {
-      await window.harvestHubCloudSync?.flushAll?.();
-    }
+    if (current?.gameProfileId !== profileId) await window.harvestHubCloudSync?.flushAll?.();
 
-    const active = requested.is_active ? requested : await markActiveProfile(user.id, profileId);
-    return saveActiveProfile(user, active, profiles.length);
+    const active = requested.is_active ? requested : await markActiveProfile(profileId);
+    const nextProfiles = profiles.map(profile => ({ ...profile, is_active: profile.id === active.id }));
+    return saveActiveProfile(user, active, nextProfiles);
   }
 
   async function createGameProfile(nickname, state) {
     const values = normalizeProfileInput(nickname, state);
-    const { user, profiles } = await listGameProfiles();
+    const user = await getAuthenticatedUser();
     await window.harvestHubCloudSync?.flushAll?.();
-
-    const { data, error } = await getClient()
-      .from("game_profiles")
-      .insert({
-        user_id: user.id,
-        ...values,
-        is_primary: profiles.length === 0,
-        is_active: false,
-        data: {}
-      })
-      .select(PROFILE_COLUMNS)
-      .single();
-    if (error) throw error;
-
-    return activateGameProfile(data.id);
+    const created = await callProfileRpc("create_and_activate_game_profile", {
+      profile_nickname: values.nickname,
+      profile_state: values.state
+    });
+    const profiles = await fetchProfiles(user.id);
+    const active = profiles.find(profile => profile.id === created.id) || created;
+    return saveActiveProfile(user, active, profiles);
   }
 
   async function updateGameProfile(profileId, nickname, state) {
@@ -231,30 +211,10 @@
       if (userError) throw userError;
     }
 
+    const nextProfiles = profiles.map(profile => profile.id === data.id ? data : profile);
     const current = window.harvestHubAccountStorage.getActiveProfile();
-    if (current?.gameProfileId === data.id) saveActiveProfile(user, data, profiles.length);
+    if (current?.gameProfileId === data.id) saveActiveProfile(user, data, nextProfiles);
     return data;
-  }
-
-  function clearLocalProfileData(profileId) {
-    const plainScope = `:profile:${profileId}`;
-    const cloudScope = `game_profile%3A${encodeURIComponent(profileId)}%3A`;
-    Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
-      .filter(key => key?.includes(plainScope) || key?.includes(cloudScope))
-      .forEach(key => localStorage.removeItem(key));
-  }
-
-  async function clearCloudProfileState(userId, profileId) {
-    const stateKeys = [
-      `game_profile:${profileId}:turbo_vs_week`,
-      `game_profile:${profileId}:calculator_forms`
-    ];
-    const { error } = await getClient()
-      .from("user_app_state")
-      .delete()
-      .eq("user_id", userId)
-      .in("state_key", stateKeys);
-    if (error) console.warn("Не удалось удалить архивные данные игрового профиля:", error);
   }
 
   async function deleteGameProfile(profileId) {
@@ -263,35 +223,17 @@
     if (!requested) throw new Error("Игровой профиль не найден.");
     if (requested.is_primary) throw new Error("Основной игровой профиль нельзя удалить.");
 
-    const current = window.harvestHubAccountStorage.getActiveProfile();
-    const deletingActive = current?.gameProfileId === requested.id;
-    let nextActive = profiles.find(profile => profile.is_primary)
-      || profiles.find(profile => profile.id !== requested.id);
-    if (!nextActive) throw new Error("Нельзя удалить единственный игровой профиль.");
-
     await window.harvestHubCloudSync?.flushAll?.();
-    if (deletingActive) nextActive = await markActiveProfile(user.id, nextActive.id);
+    const result = await callProfileRpc("delete_game_profile", { target_profile_id: profileId });
+    window.harvestHubAccountStorage.clearDataProfileStorage(profileId, user.id);
 
-    const { error } = await getClient()
-      .from("game_profiles")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("id", requested.id);
-    if (error) {
-      if (deletingActive) await markActiveProfile(user.id, requested.id);
-      throw error;
-    }
-
-    await clearCloudProfileState(user.id, requested.id);
-    clearLocalProfileData(requested.id);
-
-    if (!deletingActive) {
-      nextActive = profiles.find(profile => profile.id === current?.gameProfileId)
-        || profiles.find(profile => profile.is_active)
-        || nextActive;
-    }
-    saveActiveProfile(user, nextActive, profiles.length - 1);
-    return nextActive;
+    const nextProfiles = await fetchProfiles(user.id);
+    const active = nextProfiles.find(profile => profile.id === result?.active_profile?.id)
+      || nextProfiles.find(profile => profile.is_active)
+      || nextProfiles[0];
+    if (!active) throw new Error("После удаления не найден активный игровой профиль.");
+    saveActiveProfile(user, active, nextProfiles);
+    return active;
   }
 
   window.harvestHubGameProfileManager = {

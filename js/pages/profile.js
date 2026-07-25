@@ -110,7 +110,7 @@ function renderQuickProfile(container, profile) {
           <p class="profile-state">Штат ${escapeProfileHtml(profile.state)}</p>
         </header>
         <p class="account-warning profile-warning">Данные этого профиля хранятся только на текущем устройстве. Для синхронизации между устройствами создайте полноценный профиль.</p>
-        <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>
+        <div class="profile-page-actions"><button type="button" id="profileLogoutButton">Закрыть профиль</button><button type="button" id="deleteQuickProfileButton" class="danger-button">Удалить быстрый профиль</button></div>
       </div>
       ${renderQuickProfileAccessCard()}
     </div>`;
@@ -350,10 +350,29 @@ async function renderProfilePage() {
     }
   }
 
-  document.getElementById("profileLogoutButton")?.addEventListener("click", async () => {
-    await window.harvestHubCloudSync?.flushAll?.();
-    await window.harvestHubAccount?.signOut?.();
-    await renderProfilePage();
+  document.getElementById("profileLogoutButton")?.addEventListener("click", async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await window.harvestHubAccount?.signOut?.();
+      await renderProfilePage();
+    } catch (error) {
+      window.alert(error.message || "Не удалось выйти из профиля.");
+      button.disabled = false;
+    }
+  });
+
+  document.getElementById("deleteQuickProfileButton")?.addEventListener("click", async event => {
+    if (profile.type !== "quick") return;
+    if (!window.confirm(`Удалить быстрый профиль «${profile.nickname}» и все его данные с этого устройства?`)) return;
+    event.currentTarget.disabled = true;
+    try {
+      window.harvestHubAccountStorage.deleteQuickProfile(profile.id);
+      await renderProfilePage();
+    } catch (error) {
+      window.alert(error.message || "Не удалось удалить быстрый профиль.");
+      event.currentTarget.disabled = false;
+    }
   });
 }
 

@@ -1,4 +1,4 @@
-import { createIpkCloudSync } from "../ipk/cloud-sync.js?v=20260717-25";
+import { createIpkCloudSync } from "../ipk/cloud-sync.js?v=20260725-profile-sync-1";
 import {
   isTroopTransferApplied,
   markTroopTransferApplied,
