@@ -1,0 +1,103 @@
+-- Critical access batch 2: reservoir locks and participant validation.
+
+create or replace function public.guard_reservoir_week_update()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if old.closed_at is not null
+     and not private.can_override_reservoir_lock(old.alliance_id) then
+    raise exception 'Закрытую неделю могут изменять только владелец штаба и Р5';
+  end if;
+
+  if old.roster_saved_at is not null
+     and new.event_hour_msk is distinct from old.event_hour_msk
+     and not private.can_override_reservoir_lock(old.alliance_id) then
+    raise exception 'После сохранения состава время события меняют только владелец штаба и Р5';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke execute on function public.guard_reservoir_week_update() from public, anon, authenticated;
+drop trigger if exists guard_reservoir_week_update_trigger on public.alliance_reservoir_weeks;
+create trigger guard_reservoir_week_update_trigger
+before update on public.alliance_reservoir_weeks
+for each row execute function public.guard_reservoir_week_update();
+
+create or replace function public.validate_reservoir_participant()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_week public.alliance_reservoir_weeks%rowtype;
+  v_count integer;
+  v_event_at timestamp;
+  v_deadline timestamp;
+  v_attendance_changed boolean := true;
+begin
+  select * into v_week
+  from public.alliance_reservoir_weeks
+  where id = new.week_id;
+
+  if not found then
+    raise exception 'Неделя резервуара не найдена.';
+  end if;
+
+  if not exists (
+    select 1
+    from public.participants p
+    where p.id = new.participant_id
+      and p.alliance_id = v_week.alliance_id
+  ) then
+    raise exception 'Участник не относится к этому союзу.';
+  end if;
+
+  v_event_at := v_week.event_date::timestamp + make_interval(hours => v_week.event_hour_msk);
+  v_deadline := (v_week.event_date + 4)::timestamp;
+
+  if tg_op = 'UPDATE' then
+    v_attendance_changed := new.attendance is distinct from old.attendance;
+    if new.assignment is distinct from old.assignment
+       and (now() at time zone 'Europe/Moscow') >= v_event_at then
+      raise exception 'После начала события состав менять нельзя.';
+    end if;
+  end if;
+
+  if new.attendance is not null and new.assignment = 'none' then
+    raise exception 'Посещение можно отметить только участнику основы или резерва.';
+  end if;
+
+  if v_attendance_changed
+     and new.attendance is not null
+     and (now() at time zone 'Europe/Moscow') >= v_deadline
+     and not private.can_override_reservoir_lock(v_week.alliance_id) then
+    raise exception 'Срок внесения посещения завершён.';
+  end if;
+
+  if new.assignment in ('main', 'reserve') then
+    select count(*) into v_count
+    from public.alliance_reservoir_participants
+    where week_id = new.week_id
+      and assignment = new.assignment
+      and participant_id <> new.participant_id;
+
+    if new.assignment = 'main' and v_count >= 30 then
+      raise exception 'В основном составе уже 30 участников.';
+    end if;
+    if new.assignment = 'reserve' and v_count >= 10 then
+      raise exception 'В резерве уже 10 участников.';
+    end if;
+  end if;
+
+  new.updated_by := auth.uid();
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+revoke execute on function public.validate_reservoir_participant() from public, anon, authenticated;
