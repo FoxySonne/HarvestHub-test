@@ -46,7 +46,7 @@
       user.user_metadata?.nickname || user.email?.split("@")[0] || "Пользователь",
       user.user_metadata?.state || "—"
     );
-    return callProfileRpc("create_and_activate_game_profile", {
+    return callProfileRpc("ensure_initial_game_profile", {
       profile_nickname: profile.nickname,
       profile_state: profile.state
     });
