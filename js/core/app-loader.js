@@ -13,28 +13,47 @@
   }
 
   let lastProfileId = getStoredDataProfileId();
-  let profileReloadScheduled = false;
+  let profileRefreshPromise = null;
+
+  async function refreshProfileContext() {
+    if (profileRefreshPromise) return profileRefreshPromise;
+    profileRefreshPromise = (async () => {
+      try {
+        await window.harvestHubCloudSync?.initializeAll?.();
+      } catch (error) {
+        console.warn("Не удалось полностью обновить облачный контекст профиля:", error);
+      }
+
+      const currentPage = localStorage.getItem("currentPage")
+        || window.harvestHubNavigation?.getCurrentPage?.()
+        || "home.html";
+      if (typeof window.loadPage === "function") {
+        await window.loadPage(currentPage, {
+          skipCurrentSave: true,
+          trackVisit: false,
+          behavior: "auto"
+        });
+      }
+      window.harvestHubAccountUI?.render?.();
+    })().finally(() => {
+      profileRefreshPromise = null;
+    });
+    return profileRefreshPromise;
+  }
 
   function handleProfileChange(event) {
     const profile = event.detail?.profile;
     const nextProfileId = event.detail?.dataProfileId
       || (profile?.type === "account" ? profile.gameProfileId || profile.id : profile?.id)
       || "";
-
-    if (nextProfileId === lastProfileId) {
-      event.stopImmediatePropagation();
-      return;
-    }
-
+    if (nextProfileId === lastProfileId) return;
     lastProfileId = nextProfileId;
-    event.stopImmediatePropagation();
-
-    if (profileReloadScheduled) return;
-    profileReloadScheduled = true;
-    window.setTimeout(() => window.location.reload(), 0);
+    window.setTimeout(() => refreshProfileContext().catch(error => {
+      console.warn("Не удалось обновить страницу после смены профиля:", error);
+    }), 0);
   }
 
-  window.addEventListener("harvesthub:profile-change", handleProfileChange, true);
+  window.addEventListener("harvesthub:profile-change", handleProfileChange);
 
   window.addEventListener("beforeunload", () => {
     const currentPage = window.harvestHubNavigation?.getCurrentPage?.()

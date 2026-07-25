@@ -25,6 +25,47 @@
     }
   }
 
+  function readStorageValue(key, fallback = "") {
+    try {
+      const value = localStorage.getItem(key);
+      return value == null ? fallback : value;
+    } catch (error) {
+      console.warn(`Не удалось прочитать значение localStorage: ${key}`, error);
+      return fallback;
+    }
+  }
+
+  function writeStorageValue(key, value) {
+    try {
+      localStorage.setItem(key, String(value));
+      return true;
+    } catch (error) {
+      console.warn(`Не удалось сохранить значение localStorage: ${key}`, error);
+      window.dispatchEvent(new CustomEvent("harvesthub:storage-warning", { detail: { key, error } }));
+      return false;
+    }
+  }
+
+  function removeStorageValue(key) {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.warn(`Не удалось удалить значение localStorage: ${key}`, error);
+      window.dispatchEvent(new CustomEvent("harvesthub:storage-warning", { detail: { key, error } }));
+      return false;
+    }
+  }
+
+  function listStorageKeys() {
+    try {
+      return Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)).filter(Boolean);
+    } catch (error) {
+      console.warn("Не удалось получить список ключей localStorage", error);
+      return [];
+    }
+  }
+
   function normalizeProfileNickname(nickname) {
     return String(nickname || "").trim();
   }
@@ -320,6 +361,10 @@
   window.harvestHubStorage = {
     readJsonStorage,
     writeJsonStorage,
+    readStorageValue,
+    writeStorageValue,
+    removeStorageValue,
+    listStorageKeys,
     clearPageFormState,
     restorePageFormState,
     bindPageFormPersistence

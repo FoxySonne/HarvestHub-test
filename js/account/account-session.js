@@ -12,6 +12,12 @@
     if (password !== confirmation) throw new Error("Пароли не совпадают.");
   }
 
+  function clearStoredAccountProfiles() {
+    Object.values(window.harvestHubAccountStorage.readProfiles())
+      .filter(profile => profile?.type === "account")
+      .forEach(profile => window.harvestHubAccountStorage.removeProfile(profile.id));
+  }
+
   async function syncCloudProfileWithRetry(user, attempts = 3) {
     let lastError = null;
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -63,8 +69,8 @@
       } catch (profileError) {
         console.warn("Вход выполнен, но профиль пока не загрузился:", profileError);
         window.setTimeout(() => {
-          syncCloudProfileWithRetry(data.user).catch(error => {
-            console.warn("Не удалось повторно загрузить игровой профиль аккаунта:", error);
+          syncCloudProfileWithRetry(data.user).catch(retryError => {
+            console.warn("Не удалось повторно загрузить игровой профиль аккаунта:", retryError);
           });
         }, 2000);
       }
@@ -97,9 +103,41 @@
   async function signOutAccount() {
     const profile = window.harvestHubAccountStorage.getActiveProfile();
     const client = getClient();
-    await window.harvestHubCloudSync?.flushAll?.();
-    if (profile?.type === "account" && client) await client.auth.signOut();
-    window.harvestHubAccountStorage.clearActiveProfile();
+    let syncWarning = null;
+
+    if (profile?.type === "account") {
+      try {
+        await window.harvestHubCloudSync?.flushAll?.();
+      } catch (error) {
+        syncWarning = error;
+        const continueExit = window.confirm(
+          "Последние изменения не удалось сохранить в облаке. Нажми «ОК», чтобы всё равно выйти, или «Отмена», чтобы остаться и повторить сохранение."
+        );
+        if (!continueExit) {
+          const cancelled = new Error("Выход отменён: данные ещё не сохранены.");
+          cancelled.code = "SYNC_EXIT_CANCELLED";
+          throw cancelled;
+        }
+      }
+    }
+
+    try {
+      if (profile?.type === "account" && client) {
+        const { error } = await client.auth.signOut();
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.warn("Не удалось завершить все серверные сессии, выполняется локальный выход:", error);
+      if (client) {
+        const { error: localError } = await client.auth.signOut({ scope: "local" });
+        if (localError) console.warn("Локальный выход Supabase завершился с ошибкой:", localError);
+      }
+    } finally {
+      if (profile?.type === "account") clearStoredAccountProfiles();
+      else window.harvestHubAccountStorage.clearActiveProfile();
+    }
+
+    return { syncWarning };
   }
 
   async function refreshCloudProfile() {
@@ -108,6 +146,7 @@
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
     if (data.session?.user) await syncCloudProfileWithRetry(data.session.user);
+    else clearStoredAccountProfiles();
   }
 
   async function init() {
@@ -120,11 +159,13 @@
 
     client.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") window.harvestHubAccountModal?.openRecoveryMode?.();
-      if (session?.user) {
-        syncCloudProfileWithRetry(session.user).catch(error => {
-          console.warn("Не удалось обновить игровой профиль аккаунта:", error);
-        });
+      if (event === "SIGNED_OUT" || !session?.user) {
+        clearStoredAccountProfiles();
+        return;
       }
+      syncCloudProfileWithRetry(session.user).catch(error => {
+        console.warn("Не удалось обновить игровой профиль аккаунта:", error);
+      });
     });
 
     document.addEventListener("visibilitychange", () => {

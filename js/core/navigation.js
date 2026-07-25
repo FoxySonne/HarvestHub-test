@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260724-player-profile-editing-2";
+  const SITE_ASSET_VERSION = "20260725-profile-sync-1";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -182,7 +182,7 @@
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
     if (!isLoaded) return;
     currentLoadedPage = pageName;
-    trackPageVisit(pageName);
+    if (options.trackVisit !== false) trackPageVisit(pageName);
     renderQuickLinks(pageName);
     window.scrollTo({ top: 0, behavior: options.behavior || "auto" });
     document.dispatchEvent(new CustomEvent("harvesthub:page-loaded", { detail: { pageName, previousPage } }));

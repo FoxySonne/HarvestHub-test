@@ -8,8 +8,8 @@ export function createIpkCloudSync({ serialize, apply }) {
   let activeProfileId = "";
   let activeProfileData = {};
   let saveTimer = null;
-  let saveInProgress = false;
-  let saveQueued = false;
+  let savePromise = null;
+  let saveRequested = false;
   let clearInProgress = false;
   let flusherRegistered = false;
 
@@ -17,8 +17,8 @@ export function createIpkCloudSync({ serialize, apply }) {
     window.clearTimeout(saveTimer);
     activeProfileId = "";
     activeProfileData = {};
-    saveInProgress = false;
-    saveQueued = false;
+    savePromise = null;
+    saveRequested = false;
     clearInProgress = false;
   }
 
@@ -41,65 +41,62 @@ export function createIpkCloudSync({ serialize, apply }) {
       console.warn("Не удалось загрузить данные ИПК из профиля:", error);
       return false;
     }
-
     if (!data?.id) return false;
 
     activeProfileId = data.id;
     activeProfileData = data.data && typeof data.data === "object" ? data.data : {};
     if (!flusherRegistered) {
-      window.harvestHubCloudSync?.registerFlusher?.(saveNow);
+      window.harvestHubCloudSync?.registerFlusher?.(() => saveNow({ throwOnError: true }));
       flusherRegistered = true;
     }
     apply(activeProfileData.ipk);
     return true;
   }
 
-  async function saveNow() {
-    if (!activeProfileId || !window.harvestHubSupabase || clearInProgress) return;
+  function saveNow({ throwOnError = false } = {}) {
+    window.clearTimeout(saveTimer);
+    if (!activeProfileId || !window.harvestHubSupabase || clearInProgress) return Promise.resolve(true);
+    saveRequested = true;
 
-    if (saveInProgress) {
-      saveQueued = true;
-      return;
+    if (!savePromise) {
+      savePromise = (async () => {
+        while (saveRequested) {
+          saveRequested = false;
+          const nextData = { ...activeProfileData, ipk: serialize() };
+          const { error } = await window.harvestHubSupabase
+            .from("game_profiles")
+            .update({ data: nextData })
+            .eq("id", activeProfileId)
+            .eq("user_id", getLocalAccountProfile()?.supabaseUserId || "");
+          if (error) throw error;
+          activeProfileData = nextData;
+        }
+        return true;
+      })().catch(error => {
+        console.warn("Не удалось сохранить данные ИПК в профиле:", error);
+        throw error;
+      }).finally(() => {
+        savePromise = null;
+      });
     }
 
-    saveInProgress = true;
-    saveQueued = false;
-
-    try {
-      const nextData = { ...activeProfileData, ipk: serialize() };
-      const { error } = await window.harvestHubSupabase
-        .from("game_profiles")
-        .update({ data: nextData })
-        .eq("id", activeProfileId)
-        .eq("user_id", getLocalAccountProfile()?.supabaseUserId || "");
-
-      if (error) throw error;
-      activeProfileData = nextData;
-    } catch (error) {
-      console.warn("Не удалось сохранить данные ИПК в профиле:", error);
-    } finally {
-      saveInProgress = false;
-      if (saveQueued) saveNow();
-    }
+    return throwOnError ? savePromise : savePromise.catch(() => false);
   }
 
   function schedule() {
     if (!activeProfileId || clearInProgress) return;
     window.clearTimeout(saveTimer);
-    saveTimer = window.setTimeout(saveNow, CLOUD_SAVE_DELAY);
+    saveTimer = window.setTimeout(() => saveNow().catch(() => {}), CLOUD_SAVE_DELAY);
   }
 
   async function clear() {
     window.clearTimeout(saveTimer);
-    saveQueued = false;
+    saveRequested = false;
     if (!activeProfileId || !window.harvestHubSupabase) return false;
 
     clearInProgress = true;
     try {
-      while (saveInProgress) {
-        await new Promise(resolve => window.setTimeout(resolve, 20));
-      }
-
+      if (savePromise) await savePromise;
       const nextData = { ...activeProfileData };
       delete nextData.ipk;
       const { error } = await window.harvestHubSupabase
@@ -107,7 +104,6 @@ export function createIpkCloudSync({ serialize, apply }) {
         .update({ data: nextData })
         .eq("id", activeProfileId)
         .eq("user_id", getLocalAccountProfile()?.supabaseUserId || "");
-
       if (error) throw error;
       activeProfileData = nextData;
       return true;
@@ -122,6 +118,6 @@ export function createIpkCloudSync({ serialize, apply }) {
     load,
     reset,
     schedule,
-    flush: saveNow
+    flush: () => saveNow({ throwOnError: true })
   };
 }
