@@ -1,5 +1,6 @@
-import { fetchAllianceSquadPower, saveAllianceSquadPower, setAlliancePowerSeasonStart } from "./power-api.js?v=20260718-50";
+import { fetchAllianceSquadPower, saveAllianceSquadPower, saveAllianceSquadPowerBatch, setAlliancePowerSeasonStart } from "./power-api.js?v=20260726-power-batch-1";
 import { ACTIVE_ALLIANCE_STORAGE_KEY } from "./config.js";
+import { escapeHtml } from "./view.js?v=20260726-power-batch-1";
 import { setAllianceTableFullscreen } from "./fullscreen-table.js?v=20260721-1";
 
 const state = { client: null, data: null, expanded: false, loadToken: 0 };
@@ -98,8 +99,8 @@ function renderSummary(rows) {
 function renderBulkTable(rows) {
   const body = byId("powerBulkBody");
   if (!body) return;
-  body.innerHTML = rows.map(item => `<tr data-bulk-participant="${item.participant_id}">
-    <td><strong>${item.nickname}</strong><small>${item.rank_name || "—"}</small></td>
+  body.innerHTML = rows.map(item => `<tr data-bulk-participant="${escapeHtml(item.participant_id)}">
+    <td><strong>${escapeHtml(item.nickname)}</strong><small>${escapeHtml(item.rank_name || "—")}</small></td>
     ${[1, 2, 3, 4, 5].map(index => `<td><input type="text" inputmode="decimal" data-bulk-squad="${index}" value="${inputPower(item[`squad_${index}`])}" data-no-persist="true"></td>`).join("")}
   </tr>`).join("");
 }
@@ -125,7 +126,7 @@ function render() {
       const season = Number(item.latest_power) - Number(item.season_power);
       return `<tr>
         <td>${index + 1}</td>
-        <td><strong>${item.nickname}</strong><small>${item.rank_name || "—"}</small></td>
+        <td><strong>${escapeHtml(item.nickname)}</strong><small>${escapeHtml(item.rank_name || "—")}</small></td>
         <td>${formatDate(item.latest_date)}</td>
         <td>${formatPower(item.squad_1)}</td>
         <td data-power-col="previous" class="${previous > 0 ? "power-positive" : previous < 0 ? "power-negative" : ""}">${formatDelta(previous)}</td>
@@ -148,8 +149,14 @@ function render() {
   const select = byId("powerParticipant");
   if (select) {
     const selected = select.value;
-    select.innerHTML = rows.map(item => `<option value="${item.participant_id}">${item.nickname}</option>`).join("");
-    if ([...select.options].some(option => option.value === selected)) select.value = selected;
+    select.innerHTML = rows.map(item => `<option value="${escapeHtml(item.participant_id)}">${escapeHtml(item.nickname)}</option>`).join("");
+    const lockedParticipantId = select.dataset.lockedParticipantId || "";
+    if (lockedParticipantId && [...select.options].some(option => option.value === lockedParticipantId)) {
+      select.value = lockedParticipantId;
+      select.disabled = true;
+    } else if ([...select.options].some(option => option.value === selected)) {
+      select.value = selected;
+    }
     const editorCard = byId("powerEditorCard");
     if (editorCard) editorCard.hidden = rows.length === 0;
   }
@@ -223,18 +230,29 @@ async function submitPower(event) {
     return;
   }
   fields.forEach(field => field?.setCustomValidity(""));
+  if (values.every(value => value === null)) {
+    fields[0]?.setCustomValidity("Укажи силу хотя бы одного отряда");
+    fields[0]?.reportValidity();
+    return;
+  }
+
   const button = event.submitter;
   if (button) button.disabled = true;
-  const { error } = await saveAllianceSquadPower(state.client, allianceId, {
-    participantId,
-    measuredOn: byId("powerDate")?.value,
-    squad1: values[0], squad2: values[1], squad3: values[2], squad4: values[3], squad5: values[4]
-  });
-  if (button) button.disabled = false;
-  if (error) return showMessage(error.message, "error");
-  resetEditor();
-  await load();
-  showMessage("Замер силы сохранён.", "success");
+  try {
+    const { error } = await saveAllianceSquadPower(state.client, allianceId, {
+      participantId,
+      measuredOn: byId("powerDate")?.value,
+      squad1: values[0], squad2: values[1], squad3: values[2], squad4: values[3], squad5: values[4]
+    });
+    if (error) throw error;
+    resetEditor();
+    await load();
+    showMessage("Замер силы сохранён.", "success");
+  } catch (error) {
+    showMessage(error?.message || "Не удалось сохранить замер силы.", "error");
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 async function saveBulk() {
@@ -245,27 +263,28 @@ async function saveBulk() {
     const values = [1, 2, 3, 4, 5].map(index => parsePower(row.querySelector(`[data-bulk-squad="${index}"]`)?.value));
     if (values.some(value => value === undefined)) return showMessage("Проверь значения в общей таблице.", "error");
     if (values.every(value => value === null)) continue;
-    payloads.push({ participantId: row.dataset.bulkParticipant, values });
+    payloads.push({
+      participant_id: row.dataset.bulkParticipant,
+      measured_on: date,
+      squad_1: values[0], squad_2: values[1], squad_3: values[2], squad_4: values[3], squad_5: values[4]
+    });
   }
   if (!payloads.length) return showMessage("Заполни хотя бы одну строку.", "error");
+
   const button = byId("powerBulkSave");
   if (button) button.disabled = true;
-  for (const item of payloads) {
-    const { error } = await saveAllianceSquadPower(state.client, activeAllianceId(), {
-      participantId: item.participantId,
-      measuredOn: date,
-      squad1: item.values[0], squad2: item.values[1], squad3: item.values[2], squad4: item.values[3], squad5: item.values[4]
-    });
-    if (error) {
-      if (button) button.disabled = false;
-      return showMessage(error.message, "error");
-    }
+  try {
+    const { error } = await saveAllianceSquadPowerBatch(state.client, activeAllianceId(), payloads);
+    if (error) throw error;
+    const bulkCard = byId("powerBulkCard");
+    if (bulkCard) bulkCard.hidden = true;
+    await load();
+    showMessage(`Сохранено замеров: ${payloads.length}.`, "success");
+  } catch (error) {
+    showMessage(error?.message || "Не удалось сохранить общую таблицу силы.", "error");
+  } finally {
+    if (button) button.disabled = false;
   }
-  if (button) button.disabled = false;
-  const bulkCard = byId("powerBulkCard");
-  if (bulkCard) bulkCard.hidden = true;
-  await load();
-  showMessage("Заполненные замеры сохранены.", "success");
 }
 
 async function saveSeason(event) {
@@ -290,8 +309,15 @@ export function initPowerSection() {
   state.loadToken += 1;
   const date = byId("powerDate");
   const bulkDate = byId("powerBulkDate");
-  if (date && !date.value) date.value = localDateValue();
-  if (bulkDate) bulkDate.value = localDateValue();
+  const today = localDateValue();
+  if (date) {
+    if (!date.value) date.value = today;
+    date.max = today;
+  }
+  if (bulkDate) {
+    bulkDate.value = today;
+    bulkDate.max = today;
+  }
   byId("powerForm")?.addEventListener("submit", submitPower);
   byId("powerEditCancel")?.addEventListener("click", resetEditor);
   byId("powerSeasonForm")?.addEventListener("submit", saveSeason);

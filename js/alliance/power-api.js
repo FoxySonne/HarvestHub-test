@@ -17,6 +17,13 @@ export function saveAllianceSquadPower(client, allianceId, payload) {
   });
 }
 
+export function saveAllianceSquadPowerBatch(client, allianceId, rows) {
+  return client.rpc("save_alliance_squad_power_batch", {
+    target_alliance_id: allianceId,
+    target_rows: rows
+  });
+}
+
 export function setAlliancePowerSeasonStart(client, allianceId, startDate) {
   return client.rpc("set_alliance_power_season_start", {
     target_alliance_id: allianceId,

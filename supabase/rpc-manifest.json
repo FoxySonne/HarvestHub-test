@@ -33,6 +33,7 @@
   "revoke_advanced_mode_access",
   "save_alliance_participant",
   "save_alliance_squad_power",
+  "save_alliance_squad_power_batch",
   "save_alliance_vs_result",
   "save_my_reservoir_preferences",
   "save_reservoir_layout",

@@ -1,4 +1,4 @@
-import { initPowerSection } from "../alliance/power-section.js?v=20260725-null-guard-1";
+import { initPowerSection } from "../alliance/power-section.js?v=20260726-power-batch-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance } from "../alliance/page-context.js?v=20260718-1";
 
 function applyOwnPowerMode(participantId) {
@@ -13,13 +13,11 @@ function applyOwnPowerMode(participantId) {
 
   const select = document.getElementById("powerParticipant");
   if (!select) return;
-  const lockSelect = () => {
-    if (![...select.options].some(option => option.value === participantId)) return;
+  select.dataset.lockedParticipantId = participantId;
+  if ([...select.options].some(option => option.value === participantId)) {
     select.value = participantId;
     select.disabled = true;
-  };
-  lockSelect();
-  new MutationObserver(lockSelect).observe(select, { childList: true });
+  }
 }
 
 export async function init() {
