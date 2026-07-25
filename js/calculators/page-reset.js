@@ -1,99 +1,71 @@
 (() => {
-  const TURBO_WEEK_STATE_PREFIX = "harvesthub_turbo_vs_week_state:";
-  const TROOP_TRANSFER_STORAGE_KEY = "harvesthub_troop_training_transfer";
-  const PROFILE_BLOCK_STATE_PREFIX = "harvesthub_profile_block_state:";
-  const PAGES = {
-    "calculator/ipk.html": { label: "Игра по-крупному", sync: "forms", custom: true },
-    "calculator/turbo-vs.html": { label: "Турбочерепашка & VS", sync: "turbo" },
-    "calculator/season-resources.html": { label: "Сезонные ресурсы", sync: "forms" },
-    "calculator/troop-training.html": { label: "Обучение войск", sync: "forms", clearTransfer: true }
-  };
-
   let resetInProgress = false;
 
-  function getDataScope() {
-    const profileId = window.getActiveDataProfileId?.() || "";
-    return profileId ? `profile:${profileId}` : "local";
+  function getCurrentPage() {
+    return window.harvestHubNavigation?.getCurrentPage?.()
+      || localStorage.getItem("currentPage")
+      || "";
   }
 
-  function setStatus(message, isError = false) {
-    const status = document.querySelector("[data-calculator-reset-status]");
-    if (!status) return;
-    status.textContent = message;
-    status.classList.toggle("is-error", isError);
-  }
-
-  function clearLocalData(pageName, config) {
-    window.harvestHubStorage?.clearPageFormState?.(pageName);
-    const scope = getDataScope();
-    localStorage.removeItem(`${PROFILE_BLOCK_STATE_PREFIX}${scope}:${pageName}`);
-
-    if (config.sync === "turbo") {
-      localStorage.removeItem(`${TURBO_WEEK_STATE_PREFIX}${scope}`);
+  function removeCurrentPageLocalState() {
+    const pageName = getCurrentPage();
+    const keys = window.getPageFormStorageKeys?.(pageName) || [];
+    keys.forEach(key => localStorage.removeItem(key));
+    window.clearProfileBlockState?.(pageName);
+    if (pageName === "calculator/turbo-vs.html") {
+      window.clearTurboVsWeekState?.();
+      localStorage.removeItem("harvesthub_troop_training_transfer_applied_turbo_vs");
     }
-
-    if (config.clearTransfer) {
-      localStorage.removeItem(`${TROOP_TRANSFER_STORAGE_KEY}:${scope}`);
-    }
+    if (pageName === "calculator/troop-training.html") window.clearTroopTrainingTransfer?.();
+    return pageName;
   }
 
-  async function uploadClearedData(syncType) {
-    if (syncType === "turbo") {
+  async function runPageSpecificReset(pageName) {
+    const handler = window.harvestHubCalculatorResetHandlers?.[pageName];
+    if (typeof handler === "function") await handler();
+  }
+
+  async function clearRemoteState(pageName) {
+    if (pageName === "calculator/turbo-vs.html") {
       await window.harvestHubTurboVsCloudSync?.forceUpload?.();
       return;
     }
-    await window.harvestHubCalculatorFormsCloudSync?.forceUpload?.();
+    await window.harvestHubCalculatorFormsCloudSync?.forceUpload?.(pageName);
+    if (pageName === "calculator/troop-training.html") {
+      await window.harvestHubCalculatorFormsCloudSync?.forceTransferUpload?.();
+    }
   }
 
-  async function resetCalculatorPage(button) {
+  async function resetCurrentPage(button) {
     if (resetInProgress) return;
-    const pageName = window.harvestHubNavigation?.getCurrentPage?.() || localStorage.getItem("currentPage") || "";
-    const config = PAGES[pageName];
-    if (!config) return;
-
-    const confirmed = window.confirm(
-      `Удалить все сохранённые данные калькулятора «${config.label}» для текущего профиля? Данные остальных калькуляторов не изменятся.`
-    );
-    if (!confirmed) return;
+    if (!window.confirm("Удалить данные только этой страницы? Это действие нельзя отменить.")) return;
 
     resetInProgress = true;
     button.disabled = true;
-    button.setAttribute("aria-busy", "true");
-    setStatus("Удаляем данные…");
+    const status = button.closest(".calculator-data-actions")?.querySelector("[data-calculator-reset-status]");
+    if (status) status.textContent = "Удаляем…";
 
+    const pageName = removeCurrentPageLocalState();
     try {
-      if (config.custom) {
-        const resetHandler = window.harvestHubCalculatorResetHandlers?.[pageName];
-        if (typeof resetHandler !== "function") throw new Error("Калькулятор ещё загружается. Попробуйте ещё раз.");
-        await resetHandler();
+      await runPageSpecificReset(pageName);
+      await clearRemoteState(pageName);
+      if (status) status.textContent = "Данные этой страницы удалены.";
+      if (typeof window.loadPage === "function") {
+        await window.loadPage(pageName, { skipCurrentSave: true, trackVisit: false, behavior: "auto" });
       }
-
-      clearLocalData(pageName, config);
-      await window.loadPage(pageName, {
-        skipCurrentSave: true,
-        skipProfileRefresh: true,
-        skipVisit: true
-      });
-      await uploadClearedData(config.sync);
-      setStatus("Данные этого калькулятора удалены.");
-      window.dispatchEvent(new CustomEvent("harvesthub:calculator-data-reset", {
-        detail: { pageName }
-      }));
     } catch (error) {
-      console.error(`Не удалось удалить данные калькулятора ${pageName}:`, error);
-      setStatus(error?.message || "Не удалось удалить данные. Попробуйте ещё раз.", true);
+      console.error("Не удалось удалить данные страницы:", error);
+      if (status) status.textContent = "Не удалось удалить данные. Попробуйте ещё раз.";
     } finally {
       resetInProgress = false;
-      const currentButton = document.querySelector("[data-calculator-reset]");
-      if (currentButton) {
-        currentButton.disabled = false;
-        currentButton.removeAttribute("aria-busy");
-      }
+      button.disabled = false;
     }
   }
 
   document.addEventListener("click", event => {
-    const button = event.target.closest?.("[data-calculator-reset]");
-    if (button) resetCalculatorPage(button);
+    const button = event.target.closest("[data-calculator-reset]");
+    if (!button) return;
+    event.preventDefault();
+    resetCurrentPage(button);
   });
 })();
