@@ -4,10 +4,10 @@
   const PROFILE_BLOCK_LOCAL_PREFIX = "harvesthub_profile_block_state:";
   const TRANSFER_LOCAL_KEY = "harvesthub_troop_training_transfer";
   const ADVANCED_MODE_LOCAL_KEY = "harvesthub_advanced_mode";
-  const CALCULATOR_PAGES = new Set([
-    "calculator/ipk.html",
-    "calculator/season-resources.html",
-    "calculator/troop-training.html"
+  const CALCULATOR_PAGES = new Map([
+    ["calculator/ipk.html", "ipk"],
+    ["calculator/season-resources.html", "season_resources"],
+    ["calculator/troop-training.html", "troop_training"]
   ]);
 
   function readJson(key, fallback = {}) {
@@ -16,6 +16,11 @@
     } catch {
       return fallback;
     }
+  }
+
+  function writeJsonOrRemove(key, value) {
+    if (value && typeof value === "object") localStorage.setItem(key, JSON.stringify(value));
+    else localStorage.removeItem(key);
   }
 
   function getProfile() {
@@ -38,8 +43,22 @@
     return { accountId: profile.id };
   }
 
+  function getFormStorageKey(profileId, pageName) {
+    return `${FORM_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
+  }
+
+  function getProfileBlockStorageKey(profileId, pageName) {
+    return `${PROFILE_BLOCK_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
+  }
+
   function getScopedTransferKey(profileId) {
     return `${TRANSFER_LOCAL_KEY}:profile:${profileId}`;
+  }
+
+  function currentPageName() {
+    return window.harvestHubNavigation?.getCurrentPage?.()
+      || localStorage.getItem("currentPage")
+      || "";
   }
 
   const turboEngine = window.harvestHubCreateSyncEngine({
@@ -63,13 +82,13 @@
     },
 
     applyRemoteState(data, context) {
-      localStorage.setItem(context.localKey, JSON.stringify(data || {}));
+      writeJsonOrRemove(context.localKey, data && Object.keys(data).length ? data : null);
       localStorage.removeItem(getFormStorageKey(context.profileId, "calculator/turbo-vs.html"));
     },
 
     async afterRemoteApplied() {
-      if (localStorage.getItem("currentPage") === "calculator/turbo-vs.html" && typeof window.loadPage === "function") {
-        await window.loadPage("calculator/turbo-vs.html", { skipCurrentSave: true, trackVisit: false });
+      if (currentPageName() === "calculator/turbo-vs.html" && typeof window.loadPage === "function") {
+        await window.loadPage("calculator/turbo-vs.html", { skipCurrentSave: true, trackVisit: false, behavior: "auto" });
       }
     }
   });
@@ -107,90 +126,100 @@
     }
   });
 
-  function getFormStorageKey(profileId, pageName) {
-    return `${FORM_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
+  function normalizePageCloudState(data, pageName) {
+    if (data?.pages || data?.profileBlocks) {
+      return {
+        page: Object.prototype.hasOwnProperty.call(data.pages || {}, pageName)
+          ? data.pages[pageName]
+          : null,
+        profileBlock: Object.prototype.hasOwnProperty.call(data.profileBlocks || {}, pageName)
+          ? data.profileBlocks[pageName]
+          : null
+      };
+    }
+    return {
+      page: data?.page && typeof data.page === "object" ? data.page : null,
+      profileBlock: data?.profileBlock && typeof data.profileBlock === "object" ? data.profileBlock : null
+    };
   }
 
-  function getProfileBlockStorageKey(profileId, pageName) {
-    return `${PROFILE_BLOCK_LOCAL_PREFIX}profile:${profileId}:${pageName}`;
+  function createPageEngine(pageName, slug) {
+    return window.harvestHubCreateSyncEngine({
+      label: `Calculator ${slug}`,
+      stateKey: `calculator:${slug}`,
+      metaPrefix: `harvesthub_cloud_meta:calculator:${slug}:`,
+
+      resolveContext(user) {
+        return resolveGameProfileContext(user);
+      },
+
+      getStateKey: context => context ? `game_profile:${context.profileId}:calculator:${slug}` : `calculator:${slug}`,
+      getLegacyStateKey: context => context?.isPrimary ? "calculator_forms" : "",
+
+      readLocalState(context) {
+        const pageKey = getFormStorageKey(context.profileId, pageName);
+        const profileBlockKey = getProfileBlockStorageKey(context.profileId, pageName);
+        return {
+          schemaVersion: 4,
+          profileId: context.profileId,
+          page: localStorage.getItem(pageKey) == null ? null : readJson(pageKey, {}),
+          profileBlock: localStorage.getItem(profileBlockKey) == null ? null : readJson(profileBlockKey, {})
+        };
+      },
+
+      applyRemoteState(data, context) {
+        const normalized = normalizePageCloudState(data, pageName);
+        writeJsonOrRemove(getFormStorageKey(context.profileId, pageName), normalized.page);
+        writeJsonOrRemove(getProfileBlockStorageKey(context.profileId, pageName), normalized.profileBlock);
+      },
+
+      async afterRemoteApplied() {
+        if (currentPageName() !== pageName || typeof window.loadPage !== "function") return;
+        await window.loadPage(pageName, { skipCurrentSave: true, trackVisit: false, behavior: "auto" });
+      }
+    });
   }
 
-  const formsEngine = window.harvestHubCreateSyncEngine({
-    label: "Calculator forms",
-    stateKey: "calculator_forms",
-    metaPrefix: "harvesthub_cloud_meta:calculator_forms:",
+  const pageEngines = new Map(
+    Array.from(CALCULATOR_PAGES, ([pageName, slug]) => [pageName, createPageEngine(pageName, slug)])
+  );
+
+  const transferEngine = window.harvestHubCreateSyncEngine({
+    label: "Calculator transfer",
+    stateKey: "calculator_transfer",
+    metaPrefix: "harvesthub_cloud_meta:calculator_transfer:",
 
     resolveContext(user) {
       return resolveGameProfileContext(user);
     },
 
-    getStateKey: context => context ? `game_profile:${context.profileId}:calculator_forms` : "calculator_forms",
+    getStateKey: context => context ? `game_profile:${context.profileId}:calculator_transfer` : "calculator_transfer",
     getLegacyStateKey: context => context?.isPrimary ? "calculator_forms" : "",
 
     readLocalState(context) {
-      const pages = {};
-      const profileBlocks = {};
-      CALCULATOR_PAGES.forEach(pageName => {
-        const key = getFormStorageKey(context.profileId, pageName);
-        const raw = localStorage.getItem(key);
-        if (raw != null) pages[pageName] = readJson(key, {});
-
-        const profileBlockKey = getProfileBlockStorageKey(context.profileId, pageName);
-        const profileBlockRaw = localStorage.getItem(profileBlockKey);
-        if (profileBlockRaw != null) profileBlocks[pageName] = readJson(profileBlockKey, {});
-      });
+      const key = getScopedTransferKey(context.profileId);
       return {
-        schemaVersion: 3,
+        schemaVersion: 4,
         profileId: context.profileId,
-        transfer: readJson(getScopedTransferKey(context.profileId), null),
-        pages,
-        profileBlocks
+        transfer: localStorage.getItem(key) == null ? null : readJson(key, null)
       };
     },
 
     applyRemoteState(data, context) {
-      const pages = data?.pages || {};
-      CALCULATOR_PAGES.forEach(pageName => {
-        if (!Object.prototype.hasOwnProperty.call(pages, pageName)) return;
-        localStorage.setItem(
-          getFormStorageKey(context.profileId, pageName),
-          JSON.stringify(pages[pageName] || {})
-        );
-      });
-
-      if (Object.prototype.hasOwnProperty.call(data || {}, "profileBlocks")) {
-        const profileBlocks = data.profileBlocks || {};
-        CALCULATOR_PAGES.forEach(pageName => {
-          const key = getProfileBlockStorageKey(context.profileId, pageName);
-          if (Object.prototype.hasOwnProperty.call(profileBlocks, pageName)) {
-            localStorage.setItem(key, JSON.stringify(profileBlocks[pageName] || {}));
-          } else {
-            localStorage.removeItem(key);
-          }
-        });
-      }
-
-      if (Object.prototype.hasOwnProperty.call(data || {}, "transfer")) {
-        if (data.transfer && typeof data.transfer === "object") {
-          localStorage.setItem(getScopedTransferKey(context.profileId), JSON.stringify(data.transfer));
-        } else {
-          localStorage.removeItem(getScopedTransferKey(context.profileId));
-        }
-      }
-    },
-
-    async afterRemoteApplied() {
-      const currentPage = localStorage.getItem("currentPage") || "";
-      if (!CALCULATOR_PAGES.has(currentPage) || typeof window.loadPage !== "function") return;
-      const container = document.getElementById("page-content");
-      if (container) container.innerHTML = "";
-      await window.loadPage(currentPage, { skipCurrentSave: true, trackVisit: false });
+      const transfer = data?.pages || data?.profileBlocks
+        ? (Object.prototype.hasOwnProperty.call(data, "transfer") ? data.transfer : null)
+        : (data?.transfer && typeof data.transfer === "object" ? data.transfer : null);
+      writeJsonOrRemove(getScopedTransferKey(context.profileId), transfer);
     }
   });
 
+  function engineForPage(pageName = currentPageName()) {
+    return pageEngines.get(pageName) || null;
+  }
+
   function isTurboControl(target) {
     if (!(target instanceof Element)) return false;
-    if (localStorage.getItem("currentPage") !== "calculator/turbo-vs.html") return false;
+    if (currentPageName() !== "calculator/turbo-vs.html") return false;
     return Boolean(target.closest("#turtleList, #vsList"));
   }
 
@@ -204,15 +233,16 @@
 
   window.addEventListener("harvesthub:turbo-vs-state-change", () => turboEngine.scheduleUpload());
   window.addEventListener("harvesthub:page-form-state-change", event => {
-    if (CALCULATOR_PAGES.has(event.detail?.pageName)) formsEngine.scheduleUpload();
+    engineForPage(event.detail?.pageName)?.scheduleUpload();
   });
-  window.addEventListener("harvesthub:calculator-transfer-change", () => formsEngine.scheduleUpload());
+  window.addEventListener("harvesthub:calculator-transfer-change", () => transferEngine.scheduleUpload());
   window.addEventListener("harvesthub:advanced-mode-change", () => preferencesEngine.scheduleUpload());
   window.addEventListener("harvesthub:theme-change", () => preferencesEngine.scheduleUpload());
 
   turboEngine.start();
   preferencesEngine.start();
-  formsEngine.start();
+  transferEngine.start();
+  pageEngines.forEach(engine => engine.start());
 
   window.harvestHubTurboVsCloudSync = {
     scheduleUpload: turboEngine.scheduleUpload,
@@ -225,14 +255,29 @@
   };
 
   window.harvestHubCalculatorFormsCloudSync = {
-    scheduleUpload: formsEngine.scheduleUpload,
-    uploadNow: formsEngine.uploadNow,
-    pullRemote: formsEngine.pullRemote,
-    forceUpload: formsEngine.forceUpload,
-    getState: () => ({
-      ...formsEngine.getState(),
-      currentPage: localStorage.getItem("currentPage") || ""
-    })
+    scheduleUpload(pageName) {
+      engineForPage(pageName)?.scheduleUpload();
+    },
+    uploadNow(pageName) {
+      const engine = engineForPage(pageName);
+      return engine ? engine.uploadNow() : Promise.resolve(true);
+    },
+    pullRemote(pageName) {
+      const engine = engineForPage(pageName);
+      return engine ? engine.pullRemote() : Promise.resolve(true);
+    },
+    forceUpload(pageName) {
+      const engine = engineForPage(pageName);
+      return engine ? engine.forceUpload() : Promise.resolve(true);
+    },
+    forceTransferUpload: transferEngine.forceUpload,
+    getState(pageName) {
+      const engine = engineForPage(pageName);
+      return {
+        ...(engine?.getState?.() || {}),
+        currentPage: currentPageName()
+      };
+    }
   };
 
   window.harvestHubAccountPreferencesCloudSync = {
