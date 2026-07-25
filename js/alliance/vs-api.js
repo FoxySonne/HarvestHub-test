@@ -16,6 +16,21 @@ export function saveAllianceVsResult(client, allianceId, payload) {
   });
 }
 
+export function deleteAllianceVsResult(client, allianceId, participantId, resultDate) {
+  return client.rpc("delete_alliance_vs_result", {
+    target_alliance_id: allianceId,
+    target_participant_id: participantId,
+    target_result_date: resultDate
+  });
+}
+
+export function saveAllianceVsResultsBatch(client, allianceId, rows) {
+  return client.rpc("save_alliance_vs_results_batch", {
+    target_alliance_id: allianceId,
+    target_rows: rows
+  });
+}
+
 export function setAllianceVsDailyTarget(client, allianceId, dailyTarget) {
   return client.rpc("set_alliance_vs_daily_target", {
     target_alliance_id: allianceId,
