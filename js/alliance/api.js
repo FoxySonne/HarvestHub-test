@@ -67,10 +67,6 @@ export function updateAllianceDetails(client, { allianceId, name, stateNumber })
   });
 }
 
-export function joinAlliance(client, code) {
-  return client.rpc("join_alliance_by_code", { join_code: code });
-}
-
 export function saveParticipant(client, { id, allianceId, payload }) {
   return client.rpc("save_alliance_participant", {
     target_alliance_id: allianceId,
