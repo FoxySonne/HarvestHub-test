@@ -12,9 +12,10 @@
     if (password !== confirmation) throw new Error("Пароли не совпадают.");
   }
 
-  function clearStoredAccountProfile() {
-    const profile = window.harvestHubAccountStorage.getActiveProfile();
-    if (profile?.type === "account") window.harvestHubAccountStorage.removeProfile(profile.id);
+  function clearStoredAccountProfiles() {
+    Object.values(window.harvestHubAccountStorage.readProfiles())
+      .filter(profile => profile?.type === "account")
+      .forEach(profile => window.harvestHubAccountStorage.removeProfile(profile.id));
   }
 
   async function syncCloudProfileWithRetry(user, attempts = 3) {
@@ -132,7 +133,7 @@
         if (localError) console.warn("Локальный выход Supabase завершился с ошибкой:", localError);
       }
     } finally {
-      if (profile?.type === "account") window.harvestHubAccountStorage.removeProfile(profile.id);
+      if (profile?.type === "account") clearStoredAccountProfiles();
       else window.harvestHubAccountStorage.clearActiveProfile();
     }
 
@@ -145,7 +146,7 @@
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
     if (data.session?.user) await syncCloudProfileWithRetry(data.session.user);
-    else clearStoredAccountProfile();
+    else clearStoredAccountProfiles();
   }
 
   async function init() {
@@ -159,7 +160,7 @@
     client.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") window.harvestHubAccountModal?.openRecoveryMode?.();
       if (event === "SIGNED_OUT" || !session?.user) {
-        clearStoredAccountProfile();
+        clearStoredAccountProfiles();
         return;
       }
       syncCloudProfileWithRetry(session.user).catch(error => {
