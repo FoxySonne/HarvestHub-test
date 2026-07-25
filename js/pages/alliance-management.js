@@ -3,14 +3,15 @@ import {
   unlinkParticipantAccount,
   setAllianceMemberRole,
   transferAllianceR5,
-  transferAllianceOwner
-} from "../alliance/api.js?v=20260718-40";
+  transferAllianceOwner,
+  updateAllianceDetails
+} from "../alliance/api.js?v=20260725-critical-access-2";
 import {
   loadAlliancePageContext,
   fillAllianceCompactHeader,
   canManageAllianceRoles,
   getActiveAllianceId
-} from "../alliance/page-context.js?v=20260718-1";
+} from "../alliance/page-context.js?v=20260725-r5-access-1";
 
 const byId = id => document.getElementById(id);
 const state = { client: null, context: null };
@@ -150,10 +151,11 @@ async function saveDetails(event) {
   const button = event.submitter;
   if (!button) return;
   button.disabled = true;
-  const { error } = await state.client.from("alliances").update({
-    name: byId("allianceManagementName")?.value.trim() || "",
-    state_number: byId("allianceManagementState")?.value.trim() || ""
-  }).eq("id", getActiveAllianceId());
+  const { error } = await updateAllianceDetails(state.client, {
+    allianceId: getActiveAllianceId(),
+    name: byId("allianceManagementName")?.value || "",
+    stateNumber: byId("allianceManagementState")?.value || ""
+  });
   button.disabled = false;
   if (error) return showMessage(error.message, "error");
   await reload();
