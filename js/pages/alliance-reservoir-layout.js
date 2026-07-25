@@ -1,9 +1,18 @@
-import { loadAlliancePageContext, fillAllianceCompactHeader, getActiveAllianceId, canEditAlliance } from "../alliance/page-context.js?v=20260718-1";
+import { loadAlliancePageContext, fillAllianceCompactHeader, getActiveAllianceId, canEditAlliance } from "../alliance/page-context.js?v=20260725-guest-access-1";
 import { fetchReservoirWeeks, fetchReservoirEntries } from "../alliance/reservoir-api.js?v=20260721-1";
 import { fetchReservoirLayout, saveReservoirLayout, resetReservoirLayout } from "../alliance/reservoir-layout-api.js?v=20260722-1";
 import { fetchAllianceSquadPower } from "../alliance/power-api.js?v=20260718-50";
 
 const byId = id => document.getElementById(id);
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 const state = {
   client: null,
   context: null,
@@ -115,7 +124,7 @@ function showLocationCard(locationKey, anchor) {
   const playerNames = locationAssignments(locationKey).map(id => playerById(id)?.nickname).filter(Boolean);
   const note = state.notes.get(locationKey) || "";
   const popover = byId("reservoirLocationPopover");
-  popover.innerHTML = `<strong>${location.name}</strong><span>${location.points} очков · ${location.rate}</span>${location.effect ? `<span>${location.effect}</span>` : ""}${state.publishedAt && playerNames.length ? `<span>Игроки: ${playerNames.join(", ")}</span>` : ""}${note ? `<span>${note}</span>` : ""}`;
+  popover.innerHTML = `<strong>${location.name}</strong><span>${location.points} очков · ${location.rate}</span>${location.effect ? `<span>${location.effect}</span>` : ""}${state.publishedAt && playerNames.length ? `<span>Игроки: ${playerNames.map(escapeHtml).join(", ")}</span>` : ""}${note ? `<span>${escapeHtml(note)}</span>` : ""}`;
   popover.hidden = false;
   const viewportRect = byId("reservoirMapViewport").getBoundingClientRect();
   const rect = anchor.getBoundingClientRect();
@@ -126,7 +135,7 @@ function showLocationCard(locationKey, anchor) {
 function renderPlayerPool() {
   const search = byId("reservoirPlayerSearch")?.value.trim().toLowerCase() || "";
   const players = state.roster.filter(item => item.assignment === state.rosterTab).filter(item => !search || item.nickname.toLowerCase().includes(search));
-  byId("reservoirPlayerPool").innerHTML = players.map(item => `<button type="button" class="reservoir-player-chip${isAssignedAnywhere(item.participant_id) ? " is-assigned" : ""}" draggable="true" data-player-id="${item.participant_id}"><span>${item.nickname}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${item.assignment === "reserve" ? `<small>Р</small>` : ""}</button>`).join("");
+  byId("reservoirPlayerPool").innerHTML = players.map(item => `<button type="button" class="reservoir-player-chip${isAssignedAnywhere(item.participant_id) ? " is-assigned" : ""}" draggable="true" data-player-id="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${item.assignment === "reserve" ? `<small>Р</small>` : ""}</button>`).join("");
   byId("reservoirPlayerPool").querySelectorAll("[draggable=true]").forEach(chip => chip.addEventListener("dragstart", event => event.dataTransfer.setData("text/plain", chip.dataset.playerId)));
 }
 
@@ -138,9 +147,9 @@ function renderPlacementGrid() {
       <div class="reservoir-location-players">${ids.map(id => {
         const player = playerById(id);
         if (!player) return "";
-        return `<div class="reservoir-assigned-player"><span>${player.nickname}</span><strong>${formatPower(state.powers.get(id))}</strong>${player.assignment === "reserve" ? `<small>Р</small>` : ""}<button type="button" data-remove-player="${id}" data-location-key="${location.key}" aria-label="Убрать">×</button></div>`;
+        return `<div class="reservoir-assigned-player"><span>${escapeHtml(player.nickname)}</span><strong>${formatPower(state.powers.get(id))}</strong>${player.assignment === "reserve" ? `<small>Р</small>` : ""}<button type="button" data-remove-player="${id}" data-location-key="${location.key}" aria-label="Убрать">×</button></div>`;
       }).join("")}</div>
-      <textarea data-location-note="${location.key}" rows="2" placeholder="Комментарий к локации">${state.notes.get(location.key) || ""}</textarea>
+      <textarea data-location-note="${location.key}" rows="2" placeholder="Комментарий к локации">${escapeHtml(state.notes.get(location.key) || "")}</textarea>
     </section>`;
   }).join("");
   renderWarnings();
@@ -156,7 +165,7 @@ function renderPublished() {
   byId("reservoirPublishedGrid").innerHTML = LOCATIONS.map(location => {
     const names = locationAssignments(location.key).map(id => playerById(id)?.nickname).filter(Boolean);
     const note = state.notes.get(location.key) || "";
-    return `<section><strong>${location.name}</strong><p>${names.length ? names.join(", ") : "—"}</p>${note ? `<small>${note}</small>` : ""}</section>`;
+    return `<section><strong>${location.name}</strong><p>${names.length ? names.map(escapeHtml).join(", ") : "—"}</p>${note ? `<small>${escapeHtml(note)}</small>` : ""}</section>`;
   }).join("");
   const comment = byId("reservoirPublishedComment");
   comment.hidden = !state.generalComment;
@@ -174,7 +183,7 @@ function renderWarnings() {
   if (duplicateNames.length) warnings.push(`Повторные назначения: ${duplicateNames.join(", ")}`);
   const box = byId("reservoirWarnings");
   box.hidden = warnings.length === 0;
-  box.innerHTML = warnings.map(text => `<span>${text}</span>`).join("");
+  box.innerHTML = warnings.map(text => `<span>${escapeHtml(text)}</span>`).join("");
 }
 
 function renderAll() {
@@ -208,7 +217,7 @@ function openPicker(locationKey) {
 function renderPicker() {
   const search = byId("reservoirPickerSearch")?.value.trim().toLowerCase() || "";
   const players = state.roster.filter(item => item.assignment === state.pickerTab).filter(item => !search || item.nickname.toLowerCase().includes(search));
-  byId("reservoirPickerList").innerHTML = players.map(item => `<button type="button" data-picker-player="${item.participant_id}"><span>${item.nickname}${item.assignment === "reserve" ? " · резерв" : ""}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${isAssignedAnywhere(item.participant_id) ? `<small>Уже назначен</small>` : ""}</button>`).join("");
+  byId("reservoirPickerList").innerHTML = players.map(item => `<button type="button" data-picker-player="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}${item.assignment === "reserve" ? " · резерв" : ""}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${isAssignedAnywhere(item.participant_id) ? `<small>Уже назначен</small>` : ""}</button>`).join("");
 }
 
 function collectNotes() {
@@ -272,7 +281,7 @@ function bind() {
     const collectors = event.target.closest("[data-collector]");
     if (collectors) {
       const popover = byId("reservoirLocationPopover");
-      popover.innerHTML = `<strong>Водосборники</strong><span>${state.notes.get(collectors.dataset.collector) || "Комментарий не добавлен"}</span>`;
+      popover.innerHTML = `<strong>Водосборники</strong><span>${escapeHtml(state.notes.get(collectors.dataset.collector) || "Комментарий не добавлен")}</span>`;
       popover.hidden = false;
     }
   });
@@ -312,10 +321,36 @@ function bind() {
   byId("reservoirReset")?.addEventListener("click", reset);
 }
 
+function loadGuestLayout(layoutData) {
+  if (!layoutData?.week?.id || !layoutData.published_at) {
+    throw new Error("Расстановка резервуара ещё не опубликована.");
+  }
+  state.week = layoutData.week;
+  state.canEdit = false;
+  state.roster = Array.isArray(layoutData.roster) ? layoutData.roster : [];
+  state.publishedAt = layoutData.published_at;
+  state.generalComment = layoutData.general_comment || "";
+  byId("reservoirLayoutWeek").textContent = `${formatDate(state.week.event_date)} · ${String(state.week.event_hour_msk).padStart(2, "0")} МСК`;
+  byId("reservoirGeneralComment").value = state.generalComment;
+  (layoutData.assignments || []).forEach(item => {
+    const ids = state.assignments.get(item.location_key) || [];
+    ids.push(item.participant_id);
+    state.assignments.set(item.location_key, ids);
+  });
+  (layoutData.notes || []).forEach(item => state.notes.set(item.location_key, item.comment));
+  byId("reservoirLayoutEditor").hidden = true;
+  renderAll();
+}
+
 async function load() {
   state.context = await loadAlliancePageContext(state.client);
   fillAllianceCompactHeader(state.context);
   state.canEdit = canEditAlliance(state.context);
+  if (state.context.isGuest) {
+    loadGuestLayout(state.context.guestData?.published_layout);
+    return;
+  }
+
   const allianceId = getActiveAllianceId();
   const weeksResult = await fetchReservoirWeeks(state.client, allianceId);
   if (weeksResult.error) throw weeksResult.error;
