@@ -10,19 +10,22 @@
     return labels.some(label => label === "р" || label.includes("резерв")) ? "reserve" : "main";
   }
 
-  function addThroughPicker(targetLocation) {
+  function addThroughExistingPickerLogic(targetLocation) {
     const addButton = document.querySelector(`[data-add-player="${CSS.escape(targetLocation)}"]`);
     if (!addButton || !draggedPlayerId) return;
 
     addButton.click();
-    window.setTimeout(() => {
-      const tabButton = document.querySelector(`[data-picker-tab="${draggedPlayerTab}"]`);
-      tabButton?.click();
-      window.setTimeout(() => {
-        const playerButton = document.querySelector(`[data-picker-player="${CSS.escape(draggedPlayerId)}"]`);
-        playerButton?.click();
-      }, 0);
-    }, 0);
+
+    const picker = document.getElementById("reservoirPlayerPicker");
+    if (picker) picker.hidden = true;
+
+    const tabButton = document.querySelector(`[data-picker-tab="${draggedPlayerTab}"]`);
+    tabButton?.click();
+
+    const playerButton = document.querySelector(`[data-picker-player="${CSS.escape(draggedPlayerId)}"]`);
+    playerButton?.click();
+
+    if (picker) picker.hidden = true;
   }
 
   document.addEventListener("dragstart", event => {
@@ -47,6 +50,6 @@
     event.preventDefault();
     event.stopImmediatePropagation();
     target.classList.remove("is-drop-target");
-    addThroughPicker(targetLocation);
+    addThroughExistingPickerLogic(targetLocation);
   }, true);
 })();
