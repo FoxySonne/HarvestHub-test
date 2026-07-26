@@ -52,6 +52,12 @@ export function fetchAllianceForGuest(client, code) {
   });
 }
 
+export function joinAllianceByCode(client, code) {
+  return client.rpc("join_alliance_by_code", {
+    join_code: String(code || "").trim().toUpperCase()
+  });
+}
+
 export function createAlliance(client, { name, stateNumber }) {
   return client.rpc("create_alliance_hub", {
     alliance_name: String(name || "").trim(),
@@ -64,6 +70,12 @@ export function updateAllianceDetails(client, { allianceId, name, stateNumber })
     target_alliance_id: allianceId,
     target_name: String(name || "").trim(),
     target_state_number: String(stateNumber || "").trim()
+  });
+}
+
+export function rotateAllianceInviteCode(client, allianceId) {
+  return client.rpc("rotate_alliance_invite_code", {
+    target_alliance_id: allianceId
   });
 }
 
