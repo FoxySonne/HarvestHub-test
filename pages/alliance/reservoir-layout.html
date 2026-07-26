@@ -3,18 +3,15 @@
   <section class="card alliance-context-card"><div class="card-header"><div><h3 id="allianceContextName">Союз</h3><p><span id="allianceContextNickname">—</span> · <span id="allianceContextRank">—</span> · <span id="allianceContextRole">—</span></p></div></div></section>
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
- <section class="card reservoir-placement-card">
-      <div class="card-header"><div><h3>Расстановка по локациям</h3></div></div>
-      <div id="reservoirWarnings" class="reservoir-layout-warnings" hidden></div>
-      <div id="reservoirPlacementGrid" class="reservoir-placement-grid"></div>
-      <label class="reservoir-general-comment"><span>Общий комментарий</span><textarea id="reservoirGeneralComment" rows="3" placeholder="Комментарий для участников союза"></textarea></label>
-      <div class="reservoir-layout-actions">
-        <button id="reservoirSaveDraft" type="button">Сохранить черновик</button>
-        <button id="reservoirPublish" type="button" class="secondary-button">Опубликовать для союза</button>
-        <button id="reservoirCopy" type="button" class="secondary-button tooltip" data-tooltip="Позволяет скопировать расстановку в виде обычного текста для отправки сообщением в мессенджерах.">Скопировать расстановку</button>
-        <button id="reservoirReset" type="button" class="danger-button">Сбросить</button>
-      </div>
-    </section>
+      <section class="card reservoir-map-card">
+    <div class="card-header"><div><h3>Карта резервуара</h3><p id="reservoirLayoutWeek">—</p></div></div>
+    <button id="reservoirMapFullscreenOpen" type="button" class="secondary-button alliance-table-open-button">Открыть карту целиком</button>
+    <div id="reservoirMapViewport" class="reservoir-map-viewport" data-horizontal-scroll>
+      <button id="reservoirMapFullscreenClose" type="button" class="alliance-fullscreen-close" aria-label="Закрыть карту">×</button>
+      <div id="reservoirMap" class="reservoir-map" aria-label="Схема резервуара"></div>
+      <div id="reservoirLocationPopover" class="reservoir-location-popover" hidden></div>
+    </div>
+  </section>
 
   <section id="reservoirLayoutEditor" class="reservoir-layout-editor" hidden>
     <section class="card reservoir-player-pool-card">
@@ -27,17 +24,19 @@
       <div id="reservoirPlayerPool" class="reservoir-player-pool"></div>
     </section>
 
-     <section class="card reservoir-map-card">
-    <div class="card-header"><div><h3>Карта резервуара</h3><p id="reservoirLayoutWeek">—</p></div></div>
-    <button id="reservoirMapFullscreenOpen" type="button" class="secondary-button alliance-table-open-button">Открыть карту целиком</button>
-    <div id="reservoirMapViewport" class="reservoir-map-viewport" data-horizontal-scroll>
-      <button id="reservoirMapFullscreenClose" type="button" class="alliance-fullscreen-close" aria-label="Закрыть карту">×</button>
-      <div id="reservoirMap" class="reservoir-map" aria-label="Схема резервуара"></div>
-      <div id="reservoirLocationPopover" class="reservoir-location-popover" hidden></div>
-    </div>
-  </section>
 
-    
+  <section class="card reservoir-placement-card">
+      <div class="card-header"><div><h3>Расстановка по локациям</h3></div></div>
+      <div id="reservoirWarnings" class="reservoir-layout-warnings" hidden></div>
+      <div id="reservoirPlacementGrid" class="reservoir-placement-grid"></div>
+      <label class="reservoir-general-comment"><span>Общий комментарий</span><textarea id="reservoirGeneralComment" rows="3" placeholder="Комментарий для участников союза"></textarea></label>
+      <div class="reservoir-layout-actions">
+        <button id="reservoirSaveDraft" type="button">Сохранить черновик</button>
+        <button id="reservoirPublish" type="button" class="secondary-button">Опубликовать для союза</button>
+        <button id="reservoirCopy" type="button" class="secondary-button tooltip" data-tooltip="Позволяет скопировать расстановку в виде обычного текста для отправки сообщением в мессенджерах.">Скопировать расстановку</button>
+        <button id="reservoirReset" type="button" class="danger-button">Сбросить</button>
+      </div>
+    </section>  
   </section>
 
   <section id="reservoirPublishedView" class="card reservoir-published-view" hidden>
