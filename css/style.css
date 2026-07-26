@@ -6,7 +6,7 @@
 @import url("ui/forms.css?v=20260726-responsive-components-1");
 @import url("ui/buttons.css?v=20260726-responsive-components-1");
 @import url("ui/components.css?v=20260726-responsive-components-1");
-@import url("features/home.css?v=20260721-light-theme-1");
+@import url("features/home.css?v=20260726-responsive-pages-1");
 @import url("features/season-resources.css?v=20260721-light-theme-1");
 @import url("features/season-building-links.css?v=20260721-light-theme-1");
 @import url("ui/page-enhancements.css?v=20260721-light-theme-1");
@@ -41,3 +41,4 @@
 @import url("features/sync-status.css?v=20260721-light-theme-1");
 @import url("features/account-mobile.css?v=20260721-light-theme-1");
 @import url("core/responsive-foundation.css?v=20260726-responsive-foundation-2");
+@import url("features/ordinary-pages-responsive.css?v=20260726-responsive-pages-1");
