@@ -1,0 +1,113 @@
+.reservoir-layout-editor {
+  grid-template-columns: 1fr;
+}
+
+.reservoir-player-pool-card {
+  min-width: 0;
+}
+
+.reservoir-player-pool-card .card-header {
+  margin-bottom: 10px;
+}
+
+.reservoir-player-pool {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.reservoir-player-chip {
+  flex: 1 1 180px;
+  max-width: 240px;
+  min-height: 48px;
+}
+
+.reservoir-player-chip.is-assigned {
+  order: 2;
+  opacity: .58;
+}
+
+.reservoir-player-chip em {
+  grid-column: 1 / -1;
+  color: var(--text-soft);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.reservoir-map-location.is-drop-target .reservoir-map-building {
+  transform: translateY(-3px) scale(1.1);
+  filter: drop-shadow(0 0 12px var(--accent));
+}
+
+.reservoir-location-popover {
+  width: min(320px, calc(100% - 24px));
+}
+
+.reservoir-location-popover-heading {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reservoir-location-popover-players {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.reservoir-location-popover-player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  cursor: grab;
+}
+
+.reservoir-location-popover-player:active {
+  cursor: grabbing;
+}
+
+.reservoir-location-popover-player span {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reservoir-location-popover-player strong {
+  font-size: 12px;
+}
+
+.reservoir-location-popover-player small,
+.reservoir-location-empty {
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
+.reservoir-assigned-player[draggable="true"] {
+  cursor: grab;
+}
+
+.reservoir-assigned-player[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+@media (max-width: 899px) {
+  .reservoir-player-pool {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+  }
+
+  .reservoir-player-chip {
+    flex: 0 0 min(220px, 78vw);
+    max-width: none;
+    scroll-snap-align: start;
+  }
+}
