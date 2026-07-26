@@ -1,0 +1,260 @@
+/* ==========================================================
+   ORDINARY PAGES RESPONSIVE
+   Единые правила для калькуляторов, профиля и служебных страниц.
+========================================================== */
+
+/* Не обрезаем содержимое калькуляторов: внутренний скролл задаётся
+   только конкретным таблицам и рабочим областям. */
+.troop-page,
+.ipk-page {
+  overflow-x: visible;
+}
+
+/* Обучение войск: раскладка зависит от доступной ширины центральной
+   области, а не от старой границы мобильной версии. */
+@media (max-width: 1399px) {
+  .troop-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-workspace,
+  .troop-results-card {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .troop-results-card {
+    position: static;
+    order: -1;
+  }
+
+  .troop-results-card .troop-transfer-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+}
+
+@media (max-width: 1099px) {
+  .troop-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-available-card {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .troop-stage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .troop-stage-grid .troop-field:first-child {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+
+  .troop-results-main strong {
+    font-size: clamp(28px, 8vw, 34px);
+  }
+
+  .troop-field-with-unit {
+    grid-template-columns: minmax(0, 1fr) 76px;
+  }
+}
+
+@media (max-width: 479px) {
+  .troop-stage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .troop-stage-grid .troop-field:first-child {
+    grid-column: auto;
+  }
+}
+
+/* ИПК: боковая панель остаётся справа только когда центральной области
+   действительно хватает ширины. */
+.ipk-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) !important;
+}
+
+.ipk-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)) !important;
+}
+
+@media (max-width: 1399px) {
+  .ipk-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ipk-desktop-categories {
+    grid-column: 1;
+    grid-row: 1;
+    position: static !important;
+    max-width: 520px;
+  }
+
+  .ipk-cards {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 1099px) {
+  .ipk-mobile-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ipk-desktop-categories {
+    display: none !important;
+  }
+
+  .ipk-layout,
+  .ipk-cards {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ipk-total-card {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 479px) {
+  .ipk-stats div {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .ipk-row {
+    grid-template-columns: minmax(0, 1fr) 52px 62px;
+  }
+}
+
+/* Сезонные ресурсы: сетки складываются по реальной минимальной ширине. */
+.season-form-grid,
+.season-form-grid-compact {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+}
+
+.season-subgrid,
+.season-subgrid-production,
+.season-raid-grid,
+.season-total-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+}
+
+@media (max-width: 479px) {
+  .season-inline-fields,
+  .season-efficiency-field,
+  .season-building-row {
+    grid-template-columns: 1fr;
+  }
+
+  .season-building-levels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .season-results div,
+  .season-results-compact div,
+  .season-total-card,
+  .season-resource-total-main,
+  .season-deadline-missing div {
+    align-items: flex-start;
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .season-summary-pill {
+    min-width: 0;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .season-tracking-actions button {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* Профиль: боковой блок переносится вверх уже в узком оконном режиме. */
+@media (max-width: 1099px) {
+  .desktop-profile-box {
+    display: none;
+  }
+
+  .profile-page-content,
+  .advanced-access-page {
+    max-width: none;
+  }
+
+  .profile-layout {
+    grid-template-columns: 1fr;
+    gap: var(--layout-gap);
+  }
+
+  .profile-side-column {
+    position: static;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .profile-title-row,
+  .game-profiles-heading,
+  .game-profile-card,
+  .advanced-access-heading,
+  .advanced-access-search-result,
+  .advanced-access-list-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .game-profile-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .game-profiles-heading > button,
+  .game-profile-select,
+  .game-profile-delete,
+  .advanced-access-back,
+  .advanced-access-search-controls button {
+    width: 100%;
+  }
+
+  .advanced-access-search-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .advanced-access-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .advanced-access-panel {
+    padding: var(--card-padding-responsive);
+  }
+}
+
+@media (max-width: 479px) {
+  .profile-edit-actions,
+  .account-delete-actions,
+  .advanced-access-row-actions,
+  .advanced-access-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-edit-actions button,
+  .account-delete-actions button,
+  .advanced-access-row-actions button,
+  .advanced-access-pagination button {
+    width: 100%;
+  }
+}
