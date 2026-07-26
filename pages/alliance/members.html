@@ -3,12 +3,12 @@
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
   <section id="allianceEntryCard" class="card alliance-entry-card">
-    <div class="card-header"><div><h3>Войти в союзный штаб</h3><p>Выбери подключённый союз или открой гостевой просмотр по коду.</p></div></div>
+    <div class="card-header"><div><h3>Войти в союзный штаб</h3><p>Выбери подключённый союз или введи пригласительный код. После входа в аккаунт союз сохранится в списке «Мои союзы».</p></div></div>
     <div class="alliance-entry-grid">
       <label id="allianceHubSelectorField" hidden><span>Мои союзы</span><select id="allianceHubSelector" data-no-persist="true"></select></label>
       <form id="allianceHubJoinForm" class="alliance-inline-form">
         <label><span>Пригласительный код</span><input id="allianceHubJoinCode" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" data-no-persist="true" required></label>
-        <button type="submit">Открыть штаб</button>
+        <button type="submit">Подключить штаб</button>
       </form>
     </div>
   </section>
@@ -23,7 +23,7 @@
   </section>
 
   <section id="allianceHubAccountHint" class="card" hidden>
-    <div class="card-header"><div><h3>Нужен аккаунт</h3><p>Чтобы создать штаб и получить права участника, войди в HarvestHub.</p></div></div>
+    <div class="card-header"><div><h3>Нужен аккаунт</h3><p>Без входа код откроет временный просмотр. Чтобы сохранить союз и получить постоянный доступ, войди в HarvestHub.</p></div></div>
     <button type="button" data-account-button>Войти или создать аккаунт</button>
   </section>
 

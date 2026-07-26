@@ -10,7 +10,17 @@
       <label><span>Номер штата</span><input id="allianceManagementState" type="text" maxlength="30" data-no-persist="true"></label>
       <button type="submit">Сохранить</button>
     </form>
-    <div class="alliance-invite-row"><div><span>Код приглашения</span><strong id="allianceManagementInvite">—</strong></div><button id="allianceManagementCopyInvite" type="button" class="secondary-button">Копировать</button></div>
+    <div class="alliance-invite-row">
+      <div>
+        <span>Код приглашения</span>
+        <strong id="allianceManagementInvite">—</strong>
+        <small>После ввода кода вошедший пользователь получает постоянный доступ наблюдателя. Смена кода отключает только старый код, уже подключённые аккаунты сохраняют доступ.</small>
+      </div>
+      <div class="alliance-actions">
+        <button id="allianceManagementCopyInvite" type="button" class="secondary-button">Копировать</button>
+        <button type="button" class="secondary-button" data-rotate-alliance-code>Сменить код</button>
+      </div>
+    </div>
   </section>
 
   <section class="card" id="allianceRoleManagementCard">
