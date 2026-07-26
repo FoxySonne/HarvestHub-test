@@ -1,4 +1,4 @@
-import { createAlliance, fetchAllianceForGuest, fetchMemberships, fetchParticipants } from "../alliance/api.js?v=20260725-guest-access-1";
+import { createAlliance, fetchAllianceForGuest, fetchMemberships, fetchParticipants, joinAllianceByCode } from "../alliance/api.js?v=20260726-permanent-code-1";
 import { clearGuestAllianceContext, getGuestAllianceContext, setActiveAllianceId, setGuestAllianceContext } from "../alliance/page-context.js?v=20260725-guest-access-1";
 
 const byId = id => document.getElementById(id);
@@ -151,9 +151,25 @@ async function loadMemberships() {
 async function handleJoin(event) {
   event.preventDefault();
   const button = event.submitter;
+  const code = byId("allianceHubJoinCode").value;
   button.disabled = true;
   try {
-    const result = await fetchAllianceForGuest(state.client, byId("allianceHubJoinCode").value);
+    if (state.session) {
+      const result = await joinAllianceByCode(state.client, code);
+      if (result.error) return showMessage(getReadableError(result.error), "error");
+      if (!result.data) return showMessage("Союз с таким кодом не найден.", "error");
+
+      clearGuestAllianceContext();
+      state.guestData = null;
+      state.choosingAlliance = false;
+      setActiveAllianceId(result.data);
+      byId("allianceHubJoinCode").value = "";
+      await loadMemberships();
+      showMessage("Союз подключён к аккаунту. В следующий раз код вводить не потребуется.", "success");
+      return;
+    }
+
+    const result = await fetchAllianceForGuest(state.client, code);
     if (result.error) return showMessage(getReadableError(result.error), "error");
     if (!result.data?.alliance?.id) return showMessage("Союз с таким кодом не найден.", "error");
 
@@ -162,7 +178,7 @@ async function handleJoin(event) {
     setActiveAllianceId(result.data.alliance.id);
     byId("allianceHubJoinCode").value = "";
     openGuestDashboard(result.data);
-    showMessage("Штаб открыт в гостевом режиме. Доступны состав и опубликованная расстановка.", "success");
+    showMessage("Штаб открыт в гостевом режиме. После входа в аккаунт код подключит союз постоянно.", "success");
   } catch (error) {
     showMessage(getReadableError(error), "error");
   } finally {
@@ -205,7 +221,7 @@ async function applySession(session) {
 export async function init() {
   state.client = window.harvestHubSupabase;
   state.guestData = getGuestAllianceContext();
-  state.choosingAlliance = !state.guestData?.alliance?.id;
+  state.choosingAlliance = false;
   if (!state.client) return showMessage("Не удалось подключить Supabase.", "error");
   byId("allianceHubJoinForm")?.addEventListener("submit", handleJoin);
   byId("allianceHubCreateForm")?.addEventListener("submit", handleCreate);
