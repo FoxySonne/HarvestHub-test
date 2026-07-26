@@ -4,6 +4,7 @@ import { fetchReservoirLayout, saveReservoirLayout, resetReservoirLayout } from 
 import { fetchAllianceSquadPower } from "../alliance/power-api.js?v=20260718-50";
 
 const byId = id => document.getElementById(id);
+const SECONDARY_LOCATION_KEYS = new Set(["central", "development", "military"]);
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -82,12 +83,24 @@ function totalLocationPower(key) {
   return locationAssignments(key).reduce((sum, id) => sum + (Number(state.powers.get(id)) || 0), 0);
 }
 
-function assignedLocationKey(participantId) {
-  return LOCATIONS.find(location => locationAssignments(location.key).includes(participantId))?.key || null;
+function assignedLocationKeys(participantId) {
+  return LOCATIONS
+    .filter(location => locationAssignments(location.key).includes(participantId))
+    .map(location => location.key);
+}
+
+function assignmentCount(participantId) {
+  return assignedLocationKeys(participantId).length;
 }
 
 function isAssignedAnywhere(participantId) {
-  return Boolean(assignedLocationKey(participantId));
+  return assignmentCount(participantId) > 0;
+}
+
+function canUseLocationPair(locationKeys) {
+  if (locationKeys.length <= 1) return true;
+  if (locationKeys.length > 2) return false;
+  return locationKeys.some(key => SECONDARY_LOCATION_KEYS.has(key));
 }
 
 function bindDragSources(root) {
@@ -95,6 +108,7 @@ function bindDragSources(root) {
     item.addEventListener("dragstart", event => {
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", item.dataset.playerId);
+      event.dataTransfer.setData("application/x-reservoir-source", item.dataset.sourceLocation || "");
     });
   });
 }
@@ -127,7 +141,8 @@ function renderMap() {
       event.preventDefault();
       button.classList.remove("is-drop-target");
       const participantId = event.dataTransfer.getData("text/plain");
-      if (participantId) movePlayer(button.dataset.locationKey, participantId);
+      const sourceLocation = event.dataTransfer.getData("application/x-reservoir-source") || null;
+      if (participantId) placePlayer(button.dataset.locationKey, participantId, sourceLocation);
     });
   });
 }
@@ -144,7 +159,7 @@ function showLocationCard(locationKey, anchor) {
     ? `<div class="reservoir-location-popover-players">${ids.map(id => {
         const player = playerById(id);
         if (!player) return "";
-        return `<div class="reservoir-location-popover-player" ${state.canEdit ? `draggable="true" data-player-id="${escapeHtml(id)}"` : ""}>
+        return `<div class="reservoir-location-popover-player" ${state.canEdit ? `draggable="true" data-player-id="${escapeHtml(id)}" data-source-location="${locationKey}"` : ""}>
           <span>${escapeHtml(player.nickname)}</span>
           <strong>${formatPower(state.powers.get(id))}</strong>
           ${player.assignment === "reserve" ? "<small>Резерв</small>" : ""}
@@ -176,15 +191,15 @@ function renderPlayerPool() {
   const players = state.roster
     .filter(item => item.assignment === state.rosterTab)
     .filter(item => !search || item.nickname.toLowerCase().includes(search))
-    .sort((left, right) => Number(isAssignedAnywhere(left.participant_id)) - Number(isAssignedAnywhere(right.participant_id)));
+    .sort((left, right) => assignmentCount(left.participant_id) - assignmentCount(right.participant_id));
 
   pool.innerHTML = players.map(item => {
-    const assigned = isAssignedAnywhere(item.participant_id);
-    return `<button type="button" class="reservoir-player-chip${assigned ? " is-assigned" : ""}" draggable="true" data-player-id="${escapeHtml(item.participant_id)}">
+    const count = assignmentCount(item.participant_id);
+    return `<button type="button" class="reservoir-player-chip${count ? " is-assigned" : ""}" draggable="true" data-player-id="${escapeHtml(item.participant_id)}">
       <span>${escapeHtml(item.nickname)}</span>
       <strong>${formatPower(state.powers.get(item.participant_id))}</strong>
       ${item.assignment === "reserve" ? "<small>Р</small>" : ""}
-      ${assigned ? "<em>Расставлен</em>" : ""}
+      ${count === 1 ? "<em>Расставлен</em>" : count === 2 ? "<em>Назначен дважды</em>" : ""}
     </button>`;
   }).join("");
   bindDragSources(pool);
@@ -200,7 +215,7 @@ function renderPlacementGrid() {
       <div class="reservoir-location-players">${ids.map(id => {
         const player = playerById(id);
         if (!player) return "";
-        return `<div class="reservoir-assigned-player" draggable="true" data-player-id="${escapeHtml(id)}"><span>${escapeHtml(player.nickname)}</span><strong>${formatPower(state.powers.get(id))}</strong>${player.assignment === "reserve" ? "<small>Р</small>" : ""}<button type="button" data-remove-player="${id}" data-location-key="${location.key}" aria-label="Убрать">×</button></div>`;
+        return `<div class="reservoir-assigned-player" draggable="true" data-player-id="${escapeHtml(id)}" data-source-location="${location.key}"><span>${escapeHtml(player.nickname)}</span><strong>${formatPower(state.powers.get(id))}</strong>${player.assignment === "reserve" ? "<small>Р</small>" : ""}<button type="button" data-remove-player="${id}" data-location-key="${location.key}" aria-label="Убрать">×</button></div>`;
       }).join("")}</div>
       <textarea data-location-note="${location.key}" rows="2" placeholder="Комментарий к локации">${escapeHtml(state.notes.get(location.key) || "")}</textarea>
     </section>`;
@@ -234,10 +249,10 @@ function renderWarnings() {
   if (unassigned.length) warnings.push(`Не распределены: ${unassigned.length}`);
   const missingPower = state.roster.filter(item => !state.powers.get(item.participant_id));
   if (missingPower.length) warnings.push(`Нет БМ: ${missingPower.length}`);
-  const duplicateNames = state.roster
-    .filter(player => LOCATIONS.filter(location => locationAssignments(location.key).includes(player.participant_id)).length > 1)
+  const invalidNames = state.roster
+    .filter(player => !canUseLocationPair(assignedLocationKeys(player.participant_id)))
     .map(item => item.nickname);
-  if (duplicateNames.length) warnings.push(`Повторные назначения: ${duplicateNames.join(", ")}`);
+  if (invalidNames.length) warnings.push(`Недопустимые повторные назначения: ${invalidNames.join(", ")}`);
   const box = byId("reservoirWarnings");
   if (!box) return;
   box.hidden = warnings.length === 0;
@@ -251,24 +266,46 @@ function renderAll() {
   renderPublished();
 }
 
-function movePlayer(locationKey, participantId) {
-  if (!playerById(participantId)) return;
-  const currentLocation = assignedLocationKey(participantId);
-  if (currentLocation === locationKey) return;
+function placePlayer(locationKey, participantId, sourceLocation = null) {
+  if (!playerById(participantId)) return false;
+  const currentKeys = assignedLocationKeys(participantId);
+  if (currentKeys.includes(locationKey) && sourceLocation !== locationKey) {
+    showMessage("Игрок уже назначен на эту локацию.", "warning");
+    return false;
+  }
 
-  LOCATIONS.forEach(location => {
-    const filtered = locationAssignments(location.key).filter(id => id !== participantId);
-    state.assignments.set(location.key, filtered);
-  });
+  const nextKeys = sourceLocation
+    ? [...new Set(currentKeys.filter(key => key !== sourceLocation).concat(locationKey))]
+    : [...new Set(currentKeys.concat(locationKey))];
 
-  state.assignments.set(locationKey, [...locationAssignments(locationKey), participantId]);
+  if (!canUseLocationPair(nextKeys)) {
+    const message = currentKeys.length >= 2
+      ? "Игрока можно назначить максимум на две локации."
+      : "Повторное назначение разрешено только через Центральный резервуар, Комплекс разработки или Военный завод.";
+    showMessage(message, "warning");
+    return false;
+  }
+
+  if (sourceLocation) {
+    state.assignments.set(sourceLocation, locationAssignments(sourceLocation).filter(id => id !== participantId));
+  }
+  if (!locationAssignments(locationKey).includes(participantId)) {
+    state.assignments.set(locationKey, [...locationAssignments(locationKey), participantId]);
+  }
+
   const popover = byId("reservoirLocationPopover");
   if (popover) popover.hidden = true;
+  showMessage("", "info");
   renderAll();
+  return true;
+}
+
+function movePlayer(locationKey, participantId) {
+  return placePlayer(locationKey, participantId);
 }
 
 function addPlayer(locationKey, participantId) {
-  movePlayer(locationKey, participantId);
+  return placePlayer(locationKey, participantId);
 }
 
 function removePlayer(locationKey, participantId) {
@@ -290,8 +327,11 @@ function renderPicker() {
   const players = state.roster
     .filter(item => item.assignment === state.pickerTab)
     .filter(item => !search || item.nickname.toLowerCase().includes(search))
-    .sort((left, right) => Number(isAssignedAnywhere(left.participant_id)) - Number(isAssignedAnywhere(right.participant_id)));
-  byId("reservoirPickerList").innerHTML = players.map(item => `<button type="button" data-picker-player="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}${item.assignment === "reserve" ? " · резерв" : ""}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${isAssignedAnywhere(item.participant_id) ? "<small>Уже назначен</small>" : ""}</button>`).join("");
+    .sort((left, right) => assignmentCount(left.participant_id) - assignmentCount(right.participant_id));
+  byId("reservoirPickerList").innerHTML = players.map(item => {
+    const count = assignmentCount(item.participant_id);
+    return `<button type="button" data-picker-player="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}${item.assignment === "reserve" ? " · резерв" : ""}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${count === 1 ? "<small>Уже назначен один раз</small>" : count === 2 ? "<small>Назначен дважды</small>" : ""}</button>`;
+  }).join("");
 }
 
 function collectNotes() {
@@ -388,8 +428,7 @@ function bind() {
   byId("reservoirPickerList")?.addEventListener("click", event => {
     const player = event.target.closest("[data-picker-player]");
     if (!player) return;
-    addPlayer(state.pickerLocation, player.dataset.pickerPlayer);
-    byId("reservoirPlayerPicker").hidden = true;
+    if (addPlayer(state.pickerLocation, player.dataset.pickerPlayer)) byId("reservoirPlayerPicker").hidden = true;
   });
   byId("reservoirPickerClose")?.addEventListener("click", () => { byId("reservoirPlayerPicker").hidden = true; });
   byId("reservoirMapFullscreenOpen")?.addEventListener("click", () => setMapFullscreen(true));
