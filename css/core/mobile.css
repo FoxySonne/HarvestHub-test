@@ -1,22 +1,17 @@
 /* ==========================================================
-MOBILE: до 899px
+MOBILE SHELL: до 1099px
+Только оболочка мобильной версии. Общие кнопки, формы, сетки и
+панели действий регулируются responsive-foundation.css.
 ========================================================== */
 
-@media (max-width: 899px) {
-
+@media (max-width: 1099px) {
   html,
   body {
     max-width: 100%;
-    overflow-x: hidden;
     overscroll-behavior-x: none;
   }
 
-  body {
-    font-size: clamp(15px, 4vw, 18px);
-  }
-
   .container {
-    display: block;
     width: 100%;
     min-height: 100vh;
   }
@@ -41,21 +36,26 @@ MOBILE: до 899px
     width: 28px !important;
     height: 28px !important;
     min-width: 28px !important;
+    padding: 0 !important;
     font-size: 22px !important;
     line-height: 1 !important;
   }
 
   .topbar-title {
+    min-width: 0;
     font-size: 18px !important;
     line-height: 1 !important;
+  }
+
+  .topbar-profile-group {
+    min-width: 0;
+    margin-left: auto;
   }
 
   .main {
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    overflow-x: hidden;
-    padding: 0 16px 16px;
   }
 
   .left {
@@ -63,8 +63,9 @@ MOBILE: до 899px
     flex-direction: column;
     position: fixed;
     top: 0;
-    left: -260px;
-    width: 240px;
+    left: -280px;
+    width: 260px;
+    max-width: calc(100vw - 48px);
     height: 100vh;
     height: 100dvh;
   }
@@ -81,69 +82,12 @@ MOBILE: до 899px
   }
 
   .right {
-    padding: 0 16px 16px;
-  }
-
-  #rightbar-container {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 16px;
-    align-items: stretch;
+    min-width: 0;
   }
 
   #rightbar-container .box {
     min-width: 0;
     height: 100%;
-  }
-
-  .page-section,
-  .card,
-  .box,
-  .card-header,
-  form,
-  fieldset,
-  label,
-  .alliance-actions,
-  .button-group,
-  .calculator-data-actions,
-  [class*="-grid"],
-  [class*="-row"],
-  [class*="-controls"],
-  [class*="-actions"] {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .card-header,
-  .alliance-actions,
-  .calculator-data-actions,
-  [class*="-actions"],
-  [class*="-controls"] {
-    flex-wrap: wrap;
-  }
-
-  .button,
-  button,
-  input[type=submit],
-  input[type=button] {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    height: auto;
-    min-height: 44px;
-    padding: 10px 16px;
-    white-space: normal;
-    overflow-wrap: normal;
-    word-break: normal;
-    line-height: 1.25;
-    font-size: clamp(13px, 3.7vw, 17px);
-  }
-
-  .alliance-actions > *,
-  .calculator-data-actions > *,
-  [class*="-actions"] > button,
-  [class*="-controls"] > button {
-    flex: 1 1 170px;
   }
 
   input,
@@ -168,7 +112,7 @@ MOBILE: до 899px
   button,
   a {
     word-break: normal;
-    overflow-wrap: normal;
+    overflow-wrap: break-word;
     hyphens: none;
   }
 
@@ -213,10 +157,10 @@ MOBILE: до 899px
 
 @media (max-width: 420px) {
   .topbar {
+    width: calc(100% - 24px) !important;
     height: 40px !important;
     margin-bottom: 12px !important;
-    padding-top: 3px !important;
-    padding-bottom: 3px !important;
+    padding: 3px 12px !important;
   }
 
   .menu-button {
@@ -234,10 +178,6 @@ MOBILE: до 899px
     gap: 12px;
   }
 
-  #rightbar-container .box {
-    padding: 14px;
-  }
-
   #rightbar-container .box h4 {
     font-size: 14px;
   }
@@ -246,16 +186,5 @@ MOBILE: до 899px
   #rightbar-container .quick-link-item span,
   #rightbar-container .quick-links-empty {
     font-size: 13px;
-  }
-
-  .main,
-  .right {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .card,
-  .box {
-    padding: 16px;
   }
 }
