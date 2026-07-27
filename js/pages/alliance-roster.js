@@ -1,6 +1,12 @@
-import { findDepartedParticipant, markParticipantLeft, restoreParticipant, saveParticipant } from "../alliance/api.js?v=20260723-1";
+import {
+  findDepartedParticipant,
+  markParticipantLeft,
+  restoreParticipant,
+  saveParticipant,
+  setParticipantJoinedOn
+} from "../alliance/api.js?v=20260728-membership-periods-1";
 import { fetchAllianceSquadPower, saveAllianceSquadPower } from "../alliance/power-api.js?v=20260723-roster-power-1";
-import { renderParticipantRows } from "../alliance/view.js?v=20260722-1";
+import { renderParticipantRows } from "../alliance/view.js?v=20260728-membership-periods-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, getActiveAllianceId } from "../alliance/page-context.js?v=20260725-guest-access-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
@@ -99,6 +105,8 @@ function resetForm() {
   byId("participantId").value = "";
   byId("participantStatus").value = "main";
   byId("participantTimezone").value = "0";
+  byId("participantJoinedOn").value = localDateValue();
+  byId("participantJoinedOn").max = localDateValue();
   byId("participantSquad1").value = "";
   fillPrimaryAccountOptions();
   syncTwinFields();
@@ -111,6 +119,8 @@ function fillForm(participant) {
   byId("participantId").value = participant.id;
   byId("participantNickname").value = participant.nickname || "";
   byId("participantRank").value = participant.rank_name || "";
+  byId("participantJoinedOn").value = participant.joined_on || localDateValue();
+  byId("participantJoinedOn").max = localDateValue();
   byId("participantTimezone").value = participant.timezone_offset ?? 0;
   byId("participantBirthday").value = formatStoredBirthday(participant.birthday);
   byId("participantSquad1").value = inputPower(state.powerByParticipant.get(participant.id));
@@ -126,7 +136,7 @@ function fillForm(participant) {
 }
 
 async function reload() {
-  state.context = await loadAlliancePageContext(state.client);
+  state.context = await loadAlliancePageContext(state.client, { force: true });
   state.powerByParticipant.clear();
   if (!state.context.isGuest) {
     const powerResult = await fetchAllianceSquadPower(state.client, getActiveAllianceId());
@@ -150,10 +160,21 @@ async function saveOptionalPower(participantId, value) {
   });
 }
 
+async function saveJoinedOn(participantId, joinedOn, allianceId) {
+  const result = await setParticipantJoinedOn(state.client, {
+    id: participantId,
+    allianceId,
+    joinedOn
+  });
+  return result;
+}
+
 async function submitParticipant(event) {
   event.preventDefault();
   const birthday = toStoredBirthday(byId("participantBirthday").value);
   if (birthday === undefined) return showMessage("Укажи день рождения в формате ДД.ММ.", "error");
+  const joinedOn = byId("participantJoinedOn").value;
+  if (!joinedOn || joinedOn > localDateValue()) return showMessage("Укажи корректную дату вступления в союз.", "error");
   const squad1 = parsePower(byId("participantSquad1").value);
   if (squad1 === undefined) return showMessage("Укажи силу 1-го отряда в миллионах, например 87,72.", "error");
   const isTwin = byId("participantIsTwin").checked;
@@ -174,6 +195,8 @@ async function submitParticipant(event) {
       if (!shouldRestore) { button.disabled = false; return showMessage("Восстановление отменено. Новый участник не добавлен."); }
       const restoreResult = await restoreParticipant(state.client, { id: departed.id, allianceId });
       if (restoreResult.error) { button.disabled = false; return showMessage(restoreResult.error.message, "error"); }
+      const joinedResult = await saveJoinedOn(departed.id, joinedOn, allianceId);
+      if (joinedResult.error) { button.disabled = false; return showMessage(`Участник восстановлен, но дата вступления не сохранилась: ${joinedResult.error.message}`, "error"); }
       if (squad1 !== null) {
         const powerResult = await saveOptionalPower(departed.id, squad1);
         if (powerResult?.error) { button.disabled = false; return showMessage(powerResult.error.message, "error"); }
@@ -181,7 +204,7 @@ async function submitParticipant(event) {
       button.disabled = false;
       resetForm();
       await reload();
-      return showMessage(`Участник «${departed.nickname}» восстановлен со старыми данными.`, "success");
+      return showMessage(`Участник «${departed.nickname}» восстановлен. Новый период начинается ${joinedOn}.`, "success");
     }
   }
 
@@ -202,12 +225,15 @@ async function submitParticipant(event) {
   });
   if (saveResult.error) { button.disabled = false; return showMessage(saveResult.error.message, "error"); }
 
-  await reload();
-  const savedParticipant = participantId
-    ? state.context.participants.find(item => item.id === participantId)
-    : state.context.participants.find(item => item.member_status !== "left" && item.nickname.toLowerCase() === nickname.toLowerCase());
-  if (squad1 !== null && savedParticipant?.id) {
-    const powerResult = await saveOptionalPower(savedParticipant.id, squad1);
+  const savedParticipantId = saveResult.data || participantId;
+  const joinedResult = await saveJoinedOn(savedParticipantId, joinedOn, allianceId);
+  if (joinedResult.error) {
+    button.disabled = false;
+    return showMessage(`Участник сохранён, но дата вступления не записалась: ${joinedResult.error.message}`, "error");
+  }
+
+  if (squad1 !== null) {
+    const powerResult = await saveOptionalPower(savedParticipantId, squad1);
     if (powerResult?.error) { button.disabled = false; return showMessage(`Участник сохранён, но сила отряда не записалась: ${powerResult.error.message}`, "error"); }
   }
 
@@ -227,7 +253,7 @@ async function tableClick(event) {
   const { error } = await markParticipantLeft(state.client, { id: participant.id, allianceId: getActiveAllianceId() });
   if (error) return showMessage(error.message, "error");
   await reload();
-  showMessage("Участник отмечен как вышедший.", "success");
+  showMessage("Участник отмечен как вышедший. Текущий период членства закрыт.", "success");
 }
 
 function toggleFullscreen(open) {
@@ -236,6 +262,8 @@ function toggleFullscreen(open) {
 
 export async function init() {
   state.client = window.harvestHubSupabase;
+  byId("participantJoinedOn").max = localDateValue();
+  byId("participantJoinedOn").value = localDateValue();
   try { await reload(); } catch (error) { showMessage(error.message, "error"); return; }
   byId("participantForm")?.addEventListener("submit", submitParticipant);
   byId("participantCancelButton")?.addEventListener("click", resetForm);

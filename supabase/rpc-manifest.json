@@ -50,6 +50,7 @@
   "save_user_app_state_if_revision",
   "set_advanced_mode_access",
   "set_alliance_member_role",
+  "set_alliance_participant_joined_on",
   "set_alliance_power_season_start",
   "set_alliance_vs_daily_target",
   "set_alliance_vs_saturday_total",

@@ -1,0 +1,20 @@
+.alliance-roster-table th:nth-child(3),
+.alliance-roster-table td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.vs-cell-not-member {
+  color: var(--text-soft);
+  background: color-mix(in srgb, var(--text-soft) 6%, transparent);
+  box-shadow: none;
+}
+
+.vs-cell-not-member input:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.vs-status-partial {
+  color: var(--text-soft);
+  background: color-mix(in srgb, var(--text-soft) 14%, transparent);
+}

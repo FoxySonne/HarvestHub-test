@@ -3,7 +3,7 @@ import {
   loadAlliancePageContext,
   fillAllianceCompactHeader,
   getActiveAllianceId
-} from "../alliance/page-context.js?v=20260718-1";
+} from "../alliance/page-context.js?v=20260728-membership-periods-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
@@ -122,8 +122,21 @@ function resultMap() {
   ]));
 }
 
-function weekMetrics(participantId, start, map) {
+function membershipPeriods(participant) {
+  return Array.isArray(participant?.membership_periods) ? participant.membership_periods : [];
+}
+
+function isMemberOn(participant, date) {
+  return membershipPeriods(participant).some(period => {
+    const joined = String(period?.joined_on || "");
+    const left = String(period?.left_on || "");
+    return joined && date >= joined && (!left || date < left);
+  });
+}
+
+function weekMetrics(participant, start, map) {
   const target = Number(state.data?.daily_target) || 5000000;
+  const includeSaturday = state.data?.include_saturday_in_total !== false;
   const today = dateValue(new Date());
   const currentWeek = weekStart();
   const pastWeek = start < currentWeek;
@@ -134,11 +147,14 @@ function weekMetrics(participantId, start, map) {
 
   const days = DAYS.map((label, index) => {
     const date = addDays(start, index);
-    const future = start === currentWeek && date > today;
-    const entry = map.get(`${participantId}:${date}`);
+    const future = date > today;
+    const included = includeSaturday || index < 5;
+    const member = isMemberOn(participant, date);
+    const entry = map.get(`${participant.participant_id}:${date}`);
     const points = Number(entry?.points) || 0;
+    const countable = !future && included && member;
 
-    if (!future) {
+    if (countable) {
       counted += 1;
       total += points;
       if (entry?.is_vacation) vacation += 1;
@@ -149,10 +165,13 @@ function weekMetrics(participantId, start, map) {
       label,
       date,
       future,
+      included,
+      member,
+      countable,
       entry,
       points,
-      met: !future && !entry?.is_vacation && points >= target,
-      failed: !future && !entry?.is_vacation && points < target
+      met: countable && !entry?.is_vacation && points >= target,
+      failed: countable && !entry?.is_vacation && points < target
     };
   });
 
@@ -161,11 +180,16 @@ function weekMetrics(participantId, start, map) {
   const allDone = required > 0
     ? completed === required
     : counted > 0 && vacation === counted;
+  const calendarDays = days.filter(day => !day.future && day.included);
+  const summaryEligible = calendarDays.length > 0 && calendarDays.every(day => day.member);
 
-  let status = "fail";
-  if (pastWeek && vacation >= 3) status = "vacation";
-  else if (allDone) status = "complete";
-  else if (pastWeek && missed === 1) status = "warning";
+  let status = "partial";
+  if (summaryEligible) {
+    status = "fail";
+    if (pastWeek && vacation >= 3) status = "vacation";
+    else if (allDone) status = "complete";
+    else if (pastWeek && missed === 1) status = "warning";
+  }
 
   return {
     total,
@@ -175,6 +199,7 @@ function weekMetrics(participantId, start, map) {
     required,
     missed,
     allDone,
+    summaryEligible,
     status,
     days
   };
@@ -182,22 +207,35 @@ function weekMetrics(participantId, start, map) {
 
 function buildRows(weeks) {
   const map = resultMap();
-  return state.context.participants
-    .filter(item => item.member_status !== "left")
+  const participants = Array.isArray(state.data?.participants) ? state.data.participants : [];
+
+  return participants
     .map(participant => {
-      const metrics = weeks.map(week => weekMetrics(participant.id, week, map));
+      const metrics = weeks.map(week => weekMetrics(participant, week, map));
+      const eligibleMetrics = metrics.filter(item => item.summaryEligible);
+      const hasMembership = metrics.some(item => item.days.some(day => day.member));
       return {
-        ...participant,
+        id: participant.participant_id,
+        participant_id: participant.participant_id,
+        nickname: participant.nickname,
+        rank_name: participant.rank_name,
+        historical_only: participant.historical_only,
+        membership_periods: participant.membership_periods,
         metrics,
+        hasMembership,
+        hasEligibleWeeks: eligibleMetrics.length > 0,
+        summaryEligible: metrics.length > 0 && metrics.every(item => item.summaryEligible),
         total: metrics.reduce((sum, item) => sum + item.total, 0),
         completed: metrics.reduce((sum, item) => sum + item.completed, 0),
-        complete: metrics.every(item => item.status === "complete"),
-        fullWeeks: metrics.filter(item => item.status === "complete").length,
-        partialWeeks: metrics.filter(item => item.status === "warning").length,
-        failedWeeks: metrics.filter(item => item.status === "fail").length,
-        vacationWeeks: metrics.filter(item => item.status === "vacation").length
+        complete: eligibleMetrics.length > 0 && eligibleMetrics.every(item => item.status === "complete"),
+        eligibleWeeks: eligibleMetrics.length,
+        fullWeeks: eligibleMetrics.filter(item => item.status === "complete").length,
+        partialWeeks: eligibleMetrics.filter(item => item.status === "warning").length,
+        failedWeeks: eligibleMetrics.filter(item => item.status === "fail").length,
+        vacationWeeks: eligibleMetrics.filter(item => item.status === "vacation").length
       };
-    });
+    })
+    .filter(row => row.hasMembership);
 }
 
 function filteredRows(rows) {
@@ -209,7 +247,11 @@ function filteredRows(rows) {
   const filtered = rows
     .filter(row => !search || row.nickname.toLowerCase().includes(search))
     .filter(row => !rank || row.rank_name === rank)
-    .filter(row => !completion || (completion === "complete" ? row.complete : !row.complete));
+    .filter(row => {
+      if (!completion) return true;
+      if (!row.hasEligibleWeeks) return false;
+      return completion === "complete" ? row.complete : !row.complete;
+    });
 
   filtered.sort((a, b) => {
     if (sort === "nickname") return a.nickname.localeCompare(b.nickname, "ru");
@@ -220,6 +262,9 @@ function filteredRows(rows) {
 }
 
 function statusMark(status) {
+  if (status === "partial") {
+    return '<span class="vs-status vs-status-partial" title="Неполная неделя: игрок состоял в союзе не все учитываемые дни">—</span>';
+  }
   if (status === "vacation") {
     return '<span class="vs-status vs-status-vacation" title="Отпуск три дня и более">О</span>';
   }
@@ -265,10 +310,11 @@ function renderWeek(rows, week) {
     <tr>
       <td>${index + 1}</td>
       <td>${participantCell(row)}</td>
-      ${row.metrics[0].days.map(day => `
-        <td class="${day.failed ? "vs-cell-failed" : day.met ? "vs-cell-met" : ""}">
-          ${day.future ? "" : day.entry?.is_vacation ? "О" : formatScore(day.points)}
-        </td>`).join("")}
+      ${row.metrics[0].days.map(day => {
+        const className = !day.member ? "vs-cell-not-member" : day.failed ? "vs-cell-failed" : day.met ? "vs-cell-met" : "";
+        const value = !day.member ? "—" : day.future ? "" : day.entry?.is_vacation ? "О" : formatScore(day.points);
+        return `<td class="${className}" title="${!day.member ? "В эту дату игрок не состоял в союзе" : ""}">${value}</td>`;
+      }).join("")}
       <td><strong>${formatScore(row.total)}</strong></td>
       <td>${row.metrics[0].completed} из ${row.metrics[0].required}</td>
     </tr>
@@ -288,14 +334,13 @@ function renderCompare(rows, weeks) {
   byId("vsStatsTableBody").innerHTML = rows.map((row, index) => {
     const first = row.metrics[0];
     const second = row.metrics[1];
+    const comparable = first.summaryEligible && second.summaryEligible;
     const difference = second.total - first.total;
     const percentage = first.total > 0
       ? difference / first.total * 100
       : second.total > 0 ? 100 : 0;
     const completedDifference = second.completed - first.completed;
-    const differenceText = difference === 0
-      ? "0"
-      : `${difference > 0 ? "+" : ""}${formatScore(difference)}`;
+    const differenceText = difference === 0 ? "0" : `${difference > 0 ? "+" : ""}${formatScore(difference)}`;
 
     return `
       <tr>
@@ -303,11 +348,11 @@ function renderCompare(rows, weeks) {
         <td>${participantCell(row)}</td>
         <td>${formatScore(first.total)}</td>
         <td>${formatScore(second.total)}</td>
-        <td class="${difference > 0 ? "vs-text-positive" : difference < 0 ? "vs-text-negative" : ""}">${differenceText}</td>
-        <td class="${percentage > 0 ? "vs-text-positive" : percentage < 0 ? "vs-text-negative" : ""}">${percentage > 0 ? "+" : ""}${formatPercent(percentage)}</td>
+        <td class="${comparable && difference > 0 ? "vs-text-positive" : comparable && difference < 0 ? "vs-text-negative" : ""}">${comparable ? differenceText : "—"}</td>
+        <td class="${comparable && percentage > 0 ? "vs-text-positive" : comparable && percentage < 0 ? "vs-text-negative" : ""}">${comparable ? `${percentage > 0 ? "+" : ""}${formatPercent(percentage)}` : "—"}</td>
         <td>${first.completed} из ${first.required}</td>
         <td>${second.completed} из ${second.required}</td>
-        <td>${completedDifference > 0 ? "+" : ""}${completedDifference}</td>
+        <td>${comparable ? `${completedDifference > 0 ? "+" : ""}${completedDifference}` : "—"}</td>
       </tr>`;
   }).join("");
 }
@@ -318,16 +363,16 @@ function renderPeriod(rows, weeks) {
     <tr>
       <th>Место</th><th>Участник</th>
       ${weeks.map(week => `<th>${weekLabel(week)}</th>`).join("")}
-      <th>Сумма за период</th><th>Недель</th><th>Полностью</th><th>Частично</th><th>Не выполнено</th><th>Отпуск</th>
+      <th>Сумма за период</th><th>Учтено недель</th><th>Полностью</th><th>Частично</th><th>Не выполнено</th><th>Отпуск</th>
     </tr>`;
 
   byId("vsStatsTableBody").innerHTML = rows.map((row, index) => `
     <tr>
       <td>${index + 1}</td>
       <td>${participantCell(row)}</td>
-      ${row.metrics.map(item => `<td>${formatScore(item.total)}</td>`).join("")}
+      ${row.metrics.map(item => `<td title="${item.summaryEligible ? "" : "Неполная неделя не участвует в итоговой оценке"}">${formatScore(item.total)}</td>`).join("")}
       <td><strong>${formatScore(row.total)}</strong></td>
-      <td>${weeks.length}</td>
+      <td>${row.eligibleWeeks}</td>
       <td>${row.fullWeeks}</td>
       <td>${row.partialWeeks}</td>
       <td>${row.failedWeeks}</td>
@@ -344,17 +389,21 @@ function renderSummary(rows, weeks) {
   }
 
   const total = rows.reduce((sum, row) => sum + row.total, 0);
-  const complete = rows.filter(row => row.complete).length;
-  const best = [...rows].sort((a, b) => b.total - a.total)[0];
-  const worst = [...rows].sort((a, b) => a.total - b.total)[0];
+  const eligible = rows.filter(row => row.summaryEligible);
+  const complete = eligible.filter(row => row.complete).length;
+  const incomplete = eligible.length - complete;
+  const percentage = eligible.length ? Math.round(complete / eligible.length * 100) : 0;
+  const ranked = [...eligible].sort((a, b) => b.total - a.total || a.nickname.localeCompare(b.nickname, "ru"));
+  const best = ranked[0];
+  const worst = ranked[ranked.length - 1];
   let extra = "";
 
   if (weeks.length === 1) {
     const availableDays = DAYS.map((_, index) => index)
-      .filter(index => !rows[0].metrics[0].days[index].future);
+      .filter(index => rows.some(row => row.metrics[0].days[index].countable));
     const dayTotals = availableDays.map(index => ({
       index,
-      total: rows.reduce((sum, row) => sum + row.metrics[0].days[index].points, 0)
+      total: rows.reduce((sum, row) => sum + (row.metrics[0].days[index].countable ? row.metrics[0].days[index].points : 0), 0)
     }));
     if (dayTotals.length) {
       const bestDay = [...dayTotals].sort((a, b) => b.total - a.total)[0].index;
@@ -364,23 +413,22 @@ function renderSummary(rows, weeks) {
         <div><span>Самый слабый день</span><strong>${DAYS[worstDay]}</strong></div>`;
     }
   } else {
-    const weekTotals = weeks.map((_, index) => rows.reduce(
-      (sum, row) => sum + row.metrics[index].total,
-      0
-    ));
-    extra = `
-      <div><span>Лучшая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.max(...weekTotals))])}</strong></div>
-      <div><span>Самая слабая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.min(...weekTotals))])}</strong></div>`;
+    const weekTotals = weeks.map((_, index) => rows.reduce((sum, row) => sum + row.metrics[index].total, 0));
+    if (weekTotals.length) {
+      extra = `
+        <div><span>Лучшая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.max(...weekTotals))])}</strong></div>
+        <div><span>Самая слабая неделя</span><strong>${weekLabel(weeks[weekTotals.indexOf(Math.min(...weekTotals))])}</strong></div>`;
+    }
   }
 
   box.hidden = false;
   box.innerHTML = `
     <div><span>Общая сумма союза</span><strong>${formatScore(total)}</strong></div>
-    <div><span>Выполнили всё</span><strong>${complete}</strong></div>
-    <div><span>Выполнили не всё</span><strong>${rows.length - complete}</strong></div>
-    <div><span>Выполнили полностью</span><strong>${Math.round(complete / rows.length * 100)}%</strong></div>
-    <div><span>Лучший участник</span><strong>${escapeHtml(best.nickname)}</strong></div>
-    <div><span>Худший участник</span><strong>${escapeHtml(worst.nickname)}</strong></div>
+    <div title="Игроки с неполным периодом не входят"><span>Выполнили всё</span><strong>${complete}</strong></div>
+    <div title="Игроки с неполным периодом не входят"><span>Выполнили не всё</span><strong>${incomplete}</strong></div>
+    <div title="Процент считается только среди игроков, состоявших в союзе весь выбранный период"><span>Выполнили полностью</span><strong>${percentage}%</strong></div>
+    <div><span>Лучший участник</span><strong>${escapeHtml(best?.nickname || "—")}</strong></div>
+    <div><span>Худший участник</span><strong>${escapeHtml(worst?.nickname || "—")}</strong></div>
     ${extra}`;
 }
 
@@ -408,7 +456,7 @@ async function load() {
     range.to
   );
   if (result.error) throw result.error;
-  state.data = result.data || { results: [], daily_target: 5000000 };
+  state.data = result.data || { results: [], participants: [], daily_target: 5000000 };
   render();
 }
 
@@ -428,7 +476,7 @@ function toggleFullscreen(open) {
 export async function init() {
   state.client = window.harvestHubSupabase;
   try {
-    state.context = await loadAlliancePageContext(state.client);
+    state.context = await loadAlliancePageContext(state.client, { force: true });
   } catch (error) {
     showMessage(error.message, "error");
     return;
