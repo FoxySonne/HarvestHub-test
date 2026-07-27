@@ -37,7 +37,7 @@
 }
 
 .power-table.is-bulk-editing {
-  min-width: 920px;
+  min-width: 980px;
 }
 
 .power-table td:nth-child(2) strong,
@@ -62,6 +62,34 @@
   min-width: 0;
   padding: 7px 10px;
   white-space: nowrap;
+}
+
+.power-missing-toggle {
+  width: 44px;
+  min-width: 44px;
+  padding-inline: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.power-missing-toggle.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.power-table tr.is-power-missing td {
+  background: color-mix(in srgb, var(--panel) 82%, var(--border));
+}
+
+.power-table tr.is-power-missing input:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.power-missing-value {
+  color: var(--text-soft);
+  font-weight: 700;
 }
 
 .power-positive {

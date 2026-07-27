@@ -1,4 +1,4 @@
-import { initPowerSection } from "../alliance/power-section.js?v=20260727-power-inline-bulk-1";
+import { initPowerSection } from "../alliance/power-section.js?v=20260727-power-missing-marker-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance } from "../alliance/page-context.js?v=20260718-1";
 
 function applyOwnPowerMode(participantId) {
