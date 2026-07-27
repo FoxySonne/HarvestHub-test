@@ -1,0 +1,335 @@
+/* ==========================================================
+   RESPONSIVE FOUNDATION
+   Единые правила масштаба, ширины и поведения основных блоков.
+   Подключается последним и постепенно заменяет точечные адаптивные
+   исправления отдельных страниц.
+========================================================== */
+
+:root {
+  --site-max-width: 1920px;
+  --reading-max-width: 1440px;
+  --page-padding: clamp(12px, 1.25vw, 24px);
+  --layout-gap: clamp(12px, 1.25vw, 24px);
+  --card-padding-responsive: clamp(14px, 1vw, 22px);
+  --font-body-responsive: clamp(15px, 0.22vw + 14px, 19px);
+  --font-small-responsive: clamp(12px, 0.14vw + 11px, 15px);
+  --font-title-responsive: clamp(25px, 1vw + 18px, 40px);
+  --control-min-width: 180px;
+}
+
+html,
+body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body {
+  font-size: var(--font-body-responsive);
+}
+
+h1 {
+  font-size: var(--font-title-responsive);
+}
+
+small {
+  font-size: var(--font-small-responsive);
+}
+
+.container {
+  width: min(100%, var(--site-max-width));
+  margin-inline: auto;
+}
+
+.main,
+.right,
+#page-content,
+#main-title-container,
+#rightbar-container,
+.page-section,
+.card,
+.box,
+form,
+fieldset {
+  min-width: 0;
+}
+
+.card,
+.box {
+  padding: var(--card-padding-responsive);
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+.grid,
+.form-grid,
+.cards-grid,
+.dashboard-grid {
+  min-width: 0;
+}
+
+button,
+.button,
+input[type="submit"],
+input[type="button"] {
+  width: auto;
+  max-width: 100%;
+}
+
+.button-block,
+.full-width-button,
+button[data-full-width="true"] {
+  width: 100%;
+}
+
+.button-group,
+.alliance-actions,
+.calculator-data-actions,
+.reservoir-layout-actions,
+.alliance-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.button-group > *,
+.alliance-actions > *,
+.calculator-data-actions > *,
+.reservoir-layout-actions > *,
+.alliance-table-actions > * {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.table-wrap,
+.alliance-table-wrap,
+.power-table-wrap,
+.vs-table-wrap,
+.reservoir-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --page-padding: 12px;
+    --layout-gap: 12px;
+    --card-padding-responsive: 14px;
+  }
+
+  .main,
+  .right {
+    padding-inline: var(--page-padding);
+  }
+
+  #rightbar-container {
+    grid-template-columns: 1fr !important;
+  }
+
+  .button-group,
+  .alliance-actions,
+  .calculator-data-actions,
+  .reservoir-layout-actions,
+  .alliance-table-actions {
+    align-items: stretch;
+  }
+
+  .button-group > *,
+  .alliance-actions > *,
+  .calculator-data-actions > *,
+  .reservoir-layout-actions > *,
+  .alliance-table-actions > * {
+    flex: 1 1 100%;
+  }
+
+  .button-group button,
+  .alliance-actions button,
+  .calculator-data-actions button,
+  .reservoir-layout-actions button,
+  .alliance-table-actions button {
+    width: 100%;
+  }
+
+  .compact-button,
+  .icon-button,
+  .collapsible-card-toggle,
+  .alliance-fullscreen-close,
+  button[aria-label="Закрыть"],
+  button[aria-label="Удалить"] {
+    width: auto !important;
+    min-width: 0;
+    flex: 0 0 auto !important;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 767px) {
+  .main,
+  .right {
+    padding-inline: var(--page-padding);
+  }
+
+  #rightbar-container {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 1099px) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  .topbar {
+    display: flex !important;
+  }
+
+  .container {
+    display: block !important;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0 !important;
+  }
+
+  .main {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 var(--page-padding) var(--page-padding);
+    overflow: visible;
+  }
+
+  .left {
+    display: flex;
+    flex-direction: column;
+    position: fixed !important;
+    top: 0 !important;
+    left: -280px !important;
+    width: 260px !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    transition: left var(--transition);
+  }
+
+  .left.active {
+    left: 0 !important;
+  }
+
+  .right {
+    position: static !important;
+    width: 100%;
+    padding: 0 var(--page-padding) var(--page-padding);
+  }
+
+  #rightbar-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--layout-gap);
+  }
+
+  input,
+  select,
+  textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1100px) and (max-width: 1399px) {
+  :root {
+    --sidebar-width: 210px;
+  }
+
+  .topbar,
+  .overlay {
+    display: none !important;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    gap: var(--layout-gap);
+    padding: var(--page-padding);
+  }
+
+  .left {
+    position: sticky;
+    top: var(--page-padding);
+    height: calc(100vh - (var(--page-padding) * 2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+  }
+
+  .main {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .right {
+    grid-column: 2;
+    grid-row: 2;
+    position: static;
+  }
+
+  #rightbar-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--layout-gap);
+  }
+}
+
+@media (min-width: 1400px) {
+  .topbar,
+  .overlay {
+    display: none !important;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--rightbar-width);
+    gap: var(--layout-gap);
+    padding: var(--page-padding);
+  }
+
+  .left {
+    position: sticky;
+    top: var(--page-padding);
+    height: calc(100vh - (var(--page-padding) * 2));
+  }
+
+  .right {
+    position: sticky;
+    top: var(--page-padding);
+    height: fit-content;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --sidebar-width: 240px;
+    --rightbar-width: 280px;
+  }
+
+  .container {
+    width: min(calc(100% - 32px), var(--site-max-width));
+  }
+
+  .main > #page-content,
+  .main > #main-title-container {
+    width: 100%;
+    max-width: var(--reading-max-width);
+    margin-inline: auto;
+  }
+
+  .main:has(.alliance-table-wrap) > #page-content,
+  .main:has(.reservoir-map-card) > #page-content,
+  .main:has(.power-statistics-card) > #page-content {
+    max-width: none;
+  }
+}

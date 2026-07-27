@@ -5,73 +5,74 @@ BUTTONS
 .button,
 button,
 input[type=submit],
-input[type=button]{
-
-display:inline-flex;
-
-justify-content:center;
-
-align-items:center;
-
-min-width:220px;
-
-height:48px;
-
-padding:0 24px;
-
-background:var(--button);
-
-border:none;
-
-border-radius:var(--radius);
-
-color:white;
-
-font-size:17px;
-
-font-weight:bold;
-
-cursor:pointer;
-
-transition:var(--transition);
-
+input[type=button] {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: var(--control-height);
+  height: auto;
+  padding: 10px clamp(14px, 1vw, 24px);
+  background: var(--button);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: clamp(14px, .15vw + 13px, 17px);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+  cursor: pointer;
+  transition: var(--transition);
 }
 
 .button:hover,
 button:hover,
 input[type=submit]:hover,
-input[type=button]:hover{
-
-background:var(--button-hover);
-
+input[type=button]:hover {
+  background: var(--button-hover);
 }
 
 .button:disabled,
-button:disabled{
-
-opacity:.5;
-
-cursor:not-allowed;
-
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
 
-
-/* ==========================================================
-BUTTON GROUP
-========================================================== */
-
-.button-group{
-
-display:flex;
-
-flex-direction:column;
-
-gap:12px;
-
-margin-top:20px;
-
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
 }
 
+.button-group > * {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.button-block,
+.full-width-button,
+.button-group.is-stacked > * {
+  width: 100%;
+}
+
+.compact-button,
+.icon-button,
+.collapsible-card-toggle,
+.alliance-fullscreen-close {
+  min-height: 36px;
+  padding: 6px 10px;
+}
+
+.icon-button,
+.collapsible-card-toggle,
+.alliance-fullscreen-close {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+}
 
 .danger-button {
   background: #8b3030 !important;
@@ -101,4 +102,14 @@ margin-top:20px;
 
 .calculator-data-actions [data-calculator-reset-status].is-error {
   color: var(--danger-text);
+}
+
+@media (max-width: 479px) {
+  .button,
+  button,
+  input[type=submit],
+  input[type=button] {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
 }
