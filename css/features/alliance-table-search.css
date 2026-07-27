@@ -65,6 +65,55 @@
   font-size: 20px;
 }
 
+.alliance-table-search-results {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  overscroll-behavior: contain;
+}
+
+.alliance-table-search-results[hidden] {
+  display: none !important;
+}
+
+.alliance-table-search-result {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 3px;
+  width: 100% !important;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 9px 11px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 9px !important;
+  background: var(--card) !important;
+  color: var(--text) !important;
+  text-align: left;
+}
+
+.alliance-table-search-result:hover,
+.alliance-table-search-result:focus-visible {
+  border-color: var(--accent) !important;
+  background: color-mix(in srgb, var(--card) 88%, var(--accent)) !important;
+  transform: none !important;
+}
+
+.alliance-table-search-result strong,
+.alliance-table-search-result small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.alliance-table-search-result small {
+  color: var(--text-soft);
+  font-size: 11px;
+}
+
 .alliance-table-search [data-alliance-search-status] {
   grid-column: 1 / -1;
   min-height: 18px;
@@ -160,6 +209,10 @@
 
   .alliance-table-search button[type="submit"] {
     width: 100%;
+  }
+
+  .alliance-table-search-results {
+    grid-template-columns: 1fr;
   }
 
   .alliance-floating-search {
