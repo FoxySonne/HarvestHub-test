@@ -11,7 +11,7 @@ import {
   fillAllianceCompactHeader,
   canEditAlliance,
   getActiveAllianceId
-} from "../alliance/page-context.js?v=20260726-role-batch-1";
+} from "../alliance/page-context.js?v=20260728-membership-periods-1";
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
@@ -90,7 +90,19 @@ function inputScore(entry) {
   return entry.points ? formatScore(entry.points) : "0";
 }
 
-function participantMetrics(participantId, map) {
+function membershipPeriods(participant) {
+  return Array.isArray(participant?.membership_periods) ? participant.membership_periods : [];
+}
+
+function isMemberOn(participant, date) {
+  return membershipPeriods(participant).some(period => {
+    const joined = String(period?.joined_on || "");
+    const left = String(period?.left_on || "");
+    return joined && date >= joined && (!left || date < left);
+  });
+}
+
+function participantMetrics(participant, map) {
   const currentUtcDate = utcDateValue();
   const target = Number(state.data?.daily_target) || 5000000;
   const includeSaturday = state.data?.include_saturday_in_total !== false;
@@ -98,34 +110,44 @@ function participantMetrics(participantId, map) {
   let completed = 0;
   let counted = 0;
   let vacation = 0;
+
   const days = DAYS.map((label, index) => {
     const date = addDays(state.weekStart, index);
     const future = date > currentUtcDate;
     const ended = date < currentUtcDate;
     const included = includeSaturday || index < 5;
-    const entry = map.get(`${participantId}:${date}`);
+    const member = isMemberOn(participant, date);
+    const entry = map.get(`${participant.id}:${date}`);
     const points = Number(entry?.points) || 0;
-    if (ended && included) {
+    const countable = ended && included && member;
+
+    if (countable) {
       counted += 1;
       total += points;
       if (entry?.is_vacation) vacation += 1;
       else if (points >= target) completed += 1;
     }
+
     return {
       label,
       date,
       future,
       ended,
       included,
+      member,
+      countable,
       entry,
       points,
-      failed: included && ended && !entry?.is_vacation && points < target,
-      met: included && ended && !entry?.is_vacation && points >= target
+      failed: countable && !entry?.is_vacation && points < target,
+      met: countable && !entry?.is_vacation && points >= target
     };
   });
+
   const required = counted - vacation;
   const allDone = required > 0 ? completed === required : counted > 0 && vacation === counted;
-  return { total, completed, counted, vacation, days, allDone };
+  const requiredCalendarDays = days.filter(day => day.ended && day.included);
+  const summaryEligible = requiredCalendarDays.length > 0 && requiredCalendarDays.every(day => day.member);
+  return { total, completed, counted, vacation, required, days, allDone, summaryEligible };
 }
 
 function sortRows(rows) {
@@ -149,23 +171,30 @@ function renderSummary(rows) {
     summary.innerHTML = "";
     return;
   }
+
   const total = rows.reduce((sum, row) => sum + row.metrics.total, 0);
-  const complete = rows.filter(row => row.metrics.allDone).length;
-  const byTotal = [...rows].sort((a, b) => b.metrics.total - a.metrics.total);
+  const eligible = rows.filter(row => row.metrics.summaryEligible);
+  const complete = eligible.filter(row => row.metrics.allDone).length;
+  const incomplete = eligible.length - complete;
+  const percentage = eligible.length ? Math.round(complete / eligible.length * 100) : 0;
+  const byTotal = [...eligible].sort((a, b) => b.metrics.total - a.metrics.total || a.nickname.localeCompare(b.nickname, "ru"));
+  const best = byTotal[0]?.nickname || "—";
+  const worst = byTotal[byTotal.length - 1]?.nickname || "—";
+
   summary.hidden = false;
   summary.innerHTML = `
     <div><span>Общая сумма союза</span><strong>${formatScore(total)}</strong></div>
-    <div><span>Выполнили все дни</span><strong>${complete}</strong></div>
-    <div><span>Выполнили не все дни</span><strong>${rows.length - complete}</strong></div>
-    <div><span>Выполнили полностью</span><strong>${Math.round(complete / rows.length * 100)}%</strong></div>
-    <div><span>Лучший участник</span><strong>${escapeHtml(byTotal[0].nickname)}</strong></div>
-    <div><span>Худший участник</span><strong>${escapeHtml(byTotal[byTotal.length - 1].nickname)}</strong></div>`;
+    <div title="Считаются только игроки, состоявшие в союзе со старта доступной части недели"><span>Выполнили все дни</span><strong>${complete}</strong></div>
+    <div title="Игроки с неполной первой неделей сюда не входят"><span>Выполнили не все дни</span><strong>${incomplete}</strong></div>
+    <div title="Доля выполнивших среди игроков с полной учитываемой неделей"><span>Выполнили полностью</span><strong>${percentage}%</strong></div>
+    <div title="Неполная первая неделя не участвует в сравнении"><span>Лучший участник</span><strong>${escapeHtml(best)}</strong></div>
+    <div title="Неполная первая неделя не участвует в сравнении"><span>Худший участник</span><strong>${escapeHtml(worst)}</strong></div>`;
 }
 
 function buildRows() {
   const map = new Map((state.data?.results || []).map(item => [`${item.participant_id}:${item.result_date}`, item]));
   const active = state.context.participants.filter(item => item.member_status !== "left");
-  return sortRows(active.map(item => ({ ...item, metrics: participantMetrics(item.id, map) })));
+  return sortRows(active.map(item => ({ ...item, metrics: participantMetrics(item, map) })));
 }
 
 function renderBulk(rows) {
@@ -176,10 +205,27 @@ function renderBulk(rows) {
       <td><strong>${escapeHtml(row.nickname)}</strong><small>${escapeHtml(row.rank_name || "—")}</small></td>
       ${row.metrics.days.map((day, index) => {
         const original = inputScore(day.entry);
-        return `<td><input type="text" inputmode="decimal" data-vs-bulk-day="${index}" data-original="${escapeHtml(original)}" value="${escapeHtml(original)}" ${day.future ? "disabled" : ""} data-no-persist="true"></td>`;
+        const disabled = day.future || !day.member;
+        const title = !day.member ? "На эту дату игрок не состоял в союзе" : "";
+        return `<td class="${!day.member ? "vs-cell-not-member" : ""}"><input type="text" inputmode="decimal" data-vs-bulk-day="${index}" data-original="${escapeHtml(original)}" value="${!day.member ? "" : escapeHtml(original)}" ${disabled ? "disabled" : ""} title="${title}" data-no-persist="true"></td>`;
       }).join("")}
     </tr>`).join("");
   byId("vsBulkWeekLabel").textContent = `Неделя ${weekLabel(state.weekStart)}`;
+}
+
+function activeParticipantsForDate(date) {
+  return state.context.participants
+    .filter(item => item.member_status !== "left")
+    .filter(item => isMemberOn(item, date));
+}
+
+function syncParticipantOptionsForDate(date) {
+  const participantSelect = byId("vsParticipant");
+  if (!participantSelect) return;
+  const selectedParticipant = participantSelect.value;
+  const participants = activeParticipantsForDate(date);
+  participantSelect.innerHTML = participants.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`).join("");
+  if ([...participantSelect.options].some(option => option.value === selectedParticipant)) participantSelect.value = selectedParticipant;
 }
 
 function render() {
@@ -191,11 +237,7 @@ function render() {
   byId("vsDailyTarget").value = formatScore(state.data?.daily_target || 5000000);
   byId("vsIncludeSaturdayTotal").checked = state.data?.include_saturday_in_total !== false;
 
-  const activeParticipants = state.context.participants.filter(item => item.member_status !== "left");
-  const participantSelect = byId("vsParticipant");
-  const selectedParticipant = participantSelect.value;
-  participantSelect.innerHTML = activeParticipants.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nickname)}</option>`).join("");
-  if ([...participantSelect.options].some(option => option.value === selectedParticipant)) participantSelect.value = selectedParticipant;
+  syncParticipantOptionsForDate(byId("vsResultDate")?.value || state.weekStart);
 
   const rows = buildRows();
   byId("vsTableHead").innerHTML = `<tr><th>Место</th><th>Участник</th>${DAYS.map(day => `<th>${day}</th>`).join("")}<th>Общая сумма</th><th>Выполнено дней</th><th></th></tr>`;
@@ -203,9 +245,14 @@ function render() {
     <tr>
       <td>${index + 1}</td>
       <td><strong>${escapeHtml(row.nickname)}</strong><small>${escapeHtml(row.rank_name || "—")}</small></td>
-      ${row.metrics.days.map(day => `<td class="${day.failed ? "vs-cell-failed" : day.met ? "vs-cell-met" : ""}">${day.future ? "" : day.entry?.is_vacation ? "О" : formatScore(day.points)}</td>`).join("")}
+      ${row.metrics.days.map(day => {
+        const className = !day.member ? "vs-cell-not-member" : day.failed ? "vs-cell-failed" : day.met ? "vs-cell-met" : "";
+        const value = !day.member ? "—" : day.future ? "" : day.entry?.is_vacation ? "О" : formatScore(day.points);
+        const title = !day.member ? "В эту дату игрок ещё не состоял в союзе" : "";
+        return `<td class="${className}" title="${title}">${value}</td>`;
+      }).join("")}
       <td><strong>${formatScore(row.metrics.total)}</strong></td>
-      <td>${row.metrics.completed} из ${row.metrics.counted - row.metrics.vacation}</td>
+      <td title="Учитываются только дни нахождения в союзе">${row.metrics.completed} из ${row.metrics.required}</td>
       <td><button type="button" class="secondary-button vs-row-edit" data-vs-edit="${escapeHtml(row.id)}">Изменить</button></td>
     </tr>`).join("");
   byId("vsCount").textContent = `${rows.length} участников`;
@@ -215,7 +262,9 @@ function render() {
 }
 
 function syncDateFromDay() {
-  byId("vsResultDate").value = addDays(state.weekStart, Number(byId("vsDay").value));
+  const date = addDays(state.weekStart, Number(byId("vsDay").value));
+  byId("vsResultDate").value = date;
+  syncParticipantOptionsForDate(date);
   state.editing = null;
   byId("vsDeleteResult").hidden = true;
 }
@@ -226,6 +275,7 @@ function syncDayFromDate() {
   const day = (parseDate(value).getDay() || 7) - 1;
   if (day > 5) return showMessage("Для VS можно выбрать дату с понедельника по субботу.", "error");
   byId("vsDay").value = String(day);
+  syncParticipantOptionsForDate(value);
   state.editing = null;
   byId("vsDeleteResult").hidden = true;
   const nextWeekStart = getWeekStart(value);
@@ -248,8 +298,19 @@ async function reload() {
 }
 
 function editParticipant(participantId) {
+  const participantItem = state.context?.participants?.find(item => item.id === participantId);
+  if (!participantItem) return;
+  let resultDate = byId("vsResultDate").value || addDays(state.weekStart, Number(byId("vsDay").value));
+  if (!isMemberOn(participantItem, resultDate)) {
+    const available = DAYS.map((_, index) => addDays(state.weekStart, index))
+      .find(date => date <= utcDateValue() && isMemberOn(participantItem, date));
+    if (!available) return showMessage("На этой неделе игрок ещё не состоял в союзе.", "info");
+    resultDate = available;
+    byId("vsResultDate").value = resultDate;
+    byId("vsDay").value = String((parseDate(resultDate).getDay() || 7) - 1);
+    syncParticipantOptionsForDate(resultDate);
+  }
   byId("vsParticipant").value = participantId;
-  const resultDate = byId("vsResultDate").value || addDays(state.weekStart, Number(byId("vsDay").value));
   const entry = state.data?.results?.find(item => item.participant_id === participantId && item.result_date === resultDate) || null;
   state.editing = entry ? { participantId, resultDate } : null;
   byId("vsPoints").value = entry?.points ? formatScore(entry.points) : "";
@@ -278,6 +339,9 @@ async function saveResult(event) {
   const weekday = (parseDate(resultDate).getDay() || 7) - 1;
   if (weekday > 5) return showMessage("Для VS можно выбрать дату с понедельника по субботу.", "error");
   if (resultDate > utcDateValue()) return showMessage("Будущую дату пока нельзя сохранить.", "error");
+  const participantId = byId("vsParticipant").value;
+  const participantItem = state.context?.participants?.find(item => item.id === participantId);
+  if (!participantItem || !isMemberOn(participantItem, resultDate)) return showMessage("На выбранную дату игрок не состоял в союзе.", "error");
   const vacation = byId("vsVacation").checked;
   const points = vacation ? null : parseScore(byId("vsPoints").value);
   if (!vacation && points === null) return showMessage("Проверь формат очков.", "error");
@@ -285,7 +349,7 @@ async function saveResult(event) {
   if (button) button.disabled = true;
   try {
     const { error } = await saveAllianceVsResult(state.client, getActiveAllianceId(), {
-      participantId: byId("vsParticipant").value,
+      participantId,
       resultDate,
       points,
       isVacation: vacation
@@ -309,12 +373,7 @@ async function deleteCurrentResult(event) {
   const button = event.currentTarget;
   button.disabled = true;
   try {
-    const { error } = await deleteAllianceVsResult(
-      state.client,
-      getActiveAllianceId(),
-      state.editing.participantId,
-      state.editing.resultDate
-    );
+    const { error } = await deleteAllianceVsResult(state.client, getActiveAllianceId(), state.editing.participantId, state.editing.resultDate);
     if (error) throw error;
     resetEditor();
     await reload();
@@ -339,15 +398,7 @@ async function saveBulk() {
       if (raw === original) continue;
       const resultDate = addDays(state.weekStart, Number(input.dataset.vsBulkDay));
       if (!raw) {
-        if (original) {
-          changes.push({
-            participant_id: row.dataset.vsBulkParticipant,
-            result_date: resultDate,
-            points: null,
-            is_vacation: false,
-            delete_result: true
-          });
-        }
+        if (original) changes.push({ participant_id: row.dataset.vsBulkParticipant, result_date: resultDate, points: null, is_vacation: false, delete_result: true });
         continue;
       }
       const vacation = raw.toUpperCase() === "О";
@@ -356,13 +407,7 @@ async function saveBulk() {
         input.focus();
         return showMessage("Проверь значение в общей таблице. Число без буквы считается миллионами; также можно использовать K/M/B/T или букву «О».", "error");
       }
-      changes.push({
-        participant_id: row.dataset.vsBulkParticipant,
-        result_date: resultDate,
-        points,
-        is_vacation: vacation,
-        delete_result: false
-      });
+      changes.push({ participant_id: row.dataset.vsBulkParticipant, result_date: resultDate, points, is_vacation: vacation, delete_result: false });
     }
   }
 
