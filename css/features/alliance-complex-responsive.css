@@ -1,0 +1,204 @@
+/* ==========================================================
+   COMPLEX ALLIANCE PAGES RESPONSIVE
+   Таблицы, фильтры и рабочие области союзного штаба.
+========================================================== */
+
+/* Все сложные страницы обязаны сжимать оболочку, а широкое содержимое
+   прокручивать только внутри специально предназначенной области. */
+.alliance-page,
+.alliance-page .card,
+.alliance-table-wrap,
+.power-table-wrap,
+.vs-table-wrap,
+.reservoir-table-wrap,
+.alliance-controls,
+.power-controls-row,
+.vs-controls,
+.reservoir-controls {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.alliance-table-wrap,
+.power-table-wrap,
+.vs-table-wrap,
+.reservoir-table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Не сжимаем сложные таблицы до нечитаемого состояния. */
+.alliance-table,
+.power-table,
+.power-bulk-table,
+.vs-table,
+.reservoir-table {
+  width: max-content;
+  min-width: 100%;
+}
+
+/* Панели поиска, сортировки и фильтров используют одну адаптивную сетку. */
+.alliance-table-toolbar,
+.alliance-table-search,
+.power-controls-row,
+.power-tools,
+.vs-toolbar,
+.vs-controls,
+.reservoir-toolbar,
+.reservoir-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  align-items: end;
+  gap: 10px;
+}
+
+.alliance-table-toolbar > *,
+.alliance-table-search > *,
+.power-controls-row > *,
+.power-tools > *,
+.vs-toolbar > *,
+.vs-controls > *,
+.reservoir-toolbar > *,
+.reservoir-controls > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.alliance-table-toolbar input,
+.alliance-table-toolbar select,
+.alliance-table-toolbar button,
+.alliance-table-search input,
+.alliance-table-search select,
+.alliance-table-search button,
+.power-controls-row input,
+.power-controls-row select,
+.power-controls-row button,
+.power-tools input,
+.power-tools select,
+.power-tools button,
+.vs-toolbar input,
+.vs-toolbar select,
+.vs-toolbar button,
+.vs-controls input,
+.vs-controls select,
+.vs-controls button,
+.reservoir-toolbar input,
+.reservoir-toolbar select,
+.reservoir-toolbar button,
+.reservoir-controls input,
+.reservoir-controls select,
+.reservoir-controls button {
+  width: 100%;
+}
+
+/* Сводные карточки не получают слишком много пустого места на больших экранах. */
+.power-summary,
+.vs-summary,
+.reservoir-summary,
+.alliance-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+/* Полноэкранные таблицы используют реальную видимую область браузера. */
+.power-statistics-card.is-expanded,
+.alliance-table-fullscreen,
+.vs-table-fullscreen {
+  inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  max-width: none;
+  max-height: none;
+}
+
+@media (max-width: 1099px) {
+  .alliance-page .card-header,
+  .alliance-page .page-header,
+  .power-view-options,
+  .vs-view-options,
+  .reservoir-view-options {
+    flex-wrap: wrap;
+  }
+
+  .power-form {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  }
+
+  .power-season-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .alliance-table,
+  .power-table,
+  .power-bulk-table,
+  .vs-table,
+  .reservoir-table {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  .alliance-table-toolbar,
+  .alliance-table-search,
+  .power-controls-row,
+  .power-tools,
+  .vs-toolbar,
+  .vs-controls,
+  .reservoir-toolbar,
+  .reservoir-controls,
+  .power-form,
+  .power-season-form {
+    grid-template-columns: 1fr;
+  }
+
+  .power-view-options,
+  .vs-view-options,
+  .reservoir-view-options {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .power-view-options .checkbox,
+  .vs-view-options .checkbox,
+  .reservoir-view-options .checkbox {
+    width: 100%;
+  }
+
+  .alliance-table-wrap,
+  .power-table-wrap,
+  .vs-table-wrap,
+  .reservoir-table-wrap {
+    margin-inline: calc(var(--card-padding-responsive) * -1);
+    padding-inline: var(--card-padding-responsive);
+  }
+
+  .power-statistics-card.is-expanded,
+  .alliance-table-fullscreen,
+  .vs-table-fullscreen {
+    inset: 0;
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 479px) {
+  .alliance-table,
+  .power-table,
+  .power-bulk-table,
+  .vs-table,
+  .reservoir-table {
+    font-size: 13px;
+  }
+
+  .alliance-table th,
+  .alliance-table td,
+  .power-table th,
+  .power-table td,
+  .power-bulk-table th,
+  .power-bulk-table td,
+  .vs-table th,
+  .vs-table td,
+  .reservoir-table th,
+  .reservoir-table td {
+    padding: 8px 10px;
+  }
+}
