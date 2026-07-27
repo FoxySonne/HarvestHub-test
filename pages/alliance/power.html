@@ -19,13 +19,6 @@
       </form>
     </section>
 
-    <section id="powerBulkCard" class="card power-bulk-card" hidden>
-      <div class="card-header"><div><h3>Общий ввод силы отрядов</h3><p>Заполняй таблицу построчно, как в обычной таблице.</p></div></div>
-      <label class="power-bulk-date"><span>Дата замера</span><input id="powerBulkDate" type="date" data-no-persist="true"></label>
-      <div class="alliance-table-wrap" data-horizontal-scroll><table class="alliance-table power-bulk-table"><thead><tr><th>Участник</th><th>1-й отряд</th><th>2-й отряд</th><th>3-й отряд</th><th>4-й отряд</th><th>5-й отряд</th></tr></thead><tbody id="powerBulkBody"></tbody></table></div>
-      <div class="alliance-actions"><button id="powerBulkSave" type="button">Сохранить заполненные строки</button><button id="powerBulkClose" type="button" class="secondary-button">Закрыть</button></div>
-    </section>
-
     <section id="powerSeasonSettings" class="card power-season-card" hidden>
       <div class="card-header"><div><h3>Начало сезона</h3></div></div>
       <form id="powerSeasonForm" class="power-season-form"><label><span>Начало текущего сезона</span><input id="powerSeasonStart" type="date" data-no-persist="true"></label><button type="submit">Сохранить дату</button></form>
@@ -40,8 +33,15 @@
         <button id="powerBulkOpen" type="button" class="secondary-button">Ввести общей таблицей</button>
         <button id="powerExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button>
       </div>
-      <div class="power-view-options" aria-label="Показатели для сравнения"><strong>Показать в таблице:</strong><label class="checkbox"><input type="checkbox" data-power-column="previous" checked><span>С прошлого замера</span></label><label class="checkbox"><input type="checkbox" data-power-column="week" checked><span>За неделю</span></label><label class="checkbox"><input type="checkbox" data-power-column="month" checked><span>За месяц</span></label><label class="checkbox"><input type="checkbox" data-power-column="season" checked><span>За сезон</span></label><label class="checkbox"><input type="checkbox" data-power-column="percent" checked><span>Прирост, %</span></label></div>
-      <div class="alliance-table-wrap power-table-wrap" data-horizontal-scroll><table class="alliance-table power-table"><thead><tr><th>Место</th><th>Участник</th><th>Дата</th><th>БМ 1-го отряда, млн</th><th data-power-col="previous">С прошлого замера</th><th data-power-col="week">За неделю</th><th data-power-col="month">За месяц</th><th data-power-col="season">За сезон</th><th data-power-col="percent">Прирост, %</th><th></th></tr></thead><tbody id="powerTableBody"></tbody></table></div>
+      <div id="powerBulkControls" class="power-bulk-controls" hidden>
+        <label class="power-bulk-date"><span>Дата замера для заполненных строк</span><input id="powerBulkDate" type="date" data-no-persist="true"></label>
+        <div class="power-bulk-actions">
+          <button id="powerBulkSave" type="button">Сохранить заполненные строки</button>
+          <button id="powerBulkClose" type="button" class="secondary-button">Отменить общий ввод</button>
+        </div>
+      </div>
+      <div id="powerViewOptions" class="power-view-options" aria-label="Показатели для сравнения"><strong>Показать в таблице:</strong><label class="checkbox"><input type="checkbox" data-power-column="previous" checked><span>С прошлого замера</span></label><label class="checkbox"><input type="checkbox" data-power-column="week" checked><span>За неделю</span></label><label class="checkbox"><input type="checkbox" data-power-column="month" checked><span>За месяц</span></label><label class="checkbox"><input type="checkbox" data-power-column="season" checked><span>За сезон</span></label><label class="checkbox"><input type="checkbox" data-power-column="percent" checked><span>Прирост, %</span></label></div>
+      <div class="alliance-table-wrap power-table-wrap" data-horizontal-scroll><table id="powerTable" class="alliance-table power-table"><thead id="powerTableHead"></thead><tbody id="powerTableBody"></tbody></table></div>
       <div id="participantPowerSummary" class="power-summary" hidden></div>
       <div id="powerEmptyState" class="alliance-empty-state">Пока нет ни одного замера.</div>
     </section>
