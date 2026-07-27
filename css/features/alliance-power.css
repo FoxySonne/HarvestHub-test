@@ -36,17 +36,24 @@
   min-width: 1280px;
 }
 
+.power-table.is-bulk-editing {
+  min-width: 920px;
+}
+
 .power-table td:nth-child(2) strong,
-.power-table td:nth-child(2) small,
-.power-bulk-table td:first-child strong,
-.power-bulk-table td:first-child small {
+.power-table td:nth-child(2) small {
   display: block;
 }
 
-.power-table td:nth-child(2) small,
-.power-bulk-table td:first-child small {
+.power-table td:nth-child(2) small {
   margin-top: 4px;
   color: var(--text-soft);
+}
+
+.power-table.is-bulk-editing input {
+  width: 110px;
+  min-width: 110px;
+  padding: 8px;
 }
 
 .power-row-edit,
@@ -86,6 +93,37 @@
   width: 100%;
   margin: 0;
   white-space: nowrap;
+}
+
+.power-bulk-controls {
+  display: grid;
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
+  align-items: end;
+  gap: 12px 16px;
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.power-bulk-date {
+  min-width: 0;
+  margin: 0;
+}
+
+.power-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.power-bulk-actions button {
+  width: auto;
+  min-width: 190px;
+  margin: 0;
 }
 
 .power-view-options {
@@ -131,21 +169,6 @@
 .power-table th.is-power-sortable:hover::after,
 .power-table th.is-power-sortable:focus-visible::after {
   opacity: 1;
-}
-
-.power-bulk-date {
-  width: min(300px, 100%);
-  margin-bottom: 14px;
-}
-
-.power-bulk-table {
-  min-width: 920px;
-}
-
-.power-bulk-table input {
-  width: 110px;
-  min-width: 110px;
-  padding: 8px;
 }
 
 .power-summary {
@@ -208,7 +231,8 @@
 
 @media (max-width: 899px) {
   .power-form,
-  .power-season-form {
+  .power-season-form,
+  .power-bulk-controls {
     grid-template-columns: 1fr;
   }
 
@@ -216,10 +240,16 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .power-bulk-actions {
+    justify-content: stretch;
+  }
+
+  .power-bulk-actions button,
   .power-controls-row button,
   .power-form button,
   .power-season-form button {
     width: 100%;
+    min-width: 0;
     margin-left: 0;
   }
 
@@ -232,5 +262,9 @@
 @media (max-width: 520px) {
   .power-tools {
     grid-template-columns: 1fr;
+  }
+
+  .power-bulk-controls {
+    padding: 12px;
   }
 }
