@@ -29,7 +29,15 @@
     });
   }
 
+  function updateHeaders(table, activeIndex, direction) {
+    [...table.querySelectorAll("thead th")].forEach((header, index) => {
+      header.classList.toggle("is-power-sort-active", index === activeIndex);
+      header.dataset.powerSortDirection = index === activeIndex ? direction : "";
+    });
+  }
+
   function applySort(table, index, direction) {
+    if (table.dataset.powerBulkMode === "true") return;
     const body = table.tBodies[0];
     if (!body) return;
     const rows = [...body.rows];
@@ -46,23 +54,32 @@
     updateHeaders(table, index, direction);
   }
 
-  function updateHeaders(table, activeIndex, direction) {
-    [...table.querySelectorAll("thead th")].forEach((header, index) => {
-      header.classList.toggle("is-power-sort-active", index === activeIndex);
-      header.dataset.powerSortDirection = index === activeIndex ? direction : "";
+  function clearBulkHeaderState(table) {
+    table.querySelectorAll("thead th").forEach(header => {
+      header.classList.remove("is-power-sortable", "is-power-sort-active");
+      header.removeAttribute("tabindex");
+      header.removeAttribute("role");
+      header.removeAttribute("aria-label");
+      header.dataset.powerSortDirection = "";
     });
   }
 
-  function setup(table) {
-    if (!table || table.dataset.powerSortReady === "true") return;
-    table.dataset.powerSortReady = "true";
+  function setupHeaders(table) {
+    if (!table) return;
+    if (table.dataset.powerBulkMode === "true") {
+      clearBulkHeaderState(table);
+      return;
+    }
+
     [...table.querySelectorAll("thead th")].forEach((header, index) => {
-      if (!HEADER_SORT_KEYS[index]) return;
+      if (!HEADER_SORT_KEYS[index] || header.dataset.powerSortReady === "true") return;
+      header.dataset.powerSortReady = "true";
       header.classList.add("is-power-sortable");
       header.tabIndex = 0;
       header.setAttribute("role", "button");
       header.setAttribute("aria-label", `Сортировать по столбцу ${header.textContent.trim()}`);
       const run = () => {
+        if (table.dataset.powerBulkMode === "true") return;
         const currentColumn = Number(table.dataset.powerSortColumn);
         const currentDirection = table.dataset.powerSortDirection || "desc";
         const direction = currentColumn === index && currentDirection === "desc" ? "asc" : "desc";
@@ -79,10 +96,10 @@
 
   function setupCurrentPage() {
     const table = document.querySelector(TABLE_SELECTOR);
-    if (table) setup(table);
+    if (table) setupHeaders(table);
   }
 
   document.addEventListener("harvesthub:page-loaded", setupCurrentPage);
-  new MutationObserver(setupCurrentPage).observe(document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(setupCurrentPage).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-power-bulk-mode"] });
   setupCurrentPage();
 })();
