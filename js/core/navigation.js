@@ -1,5 +1,8 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260726-reservoir-double-assignment-1";
+  const SITE_ASSET_VERSION = "20260727-layout-without-vs-1";
+  const DEFAULT_STYLESHEET = "css/style.css?v=20260727-layout-without-vs-1";
+  const VS_STYLESHEET = "css/style-vs-main.css?v=20260727-main-vs-1";
+  const VS_PAGE = "alliance/vs.html";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -46,6 +49,23 @@
   };
 
   let currentLoadedPage = localStorage.getItem("currentPage") || "";
+
+  function setPageStylesheet(pageName) {
+    const link = document.getElementById("siteStylesheet");
+    if (!link) return Promise.resolve();
+    const target = pageName === VS_PAGE ? VS_STYLESHEET : DEFAULT_STYLESHEET;
+    if (link.dataset.stylesheetTarget === target) return Promise.resolve();
+
+    return new Promise(resolve => {
+      const finish = () => {
+        link.dataset.stylesheetTarget = target;
+        resolve();
+      };
+      link.addEventListener("load", finish, { once: true });
+      link.addEventListener("error", finish, { once: true });
+      link.href = target;
+    });
+  }
 
   function readPageVisits() {
     return window.harvestHubStorage.readJsonStorage(QUICK_LINKS_STORAGE_KEY, {});
@@ -179,6 +199,7 @@
     }
     const previousPage = currentLoadedPage;
     localStorage.setItem("currentPage", pageName);
+    await setPageStylesheet(pageName);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
     if (!isLoaded) return;
     currentLoadedPage = pageName;
