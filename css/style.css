@@ -32,7 +32,7 @@
 @import url("features/alliance-reservoir.css?v=20260721-1");
 @import url("features/alliance-reservoir-layout.css?v=20260722-3");
 @import url("features/alliance-reservoir-layout-fixes.css?v=20260723-buildings-6");
-@import url("features/alliance-reservoir-layout-usability.css?v=20260726-layout-drag-1");
+@import url("features/alliance-reservoir-layout-usability.css?v=20260726-reservoir-responsive-1");
 @import url("features/alliance-reservoir-buildings.css?v=20260723-2");
 @import url("features/alliance-reservoir-map-typography.css?v=20260723-2");
 @import url("features/alliance-reservoir-map-zones.css?v=20260723-3");
@@ -42,3 +42,4 @@
 @import url("features/account-mobile.css?v=20260721-light-theme-1");
 @import url("core/responsive-foundation.css?v=20260726-responsive-foundation-2");
 @import url("features/ordinary-pages-responsive.css?v=20260726-responsive-pages-1");
+@import url("features/alliance-complex-responsive.css?v=20260726-alliance-responsive-1");
