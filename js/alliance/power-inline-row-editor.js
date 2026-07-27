@@ -136,6 +136,11 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
       button.textContent = item?.latest_date ? "Изменить" : "Внести";
       button.setAttribute("aria-expanded", String(state.editingId === participantId));
     });
+
+    const bulkOpen = byId("powerBulkOpen");
+    if (bulkOpen && !state.canManage) bulkOpen.hidden = true;
+    const bulkControls = byId("powerBulkControls");
+    if (bulkControls && !state.canManage) bulkControls.hidden = true;
   }
 
   function injectEditor() {
@@ -158,12 +163,19 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     baseRow.after(editorRow);
   }
 
+  function observeTable() {
+    const target = byId("powerTableBody");
+    if (observer && target) observer.observe(target, { childList: true, subtree: true });
+  }
+
   function syncTable() {
     clearTimeout(state.syncTimer);
     state.syncTimer = window.setTimeout(() => {
       if (!byId("alliancePowerSection")) return;
+      observer?.disconnect();
       decorateButtons();
       injectEditor();
+      observeTable();
       window.harvestHubTableScrollbars?.refresh?.();
     }, 0);
   }
@@ -263,6 +275,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     state.saving = true;
     syncTable();
     const scrollTop = window.scrollY;
+    const successText = state.missing ? "Отметка «не сдал» сохранена." : "Замер силы сохранён.";
     const { error } = await saveAllianceSquadPower(window.harvestHubSupabase, activeAllianceId(), {
       participantId: state.editingId,
       measuredOn: state.date,
@@ -277,8 +290,8 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
 
     state.dirty = false;
     state.editingId = "";
-    showMessage(state.missing ? "Отметка «не сдал» сохранена." : "Замер силы сохранён.", "success");
     await window.loadPage?.(PAGE_PATH, { trackVisit: false });
+    showMessage(successText, "success");
     window.requestAnimationFrame(() => window.scrollTo({ top: scrollTop, behavior: "auto" }));
   }
 
@@ -304,11 +317,9 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     }
 
     const bulkOpen = event.target.closest("#powerBulkOpen");
-    if (bulkOpen && state.editingId) {
-      if (!closeEditor()) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
+    if (bulkOpen && state.editingId && !closeEditor()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
     }
   }
 
@@ -355,7 +366,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
   }, { signal });
 
   observer = new MutationObserver(syncTable);
-  observer.observe(byId("powerTableBody") || document.documentElement, { childList: true, subtree: true });
+  observeTable();
 
   const bulkDate = byId("powerBulkDate");
   if (bulkDate) {
