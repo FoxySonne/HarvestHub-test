@@ -1,0 +1,132 @@
+/* ==========================================================
+DESKTOP: 900px+
+========================================================== */
+
+@media (min-width: 900px) {
+
+  .topbar,
+  .overlay {
+    display: none;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--rightbar-width);
+    gap: 24px;
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .left {
+    position: sticky;
+    top: 20px;
+    left: 0;
+    height: calc(100vh - 40px);
+    border-radius: var(--radius-large);
+    border: 1px solid var(--border);
+  }
+
+  .main {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+  }
+
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    min-width: 0;
+  }
+
+  .button-group {
+    flex-direction: row;
+  }
+
+}
+
+/* ==========================================================
+MEDIUM DESKTOP: 900–1199px
+========================================================== */
+
+@media (min-width: 900px) and (max-width: 1199px) {
+
+  :root {
+    --sidebar-width: 210px;
+  }
+
+  .container {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    gap: 18px;
+    padding: 14px;
+  }
+
+  .right {
+    grid-column: 2;
+    grid-row: 2;
+    position: static;
+  }
+
+  #rightbar-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .main {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .page-header .button-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .page-header .button-group .button {
+    width: 100%;
+    min-width: 0;
+  }
+
+}
+
+/* ==========================================================
+DESKTOP: 1200–1599px
+========================================================== */
+
+@media (min-width: 1200px) and (max-width: 1599px) {
+
+  :root {
+    --sidebar-width: 220px;
+    --rightbar-width: 240px;
+  }
+
+  .container {
+    gap: 20px;
+    padding: 16px;
+  }
+
+}
+
+/* ==========================================================
+WIDE DESKTOP: 1600px+
+========================================================== */
+
+@media (min-width: 1600px) {
+
+  :root {
+    --sidebar-width: 240px;
+    --rightbar-width: 280px;
+  }
+
+  .container {
+    gap: 28px;
+    padding: 24px;
+  }
+
+}
