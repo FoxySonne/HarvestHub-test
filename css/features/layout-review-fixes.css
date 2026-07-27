@@ -1,0 +1,435 @@
+/* ==========================================================
+   VISUAL REVIEW FIXES
+   Точечные исправления после проверки адаптивной вёрстки.
+========================================================== */
+
+/* Слова переносятся только целиком, по пробелам. */
+button,
+label,
+h1,
+h2,
+h3,
+h4,
+p,
+span,
+strong,
+small,
+a,
+th,
+td,
+.action-row-with-need > label,
+.turbo-content [data-turbo-panel] {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  hyphens: none !important;
+}
+
+/* При недостатке места правая колонка уходит под основную раньше. */
+@media (min-width: 1100px) and (max-width: 1599px) {
+  .container {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) !important;
+    grid-template-rows: auto auto;
+  }
+
+  .main {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .right {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: static !important;
+    width: 100%;
+  }
+
+  #rightbar-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--layout-gap);
+  }
+}
+
+/* Верхняя полоса прокрутки широких таблиц. */
+.table-scrollbar-top {
+  width: 100%;
+  max-width: 100%;
+  height: 16px;
+  margin: 0 0 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+
+.table-scrollbar-top > div {
+  height: 1px;
+}
+
+/* Таблица прокручивается внутри видимой рабочей области. */
+.power-table-wrap,
+.vs-table-wrap,
+.reservoir-table-wrap {
+  max-height: clamp(360px, calc(100vh - 330px), 680px);
+  overflow: auto !important;
+  overscroll-behavior: contain;
+}
+
+.power-table-wrap thead th,
+.vs-table-wrap thead th,
+.reservoir-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--panel);
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.power-statistics-card.is-expanded .power-table-wrap,
+.vs-statistics-card.is-expanded .vs-table-wrap,
+.is-alliance-table-fullscreen {
+  max-height: none;
+}
+
+/* Общая компактность таблиц: заголовки могут занимать две строки,
+   но слова не разрываются на части. */
+.power-table,
+.vs-table,
+.reservoir-table {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+.power-table th,
+.power-table td,
+.vs-table th,
+.vs-table td,
+.reservoir-table th,
+.reservoir-table td {
+  padding: 8px 9px;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.power-table th,
+.vs-table th,
+.reservoir-table th {
+  white-space: normal;
+}
+
+.power-table td:not(:nth-child(2)),
+.vs-table td:not(:nth-child(2)),
+.reservoir-table td:not(:first-child) {
+  white-space: nowrap;
+}
+
+/* Сила отрядов. */
+.power-table {
+  min-width: 1100px !important;
+}
+
+.power-table th:nth-child(1),
+.power-table td:nth-child(1) { width: 48px; }
+.power-table th:nth-child(2),
+.power-table td:nth-child(2) { width: 170px; }
+.power-table th:nth-child(3),
+.power-table td:nth-child(3) { width: 105px; }
+.power-table th:nth-child(4),
+.power-table td:nth-child(4) { width: 140px; }
+.power-table th:nth-child(n+5):nth-child(-n+9),
+.power-table td:nth-child(n+5):nth-child(-n+9) { width: 110px; }
+.power-table th:nth-child(10),
+.power-table td:nth-child(10) { width: 88px; }
+
+.power-table td:nth-child(2) strong,
+.power-table td:nth-child(2) small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* VS: нормальная сетка без огромного пустого блока и вертикального текста. */
+.vs-current-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.vs-current-form .vs-vacation-field {
+  width: auto !important;
+  min-width: max-content;
+  justify-self: start;
+  white-space: nowrap !important;
+}
+
+.vs-current-form .alliance-actions {
+  align-self: end;
+}
+
+.vs-target-form {
+  grid-template-columns: minmax(220px, 360px) max-content !important;
+  justify-content: start;
+}
+
+.vs-target-form button {
+  width: auto !important;
+  min-width: 140px;
+}
+
+.vs-table-controls {
+  grid-template-columns: minmax(180px, 240px) max-content minmax(160px, 1fr) minmax(190px, 1.15fr) 44px !important;
+  grid-template-areas: "sort saturday edit expand search";
+  align-items: end;
+}
+
+.vs-table-controls > label:first-child { grid-area: sort; }
+.vs-table-controls .vs-saturday-total-toggle { grid-area: saturday; }
+#vsBulkOpen { grid-area: edit; }
+#vsExpandTable { grid-area: expand; }
+.vs-table-controls .vs-search-open { grid-area: search; }
+
+.vs-table-controls .vs-saturday-total-toggle {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-self: start;
+  width: auto !important;
+  min-width: max-content;
+  padding-inline: 8px;
+  white-space: nowrap !important;
+}
+
+.vs-table-controls .vs-saturday-total-toggle span {
+  white-space: nowrap !important;
+}
+
+.vs-table-controls .vs-search-open {
+  width: 44px !important;
+  min-width: 44px;
+  justify-self: start;
+}
+
+.vs-table {
+  min-width: 900px !important;
+}
+
+.vs-table th:nth-child(1),
+.vs-table td:nth-child(1) { width: 46px; }
+.vs-table th:nth-child(2),
+.vs-table td:nth-child(2) { width: 180px; }
+.vs-table th:nth-child(n+3):nth-child(-n+8),
+.vs-table td:nth-child(n+3):nth-child(-n+8) { width: 56px; }
+.vs-table th:nth-child(9),
+.vs-table td:nth-child(9) { width: 105px; }
+.vs-table th:nth-child(10),
+.vs-table td:nth-child(10) { width: 120px; }
+.vs-table th:last-child,
+.vs-table td:last-child { width: 86px; }
+
+.vs-table td:nth-child(2) strong,
+.vs-table td:nth-child(2) small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Активность резервуара: компактные фильтры и рабочая таблица в пределах экрана. */
+.reservoir-filters {
+  grid-template-columns: minmax(180px, 1.25fr) repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.reservoir-week-controls {
+  display: grid;
+  grid-template-columns: minmax(170px, 220px) repeat(3, max-content);
+  align-items: end;
+  gap: 10px;
+}
+
+.reservoir-table {
+  min-width: 1000px !important;
+}
+
+.reservoir-table th:nth-child(1),
+.reservoir-table td:nth-child(1) { width: 165px; }
+.reservoir-table th:nth-child(2),
+.reservoir-table td:nth-child(2) { width: 58px; }
+.reservoir-table th:nth-child(3),
+.reservoir-table td:nth-child(3) { width: 92px; }
+.reservoir-table th:nth-child(4),
+.reservoir-table td:nth-child(4) { width: 105px; }
+.reservoir-table th:nth-child(5),
+.reservoir-table td:nth-child(5) { width: 120px; }
+.reservoir-table th:nth-child(6),
+.reservoir-table td:nth-child(6) { width: 125px; }
+.reservoir-table th:nth-child(7),
+.reservoir-table td:nth-child(7) { width: 155px; }
+.reservoir-table th:nth-child(8),
+.reservoir-table td:nth-child(8) { width: 180px; }
+
+.reservoir-table select,
+.reservoir-table input,
+.reservoir-table input[data-field="comment"] {
+  width: 100%;
+  min-width: 0 !important;
+  padding-inline: 8px;
+}
+
+/* Расстановка резервуара: карточки идут сверху вниз, без горизонтальной карусели. */
+@media (max-width: 1099px) {
+  .reservoir-player-pool {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    scroll-snap-type: none !important;
+  }
+
+  .reservoir-player-chip {
+    flex: 1 1 180px !important;
+    max-width: none !important;
+  }
+
+  .reservoir-placement-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-auto-flow: row !important;
+    grid-auto-columns: auto !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+    scroll-snap-type: none !important;
+  }
+
+  .reservoir-location-column {
+    scroll-snap-align: none !important;
+  }
+}
+
+/* Блок конца сезона: заметные промежутки между полями, кнопкой и сообщениями. */
+.season-profile-block {
+  display: grid;
+  gap: 18px;
+}
+
+.season-profile-block .profile-block-grid {
+  column-gap: 16px;
+  row-gap: 18px;
+}
+
+.season-profile-block .profile-block-field {
+  gap: 8px;
+}
+
+.season-profile-block .season-tracking-actions {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 12px;
+  margin-top: 2px;
+}
+
+.season-profile-block .season-tracking-actions button {
+  width: auto;
+  min-width: 190px;
+}
+
+.season-profile-block .season-tracking-actions p {
+  min-width: 0;
+  padding-block: 6px;
+}
+
+/* Turbo VS: текст не сжимается до переноса по буквам. */
+.action-row-with-need > label,
+.action-level-static,
+.action-need-output,
+.turbo-summary-body,
+.turbo-goal-field span,
+.result-block {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  hyphens: none !important;
+}
+
+@media (min-width: 768px) and (max-width: 1399px) {
+  .vs-table-controls {
+    grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) !important;
+    grid-template-areas:
+      "sort saturday"
+      "edit expand"
+      "search search";
+  }
+
+  .reservoir-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reservoir-week-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reservoir-week-controls > *,
+  .reservoir-week-controls button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1099px) {
+  .vs-current-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .vs-current-form .alliance-actions {
+    grid-column: 1 / -1;
+  }
+
+  .reservoir-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reservoir-filters > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .vs-current-form,
+  .vs-target-form,
+  .vs-table-controls,
+  .reservoir-filters,
+  .reservoir-week-controls,
+  .season-profile-block .season-tracking-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .vs-table-controls {
+    grid-template-areas:
+      "sort"
+      "saturday"
+      "edit"
+      "expand"
+      "search";
+  }
+
+  .vs-current-form .alliance-actions {
+    grid-column: auto;
+  }
+
+  .vs-target-form button,
+  .reservoir-week-controls button,
+  .season-profile-block .season-tracking-actions button {
+    width: 100% !important;
+  }
+
+  .reservoir-filters > :first-child {
+    grid-column: auto;
+  }
+
+  .reservoir-player-chip {
+    flex-basis: 100% !important;
+  }
+
+  .power-table-wrap,
+  .vs-table-wrap,
+  .reservoir-table-wrap {
+    max-height: 58vh;
+  }
+}
