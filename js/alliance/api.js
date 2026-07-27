@@ -95,6 +95,14 @@ export function saveParticipant(client, { id, allianceId, payload }) {
   });
 }
 
+export function setParticipantJoinedOn(client, { id, allianceId, joinedOn }) {
+  return client.rpc("set_alliance_participant_joined_on", {
+    target_alliance_id: allianceId,
+    target_participant_id: id,
+    target_joined_on: joinedOn
+  });
+}
+
 export function findDepartedParticipant(client, { allianceId, nickname }) {
   return client.rpc("find_recent_departed_participant", {
     target_alliance_id: allianceId,
