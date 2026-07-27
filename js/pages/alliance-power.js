@@ -1,13 +1,11 @@
-import { initPowerSection } from "../alliance/power-section.js?v=20260726-power-batch-1";
+import { initPowerSection } from "../alliance/power-section.js?v=20260727-power-inline-bulk-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance } from "../alliance/page-context.js?v=20260718-1";
 
 function applyOwnPowerMode(participantId) {
   const statistics = document.getElementById("powerStatisticsCard");
   const season = document.getElementById("powerSeasonSettings");
-  const bulk = document.getElementById("powerBulkCard");
   if (statistics) statistics.hidden = true;
   if (season) season.hidden = true;
-  if (bulk) bulk.hidden = true;
   const title = document.getElementById("powerEditorTitle");
   if (title) title.textContent = "Добавить силу своих отрядов";
 
