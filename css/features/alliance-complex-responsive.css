@@ -6,15 +6,40 @@
 /* Все сложные страницы обязаны сжимать оболочку, а широкое содержимое
    прокручивать только внутри специально предназначенной области. */
 .alliance-page,
+.alliance-subpage,
 .alliance-page .card,
+.alliance-subpage .card,
+.alliance-context-card,
 .alliance-table-wrap,
 .power-table-wrap,
 .vs-table-wrap,
 .reservoir-table-wrap,
+.advanced-access-table-wrap,
 .alliance-controls,
 .power-controls-row,
 .vs-controls,
-.reservoir-controls {
+.reservoir-controls,
+.alliance-toolbar-card,
+.alliance-roster-header,
+.alliance-roster-tools,
+.participant-form,
+.participant-twin-fields,
+.alliance-details-form,
+.alliance-auth-grid,
+.alliance-setup-grid,
+.power-form,
+.power-season-form,
+.power-tools,
+.vs-result-form,
+.vs-target-form,
+.vs-period-controls,
+.vs-table-controls,
+.vs-tools,
+.reservoir-layout-editor,
+.reservoir-player-pool-card,
+.reservoir-placement-card,
+.reservoir-placement-grid,
+.reservoir-published-grid {
   min-width: 0;
   max-width: 100%;
 }
@@ -22,7 +47,8 @@
 .alliance-table-wrap,
 .power-table-wrap,
 .vs-table-wrap,
-.reservoir-table-wrap {
+.reservoir-table-wrap,
+.advanced-access-table-wrap {
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior-x: contain;
@@ -35,7 +61,9 @@
 .power-table,
 .power-bulk-table,
 .vs-table,
-.reservoir-table {
+.vs-bulk-table,
+.reservoir-table,
+.advanced-access-table {
   width: max-content;
   min-width: 100%;
 }
@@ -43,10 +71,13 @@
 /* Панели поиска, сортировки и фильтров используют одну адаптивную сетку. */
 .alliance-table-toolbar,
 .alliance-table-search,
+.alliance-roster-tools,
 .power-controls-row,
 .power-tools,
 .vs-toolbar,
 .vs-controls,
+.vs-tools,
+.vs-table-controls,
 .reservoir-toolbar,
 .reservoir-controls {
   display: grid;
@@ -57,10 +88,13 @@
 
 .alliance-table-toolbar > *,
 .alliance-table-search > *,
+.alliance-roster-tools > *,
 .power-controls-row > *,
 .power-tools > *,
 .vs-toolbar > *,
 .vs-controls > *,
+.vs-tools > *,
+.vs-table-controls > *,
 .reservoir-toolbar > *,
 .reservoir-controls > * {
   min-width: 0;
@@ -73,6 +107,9 @@
 .alliance-table-search input,
 .alliance-table-search select,
 .alliance-table-search button,
+.alliance-roster-tools input,
+.alliance-roster-tools select,
+.alliance-roster-tools button,
 .power-controls-row input,
 .power-controls-row select,
 .power-controls-row button,
@@ -85,6 +122,12 @@
 .vs-controls input,
 .vs-controls select,
 .vs-controls button,
+.vs-tools input,
+.vs-tools select,
+.vs-tools button,
+.vs-table-controls input,
+.vs-table-controls select,
+.vs-table-controls button,
 .reservoir-toolbar input,
 .reservoir-toolbar select,
 .reservoir-toolbar button,
@@ -105,7 +148,8 @@
 /* Полноэкранные таблицы используют реальную видимую область браузера. */
 .power-statistics-card.is-expanded,
 .alliance-table-fullscreen,
-.vs-table-fullscreen {
+.vs-table-fullscreen,
+.vs-statistics-card.is-expanded {
   inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   max-width: none;
   max-height: none;
@@ -114,25 +158,55 @@
 @media (max-width: 1099px) {
   .alliance-page .card-header,
   .alliance-page .page-header,
+  .alliance-subpage .card-header,
+  .alliance-subpage .page-header,
+  .alliance-roster-header,
   .power-view-options,
   .vs-view-options,
   .reservoir-view-options {
     flex-wrap: wrap;
   }
 
-  .power-form {
+  .alliance-auth-grid,
+  .alliance-setup-grid,
+  .participant-form,
+  .participant-twin-fields,
+  .alliance-details-form,
+  .alliance-toolbar-card,
+  .alliance-roster-tools,
+  .power-form,
+  .vs-result-form {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
   }
 
-  .power-season-form {
+  .power-season-form,
+  .vs-target-form {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .vs-period-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    align-items: end;
+    gap: 10px;
+  }
+
+  .vs-period-controls label {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .reservoir-layout-editor {
+    grid-template-columns: 1fr;
   }
 
   .alliance-table,
   .power-table,
   .power-bulk-table,
   .vs-table,
-  .reservoir-table {
+  .vs-bulk-table,
+  .reservoir-table,
+  .advanced-access-table {
     font-size: 14px;
   }
 }
@@ -140,41 +214,87 @@
 @media (max-width: 767px) {
   .alliance-table-toolbar,
   .alliance-table-search,
+  .alliance-roster-tools,
   .power-controls-row,
   .power-tools,
   .vs-toolbar,
   .vs-controls,
+  .vs-tools,
+  .vs-table-controls,
   .reservoir-toolbar,
   .reservoir-controls,
+  .alliance-auth-grid,
+  .alliance-setup-grid,
+  .participant-form,
+  .participant-twin-fields,
+  .alliance-details-form,
+  .alliance-toolbar-card,
   .power-form,
-  .power-season-form {
+  .power-season-form,
+  .vs-result-form,
+  .vs-target-form,
+  .vs-period-controls {
     grid-template-columns: 1fr;
+  }
+
+  .participant-comment-field,
+  .participant-form-actions,
+  .participant-twin-fields {
+    grid-column: auto;
   }
 
   .power-view-options,
   .vs-view-options,
-  .reservoir-view-options {
+  .reservoir-view-options,
+  .alliance-roster-header {
     align-items: stretch;
     flex-direction: column;
   }
 
   .power-view-options .checkbox,
   .vs-view-options .checkbox,
-  .reservoir-view-options .checkbox {
+  .reservoir-view-options .checkbox,
+  .vs-saturday-total-toggle,
+  .vs-table-controls > label:first-child {
     width: 100%;
+    min-width: 0;
+  }
+
+  .alliance-actions button,
+  .alliance-form-block > button,
+  .alliance-invite-box button,
+  .alliance-details-form button,
+  .power-form button,
+  .power-season-form button,
+  .vs-result-form button,
+  .vs-target-form button,
+  .vs-view-options button,
+  .vs-table-controls button {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .alliance-invite-box {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-invite-box > span {
+    grid-column: auto;
   }
 
   .alliance-table-wrap,
   .power-table-wrap,
   .vs-table-wrap,
-  .reservoir-table-wrap {
+  .reservoir-table-wrap,
+  .advanced-access-table-wrap {
     margin-inline: calc(var(--card-padding-responsive) * -1);
     padding-inline: var(--card-padding-responsive);
   }
 
   .power-statistics-card.is-expanded,
   .alliance-table-fullscreen,
-  .vs-table-fullscreen {
+  .vs-table-fullscreen,
+  .vs-statistics-card.is-expanded {
     inset: 0;
     border-radius: 0;
   }
@@ -185,7 +305,9 @@
   .power-table,
   .power-bulk-table,
   .vs-table,
-  .reservoir-table {
+  .vs-bulk-table,
+  .reservoir-table,
+  .advanced-access-table {
     font-size: 13px;
   }
 
@@ -197,8 +319,30 @@
   .power-bulk-table td,
   .vs-table th,
   .vs-table td,
+  .vs-bulk-table th,
+  .vs-bulk-table td,
   .reservoir-table th,
-  .reservoir-table td {
+  .reservoir-table td,
+  .advanced-access-table th,
+  .advanced-access-table td {
     padding: 8px 10px;
+  }
+
+  .alliance-context-card .card-header,
+  .alliance-roster-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .alliance-section-tabs {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .participant-row-actions,
+  .advanced-access-row-actions {
+    justify-content: flex-start;
   }
 }
