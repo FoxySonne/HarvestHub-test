@@ -15,6 +15,14 @@ function formatBirthday(value) {
     : date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
 }
 
+function formatDate(value) {
+  if (!value) return "—";
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? escapeHtml(value)
+    : date.toLocaleDateString("ru-RU");
+}
+
 function formatTimezone(value) {
   if (value === null || value === undefined || value === "") return "—";
   const number = Number(value);
@@ -72,6 +80,7 @@ export function renderParticipantRows(participants, canEdit, canSeePrivate) {
     return `<tr class="participant-row">
       <td><div class="participant-nickname-cell"><strong class="${nicknameClass}"${nicknameAttributes}>${escapeHtml(participant.nickname)}</strong>${twinDetails}</div></td>
       <td>${escapeHtml(participant.rank_name || "—")}</td>
+      <td>${formatDate(participant.joined_on)}</td>
       <td>${formatBirthday(participant.birthday)}</td>
       <td class="participant-private-column"${privateAttribute}>${formatTimezone(participant.timezone_offset)}</td>
       <td class="participant-private-column"${privateAttribute}>${escapeHtml(participant.comment || "—")}</td>
