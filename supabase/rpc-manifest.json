@@ -14,6 +14,7 @@
   "get_alliance_participants",
   "get_alliance_role",
   "get_alliance_squad_power",
+  "get_alliance_squad_power_measurement",
   "get_alliance_vs_statistics",
   "get_my_advanced_mode_status",
   "get_my_alliance_hubs",

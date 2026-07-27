@@ -4,6 +4,14 @@ export function fetchAllianceSquadPower(client, allianceId) {
   });
 }
 
+export function fetchAllianceSquadPowerMeasurement(client, allianceId, participantId, measuredOn) {
+  return client.rpc("get_alliance_squad_power_measurement", {
+    target_alliance_id: allianceId,
+    target_participant_id: participantId,
+    target_measured_on: measuredOn
+  });
+}
+
 export function saveAllianceSquadPower(client, allianceId, payload) {
   return client.rpc("save_alliance_squad_power", {
     target_alliance_id: allianceId,

@@ -55,7 +55,20 @@
   }
 
   function rows(table) {
-    return [...table.tBodies].flatMap(body => [...body.rows]).filter(row => row.cells.length > 1);
+    return [...table.tBodies]
+      .flatMap(body => [...body.rows])
+      .filter(row => row.cells.length > 1 && !row.classList.contains("power-inline-editor-row"));
+  }
+
+  function rowSearchId(row) {
+    if (!row.dataset.allianceSearchRowId) {
+      row.dataset.allianceSearchRowId = `alliance-row-${Math.random().toString(36).slice(2, 10)}`;
+    }
+    return row.dataset.allianceSearchRowId;
+  }
+
+  function rowBySearchId(table, id) {
+    return rows(table).find(row => row.dataset.allianceSearchRowId === id) || null;
   }
 
   function parseCompactNumber(value) {
@@ -104,6 +117,7 @@
   }
 
   function sortTable(table, index, direction, updateButton = true) {
+    if (!table || table.dataset.powerRowEditing === "true" || table.dataset.powerBulkMode === "true") return;
     const header = table.querySelectorAll("thead th")[index];
     if (!header) return;
     const type = columnType(header.childNodes[0]?.textContent || header.textContent);
@@ -166,9 +180,10 @@
     form.dataset.allianceTableSearchFor = tableId(table);
     form.hidden = true;
     form.innerHTML = `
-      <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока">
+      <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока" aria-autocomplete="list">
       <button type="submit">Найти</button>
       <button type="button" class="secondary-button" data-alliance-search-close aria-label="Закрыть поиск">×</button>
+      <div class="alliance-table-search-results" data-alliance-search-results hidden></div>
       <small data-alliance-search-status></small>`;
     wrapper.before(form);
 
@@ -226,6 +241,68 @@
     highlightTimer = window.setTimeout(clearHighlight, 2600);
   }
 
+  function matchPriority(nickname, query) {
+    const normalized = normalize(nickname);
+    if (normalized === query) return 0;
+    if (normalized.startsWith(query)) return 1;
+    if (normalized.split(/[\s._\-]+/).some(part => part.startsWith(query))) return 2;
+    return normalized.includes(query) ? 3 : 99;
+  }
+
+  function rankedMatches(table, query) {
+    return rows(table)
+      .map(row => ({ row, nickname: rowNickname(row, table).trim() }))
+      .map(item => ({ ...item, priority: matchPriority(item.nickname, query) }))
+      .filter(item => item.priority < 99)
+      .sort((a, b) => a.priority - b.priority || a.nickname.localeCompare(b.nickname, "ru", { numeric: true }));
+  }
+
+  function clearSuggestions(form) {
+    const results = form.querySelector("[data-alliance-search-results]");
+    if (!results) return;
+    results.hidden = true;
+    results.innerHTML = "";
+  }
+
+  function renderSuggestions(form) {
+    const table = tableBySearchId(form.dataset.allianceTableSearchFor);
+    const input = form.querySelector('input[type="search"]');
+    const status = form.querySelector("[data-alliance-search-status]");
+    const results = form.querySelector("[data-alliance-search-results]");
+    const query = normalize(input?.value);
+    if (!table || !results || !query) {
+      clearSuggestions(form);
+      if (status) status.textContent = query ? "Таблица не найдена." : "Начни вводить никнейм.";
+      return [];
+    }
+
+    const matches = rankedMatches(table, query);
+    if (!matches.length) {
+      clearSuggestions(form);
+      if (status) status.textContent = "Игроки не найдены.";
+      return [];
+    }
+
+    results.innerHTML = matches.slice(0, 12).map(({ row, nickname, priority }) => `
+      <button type="button" class="alliance-table-search-result" data-alliance-search-result="${rowSearchId(row)}">
+        <strong>${nickname.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong>
+        <small>${priority <= 1 ? "начинается с запроса" : "содержит запрос"}</small>
+      </button>`).join("");
+    results.hidden = false;
+    if (status) status.textContent = `Найдено: ${matches.length}. Сначала показаны совпадения по началу ника.`;
+    return matches;
+  }
+
+  function chooseResult(form, row) {
+    const table = tableBySearchId(form.dataset.allianceTableSearchFor);
+    const status = form.querySelector("[data-alliance-search-status]");
+    if (!table || !row) return;
+    if (status) status.textContent = `Выбран: ${rowNickname(row, table).trim()}`;
+    activeTable = table;
+    clearSuggestions(form);
+    revealRow(row, table);
+  }
+
   function runSearch(form) {
     const table = tableBySearchId(form.dataset.allianceTableSearchFor);
     const input = form.querySelector('input[type="search"]');
@@ -236,19 +313,14 @@
       input?.focus();
       return;
     }
-    const allRows = rows(table);
-    const exact = allRows.find(row => normalize(rowNickname(row, table)) === query);
-    const partial = allRows.find(row => normalize(rowNickname(row, table)).includes(query));
-    const match = exact || partial;
+    const match = rankedMatches(table, query)[0];
     if (!match) {
-      if (status) status.textContent = "Игрок не найден.";
+      if (status) status.textContent = "Игроки не найдены.";
       input?.focus();
       input?.select?.();
       return;
     }
-    if (status) status.textContent = `Найден: ${rowNickname(match, table).trim()}`;
-    activeTable = table;
-    revealRow(match, table);
+    chooseResult(form, match.row);
   }
 
   function openSearch(table) {
@@ -259,7 +331,11 @@
     if (!form) return;
     form.hidden = false;
     form.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => form.querySelector('input[type="search"]')?.focus(), 100);
+    window.setTimeout(() => {
+      const input = form.querySelector('input[type="search"]');
+      input?.focus();
+      if (input?.value) renderSuggestions(form);
+    }, 100);
   }
 
   function nearestVisibleTable() {
@@ -294,6 +370,14 @@
       return;
     }
 
+    const resultButton = event.target.closest("[data-alliance-search-result]");
+    if (resultButton) {
+      const form = resultButton.closest(".alliance-table-search");
+      const table = form && tableBySearchId(form.dataset.allianceTableSearchFor);
+      chooseResult(form, table && rowBySearchId(table, resultButton.dataset.allianceSearchResult));
+      return;
+    }
+
     const trigger = event.target.closest("[data-alliance-search-open]");
     if (trigger) {
       openSearch(tableBySearchId(trigger.dataset.allianceSearchOpen));
@@ -308,7 +392,38 @@
     const close = event.target.closest("[data-alliance-search-close]");
     if (close) {
       const form = close.closest(".alliance-table-search");
-      if (form) form.hidden = true;
+      if (form) {
+        clearSuggestions(form);
+        form.hidden = true;
+      }
+    }
+  });
+
+  document.addEventListener("input", event => {
+    const input = event.target.closest('.alliance-table-search input[type="search"]');
+    if (input) renderSuggestions(input.closest(".alliance-table-search"));
+  });
+
+  document.addEventListener("keydown", event => {
+    const input = event.target.closest?.('.alliance-table-search input[type="search"]');
+    if (input && event.key === "ArrowDown") {
+      const first = input.closest(".alliance-table-search")?.querySelector("[data-alliance-search-result]");
+      if (first) {
+        event.preventDefault();
+        first.focus();
+      }
+      return;
+    }
+
+    const result = event.target.closest?.("[data-alliance-search-result]");
+    if (result && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      const buttons = [...result.parentElement.querySelectorAll("[data-alliance-search-result]")];
+      const index = buttons.indexOf(result);
+      const next = event.key === "ArrowDown" ? buttons[index + 1] : buttons[index - 1];
+      if (next) {
+        event.preventDefault();
+        next.focus();
+      }
     }
   });
 
@@ -332,6 +447,7 @@
       const form = [...document.querySelectorAll(".alliance-table-search")].find(item => !item.hidden);
       if (form) {
         event.preventDefault();
+        clearSuggestions(form);
         form.hidden = true;
       }
     }

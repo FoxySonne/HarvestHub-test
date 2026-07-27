@@ -1,26 +1,17 @@
-.power-form {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  align-items: end;
-}
-
-.power-form label,
 .power-season-form label,
-.power-bulk-date {
+.power-bulk-date,
+.power-inline-editor label {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.power-form input,
-.power-form select,
 .power-season-form input,
-.power-bulk-date input {
+.power-bulk-date input,
+.power-inline-editor input {
   width: 100%;
 }
 
-.power-form button,
 .power-season-form button {
   width: auto;
 }
@@ -72,7 +63,8 @@
   line-height: 1;
 }
 
-.power-missing-toggle.is-active {
+.power-missing-toggle.is-active,
+.power-inline-missing.is-active {
   border-color: var(--accent);
   background: var(--accent);
   color: #fff;
@@ -82,7 +74,8 @@
   background: color-mix(in srgb, var(--panel) 82%, var(--border));
 }
 
-.power-table tr.is-power-missing input:disabled {
+.power-table tr.is-power-missing input:disabled,
+.power-inline-editor input:disabled {
   opacity: .55;
   cursor: not-allowed;
 }
@@ -170,6 +163,73 @@
   flex: 0 0 auto;
 }
 
+.power-inline-editor-row > td {
+  padding: 0 !important;
+  border-bottom: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--panel) 92%, var(--accent));
+}
+
+.power-inline-editor,
+.power-inline-editor-loading {
+  min-width: min(1120px, calc(100vw - 48px));
+  padding: 16px;
+}
+
+.power-inline-editor {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(180px, 240px) minmax(0, 1fr);
+  gap: 14px 16px;
+  align-items: end;
+}
+
+.power-inline-editor-title {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  gap: 4px;
+}
+
+.power-inline-editor-title span,
+.power-inline-editor-loading {
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.power-inline-editor-date {
+  min-width: 0;
+}
+
+.power-inline-editor-fields {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  grid-column: 1 / -1;
+  gap: 10px;
+}
+
+.power-inline-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  grid-column: 1 / -1;
+  gap: 10px;
+}
+
+.power-inline-editor-actions button {
+  width: auto;
+  min-width: 130px;
+  margin: 0;
+}
+
+.power-inline-missing {
+  min-width: 150px !important;
+}
+
+.power-table[data-power-row-editing="true"] th.is-power-sortable,
+.power-table[data-power-row-editing="true"] .alliance-column-sort {
+  pointer-events: none;
+  opacity: .45;
+}
+
 .power-table th.is-power-sortable {
   cursor: pointer;
   user-select: none;
@@ -248,19 +308,23 @@
 }
 
 @media (max-width: 1100px) {
-  .power-form {
+  .power-tools {
+    grid-template-columns: minmax(180px, 1fr) minmax(150px, 190px) repeat(3, auto);
+  }
+
+  .power-inline-editor {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .power-tools {
-    grid-template-columns: minmax(180px, 1fr) minmax(150px, 190px) repeat(3, auto);
+  .power-inline-editor-fields {
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
   }
 }
 
 @media (max-width: 899px) {
-  .power-form,
   .power-season-form,
-  .power-bulk-controls {
+  .power-bulk-controls,
+  .power-inline-editor {
     grid-template-columns: 1fr;
   }
 
@@ -268,17 +332,22 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .power-bulk-actions {
+  .power-bulk-actions,
+  .power-inline-editor-actions {
     justify-content: stretch;
   }
 
   .power-bulk-actions button,
   .power-controls-row button,
-  .power-form button,
-  .power-season-form button {
+  .power-season-form button,
+  .power-inline-editor-actions button {
     width: 100%;
     min-width: 0;
     margin-left: 0;
+  }
+
+  .power-inline-editor-fields {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
   }
 
   .power-statistics-card.is-expanded {
@@ -288,11 +357,14 @@
 }
 
 @media (max-width: 520px) {
-  .power-tools {
+  .power-tools,
+  .power-inline-editor-fields {
     grid-template-columns: 1fr;
   }
 
-  .power-bulk-controls {
+  .power-bulk-controls,
+  .power-inline-editor,
+  .power-inline-editor-loading {
     padding: 12px;
   }
 }

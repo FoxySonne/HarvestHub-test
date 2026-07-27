@@ -23,8 +23,12 @@
     return parseNumber(text);
   }
 
+  function dataRows(table) {
+    return [...table.tBodies[0]?.rows || []].filter(row => !row.classList.contains("power-inline-editor-row"));
+  }
+
   function updatePlaces(table) {
-    [...table.tBodies[0]?.rows || []].forEach((row, index) => {
+    dataRows(table).forEach((row, index) => {
       if (row.cells[0]) row.cells[0].textContent = String(index + 1);
     });
   }
@@ -37,10 +41,10 @@
   }
 
   function applySort(table, index, direction) {
-    if (table.dataset.powerBulkMode === "true") return;
+    if (table.dataset.powerBulkMode === "true" || table.dataset.powerRowEditing === "true") return;
     const body = table.tBodies[0];
     if (!body) return;
-    const rows = [...body.rows];
+    const rows = dataRows(table);
     rows.sort((a, b) => {
       const left = valueFor(a, index);
       const right = valueFor(b, index);
@@ -79,7 +83,7 @@
       header.setAttribute("role", "button");
       header.setAttribute("aria-label", `Сортировать по столбцу ${header.textContent.trim()}`);
       const run = () => {
-        if (table.dataset.powerBulkMode === "true") return;
+        if (table.dataset.powerBulkMode === "true" || table.dataset.powerRowEditing === "true") return;
         const currentColumn = Number(table.dataset.powerSortColumn);
         const currentDirection = table.dataset.powerSortDirection || "desc";
         const direction = currentColumn === index && currentDirection === "desc" ? "asc" : "desc";

@@ -1,6 +1,6 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260727-power-missing-marker-1";
-  const DEFAULT_STYLESHEET = "css/style.css?v=20260727-power-missing-marker-1";
+  const SITE_ASSET_VERSION = "20260728-power-row-editor-1";
+  const DEFAULT_STYLESHEET = "css/style.css?v=20260728-power-row-editor-1";
   const VS_STYLESHEET = "css/style-vs-main.css?v=20260727-main-vs-1";
   const VS_PAGE = "alliance/vs.html";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
