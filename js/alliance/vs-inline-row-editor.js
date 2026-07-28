@@ -3,10 +3,7 @@ import {
   saveAllianceVsResult,
   deleteAllianceVsResult
 } from "./vs-api.js?v=20260726-role-batch-1";
-import {
-  loadAlliancePageContext,
-  getActiveAllianceId
-} from "./page-context.js?v=20260728-membership-periods-1";
+import { loadAlliancePageContext, getActiveAllianceId } from "./page-context.js?v=20260728-membership-periods-1";
 
 const PAGE_PATH = "alliance/vs.html";
 const WEEK_MEMORY_KEY = "harvestHubVsSelectedWeekStart";
@@ -69,10 +66,7 @@ function parseScore(value) {
   const normalized = String(value || "").trim().replace(/\s/g, "").replace(",", ".").toUpperCase();
   const match = normalized.match(/^(\d+(?:\.\d+)?)([KMBTКМВТ]?)$/);
   if (!match) return null;
-  const multiplier = {
-    "": 1e6, K: 1e3, "К": 1e3, M: 1e6, "М": 1e6,
-    B: 1e9, "В": 1e9, T: 1e12, "Т": 1e12
-  }[match[2]];
+  const multiplier = { "": 1e6, K: 1e3, "К": 1e3, M: 1e6, "М": 1e6, B: 1e9, "В": 1e9, T: 1e12, "Т": 1e12 }[match[2]];
   const points = Number(match[1]) * multiplier;
   return Number.isFinite(points) && points >= 0 ? Math.round(points) : null;
 }
@@ -80,8 +74,7 @@ function parseScore(value) {
 function formatScore(value) {
   const number = Number(value) || 0;
   if (!number) return "";
-  const unit = [[1e12, "Т"], [1e9, "В"], [1e6, "М"], [1e3, "k"]]
-    .find(([size]) => Math.abs(number) >= size);
+  const unit = [[1e12, "Т"], [1e9, "В"], [1e6, "М"], [1e3, "k"]].find(([size]) => Math.abs(number) >= size);
   if (!unit) return new Intl.NumberFormat("ru-RU").format(number);
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(number / unit[0])}${unit[1]}`;
 }
@@ -114,7 +107,7 @@ function initEditor() {
   const state = {
     context: null,
     statistics: null,
-    weekStart: window[WEEK_MEMORY_KEY] || getWeekStart(utcDateValue()),
+    weekStart: getWeekStart(window[WEEK_MEMORY_KEY] || utcDateValue()),
     date: "",
     editingId: "",
     points: "",
@@ -124,33 +117,36 @@ function initEditor() {
     saving: false,
     sortColumn: 8,
     sortDirection: "desc",
-    observer: null,
+    bulkMode: false,
+    bulkSaving: false,
+    normalHead: "",
+    normalBody: "",
+    normalSummary: "",
+    normalSummaryHidden: true,
+    tableObserver: null,
+    messageObserver: null,
     syncTimer: null,
-    requestToken: 0,
-    switchingWeek: false
+    requestToken: 0
   };
 
-  state.weekStart = getWeekStart(state.weekStart);
-  window[WEEK_MEMORY_KEY] = state.weekStart;
   const rememberedDate = window[DATE_MEMORY_KEY];
   const weekEnd = addDays(state.weekStart, 5);
   state.date = rememberedDate && rememberedDate >= state.weekStart && rememberedDate <= weekEnd && rememberedDate <= utcDateValue()
     ? rememberedDate
     : defaultDate(state.weekStart);
+  window[WEEK_MEMORY_KEY] = state.weekStart;
   window[DATE_MEMORY_KEY] = state.date;
 
-  function isMounted() {
+  function mounted() {
     return Boolean(document.getElementById("vsCurrentTableContainer"));
   }
 
-  function participant(participantId) {
-    return state.context?.participants?.find(item => item.id === participantId) || null;
+  function participant(id) {
+    return state.context?.participants?.find(item => item.id === id) || null;
   }
 
-  function entry(participantId, date = state.date) {
-    return state.statistics?.results?.find(item => (
-      item.participant_id === participantId && item.result_date === date
-    )) || null;
+  function entry(id = state.editingId, date = state.date) {
+    return state.statistics?.results?.find(item => item.participant_id === id && item.result_date === date) || null;
   }
 
   function confirmDiscard() {
@@ -165,9 +161,9 @@ function initEditor() {
       .at(-1) || "";
   }
 
-  function hydrate(participantId, date) {
-    const result = entry(participantId, date);
-    state.editingId = participantId;
+  function hydrate(id, date) {
+    const result = entry(id, date);
+    state.editingId = id;
     state.date = date;
     state.points = result?.points ? formatScore(result.points) : "";
     state.vacation = Boolean(result?.is_vacation);
@@ -228,67 +224,62 @@ function initEditor() {
     return scoreFromText(cell.textContent);
   }
 
-  function updatePlaces() {
-    dataRows().forEach((row, index) => {
+  function applySort() {
+    const table = document.querySelector("#vsCurrentTableContainer .vs-table");
+    if (!table || state.bulkMode || state.editingId) return;
+    const body = document.getElementById("vsTableBody");
+    const rows = dataRows();
+    rows.sort((a, b) => {
+      const left = sortValue(a, state.sortColumn);
+      const right = sortValue(b, state.sortColumn);
+      const result = typeof left === "string" ? left.localeCompare(right, "ru", { numeric: true }) : left - right;
+      return state.sortDirection === "asc" ? result : -result;
+    });
+    rows.forEach((row, index) => {
+      body.append(row);
       if (row.cells[0]) row.cells[0].textContent = String(index + 1);
     });
   }
 
-  function updateHeaders() {
+  function decorateHeaders() {
     document.querySelectorAll("#vsTableHead th").forEach((header, index) => {
-      const sortable = SORTABLE_COLUMNS.has(index);
+      const sortable = SORTABLE_COLUMNS.has(index) && !state.bulkMode;
       header.classList.toggle("is-vs-sortable", sortable);
       header.classList.toggle("is-vs-sort-active", sortable && index === state.sortColumn);
       header.dataset.vsSortDirection = sortable && index === state.sortColumn ? state.sortDirection : "";
       if (sortable) {
         header.tabIndex = 0;
         header.setAttribute("role", "button");
-        header.setAttribute("aria-label", `Сортировать по столбцу ${header.textContent.trim()}`);
+      } else {
+        header.removeAttribute("tabindex");
+        header.removeAttribute("role");
       }
     });
   }
 
-  function applySort() {
-    if (state.editingId) return updateHeaders();
-    const body = document.getElementById("vsTableBody");
-    if (!body) return;
-    const rows = dataRows();
-    rows.sort((a, b) => {
-      const left = sortValue(a, state.sortColumn);
-      const right = sortValue(b, state.sortColumn);
-      const result = typeof left === "string"
-        ? left.localeCompare(right, "ru", { numeric: true })
-        : left - right;
-      return state.sortDirection === "asc" ? result : -result;
-    });
-    rows.forEach(row => body.append(row));
-    updatePlaces();
-    updateHeaders();
-  }
-
   function decorateButtons() {
+    if (state.bulkMode) return;
     document.querySelectorAll("#vsTableBody [data-vs-edit]").forEach(button => {
-      const participantId = button.dataset.vsEdit || "";
-      button.textContent = entry(participantId) ? "Изменить" : "Внести";
-      button.setAttribute("aria-expanded", String(state.editingId === participantId));
+      const id = button.dataset.vsEdit || "";
+      button.textContent = entry(id) ? "Изменить" : "Внести";
+      button.setAttribute("aria-expanded", String(state.editingId === id));
     });
   }
 
   function injectEditor() {
     document.querySelectorAll(".vs-inline-editor-row").forEach(row => row.remove());
-    if (!state.editingId) return;
+    if (!state.editingId || state.bulkMode) return;
     const button = document.querySelector(`#vsTableBody [data-vs-edit="${CSS.escape(state.editingId)}"]`);
     const baseRow = button?.closest("tr");
     if (!baseRow) return;
-    const editorRow = document.createElement("tr");
-    editorRow.className = "vs-inline-editor-row";
-    editorRow.dataset.vsInlineEditorFor = state.editingId;
+    const row = document.createElement("tr");
+    row.className = "vs-inline-editor-row";
+    row.dataset.vsInlineEditorFor = state.editingId;
     const cell = document.createElement("td");
-    const table = document.querySelector("#vsCurrentTableContainer .vs-table");
-    cell.colSpan = Math.max(1, table?.tHead?.rows?.[0]?.cells?.length || baseRow.cells.length);
+    cell.colSpan = Math.max(1, document.querySelectorAll("#vsTableHead th").length);
     cell.innerHTML = editorMarkup(participant(state.editingId));
-    editorRow.append(cell);
-    baseRow.after(editorRow);
+    row.append(cell);
+    baseRow.after(row);
   }
 
   function syncWeekControl() {
@@ -298,21 +289,37 @@ function initEditor() {
     input.value = state.weekStart;
   }
 
-  function observeTable() {
+  function updateBulkControls() {
     const table = document.querySelector("#vsCurrentTableContainer .vs-table");
-    if (table && state.observer) state.observer.observe(table, { childList: true, subtree: true });
+    if (table) {
+      table.dataset.vsBulkMode = String(state.bulkMode);
+      table.dataset.powerBulkMode = String(state.bulkMode);
+      table.dataset.powerRowEditing = String(Boolean(state.editingId));
+      table.dataset.sortInitialized = "true";
+    }
+    const open = document.getElementById("vsBulkOpen");
+    const controls = document.getElementById("vsBulkControls");
+    const hint = document.getElementById("vsBulkHint");
+    if (open) open.hidden = state.bulkMode;
+    if (controls) controls.hidden = !state.bulkMode;
+    if (hint) hint.hidden = !state.bulkMode;
   }
 
   function syncTable() {
     clearTimeout(state.syncTimer);
     state.syncTimer = window.setTimeout(() => {
-      if (!isMounted()) return;
-      state.observer?.disconnect();
-      decorateButtons();
-      applySort();
-      injectEditor();
+      if (!mounted()) return;
+      state.tableObserver?.disconnect();
+      if (!state.bulkMode) {
+        applySort();
+        decorateHeaders();
+        decorateButtons();
+        injectEditor();
+      }
       syncWeekControl();
-      observeTable();
+      updateBulkControls();
+      const body = document.getElementById("vsTableBody");
+      if (body && state.tableObserver) state.tableObserver.observe(body, { childList: true });
       window.harvestHubTableScrollbars?.refresh?.();
     }, 0);
   }
@@ -321,12 +328,11 @@ function initEditor() {
     const token = ++state.requestToken;
     const client = window.harvestHubSupabase;
     const allianceId = getActiveAllianceId();
-    if (!client || !allianceId || !isMounted()) return;
     const [context, statistics] = await Promise.all([
       loadAlliancePageContext(client, { force: true }),
       fetchAllianceVsStatistics(client, allianceId, state.weekStart, addDays(state.weekStart, 5))
     ]);
-    if (token !== state.requestToken || !isMounted()) return;
+    if (token !== state.requestToken || !mounted()) return;
     if (statistics.error) throw statistics.error;
     state.context = context;
     state.statistics = statistics.data || { results: [] };
@@ -345,66 +351,57 @@ function initEditor() {
     return true;
   }
 
-  async function openEditor(participantId) {
-    if (!participantId) return;
-    if (state.editingId && state.editingId !== participantId && !confirmDiscard()) return;
+  async function openEditor(id) {
+    if (!id || state.bulkMode) return;
+    if (state.editingId && state.editingId !== id && !confirmDiscard()) return;
     if (!state.context || !state.statistics) await refreshData();
-    const item = participant(participantId);
+    const item = participant(id);
     if (!item) return;
     const date = availableDate(item);
     if (!date) return showMessage("На доступные дни выбранной недели игрок ещё не состоял в союзе.", "info");
-    hydrate(participantId, date);
+    hydrate(id, date);
     syncTable();
     window.setTimeout(() => {
-      document.querySelector(`[data-vs-inline-editor-for="${CSS.escape(participantId)}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const row = document.querySelector(`[data-vs-inline-editor-for="${CSS.escape(id)}"]`);
+      row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      row?.querySelector("[data-vs-inline-points]")?.focus();
     }, 40);
+  }
+
+  function syncInlineFields() {
+    const form = document.querySelector("[data-vs-inline-form]");
+    if (!form) return;
+    const points = form.querySelector("[data-vs-inline-points]");
+    const vacation = form.querySelector("[data-vs-inline-vacation]");
+    const title = form.querySelector(".vs-inline-editor-title span");
+    if (points) {
+      points.value = state.vacation ? "" : state.points;
+      points.disabled = state.vacation;
+    }
+    if (vacation) vacation.checked = state.vacation;
+    if (title) title.textContent = `Результат за выбранный день · ${DAYS[weekdayIndex(state.date)] || ""}`;
   }
 
   function changeDate(value) {
     const item = participant(state.editingId);
     if (!value || !item) return;
-    const min = state.weekStart;
-    const max = defaultDate(state.weekStart);
-    if (value < min || value > max || weekdayIndex(value) > 5) {
+    const input = document.querySelector("[data-vs-inline-date]");
+    if (value < state.weekStart || value > defaultDate(state.weekStart) || weekdayIndex(value) > 5) {
       showMessage("Выбери доступный день выбранной недели с понедельника по субботу.", "error");
-      return syncTable();
+      if (input) input.value = state.date;
+      return;
     }
     if (!isMemberOn(item, value)) {
       showMessage("На выбранную дату игрок не состоял в союзе.", "error");
-      return syncTable();
+      if (input) input.value = state.date;
+      return;
     }
-    if (!confirmDiscard()) return syncTable();
+    if (!confirmDiscard()) {
+      if (input) input.value = state.date;
+      return;
+    }
     hydrate(state.editingId, value);
-    syncTable();
-  }
-
-  async function switchWeek(value) {
-    if (!value || state.switchingWeek) return;
-    if (!confirmDiscard()) return syncWeekControl();
-    const weekStart = getWeekStart(value);
-    if (weekStart > getWeekStart(utcDateValue())) {
-      showMessage("Будущую неделю пока нельзя выбрать.", "error");
-      return syncWeekControl();
-    }
-    state.switchingWeek = true;
-    closeEditor(true);
-    state.weekStart = weekStart;
-    state.date = defaultDate(weekStart);
-    window[WEEK_MEMORY_KEY] = weekStart;
-    window[DATE_MEMORY_KEY] = state.date;
-    syncWeekControl();
-    const hiddenDate = document.getElementById("vsResultDate");
-    if (hiddenDate) {
-      hiddenDate.value = state.date;
-      hiddenDate.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    try {
-      await refreshData();
-    } catch (error) {
-      showMessage(error?.message || "Не удалось загрузить выбранную неделю.", "error");
-    } finally {
-      state.switchingWeek = false;
-    }
+    syncInlineFields();
   }
 
   async function save(form) {
@@ -421,7 +418,7 @@ function initEditor() {
     }
     pointsInput?.setCustomValidity("");
     state.saving = true;
-    syncTable();
+    form.querySelectorAll("button").forEach(button => { button.disabled = true; });
     try {
       const { error } = await saveAllianceVsResult(window.harvestHubSupabase, getActiveAllianceId(), {
         participantId: state.editingId,
@@ -432,16 +429,11 @@ function initEditor() {
       if (error) throw error;
       state.dirty = false;
       state.editingId = "";
-      const hiddenDate = document.getElementById("vsResultDate");
-      if (hiddenDate) {
-        hiddenDate.value = state.date;
-        hiddenDate.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-      await refreshData();
+      await window.loadPage?.(PAGE_PATH, { trackVisit: false });
       showMessage("Результат сохранён.", "success");
     } catch (error) {
       state.saving = false;
-      syncTable();
+      form.querySelectorAll("button").forEach(button => { button.disabled = false; });
       showMessage(error?.message || "Не удалось сохранить результат.", "error");
     }
   }
@@ -451,36 +443,126 @@ function initEditor() {
     const item = participant(state.editingId);
     if (!window.confirm(`Удалить результат «${item?.nickname || "участника"}» за ${formatDate(state.date)}?`)) return;
     state.saving = true;
-    syncTable();
     try {
       const { error } = await deleteAllianceVsResult(window.harvestHubSupabase, getActiveAllianceId(), state.editingId, state.date);
       if (error) throw error;
       state.dirty = false;
       state.editingId = "";
-      const hiddenDate = document.getElementById("vsResultDate");
-      if (hiddenDate) {
-        hiddenDate.value = state.date;
-        hiddenDate.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-      await refreshData();
+      await window.loadPage?.(PAGE_PATH, { trackVisit: false });
       showMessage("Результат удалён.", "success");
     } catch (error) {
       state.saving = false;
-      syncTable();
       showMessage(error?.message || "Не удалось удалить результат.", "error");
+      syncTable();
     }
+  }
+
+  function enterBulkMode() {
+    if (state.editingId && !closeEditor()) return;
+    const source = document.getElementById("vsBulkBody");
+    const body = document.getElementById("vsTableBody");
+    const head = document.getElementById("vsTableHead");
+    const summary = document.getElementById("vsSummary");
+    if (!source || !body || !head || !summary) return;
+
+    state.normalHead = head.innerHTML;
+    state.normalBody = body.innerHTML;
+    state.normalSummary = summary.innerHTML;
+    state.normalSummaryHidden = summary.hidden;
+    state.bulkMode = true;
+
+    head.innerHTML = `<tr><th>Место</th><th>Участник</th>${DAYS.map(day => `<th>${day}</th>`).join("")}</tr>`;
+    body.innerHTML = "";
+    [...source.rows].forEach((row, index) => {
+      const place = row.insertCell(0);
+      place.dataset.vsBulkPlace = "true";
+      place.textContent = String(index + 1);
+      body.append(row);
+    });
+    summary.hidden = true;
+    updateBulkControls();
+    document.dispatchEvent(new CustomEvent("harvesthub:vs-bulk-opened", { detail: { weekStart: state.weekStart } }));
+    window.setTimeout(() => body.querySelector("[data-vs-bulk-day]:not(:disabled)")?.focus(), 30);
+  }
+
+  function restoreNormalTable() {
+    const source = document.getElementById("vsBulkBody");
+    const body = document.getElementById("vsTableBody");
+    const head = document.getElementById("vsTableHead");
+    const summary = document.getElementById("vsSummary");
+    if (!source || !body || !head || !summary) return;
+    [...body.querySelectorAll("[data-vs-bulk-participant]")].forEach(row => {
+      row.querySelector("[data-vs-bulk-place]")?.remove();
+      source.append(row);
+    });
+    head.innerHTML = state.normalHead;
+    body.innerHTML = state.normalBody;
+    summary.innerHTML = state.normalSummary;
+    summary.hidden = state.normalSummaryHidden;
+    state.bulkMode = false;
+    updateBulkControls();
+    syncTable();
+  }
+
+  function closeBulkMode() {
+    window.harvestHubVsDraft?.saveBulkNow?.();
+    restoreNormalTable();
+  }
+
+  async function switchWeek(value) {
+    if (!value) return;
+    if (state.editingId && !confirmDiscard()) {
+      syncWeekControl();
+      return;
+    }
+    if (state.bulkMode) closeBulkMode();
+    const weekStart = getWeekStart(value);
+    if (weekStart > getWeekStart(utcDateValue())) {
+      showMessage("Будущую неделю пока нельзя выбрать.", "error");
+      syncWeekControl();
+      return;
+    }
+    state.weekStart = weekStart;
+    state.date = defaultDate(weekStart);
+    window[WEEK_MEMORY_KEY] = weekStart;
+    window[DATE_MEMORY_KEY] = state.date;
+    const hiddenDate = document.getElementById("vsResultDate");
+    if (hiddenDate) {
+      hiddenDate.value = state.date;
+      hiddenDate.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    await refreshData();
   }
 
   function runHeaderSort(header) {
     const index = [...header.parentElement.children].indexOf(header);
-    if (!SORTABLE_COLUMNS.has(index) || state.editingId) return;
+    if (!SORTABLE_COLUMNS.has(index) || state.bulkMode || state.editingId) return;
     state.sortDirection = state.sortColumn === index && state.sortDirection === "desc" ? "asc" : "desc";
     state.sortColumn = index;
     applySort();
+    decorateHeaders();
   }
 
   function handleClick(event) {
-    if (!isMounted()) return;
+    if (!mounted()) return;
+    const bulkOpen = event.target.closest("#vsBulkOpen");
+    if (bulkOpen) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      enterBulkMode();
+      return;
+    }
+    const bulkClose = event.target.closest("#vsBulkClose");
+    if (bulkClose) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      closeBulkMode();
+      return;
+    }
+    if (event.target.closest("#vsBulkSave")) {
+      state.bulkSaving = true;
+      return;
+    }
     const header = event.target.closest("#vsTableHead th.is-vs-sortable");
     if (header) {
       event.preventDefault();
@@ -496,32 +578,33 @@ function initEditor() {
     }
     if (event.target.closest("[data-vs-inline-cancel]")) {
       event.preventDefault();
-      event.stopImmediatePropagation();
       closeEditor();
       return;
     }
     if (event.target.closest("[data-vs-inline-delete]")) {
       event.preventDefault();
-      event.stopImmediatePropagation();
       remove();
-      return;
-    }
-    const bulkOpen = event.target.closest("#vsBulkOpen");
-    if (bulkOpen && state.editingId && !closeEditor()) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
     }
   }
 
   function handleKeydown(event) {
     const header = event.target.closest?.("#vsTableHead th.is-vs-sortable");
-    if (!header || (event.key !== "Enter" && event.key !== " ")) return;
-    event.preventDefault();
-    runHeaderSort(header);
+    if (header && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      runHeaderSort(header);
+      return;
+    }
+    const form = event.target.closest?.("[data-vs-inline-form]");
+    const saveByEnter = event.target.matches?.("[data-vs-inline-points], [data-vs-inline-vacation]");
+    if (form && saveByEnter && event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      save(form);
+    }
   }
 
   function handleInput(event) {
-    if (state.editingId && event.target.matches("[data-vs-inline-points]")) {
+    if (event.target.matches("[data-vs-inline-points]")) {
       state.points = event.target.value;
       state.dirty = true;
     }
@@ -529,10 +612,9 @@ function initEditor() {
 
   function handleChange(event) {
     if (event.target.id === "vsWeekDate") {
-      switchWeek(event.target.value);
+      switchWeek(event.target.value).catch(error => showMessage(error?.message || "Не удалось загрузить неделю.", "error"));
       return;
     }
-    if (!state.editingId) return;
     if (event.target.matches("[data-vs-inline-date]")) {
       changeDate(event.target.value);
       return;
@@ -540,7 +622,7 @@ function initEditor() {
     if (event.target.matches("[data-vs-inline-vacation]")) {
       state.vacation = event.target.checked;
       state.dirty = true;
-      syncTable();
+      syncInlineFields();
     }
   }
 
@@ -552,7 +634,27 @@ function initEditor() {
     save(form);
   }
 
-  state.observer = new MutationObserver(syncTable);
+  state.tableObserver = new MutationObserver(() => {
+    if (state.bulkMode && !document.querySelector("#vsTableBody [data-vs-bulk-participant]")) {
+      state.bulkMode = false;
+      updateBulkControls();
+    }
+    syncTable();
+  });
+  const tableBody = document.getElementById("vsTableBody");
+  if (tableBody) state.tableObserver.observe(tableBody, { childList: true });
+
+  state.messageObserver = new MutationObserver(() => {
+    const message = document.getElementById("allianceMessage")?.textContent || "";
+    if (!state.bulkSaving || !message.startsWith("Сохранено изменений:")) return;
+    state.bulkSaving = false;
+    state.bulkMode = false;
+    document.dispatchEvent(new CustomEvent("harvesthub:vs-bulk-saved", { detail: { weekStart: state.weekStart } }));
+    updateBulkControls();
+  });
+  const messageBox = document.getElementById("allianceMessage");
+  if (messageBox) state.messageObserver.observe(messageBox, { childList: true, characterData: true, subtree: true });
+
   document.addEventListener("click", handleClick, { capture: true, signal });
   document.addEventListener("keydown", handleKeydown, { signal });
   document.addEventListener("input", handleInput, { signal });
@@ -560,17 +662,13 @@ function initEditor() {
   document.addEventListener("submit", handleSubmit, { signal });
 
   syncWeekControl();
-  const hiddenDate = document.getElementById("vsResultDate");
-  if (hiddenDate && getWeekStart(hiddenDate.value || utcDateValue()) !== state.weekStart) {
-    hiddenDate.value = state.date;
-    hiddenDate.dispatchEvent(new Event("change", { bubbles: true }));
-  }
   refreshData().catch(error => showMessage(error?.message || "Не удалось подготовить страницу VS.", "error"));
 
   const api = {
     destroy() {
       controller.abort();
-      state.observer?.disconnect();
+      state.tableObserver?.disconnect();
+      state.messageObserver?.disconnect();
       clearTimeout(state.syncTimer);
       document.querySelectorAll(".vs-inline-editor-row").forEach(row => row.remove());
     }
