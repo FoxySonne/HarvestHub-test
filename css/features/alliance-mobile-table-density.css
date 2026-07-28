@@ -32,6 +32,28 @@
     vertical-align: middle;
   }
 
+  .power-view-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 10px;
+    margin-bottom: 8px;
+  }
+
+  .power-view-options > strong {
+    grid-column: 1 / -1;
+    margin-bottom: 2px;
+  }
+
+  .power-view-options .checkbox {
+    min-height: 0;
+    padding: 2px 0;
+  }
+
+  .table-scrollbar-top {
+    height: 10px;
+    margin-bottom: 4px;
+  }
+
   .power-table th:first-child,
   .power-table td:first-child,
   .vs-table th:first-child,
@@ -77,8 +99,8 @@
   }
 
   .power-table:not(.is-bulk-editing) {
-    width: max-content;
-    min-width: 620px;
+    width: max-content !important;
+    min-width: 0 !important;
     table-layout: fixed;
   }
 
@@ -119,7 +141,7 @@
   }
 
   .power-table.is-bulk-editing {
-    min-width: 680px;
+    min-width: 680px !important;
     table-layout: fixed;
   }
 
@@ -217,10 +239,6 @@
     width: 124px;
     min-width: 124px;
     max-width: 124px;
-  }
-
-  .power-table:not(.is-bulk-editing) {
-    min-width: 590px;
   }
 
   .alliance-roster-table th:first-child,
