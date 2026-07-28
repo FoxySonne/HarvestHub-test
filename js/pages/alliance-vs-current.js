@@ -163,6 +163,45 @@ function sortRows(rows) {
   });
 }
 
+function playerCountLabel(count) {
+  const lastTwo = count % 100;
+  const last = count % 10;
+  const word = lastTwo >= 11 && lastTwo <= 14
+    ? "игроков"
+    : last === 1
+      ? "игрок"
+      : last >= 2 && last <= 4
+        ? "игрока"
+        : "игроков";
+  return `${count} ${word}`;
+}
+
+function extremumSummary(rows, type) {
+  const isBest = type === "best";
+  const singularLabel = isBest ? "Лучший участник" : "Худший участник";
+  const pluralLabel = isBest ? "Лучшие участники" : "Худшие участники";
+  const baseTitle = "Неполная первая неделя не участвует в сравнении";
+  if (!rows.length) return { label: singularLabel, value: "—", title: baseTitle };
+
+  const totals = rows.map(row => Number(row.metrics.total) || 0);
+  const target = isBest ? Math.max(...totals) : Math.min(...totals);
+  const tied = rows
+    .filter(row => (Number(row.metrics.total) || 0) === target)
+    .sort((a, b) => a.nickname.localeCompare(b.nickname, "ru"));
+
+  if (tied.length === 1) {
+    return { label: singularLabel, value: tied[0].nickname, title: baseTitle };
+  }
+
+  const score = target === 0 ? "0" : formatScore(target);
+  const names = tied.map(row => row.nickname).join(", ");
+  return {
+    label: pluralLabel,
+    value: `${playerCountLabel(tied.length)} · ${score}`,
+    title: `${baseTitle}. Равный результат: ${names}`
+  };
+}
+
 function renderSummary(rows) {
   const summary = byId("vsSummary");
   if (!summary) return;
@@ -177,9 +216,8 @@ function renderSummary(rows) {
   const complete = eligible.filter(row => row.metrics.allDone).length;
   const incomplete = eligible.length - complete;
   const percentage = eligible.length ? Math.round(complete / eligible.length * 100) : 0;
-  const byTotal = [...eligible].sort((a, b) => b.metrics.total - a.metrics.total || a.nickname.localeCompare(b.nickname, "ru"));
-  const best = byTotal[0]?.nickname || "—";
-  const worst = byTotal[byTotal.length - 1]?.nickname || "—";
+  const best = extremumSummary(eligible, "best");
+  const worst = extremumSummary(eligible, "worst");
 
   summary.hidden = false;
   summary.innerHTML = `
@@ -187,8 +225,8 @@ function renderSummary(rows) {
     <div title="Считаются только игроки, состоявшие в союзе со старта доступной части недели"><span>Выполнили все дни</span><strong>${complete}</strong></div>
     <div title="Игроки с неполной первой неделей сюда не входят"><span>Выполнили не все дни</span><strong>${incomplete}</strong></div>
     <div title="Доля выполнивших среди игроков с полной учитываемой неделей"><span>Выполнили полностью</span><strong>${percentage}%</strong></div>
-    <div title="Неполная первая неделя не участвует в сравнении"><span>Лучший участник</span><strong>${escapeHtml(best)}</strong></div>
-    <div title="Неполная первая неделя не участвует в сравнении"><span>Худший участник</span><strong>${escapeHtml(worst)}</strong></div>`;
+    <div title="${escapeHtml(best.title)}"><span>${best.label}</span><strong>${escapeHtml(best.value)}</strong></div>
+    <div title="${escapeHtml(worst.title)}"><span>${worst.label}</span><strong>${escapeHtml(worst.value)}</strong></div>`;
 }
 
 function buildRows() {
