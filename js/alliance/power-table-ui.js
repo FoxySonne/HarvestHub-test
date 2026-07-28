@@ -68,8 +68,31 @@
     });
   }
 
+  function compactPowerContent(table) {
+    if (!table || table.dataset.powerBulkMode === "true") return;
+    const headers = table.querySelectorAll("thead th");
+    const powerHeader = headers[3];
+    if (powerHeader && powerHeader.dataset.compactLabelReady !== "true") {
+      powerHeader.textContent = "1 отряд";
+      powerHeader.dataset.compactLabelReady = "true";
+    }
+
+    dataRows(table).forEach(row => {
+      const cell = row.cells[2];
+      if (!cell || cell.dataset.mobileDateReady === "true") return;
+      const match = cell.textContent.trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (!match) return;
+      const full = `${match[1]}.${match[2]}.${match[3]}`;
+      const short = `${match[1]}.${match[2]}`;
+      cell.dataset.mobileDateReady = "true";
+      cell.title = full;
+      cell.innerHTML = `<span class="power-date-full">${full}</span><span class="power-date-short" aria-hidden="true">${short}</span>`;
+    });
+  }
+
   function setupHeaders(table) {
     if (!table) return;
+    compactPowerContent(table);
     if (table.dataset.powerBulkMode === "true") {
       clearBulkHeaderState(table);
       return;
@@ -104,6 +127,11 @@
   }
 
   document.addEventListener("harvesthub:page-loaded", setupCurrentPage);
-  new MutationObserver(setupCurrentPage).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-power-bulk-mode"] });
+  new MutationObserver(setupCurrentPage).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["data-power-bulk-mode"]
+  });
   setupCurrentPage();
 })();
