@@ -2,13 +2,8 @@
   const TABLE_SELECTOR = "[data-horizontal-scroll]";
   const instances = new Map();
 
-  function isLegacyVsPage() {
-    return localStorage.getItem("currentPage") === "alliance/vs.html"
-      || Boolean(document.getElementById("vsCurrentTableContainer"));
-  }
-
   function createTopScrollbar(wrapper) {
-    if (!(wrapper instanceof HTMLElement) || instances.has(wrapper) || isLegacyVsPage()) return;
+    if (!(wrapper instanceof HTMLElement) || instances.has(wrapper)) return;
 
     const scrollbar = document.createElement("div");
     scrollbar.className = "table-scrollbar-top";
@@ -54,10 +49,10 @@
   }
 
   function refreshTableScrollbars(root = document) {
-    if (!isLegacyVsPage()) root.querySelectorAll?.(TABLE_SELECTOR).forEach(createTopScrollbar);
+    root.querySelectorAll?.(TABLE_SELECTOR).forEach(createTopScrollbar);
 
     instances.forEach((instance, wrapper) => {
-      if (!isLegacyVsPage() && wrapper.isConnected && instance.scrollbar.isConnected) {
+      if (wrapper.isConnected && instance.scrollbar.isConnected) {
         instance.update();
         return;
       }
