@@ -1,173 +1,191 @@
-/* Построчное редактирование результата VS внутри основной таблицы. */
-#vsEditorCard {
-  display: none !important;
-}
-
 .vs-week-picker {
-  min-width: 0;
+min-width: 0;
 }
-
 .vs-week-picker input {
-  width: 100%;
-  min-width: 0;
+width: 100%;
+min-width: 0;
 }
-
-.vs-week-hint {
-  align-self: end;
-  min-height: var(--control-height);
-  display: flex;
-  align-items: center;
-  color: var(--text-soft);
-  font-size: 12px;
-  line-height: 1.3;
+#vsBulkControls[hidden],
+#vsBulkHint[hidden] {
+display: none !important;
 }
-
+#vsBulkControls {
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+gap: 8px;
+min-width: 0;
+}
+#vsBulkControls button {
+width: auto !important;
+min-width: 150px;
+}
+#vsBulkControls [data-vs-draft-status] {
+flex: 1 1 220px;
+color: var(--text-soft);
+font-size: 12px;
+line-height: 1.3;
+}
+#vsBulkHint {
+margin: 10px 0;
+color: var(--text-soft);
+font-size: 12px;
+line-height: 1.45;
+}
 #vsTableHead th.is-vs-sortable {
-  position: sticky;
-  padding-right: 18px;
-  cursor: pointer;
-  user-select: none;
+position: sticky;
+padding-right: 18px;
+cursor: pointer;
+user-select: none;
 }
-
 #vsTableHead th.is-vs-sortable::after {
-  content: "↕";
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-soft);
-  font-size: 10px;
-  opacity: .62;
+content: "↕";
+position: absolute;
+right: 5px;
+top: 50%;
+transform: translateY(-50%);
+color: var(--text-soft);
+font-size: 10px;
+opacity: .62;
 }
-
 #vsTableHead th.is-vs-sort-active::after {
-  content: "↓";
-  color: var(--accent);
-  opacity: 1;
+content: "↓";
+color: var(--accent);
+opacity: 1;
 }
-
 #vsTableHead th.is-vs-sort-active[data-vs-sort-direction="asc"]::after {
-  content: "↑";
+content: "↑";
 }
-
 #vsTableHead th.is-vs-sortable:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+outline: 2px solid var(--accent);
+outline-offset: -2px;
 }
-
 #vsCurrentTableContainer .vs-inline-editor-row > td {
-  width: auto !important;
-  padding: 10px !important;
-  white-space: normal !important;
-  background: color-mix(in srgb, var(--panel) 88%, var(--accent) 12%);
-  box-shadow:
-    inset 0 1px 0 var(--border),
-    inset 0 -1px 0 var(--border);
+width: auto !important;
+padding: 10px !important;
+white-space: normal !important;
+background: color-mix(in srgb, var(--panel) 88%, var(--accent) 12%);
+box-shadow: inset 0 1px 0 var(--border), inset 0 -1px 0 var(--border);
 }
-
 .vs-inline-editor {
-  display: grid;
-  grid-template-columns: minmax(170px, 1.2fr) minmax(145px, .8fr) minmax(170px, 1fr) max-content;
-  align-items: end;
-  gap: 10px 12px;
-  min-width: 0;
+display: grid;
+grid-template-columns: minmax(170px, 1.2fr) minmax(145px, .8fr) minmax(170px, 1fr) max-content;
+align-items: end;
+gap: 10px 12px;
+min-width: 0;
 }
-
 .vs-inline-editor-title {
-  align-self: center;
-  min-width: 0;
+align-self: center;
+min-width: 0;
 }
-
 .vs-inline-editor-title strong,
 .vs-inline-editor-title span {
-  display: block;
-  max-width: 100%;
+display: block;
+max-width: 100%;
 }
-
 .vs-inline-editor-title strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
 }
-
 .vs-inline-editor-title span {
-  margin-top: 4px;
-  color: var(--text-soft);
-  font-size: 12px;
+margin-top: 4px;
+color: var(--text-soft);
+font-size: 12px;
 }
-
 .vs-inline-editor label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+display: flex;
+flex-direction: column;
+gap: 6px;
+min-width: 0;
 }
-
 .vs-inline-editor input[type="date"],
 .vs-inline-editor input[type="text"] {
-  width: 100%;
-  min-width: 0;
+width: 100%;
+min-width: 0;
 }
-
 .vs-inline-editor-vacation {
-  flex-direction: row !important;
-  align-items: center;
-  align-self: end;
-  min-height: var(--control-height);
-  padding-inline: 8px;
-  white-space: nowrap;
+flex-direction: row !important;
+align-items: center;
+align-self: end;
+min-height: var(--control-height);
+padding-inline: 8px;
+white-space: nowrap;
 }
-
 .vs-inline-editor-vacation input {
-  flex: 0 0 auto;
-  width: auto;
+flex: 0 0 auto;
+width: auto;
 }
-
 .vs-inline-editor-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+grid-column: 1 / -1;
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
 }
-
 .vs-inline-editor-actions button {
-  width: auto !important;
-  min-width: 120px;
+width: auto !important;
+min-width: 120px;
 }
-
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] {
+table-layout: fixed !important;
+}
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] th:first-child,
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] td:first-child {
+width: 42px;
+}
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] th:nth-child(2),
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] td:nth-child(2) {
+width: 160px;
+}
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] th:nth-child(n+3),
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] td:nth-child(n+3) {
+width: 90px;
+}
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] input[data-vs-bulk-day] {
+width: 100%;
+min-width: 0;
+padding: 6px 5px;
+text-align: center;
+}
+#vsCurrentTableContainer .vs-table[data-vs-bulk-mode="true"] input[data-vs-bulk-day]:focus {
+position: relative;
+z-index: 2;
+}
 @media (max-width: 1199px) {
-  .vs-week-hint {
-    grid-column: 1 / -1;
-    min-height: 0;
-  }
+#vsBulkControls {
+grid-column: 1 / -1;
 }
-
+}
 @media (max-width: 1099px) {
-  .vs-inline-editor {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .vs-inline-editor-title,
-  .vs-inline-editor-actions {
-    grid-column: 1 / -1;
-  }
+.vs-inline-editor {
+grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-
+.vs-inline-editor-title,
+.vs-inline-editor-actions {
+grid-column: 1 / -1;
+}
+}
 @media (max-width: 599px) {
-  .vs-inline-editor {
-    grid-template-columns: 1fr;
-  }
-
-  .vs-inline-editor-title,
-  .vs-inline-editor-actions {
-    grid-column: auto;
-  }
-
-  .vs-inline-editor-actions {
-    flex-direction: column;
-  }
-
-  .vs-inline-editor-actions button {
-    width: 100% !important;
-  }
+#vsBulkControls {
+width: 100%;
+}
+#vsBulkControls button {
+width: 100% !important;
+}
+.vs-inline-editor {
+grid-template-columns: 1fr;
+}
+.vs-inline-editor-title,
+.vs-inline-editor-actions {
+grid-column: auto;
+}
+.vs-inline-editor-actions {
+flex-direction: column;
+}
+.vs-inline-editor-actions button {
+width: 100% !important;
+}
+}
+#vsTableHead .alliance-column-sort {
+display: none !important;
 }
