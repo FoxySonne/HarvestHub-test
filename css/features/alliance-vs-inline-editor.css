@@ -1,3 +1,7 @@
+#vsEditorCard,
+#vsBulkCard {
+display: none !important;
+}
 .vs-week-picker {
 min-width: 0;
 }
