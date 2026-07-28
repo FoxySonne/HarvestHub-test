@@ -10,57 +10,33 @@
     <p id="vsReviewMessage" class="alliance-form-message" aria-live="polite"></p>
   </section>
 
-  <section id="vsEditorCard" class="card" hidden>
-    <div class="card-header"><div><h3 id="vsEditorTitle">Внести результат VS</h3><p id="vsCurrentWeekLabel">Текущая неделя</p></div></div>
-    <form id="vsResultForm" class="vs-current-form">
-      <label><span>Участник</span><select id="vsParticipant" data-no-persist="true" required></select></label>
-      <label><span>День недели</span><select id="vsDay" data-no-persist="true"><option value="0">Понедельник</option><option value="1">Вторник</option><option value="2">Среда</option><option value="3">Четверг</option><option value="4">Пятница</option><option value="5">Суббота</option></select></label>
-      <label><span>Дата</span><input id="vsResultDate" type="date" data-no-persist="true" required></label>
-      <label class="vs-score-label"><span class="tooltip" data-tooltip="Число без буквы считается миллионами: 13 = 13М, 0,1 = 100k, 1280 = 1,28В. При необходимости можно использовать K, M, B или T.">Очки</span><input id="vsPoints" type="text" inputmode="decimal" data-no-persist="true"></label>
-      <label class="checkbox vs-vacation-field"><input id="vsVacation" type="checkbox" data-no-persist="true"><span>Отпуск</span></label>
-      <div class="alliance-actions"><button type="submit">Сохранить результат</button><button id="vsEditCancel" type="button" class="secondary-button" hidden>Отменить</button><button id="vsDeleteResult" type="button" class="danger-button" hidden>Удалить результат</button></div>
-    </form>
-  </section>
-
   <section id="vsTargetCard" class="card" hidden>
     <div class="card-header"><div><h3>Ежедневный норматив</h3></div></div>
     <form id="vsTargetForm" class="vs-target-form"><label><span>Норматив</span><input id="vsDailyTarget" type="text" inputmode="decimal" data-no-persist="true"></label><button type="submit">Сохранить</button></form>
   </section>
 
-  <section id="vsBulkCard" class="card" hidden>
-    <div class="card-header"><div><h3>Общее редактирование VS</h3><p id="vsBulkWeekLabel">Неделя</p></div></div>
-    <p class="vs-bulk-hint">Сохраняются только изменённые ячейки. Число без буквы считается миллионами. Буква «О» обозначает отпуск. Если очистить ранее заполненную ячейку, существующий результат будет удалён.</p>
-    <div class="alliance-actions vs-bulk-actions"><button id="vsBulkSave" type="button">Сохранить изменения</button><button id="vsBulkClose" type="button" class="secondary-button">Закрыть</button><button type="button" class="secondary-button vs-search-open" data-vs-search-open="bulk" aria-label="Найти игрока"></button></div>
-    <form id="vsBulkSearch" class="vs-player-search" data-vs-search="bulk" hidden>
-      <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока">
-      <button type="submit">Найти</button>
-      <button type="button" class="secondary-button" data-vs-search-close aria-label="Закрыть поиск">×</button>
-      <small data-vs-search-status></small>
-    </form>
-    <div class="alliance-table-wrap" data-horizontal-scroll>
-      <table class="alliance-table vs-bulk-table">
-        <thead><tr><th>Участник</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th></tr></thead>
-        <tbody id="vsBulkBody"></tbody>
-      </table>
-    </div>
-  </section>
-
   <section class="card alliance-list-card">
     <div class="card-header"><div><h3 id="vsTableWeekTitle">Текущая неделя</h3><p id="vsCount">0 участников</p></div></div>
     <div class="vs-table-controls">
-      <label class="vs-week-picker"><span>Неделя</span><input id="vsWeekDate" type="date" data-no-persist="true" aria-describedby="vsWeekHint"></label>
+      <label class="vs-week-picker"><span>Неделя</span><input id="vsWeekDate" type="date" data-no-persist="true"></label>
       <label class="checkbox vs-saturday-total-toggle tooltip" data-tooltip="Если отключить, общая сумма и выполнение недели считаются только по понедельнику–пятницу."><input id="vsIncludeSaturdayTotal" type="checkbox" data-no-persist="true"><span>Учитывать субботу</span></label>
       <button id="vsBulkOpen" type="button" class="secondary-button">Изменить таблицу</button>
+      <div id="vsBulkControls" class="vs-table-actions vs-bulk-actions" hidden>
+        <button id="vsBulkSave" type="button">Сохранить изменения</button>
+        <button id="vsBulkClose" type="button" class="secondary-button">Закрыть редактирование</button>
+        <small data-vs-draft-status aria-live="polite"></small>
+      </div>
       <button id="vsExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button>
       <button type="button" class="secondary-button vs-search-open" data-vs-search-open="main" aria-label="Найти игрока"></button>
     </div>
+    <p id="vsBulkHint" class="vs-bulk-hint" hidden>Сохраняются только изменённые ячейки. Число без буквы считается миллионами. Буква «О» обозначает отпуск. Enter сохраняет локальный черновик и переводит курсор на следующего игрока.</p>
     <form id="vsMainSearch" class="vs-player-search" data-vs-search="main" hidden>
       <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока">
       <button type="submit">Найти</button>
       <button type="button" class="secondary-button" data-vs-search-close aria-label="Закрыть поиск">×</button>
       <small data-vs-search-status></small>
     </form>
-    <div id="vsCurrentTableContainer" class="alliance-table-wrap vs-table-wrap" data-horizontal-scroll><button id="vsCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button><table class="alliance-table vs-table"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
+    <div id="vsCurrentTableContainer" class="alliance-table-wrap vs-table-wrap" data-horizontal-scroll><button id="vsCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button><table class="alliance-table vs-table" data-sort-initialized="true"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
     <div id="vsEmptyState" class="alliance-empty-state">Пока нет участников.</div>
     <div id="vsSummary" class="vs-summary" hidden></div>
   </section>
