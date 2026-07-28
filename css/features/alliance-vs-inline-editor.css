@@ -1,0 +1,114 @@
+/* Построчное редактирование результата VS внутри основной таблицы. */
+#vsEditorCard {
+  display: none !important;
+}
+
+#vsCurrentTableContainer .vs-inline-editor-row > td {
+  width: auto !important;
+  padding: 10px !important;
+  white-space: normal !important;
+  background: color-mix(in srgb, var(--panel) 88%, var(--accent) 12%);
+  box-shadow:
+    inset 0 1px 0 var(--border),
+    inset 0 -1px 0 var(--border);
+}
+
+.vs-inline-editor {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.2fr) minmax(145px, .8fr) minmax(170px, 1fr) max-content;
+  align-items: end;
+  gap: 10px 12px;
+  min-width: 0;
+}
+
+.vs-inline-editor-title {
+  align-self: center;
+  min-width: 0;
+}
+
+.vs-inline-editor-title strong,
+.vs-inline-editor-title span {
+  display: block;
+  max-width: 100%;
+}
+
+.vs-inline-editor-title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vs-inline-editor-title span {
+  margin-top: 4px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.vs-inline-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.vs-inline-editor input[type="date"],
+.vs-inline-editor input[type="text"] {
+  width: 100%;
+  min-width: 0;
+}
+
+.vs-inline-editor-vacation {
+  flex-direction: row !important;
+  align-items: center;
+  align-self: end;
+  min-height: var(--control-height);
+  padding-inline: 8px;
+  white-space: nowrap;
+}
+
+.vs-inline-editor-vacation input {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.vs-inline-editor-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vs-inline-editor-actions button {
+  width: auto !important;
+  min-width: 120px;
+}
+
+@media (max-width: 1099px) {
+  .vs-inline-editor {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vs-inline-editor-title,
+  .vs-inline-editor-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 599px) {
+  .vs-inline-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .vs-inline-editor-title,
+  .vs-inline-editor-actions {
+    grid-column: auto;
+  }
+
+  .vs-inline-editor-actions {
+    flex-direction: column;
+  }
+
+  .vs-inline-editor-actions button {
+    width: 100% !important;
+  }
+}
