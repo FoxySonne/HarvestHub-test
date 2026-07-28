@@ -3,6 +3,58 @@
   display: none !important;
 }
 
+.vs-week-picker {
+  min-width: 0;
+}
+
+.vs-week-picker input {
+  width: 100%;
+  min-width: 0;
+}
+
+.vs-week-hint {
+  align-self: end;
+  min-height: var(--control-height);
+  display: flex;
+  align-items: center;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+#vsTableHead th.is-vs-sortable {
+  position: sticky;
+  padding-right: 18px;
+  cursor: pointer;
+  user-select: none;
+}
+
+#vsTableHead th.is-vs-sortable::after {
+  content: "↕";
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-soft);
+  font-size: 10px;
+  opacity: .62;
+}
+
+#vsTableHead th.is-vs-sort-active::after {
+  content: "↓";
+  color: var(--accent);
+  opacity: 1;
+}
+
+#vsTableHead th.is-vs-sort-active[data-vs-sort-direction="asc"]::after {
+  content: "↑";
+}
+
+#vsTableHead th.is-vs-sortable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 #vsCurrentTableContainer .vs-inline-editor-row > td {
   width: auto !important;
   padding: 10px !important;
@@ -81,6 +133,13 @@
 .vs-inline-editor-actions button {
   width: auto !important;
   min-width: 120px;
+}
+
+@media (max-width: 1199px) {
+  .vs-week-hint {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 1099px) {
