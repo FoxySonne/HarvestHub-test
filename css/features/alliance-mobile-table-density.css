@@ -32,21 +32,17 @@
     vertical-align: middle;
   }
 
-  .alliance-table th:first-child,
-  .alliance-table td:first-child,
   .power-table th:first-child,
   .power-table td:first-child,
   .vs-table th:first-child,
   .vs-table td:first-child {
-    width: 40px;
-    min-width: 40px;
-    max-width: 40px;
-    padding-inline: 5px;
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    padding-inline: 3px;
     text-align: center;
   }
 
-  .alliance-table th:nth-child(2),
-  .alliance-table td:nth-child(2),
   .power-table th:nth-child(2),
   .power-table td:nth-child(2),
   .vs-table th:nth-child(2),
@@ -56,8 +52,6 @@
     max-width: 132px;
   }
 
-  .alliance-table td:nth-child(2) strong,
-  .alliance-table td:nth-child(2) small,
   .power-table td:nth-child(2) strong,
   .power-table td:nth-child(2) small,
   .vs-table td:nth-child(2) strong,
@@ -68,7 +62,6 @@
     white-space: nowrap;
   }
 
-  .alliance-table td:nth-child(2) small,
   .power-table td:nth-child(2) small,
   .vs-table td:nth-child(2) small {
     margin-top: 2px;
@@ -84,39 +77,37 @@
   }
 
   .power-table:not(.is-bulk-editing) {
-    min-width: 760px;
+    width: max-content;
+    min-width: 620px;
     table-layout: fixed;
   }
 
   .power-table:not(.is-bulk-editing) th:nth-child(3),
   .power-table:not(.is-bulk-editing) td:nth-child(3) {
-    width: 58px;
-    min-width: 58px;
-    max-width: 58px;
-    padding-inline: 5px;
-    text-align: center;
+    display: none;
   }
 
   .power-table:not(.is-bulk-editing) th:nth-child(4),
   .power-table:not(.is-bulk-editing) td:nth-child(4) {
-    width: 70px;
-    min-width: 70px;
-    max-width: 70px;
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    padding-inline: 5px;
     text-align: right;
   }
 
   .power-table:not(.is-bulk-editing) th:nth-child(n+5):nth-child(-n+9),
   .power-table:not(.is-bulk-editing) td:nth-child(n+5):nth-child(-n+9) {
-    width: 82px;
-    min-width: 82px;
-    max-width: 82px;
+    width: 78px;
+    min-width: 78px;
+    max-width: 78px;
   }
 
   .power-table:not(.is-bulk-editing) th:last-child,
   .power-table:not(.is-bulk-editing) td:last-child {
-    width: 78px;
-    min-width: 78px;
-    max-width: 78px;
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
   }
 
   .power-date-full {
@@ -128,21 +119,86 @@
   }
 
   .power-table.is-bulk-editing {
-    min-width: 720px;
+    min-width: 680px;
     table-layout: fixed;
   }
 
   .power-table.is-bulk-editing th:nth-child(n+3):nth-child(-n+7),
   .power-table.is-bulk-editing td:nth-child(n+3):nth-child(-n+7) {
-    width: 76px;
-    min-width: 76px;
-    max-width: 76px;
+    width: 74px;
+    min-width: 74px;
+    max-width: 74px;
   }
 
   .power-table.is-bulk-editing input {
     width: 100%;
     min-width: 0;
     padding: 6px 5px;
+  }
+
+  .alliance-roster-table {
+    width: max-content;
+    min-width: 650px;
+    table-layout: fixed;
+  }
+
+  .alliance-roster-table th:first-child,
+  .alliance-roster-table td:first-child {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    padding-inline: 8px;
+    text-align: left;
+  }
+
+  .alliance-roster-table th:nth-child(2),
+  .alliance-roster-table td:nth-child(2) {
+    width: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    padding-inline: 5px;
+    text-align: center;
+  }
+
+  .alliance-roster-table th:nth-child(3),
+  .alliance-roster-table td:nth-child(3) {
+    width: 92px;
+    min-width: 92px;
+    max-width: 92px;
+    padding-inline: 6px;
+    white-space: nowrap;
+  }
+
+  .alliance-roster-table th:nth-child(4),
+  .alliance-roster-table td:nth-child(4) {
+    width: 76px;
+    min-width: 76px;
+    max-width: 76px;
+    padding-inline: 6px;
+    white-space: nowrap;
+  }
+
+  .alliance-roster-table .participant-nickname-cell,
+  .alliance-roster-table .participant-nickname,
+  .alliance-roster-table .participant-twin-details {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .alliance-roster-table .participant-nickname {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .alliance-roster-table .participant-twin-details {
+    display: block;
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
   }
 
   .power-summary,
@@ -154,18 +210,23 @@
 }
 
 @media (max-width: 420px) {
-  .alliance-table th:nth-child(2),
-  .alliance-table td:nth-child(2),
   .power-table th:nth-child(2),
   .power-table td:nth-child(2),
   .vs-table th:nth-child(2),
   .vs-table td:nth-child(2) {
-    width: 116px;
-    min-width: 116px;
-    max-width: 116px;
+    width: 124px;
+    min-width: 124px;
+    max-width: 124px;
   }
 
   .power-table:not(.is-bulk-editing) {
-    min-width: 690px;
+    min-width: 590px;
+  }
+
+  .alliance-roster-table th:first-child,
+  .alliance-roster-table td:first-child {
+    width: 138px;
+    min-width: 138px;
+    max-width: 138px;
   }
 }
