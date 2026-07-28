@@ -381,6 +381,45 @@ function renderPeriod(rows, weeks) {
   `).join("");
 }
 
+function playerCountLabel(count) {
+  const lastTwo = count % 100;
+  const last = count % 10;
+  const word = lastTwo >= 11 && lastTwo <= 14
+    ? "игроков"
+    : last === 1
+      ? "игрок"
+      : last >= 2 && last <= 4
+        ? "игрока"
+        : "игроков";
+  return `${count} ${word}`;
+}
+
+function extremumSummary(rows, type) {
+  const isBest = type === "best";
+  const singularLabel = isBest ? "Лучший участник" : "Худший участник";
+  const pluralLabel = isBest ? "Лучшие участники" : "Худшие участники";
+  const baseTitle = "Игроки с неполным выбранным периодом не участвуют в сравнении";
+  if (!rows.length) return { label: singularLabel, value: "—", title: baseTitle };
+
+  const totals = rows.map(row => Number(row.total) || 0);
+  const target = isBest ? Math.max(...totals) : Math.min(...totals);
+  const tied = rows
+    .filter(row => (Number(row.total) || 0) === target)
+    .sort((a, b) => a.nickname.localeCompare(b.nickname, "ru"));
+
+  if (tied.length === 1) {
+    return { label: singularLabel, value: tied[0].nickname, title: baseTitle };
+  }
+
+  const score = target === 0 ? "0" : formatScore(target);
+  const names = tied.map(row => row.nickname).join(", ");
+  return {
+    label: pluralLabel,
+    value: `${playerCountLabel(tied.length)} · ${score}`,
+    title: `${baseTitle}. Равный результат: ${names}`
+  };
+}
+
 function renderSummary(rows, weeks) {
   const box = byId("vsStatsSummary");
   if (!rows.length) {
@@ -393,9 +432,8 @@ function renderSummary(rows, weeks) {
   const complete = eligible.filter(row => row.complete).length;
   const incomplete = eligible.length - complete;
   const percentage = eligible.length ? Math.round(complete / eligible.length * 100) : 0;
-  const ranked = [...eligible].sort((a, b) => b.total - a.total || a.nickname.localeCompare(b.nickname, "ru"));
-  const best = ranked[0];
-  const worst = ranked[ranked.length - 1];
+  const best = extremumSummary(eligible, "best");
+  const worst = extremumSummary(eligible, "worst");
   let extra = "";
 
   if (weeks.length === 1) {
@@ -427,8 +465,8 @@ function renderSummary(rows, weeks) {
     <div title="Игроки с неполным периодом не входят"><span>Выполнили всё</span><strong>${complete}</strong></div>
     <div title="Игроки с неполным периодом не входят"><span>Выполнили не всё</span><strong>${incomplete}</strong></div>
     <div title="Процент считается только среди игроков, состоявших в союзе весь выбранный период"><span>Выполнили полностью</span><strong>${percentage}%</strong></div>
-    <div><span>Лучший участник</span><strong>${escapeHtml(best?.nickname || "—")}</strong></div>
-    <div><span>Худший участник</span><strong>${escapeHtml(worst?.nickname || "—")}</strong></div>
+    <div title="${escapeHtml(best.title)}"><span>${best.label}</span><strong>${escapeHtml(best.value)}</strong></div>
+    <div title="${escapeHtml(worst.title)}"><span>${worst.label}</span><strong>${escapeHtml(worst.value)}</strong></div>
     ${extra}`;
 }
 
