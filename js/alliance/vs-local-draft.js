@@ -86,15 +86,16 @@
   }
 
   function saveDraft() {
-    if (!byId("vsResultForm")) return;
+    if (!byId("vsResultForm")) return false;
     const existing = readDraft() || {};
     const regular = collectRegular();
     const bulk = collectBulk();
-    if (!regular && !bulk) return;
+    if (!regular && !bulk) return false;
     const draft = { ...existing, savedAt: new Date().toISOString() };
     if (regular) draft.regular = regular;
     if (bulk) draft.bulk = bulk;
     writeDraft(draft);
+    return true;
   }
 
   function restoreRegular(draft) {
@@ -166,7 +167,7 @@
       dirtyRegular = false;
       removeDraftSection("regular");
     }
-    if (message === "Результаты недели сохранены.") {
+    if (message === "Результаты недели сохранены." || message.startsWith("Сохранено изменений:")) {
       dirtyBulk.clear();
       removeDraftSection("bulk");
     }
@@ -188,17 +189,57 @@
     setTimeout(restoreDraft, 100);
   }
 
+  function markBulkCell(input) {
+    const key = bulkCellKey(input);
+    if (!key) return;
+    if (input.value === (input.dataset.original || "")) dirtyBulk.delete(key);
+    else dirtyBulk.add(key);
+  }
+
+  function moveBulkFocus(input, direction) {
+    const card = byId("vsBulkCard");
+    const day = input.dataset.vsBulkDay;
+    if (!card || !day) return;
+    const columnInputs = [...card.querySelectorAll(`[data-vs-bulk-day="${CSS.escape(day)}"]`)]
+      .filter(item => !item.disabled);
+    const currentIndex = columnInputs.indexOf(input);
+    const nextInput = columnInputs[currentIndex + direction];
+    if (!nextInput) return;
+    nextInput.focus({ preventScroll: true });
+    nextInput.select?.();
+    nextInput.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }
+
+  function handleEnter(event) {
+    if (event.key !== "Enter" || event.isComposing) return;
+
+    const bulkInput = event.target.closest?.("[data-vs-bulk-day]");
+    if (bulkInput) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      markBulkCell(bulkInput);
+      saveDraft();
+      moveBulkFocus(bulkInput, event.shiftKey ? -1 : 1);
+      return;
+    }
+
+    const inlineForm = event.target.closest?.("[data-vs-inline-form]");
+    if (!inlineForm || event.target.closest("button")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    inlineForm.requestSubmit();
+  }
+
   document.addEventListener("input", event => {
     if (event.target.closest("#vsResultForm")) dirtyRegular = true;
-    if (event.target.matches("[data-vs-bulk-day]")) {
-      const key = bulkCellKey(event.target);
-      if (key) dirtyBulk.add(key);
-    }
+    if (event.target.matches("[data-vs-bulk-day]")) markBulkCell(event.target);
   });
 
   document.addEventListener("change", event => {
     if (event.target.closest("#vsResultForm")) dirtyRegular = true;
   });
+
+  document.addEventListener("keydown", handleEnter);
 
   document.addEventListener("click", event => {
     if (event.target.closest("#vsBulkOpen")) setTimeout(restoreDraft, 150);
