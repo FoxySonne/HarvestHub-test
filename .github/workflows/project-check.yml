@@ -34,6 +34,19 @@ jobs:
       - name: Check repository structure and code
         run: npm run check:ci 2> project-check-errors.txt
 
+      - name: Build repository audit
+        if: always()
+        run: npm run audit
+
+      - name: Upload project audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-audit
+          path: reports/
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload check report
         if: failure()
         uses: actions/upload-artifact@v4
