@@ -2,19 +2,26 @@ name: Project check
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - development
+      - "chore/**"
+      - "fix/**"
+      - "feature/**"
   pull_request:
 
 permissions:
   contents: read
 
 concurrency:
-  group: project-check-${{ github.ref }}
+  group: project-check-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,9 +30,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Check JavaScript and assets
-        run: npm run check 2> project-check-errors.txt
+      - name: Check repository structure and code
+        run: npm run check:ci 2> project-check-errors.txt
 
       - name: Upload check report
         if: failure()
@@ -34,3 +43,4 @@ jobs:
           name: project-check-errors
           path: project-check-errors.txt
           if-no-files-found: ignore
+          retention-days: 14
