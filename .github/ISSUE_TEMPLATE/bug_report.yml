@@ -1,0 +1,52 @@
+name: Сообщить об ошибке
+description: Зафиксировать воспроизводимую проблему на сайте
+title: "[Ошибка] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Что произошло
+      description: Опишите фактическое поведение.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Как должно работать
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как повторить
+      description: Перечислите действия по порядку.
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Страница сайта
+  - type: dropdown
+    id: device
+    attributes:
+      label: Устройство
+      options:
+        - Телефон
+        - Планшет
+        - Компьютер
+        - Несколько устройств
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Скриншоты и дополнительные сведения
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Проверка
+      options:
+        - label: Я проверил(а), что похожая задача ещё не заведена
+          required: true
