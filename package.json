@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "audit": "node scripts/audit-project.mjs",
     "check": "node scripts/check-project.mjs",
     "check:ci": "node scripts/check-project.mjs --ci"
   },
