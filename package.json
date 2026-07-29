@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "audit": "node scripts/audit-project.mjs",
-    "check": "node scripts/check-project.mjs",
-    "check:ci": "node scripts/check-project.mjs --ci"
+    "check": "node scripts/check-project.mjs && node scripts/check-legacy-sql.mjs",
+    "check:ci": "node scripts/check-project.mjs --ci && node scripts/check-legacy-sql.mjs"
   },
   "engines": {
     "node": ">=22"
