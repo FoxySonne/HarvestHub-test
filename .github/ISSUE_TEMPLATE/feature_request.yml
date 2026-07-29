@@ -1,0 +1,34 @@
+name: Предложить улучшение
+description: Описать новую возможность или изменение поведения
+title: "[Улучшение] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Какую задачу нужно решить
+      description: Опишите потребность пользователя, а не только желаемую кнопку или поле.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Предлагаемое решение
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Как это работает сейчас
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Когда задачу можно считать выполненной
+      description: Перечислите ожидаемые результаты.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Дополнительные сведения
