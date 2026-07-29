@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/check-project.mjs"
+    "check": "node scripts/check-project.mjs",
+    "check:ci": "node scripts/check-project.mjs --ci"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
