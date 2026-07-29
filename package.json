@@ -3,6 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/check-project.mjs"
+    "audit": "node scripts/audit-project.mjs",
+    "check": "node scripts/check-project.mjs && node scripts/check-legacy-sql.mjs",
+    "check:ci": "node scripts/check-project.mjs --ci && node scripts/check-legacy-sql.mjs"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -1,0 +1,23 @@
+{
+  "description": "Исторические SQL-снимки. Они сохранены только для сверки и никогда не применяются к действующей базе вручную.",
+  "files": [
+    "001_alliance_hub.sql",
+    "002_alliance_guest_view.sql",
+    "003_alliance_create_rpc.sql",
+    "005_alliance_membership_repair.sql",
+    "005_alliance_participants_v2.sql",
+    "006_alliance_memberships_v2.sql",
+    "007_alliance_squad_power.sql",
+    "008_alliance_vs_statistics.sql",
+    "009_alliance_roles_and_ownership.sql",
+    "010_alliance_current_user_identity.sql",
+    "011_alliance_r5_rank_guard.sql",
+    "012_alliance_account_roles.sql",
+    "013_alliance_twins_and_nickname_history.sql",
+    "013_reservoir_activity.sql",
+    "014_reservoir_layout.sql",
+    "015_alliance_departed_restore.sql",
+    "20260723_account_personal_data.sql",
+    "20260724_vs_saturday_total.sql"
+  ]
+}
