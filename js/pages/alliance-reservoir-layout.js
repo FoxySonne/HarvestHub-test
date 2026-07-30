@@ -4,7 +4,6 @@ import { fetchReservoirLayout, saveReservoirLayout, resetReservoirLayout } from 
 import { fetchAllianceSquadPower } from "../alliance/power-api.js?v=20260718-50";
 
 const byId = id => document.getElementById(id);
-const SECONDARY_LOCATION_KEYS = new Set(["central", "development", "military"]);
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -32,14 +31,14 @@ const state = {
 };
 
 const LOCATIONS = [
-  { key: "treatment_1", name: "Водоочистительный центр 1", x: 37, y: 70, repeatGroup: "primary", points: "6000", rate: "1200/мин" },
-  { key: "treatment_2", name: "Водоочистительный центр 2", x: 72, y: 20, repeatGroup: "primary", points: "6000", rate: "1200/мин" },
-  { key: "processing_1", name: "Водообрабатывающий завод 1", x: 25, y: 70, repeatGroup: "primary", points: "3000", rate: "600/мин" },
-  { key: "processing_2", name: "Водообрабатывающий завод 2", x: 84, y: 18, repeatGroup: "primary", points: "3000", rate: "600/мин" },
-  { key: "processing_3", name: "Водообрабатывающий завод 3", x: 35, y: 15, repeatGroup: "primary", points: "3000", rate: "600/мин" },
-  { key: "processing_4", name: "Водообрабатывающий завод 4", x: 72, y: 76, repeatGroup: "primary", points: "3000", rate: "600/мин" },
-  { key: "solar", name: "Солнечная электростанция", x: 18, y: 25, repeatGroup: "primary", points: "1200", rate: "240/мин", effect: "Время захвата −50%" },
-  { key: "helipad", name: "Заброшенная вертолётная площадка", x: 88, y: 63, repeatGroup: "primary", points: "1200", rate: "240/мин", effect: "Откат релокатора −50%" },
+  { key: "treatment_1", name: "Водоочистительный центр 1", x: 37, y: 70, points: "6000", rate: "1200/мин" },
+  { key: "treatment_2", name: "Водоочистительный центр 2", x: 72, y: 20, points: "6000", rate: "1200/мин" },
+  { key: "processing_1", name: "Водообрабатывающий завод 1", x: 25, y: 70, points: "3000", rate: "600/мин" },
+  { key: "processing_2", name: "Водообрабатывающий завод 2", x: 84, y: 18, points: "3000", rate: "600/мин" },
+  { key: "processing_3", name: "Водообрабатывающий завод 3", x: 35, y: 15, points: "3000", rate: "600/мин" },
+  { key: "processing_4", name: "Водообрабатывающий завод 4", x: 72, y: 76, points: "3000", rate: "600/мин" },
+  { key: "solar", name: "Солнечная электростанция", x: 18, y: 25, points: "1200", rate: "240/мин", effect: "Время захвата −50%" },
+  { key: "helipad", name: "Заброшенная вертолётная площадка", x: 88, y: 63, points: "1200", rate: "240/мин", effect: "Откат релокатора −50%" },
   { key: "central", name: "Центральный резервуар", x: 51, y: 48, points: "9000", rate: "1800/мин" },
   { key: "development", name: "Комплекс разработки", x: 43, y: 30, points: "1200", rate: "240/мин" },
   { key: "military", name: "Военный завод", x: 66, y: 57, points: "1200", rate: "240/мин", effect: "+15% к атаке и защите" }
@@ -84,23 +83,11 @@ function totalLocationPower(key) {
 }
 
 function assignedLocationKeys(participantId) {
-  return LOCATIONS
-    .filter(location => locationAssignments(location.key).includes(participantId))
-    .map(location => location.key);
+  return LOCATIONS.filter(location => locationAssignments(location.key).includes(participantId)).map(location => location.key);
 }
 
 function assignmentCount(participantId) {
   return assignedLocationKeys(participantId).length;
-}
-
-function isAssignedAnywhere(participantId) {
-  return assignmentCount(participantId) > 0;
-}
-
-function canUseLocationPair(locationKeys) {
-  if (locationKeys.length <= 1) return true;
-  if (locationKeys.length > 2) return false;
-  return locationKeys.some(key => SECONDARY_LOCATION_KEYS.has(key));
 }
 
 function bindDragSources(root) {
@@ -122,11 +109,7 @@ function renderMap() {
     ${COLLECTORS.map(group => `<button type="button" class="reservoir-map-collectors" data-collector="${group.key}" style="left:${group.x}%;top:${group.y}%" aria-label="Водосборники"><span></span><span></span><span></span></button>`).join("")}
     ${LOCATIONS.map(location => {
       const count = locationAssignments(location.key).length;
-      return `<button type="button" class="reservoir-map-location" data-location-key="${location.key}" style="left:${location.x}%;top:${location.y}%">
-        <span class="reservoir-map-building"></span>
-        <span class="reservoir-map-location-name">${location.name}</span>
-        ${state.canEdit ? `<strong class="reservoir-map-count">${count}</strong>` : ""}
-      </button>`;
+      return `<button type="button" class="reservoir-map-location" data-location-key="${location.key}" style="left:${location.x}%;top:${location.y}%"><span class="reservoir-map-building"></span><span class="reservoir-map-location-name">${location.name}</span>${state.canEdit ? `<strong class="reservoir-map-count">${count}</strong>` : ""}</button>`;
     }).join("")}`;
 
   if (!state.canEdit) return;
@@ -159,21 +142,11 @@ function showLocationCard(locationKey, anchor) {
     ? `<div class="reservoir-location-popover-players">${ids.map(id => {
         const player = playerById(id);
         if (!player) return "";
-        return `<div class="reservoir-location-popover-player" ${state.canEdit ? `draggable="true" data-player-id="${escapeHtml(id)}" data-source-location="${locationKey}"` : ""}>
-          <span>${escapeHtml(player.nickname)}</span>
-          <strong>${formatPower(state.powers.get(id))}</strong>
-          ${player.assignment === "reserve" ? "<small>Резерв</small>" : ""}
-        </div>`;
+        return `<div class="reservoir-location-popover-player" ${state.canEdit ? `draggable="true" data-player-id="${escapeHtml(id)}" data-source-location="${locationKey}"` : ""}><span>${escapeHtml(player.nickname)}</span><strong>${formatPower(state.powers.get(id))}</strong>${player.assignment === "reserve" ? "<small>Резерв</small>" : ""}</div>`;
       }).join("")}</div>`
     : `<span class="reservoir-location-empty">Игроки не назначены</span>`;
 
-  popover.innerHTML = `
-    <strong>${location.name}</strong>
-    <span>${location.points} очков · ${location.rate}</span>
-    ${location.effect ? `<span>${location.effect}</span>` : ""}
-    <div class="reservoir-location-popover-heading">Назначенные игроки: ${ids.length}</div>
-    ${playersMarkup}
-    ${note ? `<span>${escapeHtml(note)}</span>` : ""}`;
+  popover.innerHTML = `<strong>${location.name}</strong><span>${location.points} очков · ${location.rate}</span>${location.effect ? `<span>${location.effect}</span>` : ""}<div class="reservoir-location-popover-heading">Назначенные игроки: ${ids.length}</div>${playersMarkup}${note ? `<span>${escapeHtml(note)}</span>` : ""}`;
   popover.hidden = false;
   popover.dataset.locationKey = locationKey;
   bindDragSources(popover);
@@ -182,6 +155,11 @@ function showLocationCard(locationKey, anchor) {
   const rect = anchor.getBoundingClientRect();
   popover.style.left = `${Math.max(8, Math.min(viewportRect.width - 328, rect.left - viewportRect.left))}px`;
   popover.style.top = `${Math.max(8, rect.bottom - viewportRect.top + 8)}px`;
+}
+
+function assignmentLabel(count) {
+  if (!count) return "";
+  return `<em>Назначен: ${count}</em>`;
 }
 
 function renderPlayerPool() {
@@ -195,12 +173,7 @@ function renderPlayerPool() {
 
   pool.innerHTML = players.map(item => {
     const count = assignmentCount(item.participant_id);
-    return `<button type="button" class="reservoir-player-chip${count ? " is-assigned" : ""}" draggable="true" data-player-id="${escapeHtml(item.participant_id)}">
-      <span>${escapeHtml(item.nickname)}</span>
-      <strong>${formatPower(state.powers.get(item.participant_id))}</strong>
-      ${item.assignment === "reserve" ? "<small>Р</small>" : ""}
-      ${count === 1 ? "<em>Расставлен</em>" : count === 2 ? "<em>Назначен дважды</em>" : ""}
-    </button>`;
+    return `<button type="button" class="reservoir-player-chip${count ? " is-assigned" : ""}" draggable="true" data-player-id="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${item.assignment === "reserve" ? "<small>Р</small>" : ""}${assignmentLabel(count)}</button>`;
   }).join("");
   bindDragSources(pool);
 }
@@ -210,15 +183,11 @@ function renderPlacementGrid() {
   if (!grid) return;
   grid.innerHTML = LOCATIONS.map(location => {
     const ids = locationAssignments(location.key);
-    return `<section class="reservoir-location-column" data-location-column="${location.key}">
-      <header><div><strong>${location.name}</strong><span>${ids.length} игроков · ${formatPower(totalLocationPower(location.key))} БМ</span></div><button type="button" class="secondary-button" data-add-player="${location.key}">Добавить</button></header>
-      <div class="reservoir-location-players">${ids.map(id => {
-        const player = playerById(id);
-        if (!player) return "";
-        return `<div class="reservoir-assigned-player" draggable="true" data-player-id="${escapeHtml(id)}" data-source-location="${location.key}"><span>${escapeHtml(player.nickname)}</span><strong>${formatPower(state.powers.get(id))}</strong>${player.assignment === "reserve" ? "<small>Р</small>" : ""}<button type="button" data-remove-player="${id}" data-location-key="${location.key}" aria-label="Убрать">×</button></div>`;
-      }).join("")}</div>
-      <textarea data-location-note="${location.key}" rows="2" placeholder="Комментарий к локации">${escapeHtml(state.notes.get(location.key) || "")}</textarea>
-    </section>`;
+    return `<section class="reservoir-location-column" data-location-column="${location.key}"><header><div><strong>${location.name}</strong><span>${ids.length} игроков · ${formatPower(totalLocationPower(location.key))} БМ</span></div><button type="button" class="secondary-button" data-add-player="${location.key}">Добавить</button></header><div class="reservoir-location-players">${ids.map(id => {
+      const player = playerById(id);
+      if (!player) return "";
+      return `<div class="reservoir-assigned-player" draggable="true" data-player-id="${escapeHtml(id)}" data-source-location="${location.key}"><span>${escapeHtml(player.nickname)}</span><strong>${formatPower(state.powers.get(id))}</strong>${player.assignment === "reserve" ? "<small>Р</small>" : ""}<button type="button" data-remove-player="${id}" data-location-key="${location.key}" aria-label="Убрать">×</button></div>`;
+    }).join("")}</div><textarea data-location-note="${location.key}" rows="2" placeholder="Комментарий к локации">${escapeHtml(state.notes.get(location.key) || "")}</textarea></section>`;
   }).join("");
   bindDragSources(grid);
   renderWarnings();
@@ -249,10 +218,6 @@ function renderWarnings() {
   if (unassigned.length) warnings.push(`Не распределены: ${unassigned.length}`);
   const missingPower = state.roster.filter(item => !state.powers.get(item.participant_id));
   if (missingPower.length) warnings.push(`Нет БМ: ${missingPower.length}`);
-  const invalidNames = state.roster
-    .filter(player => !canUseLocationPair(assignedLocationKeys(player.participant_id)))
-    .map(item => item.nickname);
-  if (invalidNames.length) warnings.push(`Недопустимые повторные назначения: ${invalidNames.join(", ")}`);
   const box = byId("reservoirWarnings");
   if (!box) return;
   box.hidden = warnings.length === 0;
@@ -274,18 +239,6 @@ function placePlayer(locationKey, participantId, sourceLocation = null) {
     return false;
   }
 
-  const nextKeys = sourceLocation
-    ? [...new Set(currentKeys.filter(key => key !== sourceLocation).concat(locationKey))]
-    : [...new Set(currentKeys.concat(locationKey))];
-
-  if (!canUseLocationPair(nextKeys)) {
-    const message = currentKeys.length >= 2
-      ? "Игрока можно назначить максимум на две локации."
-      : "Повторное назначение разрешено только через Центральный резервуар, Комплекс разработки или Военный завод.";
-    showMessage(message, "warning");
-    return false;
-  }
-
   if (sourceLocation) {
     state.assignments.set(sourceLocation, locationAssignments(sourceLocation).filter(id => id !== participantId));
   }
@@ -298,10 +251,6 @@ function placePlayer(locationKey, participantId, sourceLocation = null) {
   showMessage("", "info");
   renderAll();
   return true;
-}
-
-function movePlayer(locationKey, participantId) {
-  return placePlayer(locationKey, participantId);
 }
 
 function addPlayer(locationKey, participantId) {
@@ -330,7 +279,7 @@ function renderPicker() {
     .sort((left, right) => assignmentCount(left.participant_id) - assignmentCount(right.participant_id));
   byId("reservoirPickerList").innerHTML = players.map(item => {
     const count = assignmentCount(item.participant_id);
-    return `<button type="button" data-picker-player="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}${item.assignment === "reserve" ? " · резерв" : ""}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${count === 1 ? "<small>Уже назначен один раз</small>" : count === 2 ? "<small>Назначен дважды</small>" : ""}</button>`;
+    return `<button type="button" data-picker-player="${escapeHtml(item.participant_id)}"><span>${escapeHtml(item.nickname)}${item.assignment === "reserve" ? " · резерв" : ""}</span><strong>${formatPower(state.powers.get(item.participant_id))}</strong>${count ? `<small>Назначен: ${count}</small>` : ""}</button>`;
   }).join("");
 }
 
