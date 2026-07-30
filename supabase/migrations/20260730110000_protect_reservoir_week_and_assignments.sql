@@ -3,11 +3,6 @@ alter table public.alliance_reservoir_participants
   add constraint alliance_reservoir_participants_comment_length_check
     check (char_length(comment) <= 1000);
 
-alter table public.alliance_reservoir_assignments
-  drop constraint if exists alliance_reservoir_assignments_sort_order_check,
-  add constraint alliance_reservoir_assignments_sort_order_check
-    check (sort_order between 0 and 99);
-
 create or replace function public.validate_reservoir_week_update()
 returns trigger
 language plpgsql
@@ -91,15 +86,6 @@ begin
       and rp.assignment in ('main','reserve')
   ) then
     raise exception 'Сначала добавь игрока в состав недели резервуара';
-  end if;
-
-  if exists (
-    select 1 from public.alliance_reservoir_assignments a
-    where a.week_id = new.week_id
-      and a.participant_id = new.participant_id
-      and a.location_key <> new.location_key
-  ) then
-    raise exception 'Игрок уже назначен в другую локацию этой недели';
   end if;
 
   if week_row.closed_at is not null then
