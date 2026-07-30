@@ -1,5 +1,6 @@
 import { initPowerSection } from "../alliance/power-section.js?v=20260727-power-missing-marker-1";
 import { initPowerInlineRowEditor } from "../alliance/power-inline-row-editor.js?v=20260728-power-row-editor-1";
+import { initPowerAnomalyWarning } from "../alliance/power-anomaly-warning.js?v=20260730-power-500m-warning-1";
 import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance } from "../alliance/page-context.js?v=20260718-1";
 
 export async function init() {
@@ -17,6 +18,7 @@ export async function init() {
       canManage,
       currentParticipantId: context.currentParticipant?.id || ""
     });
+    initPowerAnomalyWarning();
   } catch (error) {
     if (!box) return;
     box.hidden = false;
