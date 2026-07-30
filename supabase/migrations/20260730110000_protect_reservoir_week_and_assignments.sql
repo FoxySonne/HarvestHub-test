@@ -1,7 +1,7 @@
 alter table public.alliance_reservoir_participants
   drop constraint if exists alliance_reservoir_participants_comment_length_check,
   add constraint alliance_reservoir_participants_comment_length_check
-    check (char_length(comment) <= 1000);
+    check (char_length(comment) <= 500);
 
 create or replace function public.validate_reservoir_week_update()
 returns trigger
@@ -42,8 +42,8 @@ begin
     raise exception 'Можно добавить только действующего участника этого союза';
   end if;
 
-  if char_length(coalesce(new.comment, '')) > 1000 then
-    raise exception 'Комментарий не должен быть длиннее 1000 символов';
+  if char_length(coalesce(new.comment, '')) > 500 then
+    raise exception 'Комментарий не должен быть длиннее 500 символов';
   end if;
 
   if week_row.closed_at is not null then
