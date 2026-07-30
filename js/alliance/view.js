@@ -27,7 +27,7 @@ function formatTimezone(value) {
   if (value === null || value === undefined || value === "") return "—";
   const number = Number(value);
   if (!Number.isFinite(number)) return "—";
-  return number === 0 ? "МСК" : `МСК${number > 0 ? "+" : ""}${number}`;
+  return number > 0 ? `+${number}` : String(number);
 }
 
 function nicknameHistoryTitle(history, currentNickname) {
