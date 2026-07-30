@@ -68,6 +68,45 @@ function getSettingsAuthError(error, fallback = "Не удалось выпол�
     return fallback;
 }
 
+function allianceLabel(item) {
+    const name = String(item?.alliance_name || "Союз").trim();
+    const state = String(item?.state_number || "").trim();
+    return state ? `${name} (штат ${state})` : name;
+}
+
+function formatAccountDeletionBlockers(blockers) {
+    const reasons = [];
+    const ownerships = Array.isArray(blockers?.ownerships) ? blockers.ownerships : [];
+    const r5Assignments = Array.isArray(blockers?.r5_assignments) ? blockers.r5_assignments : [];
+
+    if (ownerships.length) {
+        reasons.push(`Сначала передайте владение: ${ownerships.map(allianceLabel).join(", ")}.`);
+    }
+    if (r5Assignments.length) {
+        reasons.push(`Сначала передайте роль Р5: ${r5Assignments.map(allianceLabel).join(", ")}.`);
+    }
+
+    return reasons.length
+        ? `Аккаунт пока нельзя удалить. ${reasons.join(" ")}`
+        : "Аккаунт пока нельзя удалить. Проверьте роли в союзном штабе и попробуйте снова.";
+}
+
+function getAccountDeletionError(data, error) {
+    if (data?.code === "ACCOUNT_DELETE_BLOCKED") {
+        return formatAccountDeletionBlockers(data.blockers);
+    }
+    if (data?.code === "UNAUTHORIZED") {
+        return "Сессия устарела. Войдите в аккаунт заново и повторите удаление.";
+    }
+    if (data?.code === "BLOCKERS_CHECK_FAILED") {
+        return "Не удалось проверить роли в союзах. Попробуйте ещё раз позже.";
+    }
+    if (data?.code === "SERVER_CONFIG_ERROR") {
+        return "Удаление аккаунта временно недоступно из-за настройки сервера.";
+    }
+    return getSettingsAuthError(error, "Не удалось удалить аккаунт. Попробуйте ещё раз позже.");
+}
+
 function toggleSettingsPassword(inputId, button) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -143,6 +182,8 @@ async function initAccountSecurity() {
 
         button.disabled = true;
         button.textContent = "Проверяем…";
+        setSettingsMessage("deleteAccountMessage", "");
+
         const { error: loginError } = await window.harvestHubSupabase.auth.signInWithPassword({ email, password });
         if (loginError) {
             button.disabled = false;
@@ -155,14 +196,22 @@ async function initAccountSecurity() {
         }
 
         button.textContent = "Удаляем…";
-        const { error: deleteError } = await window.harvestHubSupabase.functions.invoke("delete-account", { body: { confirmation: "DELETE_ACCOUNT" } });
-        if (deleteError) {
+        const { data, error: deleteError } = await window.harvestHubSupabase.functions.invoke("delete-account", {
+            body: { confirmation: "DELETE_ACCOUNT" }
+        });
+        const deletionConfirmed = data?.ok === true && data?.deleted === true;
+
+        if (deleteError || !deletionConfirmed) {
             button.disabled = false;
             button.textContent = "Удалить аккаунт";
-            return setSettingsMessage("deleteAccountMessage", "Не удалось удалить аккаунт. Попробуйте ещё раз позже.", "error");
+            return setSettingsMessage(
+                "deleteAccountMessage",
+                getAccountDeletionError(data, deleteError),
+                "error"
+            );
         }
 
-        await window.harvestHubSupabase.auth.signOut();
+        await window.harvestHubSupabase.auth.signOut({ scope: "local" });
         localStorage.clear();
         sessionStorage.clear();
         window.location.replace(window.location.pathname);
