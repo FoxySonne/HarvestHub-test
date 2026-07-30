@@ -274,15 +274,15 @@ function confirmTyped(message, nickname) {
 
 async function transferR5(event) {
   const participant = selectedParticipant();
-  const previousRole = byId("alliancePreviousR5Role")?.value;
+  const previousRank = byId("alliancePreviousR5Role")?.value;
   if (!participant?.linked_user_id) return showMessage("Сначала свяжи нового Р5 с аккаунтом.", "error");
   const oldR5 = activeParticipants().find(item => item.rank_name === "Р5");
-  const message = `«${participant.nickname}» немедленно станет новым Р5. ${oldR5 && oldR5.id !== participant.id ? `Прежний Р5 «${oldR5.nickname}» станет Р4 и ${roleAfterTransfer(previousRole)}.` : "Другой Р5 сейчас не назначен."}`;
+  const message = `«${participant.nickname}» немедленно станет новым Р5. ${oldR5 && oldR5.id !== participant.id ? `Прежний Р5 «${oldR5.nickname}» получит ранг ${previousRank}.` : "Другой Р5 сейчас не назначен."}`;
   if (!confirmTyped(message, participant.nickname)) return;
   const button = event.currentTarget;
   button.disabled = true;
   try {
-    const { error } = await transferAllianceR5(state.client, getActiveAllianceId(), participant.id, previousRole);
+    const { error } = await transferAllianceR5(state.client, getActiveAllianceId(), participant.id, previousRank);
     if (error) throw error;
     await reload();
     showMessage("Новый Р5 назначен.", "success");
