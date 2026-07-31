@@ -64,6 +64,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     canManage: Boolean(canManage),
     currentParticipantId: currentParticipantId || "",
     participants: new Map(),
+    participantsLoaded: false,
     editingId: "",
     date: rememberDate(storedDate()),
     values: ["", "", "", "", ""],
@@ -137,8 +138,11 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     document.querySelectorAll("#powerTableBody [data-power-edit]").forEach(button => {
       const participantId = button.dataset.powerEdit || "";
       const item = participant(participantId);
-      const allowed = canEditParticipant(participantId);
-      button.hidden = !allowed;
+      const accessKnown = state.canManage
+        || participantId === state.currentParticipantId
+        || state.participantsLoaded;
+      const allowed = accessKnown && canEditParticipant(participantId);
+      button.hidden = state.participantsLoaded && !allowed;
       button.disabled = !allowed;
       button.textContent = item?.latest_date ? "Изменить" : "Внести";
       button.setAttribute("aria-expanded", String(state.editingId === participantId));
@@ -196,6 +200,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
       return;
     }
     state.participants = new Map((data?.participants || []).map(item => [item.participant_id, item]));
+    state.participantsLoaded = true;
     syncTable();
   }
 
