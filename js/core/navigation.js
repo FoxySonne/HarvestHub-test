@@ -1,5 +1,5 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260728-membership-periods-1";
+  const SITE_ASSET_VERSION = "20260731-roster-unsaved-1";
   const DEFAULT_STYLESHEET = "css/style.css?v=20260728-membership-periods-1";
   const VS_STYLESHEET = "css/style-vs-main.css?v=20260728-membership-periods-1";
   const VS_PAGE = "alliance/vs.html";
@@ -208,6 +208,12 @@
   }
 
   async function loadPage(pageName, options = {}) {
+    const previousLeaveGuard = window.harvestHubConfirmPageLeave;
+    if (typeof previousLeaveGuard === "function"
+        && previousLeaveGuard(pageName) === false) {
+      return false;
+    }
+    window.harvestHubConfirmPageLeave = null;
     if (!options.skipCurrentSave && typeof window.savePageFormState === "function") {
       window.savePageFormState(currentLoadedPage);
     }
@@ -215,12 +221,16 @@
     localStorage.setItem("currentPage", pageName);
     await setPageStylesheet(pageName);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      window.harvestHubConfirmPageLeave = previousLeaveGuard;
+      return false;
+    }
     currentLoadedPage = pageName;
     if (options.trackVisit !== false) trackPageVisit(pageName);
     renderQuickLinks(pageName);
     window.scrollTo({ top: 0, behavior: options.behavior || "auto" });
     document.dispatchEvent(new CustomEvent("harvesthub:page-loaded", { detail: { pageName, previousPage } }));
+    return true;
   }
 
   window.harvestHubNavigation = {

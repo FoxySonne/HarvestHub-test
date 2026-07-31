@@ -9,7 +9,7 @@ import { loadAlliancePageContext, fillAllianceCompactHeader, canEditAlliance, ge
 import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
 
 const byId = id => document.getElementById(id);
-const state = { client: null, context: null, powerByParticipant: new Map() };
+const state = { client: null, context: null, powerByParticipant: new Map(), formBaseline: "" };
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -40,6 +40,34 @@ function setParticipantFormBusy(busy) {
     control.disabled = control.dataset.wasDisabled === "true";
     delete control.dataset.wasDisabled;
   });
+}
+
+function participantFormSnapshot() {
+  const form = byId("participantForm");
+  if (!form) return "";
+  return JSON.stringify([...form.querySelectorAll("input, select, textarea")].map(control => ({
+    id: control.id,
+    value: control.value,
+    checked: control.type === "checkbox" ? control.checked : undefined
+  })));
+}
+
+function rememberParticipantForm() {
+  state.formBaseline = participantFormSnapshot();
+}
+
+function hasUnsavedParticipantForm() {
+  return Boolean(state.formBaseline) && participantFormSnapshot() !== state.formBaseline;
+}
+
+function confirmDiscardParticipantForm() {
+  return !hasUnsavedParticipantForm() || confirm("В форме участника есть несохранённые изменения. Уйти без сохранения?");
+}
+
+function handleBeforeUnload(event) {
+  if (!hasUnsavedParticipantForm()) return;
+  event.preventDefault();
+  event.returnValue = "";
 }
 
 function formatStoredBirthday(value) {
@@ -130,6 +158,7 @@ function resetForm() {
   syncTwinFields();
   byId("participantEditorTitle").textContent = "Добавить участника";
   byId("participantCancelButton").hidden = true;
+  rememberParticipantForm();
 }
 
 function fillForm(participant) {
@@ -150,6 +179,7 @@ function fillForm(participant) {
   syncTwinFields();
   byId("participantEditorTitle").textContent = `Изменить: ${participant.nickname}`;
   byId("participantCancelButton").hidden = false;
+  rememberParticipantForm();
   byId("participantEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -209,19 +239,22 @@ async function submitParticipant(event) {
       const departed = archivedResult.data;
       if (departed?.id) {
         const shouldRestore = confirm(`Игрок «${departed.nickname}» недавно состоял в союзе. Восстановить его вместе с сохранёнными данными?`);
-        if (!shouldRestore) return showMessage("Восстановление отменено. Новый участник не добавлен.");
-        const restoreResult = await saveParticipantBundle(state.client, {
-          id: departed.id,
-          allianceId,
-          payload,
-          joinedOn,
-          squad1,
-          restoreExisting: true
-        });
-        if (restoreResult.error) return showMessage(restoreResult.error.message, "error");
-        resetForm();
-        await reload();
-        return showMessage(`Участник «${departed.nickname}» восстановлен. Новый период начинается ${joinedOn}.`, "success");
+        if (shouldRestore) {
+          const restoreResult = await saveParticipantBundle(state.client, {
+            id: departed.id,
+            allianceId,
+            payload,
+            joinedOn,
+            squad1,
+            restoreExisting: true
+          });
+          if (restoreResult.error) return showMessage(restoreResult.error.message, "error");
+          resetForm();
+          await reload();
+          return showMessage(`Участник «${departed.nickname}» восстановлен. Новый период начинается ${joinedOn}.`, "success");
+        }
+        const shouldCreateNew = confirm(`Не восстанавливать прежнюю карточку «${departed.nickname}» и создать нового участника с введёнными данными?`);
+        if (!shouldCreateNew) return showMessage("Создание участника отменено.");
       }
     }
 
@@ -247,7 +280,10 @@ async function submitParticipant(event) {
 
 async function tableClick(event) {
   const edit = event.target.closest("[data-participant-edit]");
-  if (edit) return fillForm(state.context.participants.find(item => item.id === edit.dataset.participantEdit));
+  if (edit) {
+    if (!confirmDiscardParticipantForm()) return;
+    return fillForm(state.context.participants.find(item => item.id === edit.dataset.participantEdit));
+  }
   const remove = event.target.closest("[data-participant-delete]");
   if (!remove) return;
   const participant = state.context.participants.find(item => item.id === remove.dataset.participantDelete);
@@ -268,11 +304,18 @@ export async function init() {
   byId("participantJoinedOn").value = localDateValue();
   try { await reload(); } catch (error) { showMessage(error.message, "error"); return; }
   byId("participantForm")?.addEventListener("submit", submitParticipant);
-  byId("participantCancelButton")?.addEventListener("click", resetForm);
+  byId("participantCancelButton")?.addEventListener("click", () => {
+    if (confirmDiscardParticipantForm()) resetForm();
+  });
   byId("participantIsTwin")?.addEventListener("change", syncTwinFields);
   byId("participantPrimaryAccount")?.addEventListener("change", syncTwinFields);
   byId("participantTableBody")?.addEventListener("click", tableClick);
   ["participantSearch", "participantRankFilter", "participantSort"].forEach(id => byId(id)?.addEventListener(id === "participantSearch" ? "input" : "change", render));
   byId("rosterExpandTable")?.addEventListener("click", () => toggleFullscreen(true));
   byId("rosterCloseTable")?.addEventListener("click", () => toggleFullscreen(false));
+
+  rememberParticipantForm();
+  window.harvestHubConfirmPageLeave = confirmDiscardParticipantForm;
+  const signal = window.harvestHubPageAbortController?.signal;
+  window.addEventListener("beforeunload", handleBeforeUnload, signal ? { signal } : undefined);
 }
