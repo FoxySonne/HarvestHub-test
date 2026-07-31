@@ -29,6 +29,21 @@ function showMessage(text, type = "info") {
   box.dataset.type = type;
 }
 
+function setParticipantFormBusy(busy) {
+  const form = byId("participantForm");
+  if (!form) return;
+  form.setAttribute("aria-busy", String(busy));
+  form.querySelectorAll("input, select, textarea, button").forEach(control => {
+    if (busy) {
+      control.dataset.wasDisabled = control.disabled ? "true" : "false";
+      control.disabled = true;
+      return;
+    }
+    control.disabled = control.dataset.wasDisabled === "true";
+    delete control.dataset.wasDisabled;
+  });
+}
+
 function formatStoredBirthday(value) {
   const match = String(value || "").match(/^\d{4}-(\d{2})-(\d{2})$/);
   return match ? `${match[2]}.${match[1]}` : String(value || "");
@@ -144,9 +159,14 @@ async function reload() {
   state.context = await loadAlliancePageContext(state.client, { force: true });
   state.powerByParticipant.clear();
   if (!state.context.isGuest) {
-    const powerResult = await fetchAllianceSquadPower(state.client, getActiveAllianceId());
-    if (powerResult.error) showMessage("Состав загружен, но данные силы сейчас недоступны.", "warning");
-    else (powerResult.data?.participants || []).forEach(item => state.powerByParticipant.set(item.participant_id, item.squad_1));
+    try {
+      const powerResult = await fetchAllianceSquadPower(state.client, getActiveAllianceId());
+      if (powerResult.error) throw powerResult.error;
+      (powerResult.data?.participants || []).forEach(item => state.powerByParticipant.set(item.participant_id, item.squad_1));
+    } catch (error) {
+      console.warn("Не удалось загрузить силу участников:", error);
+      showMessage("Состав загружен, но данные силы сейчас недоступны. Попробуй обновить страницу позже.", "warning");
+    }
   }
   render();
   if (!state.context.isGuest) fillPrimaryAccountOptions(byId("participantPrimaryAccount")?.value || "");
@@ -165,13 +185,8 @@ async function saveOptionalPower(participantId, value) {
   });
 }
 
-async function saveJoinedOn(participantId, joinedOn, allianceId) {
-  const result = await setParticipantJoinedOn(state.client, {
-    id: participantId,
-    allianceId,
-    joinedOn
-  });
-  return result;
+function saveJoinedOn(participantId, joinedOn, allianceId) {
+  return setParticipantJoinedOn(state.client, { id: participantId, allianceId, joinedOn });
 }
 
 async function submitParticipant(event) {
@@ -182,70 +197,72 @@ async function submitParticipant(event) {
   if (!joinedOn || joinedOn > localDateValue()) return showMessage("Укажи корректную дату вступления в союз.", "error");
   const squad1 = parsePower(byId("participantSquad1").value);
   if (squad1 === undefined) return showMessage("Укажи силу 1-го отряда в миллионах, например 87,72.", "error");
-  const isTwin = byId("participantIsTwin").checked;
-  const primaryParticipantId = isTwin ? byId("participantPrimaryAccount").value : "";
-  const primaryNickname = isTwin && !primaryParticipantId ? byId("participantPrimaryNickname").value.trim() : "";
-  const button = event.submitter || byId("participantForm").querySelector('[type="submit"]');
-  button.disabled = true;
+
   const participantId = byId("participantId").value || null;
   const allianceId = getActiveAllianceId();
   const nickname = byId("participantNickname").value.trim();
+  const isTwin = byId("participantIsTwin").checked;
+  const primaryParticipantId = isTwin ? byId("participantPrimaryAccount").value : "";
+  const primaryNickname = isTwin && !primaryParticipantId ? byId("participantPrimaryNickname").value.trim() : "";
 
-  if (!participantId) {
-    const archivedResult = await findDepartedParticipant(state.client, { allianceId, nickname });
-    if (archivedResult.error) { button.disabled = false; return showMessage(archivedResult.error.message, "error"); }
-    const departed = archivedResult.data;
-    if (departed?.id) {
-      const shouldRestore = confirm(`Игрок «${departed.nickname}» недавно состоял в союзе. Восстановить его вместе с сохранёнными данными?`);
-      if (!shouldRestore) { button.disabled = false; return showMessage("Восстановление отменено. Новый участник не добавлен."); }
-      const restoreResult = await restoreParticipant(state.client, { id: departed.id, allianceId });
-      if (restoreResult.error) { button.disabled = false; return showMessage(restoreResult.error.message, "error"); }
-      const joinedResult = await saveJoinedOn(departed.id, joinedOn, allianceId);
-      if (joinedResult.error) { button.disabled = false; return showMessage(`Участник восстановлен, но дата вступления не сохранилась: ${joinedResult.error.message}`, "error"); }
-      if (squad1 !== null) {
-        const powerResult = await saveOptionalPower(departed.id, squad1);
-        if (powerResult?.error) { button.disabled = false; return showMessage(powerResult.error.message, "error"); }
+  setParticipantFormBusy(true);
+  try {
+    if (!participantId) {
+      const archivedResult = await findDepartedParticipant(state.client, { allianceId, nickname });
+      if (archivedResult.error) return showMessage(archivedResult.error.message, "error");
+      const departed = archivedResult.data;
+      if (departed?.id) {
+        const shouldRestore = confirm(`Игрок «${departed.nickname}» недавно состоял в союзе. Восстановить его вместе с сохранёнными данными?`);
+        if (!shouldRestore) return showMessage("Восстановление отменено. Новый участник не добавлен.");
+        const restoreResult = await restoreParticipant(state.client, { id: departed.id, allianceId });
+        if (restoreResult.error) return showMessage(restoreResult.error.message, "error");
+        const joinedResult = await saveJoinedOn(departed.id, joinedOn, allianceId);
+        if (joinedResult.error) return showMessage(`Участник восстановлен, но дата вступления не сохранилась: ${joinedResult.error.message}`, "error");
+        if (squad1 !== null) {
+          const powerResult = await saveOptionalPower(departed.id, squad1);
+          if (powerResult?.error) return showMessage(powerResult.error.message, "error");
+        }
+        resetForm();
+        await reload();
+        return showMessage(`Участник «${departed.nickname}» восстановлен. Новый период начинается ${joinedOn}.`, "success");
       }
-      button.disabled = false;
-      resetForm();
-      await reload();
-      return showMessage(`Участник «${departed.nickname}» восстановлен. Новый период начинается ${joinedOn}.`, "success");
     }
-  }
 
-  const saveResult = await saveParticipant(state.client, {
-    id: participantId,
-    allianceId,
-    payload: {
-      nickname,
-      rank_name: byId("participantRank").value,
-      member_status: byId("participantStatus").value,
-      timezone_offset: byId("participantTimezone").value === "" ? 0 : Number(byId("participantTimezone").value),
-      birthday,
-      comment: byId("participantComment").value.trim(),
-      is_twin: isTwin,
-      primary_participant_id: primaryParticipantId || null,
-      primary_nickname: primaryNickname || null
+    const saveResult = await saveParticipant(state.client, {
+      id: participantId,
+      allianceId,
+      payload: {
+        nickname,
+        rank_name: byId("participantRank").value,
+        member_status: byId("participantStatus").value,
+        timezone_offset: byId("participantTimezone").value === "" ? 0 : Number(byId("participantTimezone").value),
+        birthday,
+        comment: byId("participantComment").value.trim(),
+        is_twin: isTwin,
+        primary_participant_id: primaryParticipantId || null,
+        primary_nickname: primaryNickname || null
+      }
+    });
+    if (saveResult.error) return showMessage(saveResult.error.message, "error");
+
+    const savedParticipantId = saveResult.data || participantId;
+    const joinedResult = await saveJoinedOn(savedParticipantId, joinedOn, allianceId);
+    if (joinedResult.error) return showMessage(`Участник сохранён, но дата вступления не записалась: ${joinedResult.error.message}`, "error");
+
+    if (squad1 !== null) {
+      const powerResult = await saveOptionalPower(savedParticipantId, squad1);
+      if (powerResult?.error) return showMessage(`Участник сохранён, но сила отряда не записалась: ${powerResult.error.message}`, "error");
     }
-  });
-  if (saveResult.error) { button.disabled = false; return showMessage(saveResult.error.message, "error"); }
 
-  const savedParticipantId = saveResult.data || participantId;
-  const joinedResult = await saveJoinedOn(savedParticipantId, joinedOn, allianceId);
-  if (joinedResult.error) {
-    button.disabled = false;
-    return showMessage(`Участник сохранён, но дата вступления не записалась: ${joinedResult.error.message}`, "error");
+    resetForm();
+    await reload();
+    showMessage("Данные участника сохранены.", "success");
+  } catch (error) {
+    console.error("Ошибка сохранения участника:", error);
+    showMessage(error?.message || "Не удалось сохранить участника. Попробуй ещё раз.", "error");
+  } finally {
+    setParticipantFormBusy(false);
   }
-
-  if (squad1 !== null) {
-    const powerResult = await saveOptionalPower(savedParticipantId, squad1);
-    if (powerResult?.error) { button.disabled = false; return showMessage(`Участник сохранён, но сила отряда не записалась: ${powerResult.error.message}`, "error"); }
-  }
-
-  button.disabled = false;
-  resetForm();
-  await reload();
-  showMessage("Данные участника сохранены.", "success");
 }
 
 async function tableClick(event) {
