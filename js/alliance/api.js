@@ -95,6 +95,25 @@ export function saveParticipant(client, { id, allianceId, payload }) {
   });
 }
 
+export function saveParticipantBundle(client, { id, allianceId, payload, joinedOn, squad1, restoreExisting = false }) {
+  return client.rpc("save_alliance_participant_bundle", {
+    target_alliance_id: allianceId,
+    participant_id: id || null,
+    participant_nickname: payload.nickname,
+    participant_rank: payload.rank_name,
+    participant_status: payload.member_status,
+    participant_timezone: payload.timezone_offset,
+    participant_birthday: payload.birthday || null,
+    participant_comment: payload.comment,
+    participant_is_twin: payload.is_twin,
+    participant_primary_id: payload.primary_participant_id || null,
+    participant_primary_nickname: payload.primary_nickname || null,
+    participant_joined_on: joinedOn,
+    participant_squad_1: squad1,
+    restore_existing: restoreExisting
+  });
+}
+
 export function setParticipantJoinedOn(client, { id, allianceId, joinedOn }) {
   return client.rpc("set_alliance_participant_joined_on", {
     target_alliance_id: allianceId,
