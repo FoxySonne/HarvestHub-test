@@ -39,7 +39,6 @@
 .account-modal.is-recovery .password-recovery-form{display:block}
 .account-warning{margin:2px 0 14px;padding:9px 11px;border-left:2px solid var(--accent);border-radius:8px;background:var(--accent-selection);font-size:12px;line-height:1.4;color:var(--text-soft);overflow-wrap:anywhere}
 .account-message{min-height:24px;margin:14px 0 0}
-.account-message[data-type="error"],.settings-form-message[data-type="error"]{color:var(--danger-text)}
 .account-message[data-type="success"],.settings-form-message[data-type="success"]{color:var(--accent)}
 .account-security-card h4{margin:0 0 14px}
 .settings-account-form{max-width:560px}

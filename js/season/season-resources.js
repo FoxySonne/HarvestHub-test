@@ -133,7 +133,7 @@ function updateSeasonProfileBlockSummary() {
     const replaceableStatus = !trackingStatus?.textContent
       || trackingStatus.textContent.startsWith("Отслеживание включено")
       || trackingStatus.textContent === "Сезон завершён.";
-    if (trackingStatus && !trackingStatus.classList.contains("is-error") && replaceableStatus) {
+    if (trackingStatus && replaceableStatus) {
       trackingStatus.textContent = "Дата окончания пока не отслеживается.";
     }
     if (trackingButton) {
@@ -148,7 +148,6 @@ function updateSeasonProfileBlockSummary() {
   setValue("seasonProfileDaysLeft", countdown.days);
   setValue("seasonProfileHoursLeft", countdown.hours);
   if (trackingStatus) {
-    trackingStatus.classList.remove("is-error");
     trackingStatus.textContent = countdown.ended
       ? "Сезон завершён."
       : `Отслеживание включено: осталось ${countdown.days} д. ${countdown.hours} ч.`;
@@ -169,17 +168,17 @@ function startSeasonTracking() {
   const days = Math.max(0, num("seasonProfileDaysLeft"));
   const hours = Math.max(0, num("seasonProfileHoursLeft"));
   if (days * 24 + hours <= 0) {
-    if (status) {
-      status.textContent = "Укажите, сколько дней или часов осталось до конца сезона.";
-      status.classList.add("is-error");
-    }
+    if (status) status.textContent = "";
+    window.harvestHubNotifications?.error(
+      "Укажите, сколько дней или часов осталось до конца сезона.",
+      "Не удалось включить отслеживание сезона."
+    );
     return;
   }
 
   const endInput = document.getElementById("seasonProfileEndAt");
   if (!endInput) return;
   endInput.value = calculateSeasonEndUtc(getCurrentUtcDate(), days, hours).toISOString();
-  if (status) status.classList.remove("is-error");
   saveSeasonTrackingState();
   updateSeasonProfileBlockSummary();
   updateAll();
@@ -192,7 +191,6 @@ function stopTrackingWhenEdited(target) {
   endInput.value = "";
   const status = document.getElementById("seasonTrackingStatus");
   if (status) {
-    status.classList.remove("is-error");
     status.textContent = "Значение изменено. Нажмите «Отслеживать сезон», чтобы зафиксировать новую дату.";
   }
   saveSeasonTrackingState();

@@ -2,6 +2,11 @@
   function showMessage(message, type = "") {
     const element = document.getElementById("accountMessage");
     if (!element) return;
+    if (type === "error" && message) {
+      element.textContent = "";
+      window.harvestHubNotifications?.error(message, "Не удалось выполнить действие с профилем.");
+      return;
+    }
     element.textContent = message || "";
     element.dataset.type = type;
   }
@@ -43,7 +48,10 @@
     if (raw.includes("user already registered")) return "Профиль с таким email уже существует. Перейдите во вкладку «Войти».";
     if (raw.includes("password should be")) return "Пароль должен содержать не менее 8 символов.";
     if (raw.includes("rate limit") || raw.includes("too many requests")) return "Слишком много попыток. Подождите и попробуйте снова.";
-    return error?.message || "Не удалось выполнить действие. Попробуйте позже.";
+    return window.harvestHubNotifications?.translateError(
+      error,
+      "Не удалось выполнить действие. Попробуйте позже."
+    ) || "Не удалось выполнить действие. Попробуйте позже.";
   }
 
   function togglePassword(inputId, button) {

@@ -61,6 +61,11 @@ function activeAllianceId() {
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
   if (!box) return;
+  if (type === "error" && text) {
+    box.hidden = true;
+    window.harvestHubNotifications?.error(text, "Не удалось изменить замеры силы.");
+    return;
+  }
   box.hidden = !text;
   box.textContent = text;
   box.dataset.type = type;
@@ -248,12 +253,10 @@ async function load() {
   const token = ++state.loadToken;
   const { data, error } = await fetchAllianceSquadPower(state.client, allianceId);
   if (token !== state.loadToken || !isMounted()) return;
-  const errorBox = byId("powerSectionError");
   if (error) {
-    if (errorBox) { errorBox.hidden = false; errorBox.textContent = error.message; }
+    window.harvestHubNotifications?.error(error, "Не удалось загрузить страницу замеров силы.");
     return;
   }
-  if (errorBox) errorBox.hidden = true;
   state.data = data || { participants: [] };
   render();
 }

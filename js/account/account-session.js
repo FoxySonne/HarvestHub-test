@@ -71,6 +71,10 @@
         window.setTimeout(() => {
           syncCloudProfileWithRetry(data.user).catch(retryError => {
             console.warn("Не удалось повторно загрузить игровой профиль аккаунта:", retryError);
+            window.harvestHubNotifications?.error(
+              retryError,
+              "Вход выполнен, но игровой профиль загрузить не удалось."
+            );
           });
         }, 2000);
       }
@@ -128,6 +132,10 @@
       }
     } catch (error) {
       console.warn("Не удалось завершить все серверные сессии, выполняется локальный выход:", error);
+      window.harvestHubNotifications?.error(
+        error,
+        "Выход выполнен только на этом устройстве. Завершить остальные сеансы не удалось."
+      );
       if (client) {
         const { error: localError } = await client.auth.signOut({ scope: "local" });
         if (localError) console.warn("Локальный выход Supabase завершился с ошибкой:", localError);
@@ -155,6 +163,7 @@
 
     await refreshCloudProfile().catch(error => {
       console.warn("Не удалось восстановить профиль аккаунта при загрузке:", error);
+      window.harvestHubNotifications?.error(error, "Не удалось восстановить игровой профиль аккаунта.");
     });
 
     client.auth.onAuthStateChange((event, session) => {
@@ -165,6 +174,7 @@
       }
       syncCloudProfileWithRetry(session.user).catch(error => {
         console.warn("Не удалось обновить игровой профиль аккаунта:", error);
+        window.harvestHubNotifications?.error(error, "Не удалось обновить игровой профиль аккаунта.");
       });
     });
 

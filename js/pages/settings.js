@@ -28,7 +28,10 @@ async function resetAllSiteData() {
         window.location.replace(`${window.location.pathname}?reset=${Date.now()}`);
     } catch (error) {
         console.error("Ошибка при локальном сбросе данных:", error);
-        alert("Не удалось полностью очистить локальные данные. Попробуй ещё раз.");
+        window.harvestHubNotifications?.error(
+            error,
+            "Не удалось полностью очистить локальные данные. Попробуйте ещё раз."
+        );
     }
 }
 
@@ -39,6 +42,11 @@ async function clearSiteCache() {
 function setSettingsMessage(id, message, type = "") {
     const element = document.getElementById(id);
     if (!element) return;
+    if (type === "error" && message) {
+        element.textContent = "";
+        window.harvestHubNotifications?.error(message, "Не удалось изменить настройки аккаунта.");
+        return;
+    }
     element.textContent = message || "";
     element.dataset.type = type;
 }

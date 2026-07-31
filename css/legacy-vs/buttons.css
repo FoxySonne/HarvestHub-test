@@ -98,7 +98,3 @@ margin-top:20px;
   margin: 0;
   color: var(--text-muted);
 }
-
-.calculator-data-actions [data-calculator-reset-status].is-error {
-  color: var(--danger-text);
-}

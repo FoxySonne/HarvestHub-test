@@ -35,6 +35,11 @@ const state = {
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
   if (!box) return;
+  if (type === "error" && text) {
+    box.hidden = true;
+    window.harvestHubNotifications?.error(text, "Не удалось загрузить профиль игрока.");
+    return;
+  }
   box.hidden = !text;
   box.textContent = text;
   box.dataset.type = type;
@@ -43,6 +48,11 @@ function showMessage(text, type = "info") {
 function setFormMessage(id, text, type = "info") {
   const message = byId(id);
   if (!message) return;
+  if (type === "error" && text) {
+    message.textContent = "";
+    window.harvestHubNotifications?.error(text, "Не удалось сохранить данные игрока.");
+    return;
+  }
   message.textContent = text;
   message.dataset.type = type;
 }

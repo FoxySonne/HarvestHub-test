@@ -160,9 +160,19 @@
     const container = document.getElementById(containerId);
     if (!container) return false;
 
-    const response = await fetch(withCacheBust(filePath), { cache: "no-store" });
+    let response;
+    try {
+      response = await fetch(withCacheBust(filePath), { cache: "no-store" });
+    } catch (error) {
+      window.harvestHubNotifications?.error(error, "Не удалось загрузить раздел сайта. Проверьте подключение и попробуйте ещё раз.");
+      return false;
+    }
     if (!response.ok) {
       console.warn(`Не удалось загрузить ${filePath}:`, response.status);
+      window.harvestHubNotifications?.error(
+        { message: `HTTP ${response.status}`, status: response.status },
+        "Не удалось загрузить раздел сайта. Обновите страницу и попробуйте ещё раз."
+      );
       return false;
     }
 
@@ -183,6 +193,10 @@
         console.warn(`JS-модуль для страницы ${fileName} не был запущен:`, error);
         const globalInitName = getGlobalInitName(fileName);
         if (typeof window[globalInitName] === "function") await window[globalInitName]();
+        else window.harvestHubNotifications?.error(
+          error,
+          "Не удалось запустить этот раздел сайта. Обновите страницу и попробуйте ещё раз."
+        );
       }
     } else {
       const globalInitName = getGlobalInitName(fileName);

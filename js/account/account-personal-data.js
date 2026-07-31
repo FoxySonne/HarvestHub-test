@@ -29,27 +29,36 @@
     return Number.isInteger(number) && number >= -12 && number <= 12 ? number : undefined;
   }
 
+  function setMessage(text, type = "info") {
+    const message = byId("accountPersonalDataMessage");
+    if (!message) return;
+    if (type === "error" && text) {
+      message.textContent = "";
+      window.harvestHubNotifications?.error(text, "Не удалось сохранить личные данные.");
+      return;
+    }
+    message.textContent = text;
+    message.dataset.type = type;
+  }
+
   async function save(event) {
     event.preventDefault();
     const birthday = parseBirthday(byId("accountBirthday")?.value);
     const timezoneOffset = parseTimezone(byId("accountTimezone")?.value);
-    const message = byId("accountPersonalDataMessage");
     const button = event.submitter;
 
     if (birthday === undefined) {
-      message.textContent = "Укажи день рождения в формате ДД.ММ.";
-      message.dataset.type = "error";
+      setMessage("Укажи день рождения в формате ДД.ММ.", "error");
       return;
     }
     if (timezoneOffset === undefined) {
-      message.textContent = "Часовой пояс должен быть целым числом от −12 до +12 относительно Москвы.";
-      message.dataset.type = "error";
+      setMessage("Часовой пояс должен быть целым числом от −12 до +12 относительно Москвы.", "error");
       return;
     }
 
     button.disabled = true;
     button.textContent = "Сохраняем…";
-    message.textContent = "";
+    setMessage("");
 
     const { error } = await window.harvestHubSupabase.auth.updateUser({
       data: {
@@ -61,8 +70,7 @@
     if (error) {
       button.disabled = false;
       button.textContent = "Сохранить";
-      message.textContent = error.message || "Не удалось сохранить данные.";
-      message.dataset.type = "error";
+      setMessage(error.message || "Не удалось сохранить данные.", "error");
       return;
     }
 
@@ -71,15 +79,13 @@
     button.textContent = "Сохранить";
 
     if (syncResult.error) {
-      message.textContent = "Данные аккаунта сохранены, но не удалось обновить связанный профиль игрока. Попробуй сохранить ещё раз.";
-      message.dataset.type = "error";
+      setMessage("Данные аккаунта сохранены, но не удалось обновить связанный профиль игрока. Попробуй сохранить ещё раз.", "error");
       return;
     }
 
-    message.textContent = syncResult.data > 0
+    setMessage(syncResult.data > 0
       ? "Данные сохранены и обновлены в связанном профиле игрока."
-      : "Данные сохранены. При привязке аккаунта они подставятся в профиль игрока автоматически.";
-    message.dataset.type = "success";
+      : "Данные сохранены. При привязке аккаунта они подставятся в профиль игрока автоматически.", "success");
   }
 
   async function mount() {

@@ -100,10 +100,6 @@ button:disabled {
   color: var(--text-muted);
 }
 
-.calculator-data-actions [data-calculator-reset-status].is-error {
-  color: var(--danger-text);
-}
-
 @media (max-width: 479px) {
   .button,
   button,

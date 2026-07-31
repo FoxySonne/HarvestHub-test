@@ -81,6 +81,9 @@ for (const file of javascriptFiles) {
   if (check.status !== 0) errors.push(`${relative(file)}: ${check.stderr.trim()}`);
 
   const source = fs.readFileSync(file, "utf8");
+  if (relative(file) !== "scripts/check-project.mjs" && /\b(?:window\.)?alert\s*\(/.test(source)) {
+    errors.push(`${relative(file)}: ошибки нужно показывать через общую систему уведомлений`);
+  }
   for (const match of source.matchAll(/(?:import|export)\s+(?:[^'"]*?\s+from\s+)?["']([^"']+)["']/g)) {
     const reference = match[1];
     if (!reference.startsWith(".")) continue;

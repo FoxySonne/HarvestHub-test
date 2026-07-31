@@ -255,7 +255,7 @@ function bindRenderedEvents() {
       await refreshSearchResult();
       renderAdmin();
     } catch (error) {
-      window.alert(error.message || "Не удалось выполнить поиск.");
+      window.harvestHubNotifications?.error(error, "Не удалось выполнить поиск.");
       renderAdmin();
     }
   });
@@ -283,7 +283,7 @@ function bindRenderedEvents() {
         await getStore().deleteRequest(button.dataset.accessDeleteRequest);
         await afterMutation();
       } catch (error) {
-        window.alert(error.message || "Не удалось удалить заявку.");
+        window.harvestHubNotifications?.error(error, "Не удалось удалить заявку.");
         button.disabled = false;
       }
     });
@@ -299,7 +299,7 @@ function bindRenderedEvents() {
         await getStore().revokeAccess(userId);
         await afterMutation();
       } catch (error) {
-        window.alert(error.message || "Не удалось удалить доступ.");
+        window.harvestHubNotifications?.error(error, "Не удалось удалить доступ.");
         button.disabled = false;
       }
     });
@@ -317,7 +317,7 @@ function bindRenderedEvents() {
       closeDateDialog();
       await afterMutation();
     } catch (error) {
-      window.alert(error.message || "Не удалось сохранить доступ.");
+      window.harvestHubNotifications?.error(error, "Не удалось сохранить доступ.");
       event.currentTarget.disabled = false;
       event.currentTarget.textContent = "Сохранить";
     }
@@ -347,7 +347,8 @@ async function renderAccessPage() {
   try {
     await loadAdminData();
   } catch (error) {
-    container.innerHTML = renderEmpty(error.message || "Не удалось загрузить данные доступа.");
+    window.harvestHubNotifications?.error(error, "Не удалось загрузить данные доступа.");
+    container.innerHTML = renderEmpty("Данные доступа пока недоступны.");
   }
 }
 

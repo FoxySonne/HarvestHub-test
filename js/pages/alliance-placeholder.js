@@ -12,9 +12,7 @@ export async function init() {
     const context = await loadAlliancePageContext(window.harvestHubSupabase);
     fillAllianceCompactHeader(context);
   } catch (error) {
-    if (!box) return;
-    box.hidden = false;
-    box.dataset.type = "error";
-    box.textContent = error.message;
+    if (box) box.hidden = true;
+    window.harvestHubNotifications?.error(error, "Не удалось загрузить раздел союзного штаба.");
   }
 }

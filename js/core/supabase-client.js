@@ -4,6 +4,10 @@
 
   if (!window.supabase?.createClient) {
     console.error("Supabase SDK не загрузился");
+    window.harvestHubNotifications?.error(
+      "Supabase SDK не загрузился",
+      "Не удалось подключиться к серверу. Обновите страницу и попробуйте ещё раз."
+    );
     return;
   }
 

@@ -22,6 +22,7 @@
         await window.harvestHubCloudSync?.initializeAll?.();
       } catch (error) {
         console.warn("Не удалось полностью обновить облачный контекст профиля:", error);
+        window.harvestHubNotifications?.error(error, "Не удалось обновить данные выбранного профиля.");
       }
 
       const currentPage = localStorage.getItem("currentPage")
@@ -50,6 +51,7 @@
     lastProfileId = nextProfileId;
     window.setTimeout(() => refreshProfileContext().catch(error => {
       console.warn("Не удалось обновить страницу после смены профиля:", error);
+      window.harvestHubNotifications?.error(error, "Не удалось обновить страницу после смены профиля.");
     }), 0);
   }
 

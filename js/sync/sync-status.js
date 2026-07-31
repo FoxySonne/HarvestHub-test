@@ -31,11 +31,14 @@
   }
 
   function getText(status, detail = "") {
+    const safeDetail = detail
+      ? window.harvestHubNotifications?.translateError(detail, "Не удалось синхронизировать данные.") || "Не удалось синхронизировать данные."
+      : "";
     switch (status) {
       case "pending": return "Ожидает синхронизации";
       case "syncing": return `Данные синхронизируются${".".repeat((animationFrame % 3) + 1)}`;
       case "synced": return "Данные синхронизованы";
-      case "error": return detail ? `Ошибка синхронизации: ${detail}` : "Ошибка синхронизации";
+      case "error": return safeDetail ? `Ошибка синхронизации: ${safeDetail}` : "Ошибка синхронизации";
       case "offline": return "Нет сети — изменения сохранены на устройстве";
       case "reauth": return "Сессия истекла — войдите снова";
       default: return "";
@@ -177,6 +180,11 @@
     const status = event.detail?.status || "local";
     const detail = event.detail?.detail || "";
     scopeStates.set(scope, { status, detail });
+    if (status === "error") {
+      window.harvestHubNotifications?.error(detail, "Не удалось синхронизировать данные.", {
+        key: `sync-error:${scope}`
+      });
+    }
     render();
   });
 

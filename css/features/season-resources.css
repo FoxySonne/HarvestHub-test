@@ -394,10 +394,6 @@ SEASON RESOURCES — compact calculator layout
   line-height: 1.4;
 }
 
-.season-tracking-actions p.is-error {
-  color: var(--danger-text);
-}
-
 .season-deadline-card {
   padding: 16px;
   background: var(--panel);

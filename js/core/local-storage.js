@@ -11,6 +11,10 @@
       return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
     } catch (error) {
       console.warn(`Не удалось прочитать данные из localStorage: ${key}`, error);
+      window.harvestHubNotifications?.error(
+        error,
+        "Не удалось прочитать часть сохранённых данных на этом устройстве."
+      );
       return fallback;
     }
   }
@@ -21,6 +25,10 @@
       return true;
     } catch (error) {
       console.warn(`Не удалось сохранить данные в localStorage: ${key}`, error);
+      window.harvestHubNotifications?.error(
+        error,
+        "Не удалось сохранить данные на этом устройстве. Проверьте свободное место и настройки браузера."
+      );
       return false;
     }
   }
@@ -31,6 +39,10 @@
       return value == null ? fallback : value;
     } catch (error) {
       console.warn(`Не удалось прочитать значение localStorage: ${key}`, error);
+      window.harvestHubNotifications?.error(
+        error,
+        "Не удалось прочитать часть сохранённых данных на этом устройстве."
+      );
       return fallback;
     }
   }
@@ -41,6 +53,10 @@
       return true;
     } catch (error) {
       console.warn(`Не удалось сохранить значение localStorage: ${key}`, error);
+      window.harvestHubNotifications?.error(
+        error,
+        "Не удалось сохранить данные на этом устройстве. Проверьте свободное место и настройки браузера."
+      );
       window.dispatchEvent(new CustomEvent("harvesthub:storage-warning", { detail: { key, error } }));
       return false;
     }
@@ -52,6 +68,10 @@
       return true;
     } catch (error) {
       console.warn(`Не удалось удалить значение localStorage: ${key}`, error);
+      window.harvestHubNotifications?.error(
+        error,
+        "Не удалось удалить сохранённые данные на этом устройстве."
+      );
       window.dispatchEvent(new CustomEvent("harvesthub:storage-warning", { detail: { key, error } }));
       return false;
     }
@@ -62,6 +82,10 @@
       return Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)).filter(Boolean);
     } catch (error) {
       console.warn("Не удалось получить список ключей localStorage", error);
+      window.harvestHubNotifications?.error(
+        error,
+        "Не удалось прочитать список сохранённых данных на этом устройстве."
+      );
       return [];
     }
   }

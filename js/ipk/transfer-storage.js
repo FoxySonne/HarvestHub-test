@@ -15,6 +15,7 @@ export function readTroopTransferPreset() {
     return JSON.parse(localStorage.getItem(getScopedKey(TROOP_TRANSFER_STORAGE_KEY)) || "null");
   } catch (error) {
     console.warn("Не удалось прочитать заготовку обучения войск для ИПК", error);
+    window.harvestHubNotifications?.error(error, "Не удалось прочитать сохранённую заготовку обучения войск.");
     return null;
   }
 }

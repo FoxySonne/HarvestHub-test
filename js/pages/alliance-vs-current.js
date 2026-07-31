@@ -62,6 +62,11 @@ function weekLabel(start) {
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
   if (!box) return;
+  if (type === "error" && text) {
+    box.hidden = true;
+    window.harvestHubNotifications?.error(text, "Не удалось изменить данные VS.");
+    return;
+  }
   box.hidden = !text;
   box.textContent = text;
   box.dataset.type = type;

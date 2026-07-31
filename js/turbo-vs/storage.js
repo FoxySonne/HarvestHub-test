@@ -21,6 +21,7 @@ export function readWeekState() {
     return JSON.parse(localStorage.getItem(getWeekStateKey()) || "{}");
   } catch (error) {
     console.warn("Не удалось прочитать недельные данные Турбо/VS", error);
+    window.harvestHubNotifications?.error(error, "Не удалось прочитать сохранённые данные Турбо/VS.");
     return {};
   }
 }
@@ -48,6 +49,7 @@ export function readTroopTransferPreset() {
     return JSON.parse(localStorage.getItem(getScopedTransferKey(TROOP_TRANSFER_STORAGE_KEY)) || "null");
   } catch (error) {
     console.warn("Не удалось прочитать заготовку обучения войск", error);
+    window.harvestHubNotifications?.error(error, "Не удалось прочитать сохранённую заготовку обучения войск.");
     return null;
   }
 }

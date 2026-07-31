@@ -121,10 +121,6 @@
   display: none;
 }
 
-.alliance-form-message[data-type="error"] {
-  color: var(--danger);
-}
-
 .alliance-form-message[data-type="success"] {
   color: var(--accent);
 }

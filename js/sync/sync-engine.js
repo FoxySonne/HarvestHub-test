@@ -85,6 +85,10 @@
       } else {
         try { localStorage.setItem(key, serialized); } catch (error) {
           console.warn(`Не удалось сохранить состояние синхронизации: ${key}`, error);
+          window.harvestHubNotifications?.error(
+            error,
+            "Не удалось сохранить состояние синхронизации на этом устройстве."
+          );
         }
       }
     }

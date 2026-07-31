@@ -85,7 +85,8 @@
     } catch (error) {
       if (requestId !== renderRequestId) return;
       if (list) list.innerHTML = "";
-      if (status) status.textContent = error.message || "Не удалось загрузить профили.";
+      if (status) status.textContent = "";
+      window.harvestHubNotifications?.error(error, "Не удалось загрузить игровые профили.");
     }
   }
 
@@ -117,7 +118,8 @@
     } catch (error) {
       button.disabled = false;
       button.removeAttribute("aria-busy");
-      if (status) status.textContent = error.message || "Не удалось переключить профиль.";
+      if (status) status.textContent = "";
+      window.harvestHubNotifications?.error(error, "Не удалось переключить профиль.");
     }
   }
 

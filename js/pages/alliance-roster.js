@@ -19,6 +19,11 @@ function escapeHtml(value) {
 
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
+  if (type === "error" && text) {
+    box.hidden = true;
+    window.harvestHubNotifications?.error(text, "Не удалось изменить состав союза.");
+    return;
+  }
   box.hidden = !text;
   box.textContent = text;
   box.dataset.type = type;

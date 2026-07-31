@@ -19,6 +19,7 @@ function readTurboWeekState() {
     return JSON.parse(localStorage.getItem(getTurboWeekStateKey()) || "{}");
   } catch (error) {
     console.warn("Не удалось прочитать данные Турбочерепашки/VS", error);
+    window.harvestHubNotifications?.error(error, "Не удалось прочитать сохранённые данные Турбо/VS.");
     return {};
   }
 }

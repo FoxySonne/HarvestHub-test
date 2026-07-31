@@ -22,6 +22,7 @@ function readProfileBlockState() {
     return JSON.parse(localStorage.getItem(getProfileBlockStateKey()) || "{}");
   } catch (error) {
     console.warn("Не удалось прочитать данные проф.блока", error);
+    window.harvestHubNotifications?.error(error, "Не удалось прочитать часть сохранённых данных страницы.");
     return {};
   }
 }

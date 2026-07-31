@@ -39,6 +39,7 @@ export function createIpkCloudSync({ serialize, apply }) {
 
     if (error) {
       console.warn("Не удалось загрузить данные ИПК из профиля:", error);
+      window.harvestHubNotifications?.error(error, "Не удалось загрузить данные ИПК из профиля.");
       return false;
     }
     if (!data?.id) return false;
@@ -80,7 +81,12 @@ export function createIpkCloudSync({ serialize, apply }) {
       });
     }
 
-    return throwOnError ? savePromise : savePromise.catch(() => false);
+    return throwOnError
+      ? savePromise
+      : savePromise.catch(error => {
+        window.harvestHubNotifications?.error(error, "Не удалось синхронизировать данные ИПК.");
+        return false;
+      });
   }
 
   function schedule() {

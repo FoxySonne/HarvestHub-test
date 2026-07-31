@@ -16,11 +16,10 @@
     return profileId ? `profile:${profileId}` : "local";
   }
 
-  function setStatus(message, isError = false) {
+  function setStatus(message) {
     const status = document.querySelector("[data-calculator-reset-status]");
     if (!status) return;
     status.textContent = message;
-    status.classList.toggle("is-error", isError);
   }
 
   function clearLocalData(pageName, config) {
@@ -81,7 +80,8 @@
       }));
     } catch (error) {
       console.error(`Не удалось удалить данные калькулятора ${pageName}:`, error);
-      setStatus(error?.message || "Не удалось удалить данные. Попробуйте ещё раз.", true);
+      setStatus("");
+      window.harvestHubNotifications?.error(error, "Не удалось удалить данные. Попробуйте ещё раз.");
     } finally {
       resetInProgress = false;
       const currentButton = document.querySelector("[data-calculator-reset]");

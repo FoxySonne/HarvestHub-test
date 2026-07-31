@@ -210,7 +210,7 @@ function bindProfileAccessEvents(status) {
     } catch (error) {
       button.disabled = false;
       button.textContent = "Оставить заявку";
-      window.alert(error.message || "Не удалось отправить заявку.");
+      window.harvestHubNotifications?.error(error, "Не удалось отправить заявку.");
     }
   });
 
@@ -266,8 +266,7 @@ function bindAccountProfileEvents(activeProfile) {
       );
       await renderProfilePage();
     } catch (error) {
-      message.textContent = error.message || "Не удалось сохранить изменения.";
-      message.dataset.type = "error";
+      window.harvestHubNotifications?.error(error, "Не удалось сохранить изменения.");
       setFormBusy(button, false, "", "Сохранить");
     }
   });
@@ -285,8 +284,7 @@ function bindAccountProfileEvents(activeProfile) {
       );
       await renderProfilePage();
     } catch (error) {
-      message.textContent = error.message || "Не удалось создать профиль.";
-      message.dataset.type = "error";
+      window.harvestHubNotifications?.error(error, "Не удалось создать профиль.");
       setFormBusy(button, false, "", "Создать и переключиться");
     }
   });
@@ -300,7 +298,7 @@ function bindAccountProfileEvents(activeProfile) {
         await renderProfilePage();
       } catch (error) {
         setFormBusy(button, false, "", normalText);
-        window.alert(error.message || "Не удалось переключить профиль.");
+        window.harvestHubNotifications?.error(error, "Не удалось переключить профиль.");
       }
     });
   });
@@ -316,7 +314,7 @@ function bindAccountProfileEvents(activeProfile) {
         await renderProfilePage();
       } catch (error) {
         setFormBusy(button, false, "", normalText);
-        window.alert(error.message || "Не удалось удалить профиль.");
+        window.harvestHubNotifications?.error(error, "Не удалось удалить профиль.");
       }
     });
   });
@@ -346,7 +344,8 @@ async function renderProfilePage() {
       renderAccountProfile(container, window.harvestHubAccount?.getProfile?.() || profile, profiles, accessStatus, accessSummary);
       window.harvestHubSyncStatus?.markSynced?.();
     } catch (error) {
-      container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>${escapeProfileHtml(profile.nickname)}</h1></header><p class="account-warning profile-warning">Не удалось загрузить профили: ${escapeProfileHtml(error.message || "неизвестная ошибка")}</p><div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
+      window.harvestHubNotifications?.error(error, "Не удалось загрузить игровые профили.");
+      container.innerHTML = `<header class="profile-hero"><p class="profile-eyebrow">Профиль HarvestHub</p><h1>${escapeProfileHtml(profile.nickname)}</h1></header><div class="profile-page-actions"><button type="button" id="profileLogoutButton">Выйти</button></div>`;
     }
   }
 
@@ -357,7 +356,7 @@ async function renderProfilePage() {
       await window.harvestHubAccount?.signOut?.();
       await renderProfilePage();
     } catch (error) {
-      window.alert(error.message || "Не удалось выйти из профиля.");
+      window.harvestHubNotifications?.error(error, "Не удалось выйти из профиля.");
       button.disabled = false;
     }
   });
@@ -370,7 +369,7 @@ async function renderProfilePage() {
       window.harvestHubAccountStorage.deleteQuickProfile(profile.id);
       await renderProfilePage();
     } catch (error) {
-      window.alert(error.message || "Не удалось удалить быстрый профиль.");
+      window.harvestHubNotifications?.error(error, "Не удалось удалить быстрый профиль.");
       event.currentTarget.disabled = false;
     }
   });

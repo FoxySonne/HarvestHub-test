@@ -14,7 +14,6 @@
 }
 
 .alliance-message[data-type="success"] { border-color: var(--success); }
-.alliance-message[data-type="error"] { border-color: var(--danger); }
 
 .alliance-auth-card,
 .alliance-setup-card,
