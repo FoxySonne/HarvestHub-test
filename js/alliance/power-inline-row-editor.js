@@ -78,7 +78,9 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
   let observer = null;
 
   function canEditParticipant(participantId) {
-    return state.canManage || participantId === state.currentParticipantId;
+    return state.canManage
+      || participantId === state.currentParticipantId
+      || state.participants.get(participantId)?.is_own === true;
   }
 
   function participant(participantId) {
