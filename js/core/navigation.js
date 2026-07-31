@@ -208,10 +208,12 @@
   }
 
   async function loadPage(pageName, options = {}) {
-    if (typeof window.harvestHubConfirmPageLeave === "function"
-        && window.harvestHubConfirmPageLeave(pageName) === false) {
+    const previousLeaveGuard = window.harvestHubConfirmPageLeave;
+    if (typeof previousLeaveGuard === "function"
+        && previousLeaveGuard(pageName) === false) {
       return false;
     }
+    window.harvestHubConfirmPageLeave = null;
     if (!options.skipCurrentSave && typeof window.savePageFormState === "function") {
       window.savePageFormState(currentLoadedPage);
     }
@@ -219,8 +221,10 @@
     localStorage.setItem("currentPage", pageName);
     await setPageStylesheet(pageName);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);
-    if (!isLoaded) return false;
-    window.harvestHubConfirmPageLeave = null;
+    if (!isLoaded) {
+      window.harvestHubConfirmPageLeave = previousLeaveGuard;
+      return false;
+    }
     currentLoadedPage = pageName;
     if (options.trackVisit !== false) trackPageVisit(pageName);
     renderQuickLinks(pageName);
