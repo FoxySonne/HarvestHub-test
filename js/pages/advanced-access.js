@@ -10,7 +10,10 @@ const viewState = {
   page: 1,
   sort: "granted-desc",
   pendingDateAction: null,
-  loading: false
+  pendingConfirmAction: null,
+  modalTrigger: null,
+  loading: false,
+  loadError: ""
 };
 
 function escapeAccessHtml(value) {
@@ -49,8 +52,20 @@ function getRecordById(userId) {
   ].filter(Boolean).find(item => item.userId === userId) || null;
 }
 
+function notifyError(error, fallback) {
+  console.error(fallback, error);
+  window.harvestHubNotifications?.error(error, fallback);
+}
+
 function renderEmpty(text) {
   return `<div class="advanced-access-empty">${escapeAccessHtml(text)}</div>`;
+}
+
+function renderLoadError() {
+  return `<div class="advanced-access-empty" role="alert">
+    <p>${escapeAccessHtml(viewState.loadError || "Данные доступа пока недоступны.")}</p>
+    <button type="button" id="advancedAccessRetry">Повторить загрузку</button>
+  </div>`;
 }
 
 function renderRequestsTab() {
@@ -66,7 +81,7 @@ function renderRequestsTab() {
             <td>${formatAccessDate(item.requestedAt, true)}</td>
             <td><div class="advanced-access-row-actions">
               <button type="button" data-access-grant="${escapeAccessHtml(item.userId)}">Выдать доступ</button>
-              <button type="button" class="danger-button" data-access-delete-request="${escapeAccessHtml(item.userId)}">Удалить</button>
+              <button type="button" class="danger-button" data-access-delete-request="${escapeAccessHtml(item.userId)}">Удалить заявку</button>
             </div></td>
           </tr>`).join("")}</tbody>
       </table>
@@ -82,9 +97,12 @@ function renderSearchResult() {
   const primaryAction = result.hasAccess
     ? `<button type="button" ${isOwner ? "disabled" : `data-access-extend="${escapeAccessHtml(result.userId)}"`}>${isOwner ? "Владелец сайта" : "Продлить"}</button>`
     : `<button type="button" data-access-grant="${escapeAccessHtml(result.userId)}">Выдать доступ</button>`;
-  const deleteAction = result.hasAccess
-    ? `<button type="button" class="danger-button" ${isOwner ? "disabled" : `data-access-revoke="${escapeAccessHtml(result.userId)}"`}>Удалить</button>`
-    : `<button type="button" class="danger-button" ${result.requestStatus === "pending" ? `data-access-delete-request="${escapeAccessHtml(result.userId)}"` : "disabled"}>Удалить</button>`;
+  let secondaryAction = "";
+  if (result.hasAccess) {
+    secondaryAction = `<button type="button" class="danger-button" ${isOwner ? "disabled" : `data-access-revoke="${escapeAccessHtml(result.userId)}"`}>${isOwner ? "Доступ владельца" : "Отозвать доступ"}</button>`;
+  } else if (result.requestStatus === "pending") {
+    secondaryAction = `<button type="button" class="danger-button" data-access-delete-request="${escapeAccessHtml(result.userId)}">Удалить заявку</button>`;
+  }
 
   return `
     <article class="advanced-access-search-result">
@@ -97,7 +115,7 @@ function renderSearchResult() {
           <div><dt>Дата окончания</dt><dd>${result.hasAccess ? (result.expiresOn ? formatAccessDate(result.expiresOn) : "Бессрочно") : "—"}</dd></div>
         </dl>
       </div>
-      <div class="advanced-access-row-actions">${primaryAction}${deleteAction}</div>
+      <div class="advanced-access-row-actions">${primaryAction}${secondaryAction}</div>
     </article>`;
 }
 
@@ -143,7 +161,7 @@ function renderGrantedTab() {
               <td>${item.expiresOn ? formatAccessDate(item.expiresOn) : "Бессрочно"}</td>
               <td><div class="advanced-access-row-actions">
                 <button type="button" ${item.isAdmin ? "disabled" : `data-access-extend="${escapeAccessHtml(item.userId)}"`}>${item.isAdmin ? "Владелец" : "Продлить"}</button>
-                <button type="button" class="danger-button" ${item.isAdmin ? "disabled" : `data-access-revoke="${escapeAccessHtml(item.userId)}"`}>Удалить</button>
+                <button type="button" class="danger-button" ${item.isAdmin ? "disabled" : `data-access-revoke="${escapeAccessHtml(item.userId)}"`}>${item.isAdmin ? "Доступ владельца" : "Отозвать доступ"}</button>
               </div></td>
             </tr>`).join("")}</tbody>
         </table>
@@ -157,22 +175,28 @@ function renderGrantedTab() {
 
 function renderTabContent() {
   if (viewState.loading) return renderEmpty("Загружаем данные…");
+  if (viewState.loadError) return renderLoadError();
   if (viewState.tab === "search") return renderSearchTab();
   if (viewState.tab === "granted") return renderGrantedTab();
   return renderRequestsTab();
 }
 
+function tabMarkup(tab, label) {
+  const active = viewState.tab === tab;
+  const count = tab === "requests" && viewState.summary.pendingRequests ? ` (${viewState.summary.pendingRequests})` : "";
+  return `<button type="button" id="advancedAccessTab-${tab}" data-access-tab="${tab}" role="tab" aria-selected="${active}" aria-controls="advancedAccessPanel" tabindex="${active ? "0" : "-1"}" class="${active ? "is-active" : ""}">${label}${count}</button>`;
+}
+
 function renderAdmin() {
   const container = document.getElementById("advancedAccessAdminContent");
   if (!container) return;
-  const requestCount = viewState.summary.pendingRequests;
   container.innerHTML = `
     <div class="advanced-access-tabs" role="tablist" aria-label="Управление продвинутым режимом">
-      <button type="button" data-access-tab="requests" class="${viewState.tab === "requests" ? "is-active" : ""}">Заявки${requestCount ? ` (${requestCount})` : ""}</button>
-      <button type="button" data-access-tab="search" class="${viewState.tab === "search" ? "is-active" : ""}">Поиск</button>
-      <button type="button" data-access-tab="granted" class="${viewState.tab === "granted" ? "is-active" : ""}">Доступ выдан</button>
+      ${tabMarkup("requests", "Заявки")}
+      ${tabMarkup("search", "Поиск")}
+      ${tabMarkup("granted", "Доступ выдан")}
     </div>
-    <section class="advanced-access-panel">${renderTabContent()}</section>
+    <section class="advanced-access-panel" id="advancedAccessPanel" role="tabpanel" aria-labelledby="advancedAccessTab-${viewState.tab}">${renderTabContent()}</section>
     <div class="advanced-access-date-modal" id="advancedAccessDateModal" hidden>
       <div class="advanced-access-date-backdrop" data-access-date-close></div>
       <section class="advanced-access-date-dialog" role="dialog" aria-modal="true" aria-labelledby="advancedAccessDateTitle">
@@ -186,6 +210,18 @@ function renderAdmin() {
           <button type="button" id="advancedAccessDateConfirm">Сохранить</button>
         </div>
       </section>
+    </div>
+    <div class="advanced-access-date-modal" id="advancedAccessConfirmModal" hidden>
+      <div class="advanced-access-date-backdrop" data-access-confirm-close></div>
+      <section class="advanced-access-date-dialog" role="dialog" aria-modal="true" aria-labelledby="advancedAccessConfirmTitle">
+        <button type="button" class="account-delete-close" data-access-confirm-close aria-label="Закрыть">×</button>
+        <h3 id="advancedAccessConfirmTitle">Отозвать доступ</h3>
+        <p id="advancedAccessConfirmText"></p>
+        <div class="profile-edit-actions">
+          <button type="button" data-access-confirm-close>Отмена</button>
+          <button type="button" class="danger-button" id="advancedAccessConfirmAction">Отозвать доступ</button>
+        </div>
+      </section>
     </div>`;
   bindRenderedEvents();
 }
@@ -193,6 +229,7 @@ function renderAdmin() {
 async function loadAdminData() {
   const store = getStore();
   viewState.loading = true;
+  viewState.loadError = "";
   renderAdmin();
   try {
     viewState.summary = await store.getAdminSummary();
@@ -201,6 +238,9 @@ async function loadAdminData() {
       viewState.grants = await store.listGrants({ page: viewState.page, pageSize: PAGE_SIZE, sort: viewState.sort });
       viewState.page = viewState.grants.page;
     }
+  } catch (error) {
+    viewState.loadError = "Не удалось загрузить данные продвинутого доступа. Проверь подключение и повтори попытку.";
+    notifyError(error, "Не удалось загрузить данные доступа.");
   } finally {
     viewState.loading = false;
     renderAdmin();
@@ -215,20 +255,74 @@ async function refreshSearchResult() {
   viewState.searchResult = await getStore().findByEmail(viewState.searchEmail);
 }
 
-function openDateDialog(action, userId) {
+function focusableElements(modal) {
+  return [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')]
+    .filter(element => !element.hidden && element.offsetParent !== null);
+}
+
+function openModal(modal, trigger) {
+  if (!modal) return;
+  viewState.modalTrigger = trigger || document.activeElement;
+  modal.hidden = false;
+  requestAnimationFrame(() => focusableElements(modal)[0]?.focus());
+}
+
+function closeModal(modal) {
+  if (modal) modal.hidden = true;
+  const trigger = viewState.modalTrigger;
+  viewState.modalTrigger = null;
+  requestAnimationFrame(() => trigger?.isConnected && trigger.focus());
+}
+
+function openDateDialog(action, userId, trigger) {
   const record = getRecordById(userId);
   if (!record) return;
   viewState.pendingDateAction = { action, userId };
   document.getElementById("advancedAccessDateTitle").textContent = action === "extend" ? "Продлить доступ" : "Выдать доступ";
   document.getElementById("advancedAccessDateUser").textContent = `${record.email} · ${record.nickname}`;
   document.getElementById("advancedAccessExpirationDate").value = record.expiresOn ? String(record.expiresOn).slice(0, 10) : "";
-  document.getElementById("advancedAccessDateModal").hidden = false;
+  openModal(document.getElementById("advancedAccessDateModal"), trigger);
 }
 
 function closeDateDialog() {
-  const modal = document.getElementById("advancedAccessDateModal");
-  if (modal) modal.hidden = true;
+  closeModal(document.getElementById("advancedAccessDateModal"));
   viewState.pendingDateAction = null;
+}
+
+function openConfirmDialog(userId, trigger) {
+  const record = getRecordById(userId);
+  if (!record) return;
+  viewState.pendingConfirmAction = { action: "revoke", userId };
+  document.getElementById("advancedAccessConfirmText").textContent = `Отозвать продвинутый доступ у ${record.email}?`;
+  openModal(document.getElementById("advancedAccessConfirmModal"), trigger);
+}
+
+function closeConfirmDialog() {
+  closeModal(document.getElementById("advancedAccessConfirmModal"));
+  viewState.pendingConfirmAction = null;
+}
+
+function handleModalKeydown(event) {
+  const modal = [document.getElementById("advancedAccessDateModal"), document.getElementById("advancedAccessConfirmModal")]
+    .find(item => item && !item.hidden);
+  if (!modal) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    modal.id === "advancedAccessDateModal" ? closeDateDialog() : closeConfirmDialog();
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const items = focusableElements(modal);
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 async function afterMutation() {
@@ -236,7 +330,25 @@ async function afterMutation() {
   await loadAdminData();
 }
 
+function bindTabKeyboard() {
+  const tabs = [...document.querySelectorAll("[data-access-tab]")];
+  tabs.forEach((button, index) => {
+    button.addEventListener("keydown", event => {
+      let nextIndex = null;
+      if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+      if (event.key === "ArrowLeft") nextIndex = (index - 1 + tabs.length) % tabs.length;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = tabs.length - 1;
+      if (nextIndex === null) return;
+      event.preventDefault();
+      tabs[nextIndex].focus();
+      tabs[nextIndex].click();
+    });
+  });
+}
+
 function bindRenderedEvents() {
+  bindTabKeyboard();
   document.querySelectorAll("[data-access-tab]").forEach(button => {
     button.addEventListener("click", async () => {
       viewState.tab = getStore().setAdminTab(button.dataset.accessTab);
@@ -244,6 +356,8 @@ function bindRenderedEvents() {
       await loadAdminData();
     });
   });
+
+  document.getElementById("advancedAccessRetry")?.addEventListener("click", loadAdminData);
 
   document.getElementById("advancedAccessSearchForm")?.addEventListener("submit", async event => {
     event.preventDefault();
@@ -255,8 +369,9 @@ function bindRenderedEvents() {
       await refreshSearchResult();
       renderAdmin();
     } catch (error) {
-      window.harvestHubNotifications?.error(error, "Не удалось выполнить поиск.");
-      renderAdmin();
+      notifyError(error, "Не удалось выполнить поиск.");
+      button.disabled = false;
+      button.textContent = "Найти";
     }
   });
 
@@ -273,8 +388,8 @@ function bindRenderedEvents() {
     });
   });
 
-  document.querySelectorAll("[data-access-grant]").forEach(button => button.addEventListener("click", () => openDateDialog("grant", button.dataset.accessGrant)));
-  document.querySelectorAll("[data-access-extend]").forEach(button => button.addEventListener("click", () => openDateDialog("extend", button.dataset.accessExtend)));
+  document.querySelectorAll("[data-access-grant]").forEach(button => button.addEventListener("click", () => openDateDialog("grant", button.dataset.accessGrant, button)));
+  document.querySelectorAll("[data-access-extend]").forEach(button => button.addEventListener("click", () => openDateDialog("extend", button.dataset.accessExtend, button)));
 
   document.querySelectorAll("[data-access-delete-request]").forEach(button => {
     button.addEventListener("click", async () => {
@@ -283,29 +398,19 @@ function bindRenderedEvents() {
         await getStore().deleteRequest(button.dataset.accessDeleteRequest);
         await afterMutation();
       } catch (error) {
-        window.harvestHubNotifications?.error(error, "Не удалось удалить заявку.");
+        notifyError(error, "Не удалось удалить заявку.");
         button.disabled = false;
       }
     });
   });
 
   document.querySelectorAll("[data-access-revoke]").forEach(button => {
-    button.addEventListener("click", async () => {
-      const userId = button.dataset.accessRevoke;
-      const record = getRecordById(userId);
-      if (!window.confirm(`Удалить доступ у ${record?.email || "пользователя"}?`)) return;
-      button.disabled = true;
-      try {
-        await getStore().revokeAccess(userId);
-        await afterMutation();
-      } catch (error) {
-        window.harvestHubNotifications?.error(error, "Не удалось удалить доступ.");
-        button.disabled = false;
-      }
-    });
+    button.addEventListener("click", () => openConfirmDialog(button.dataset.accessRevoke, button));
   });
 
   document.querySelectorAll("[data-access-date-close]").forEach(button => button.addEventListener("click", closeDateDialog));
+  document.querySelectorAll("[data-access-confirm-close]").forEach(button => button.addEventListener("click", closeConfirmDialog));
+
   document.getElementById("advancedAccessDateConfirm")?.addEventListener("click", async event => {
     const pending = viewState.pendingDateAction;
     if (!pending) return;
@@ -317,9 +422,25 @@ function bindRenderedEvents() {
       closeDateDialog();
       await afterMutation();
     } catch (error) {
-      window.harvestHubNotifications?.error(error, "Не удалось сохранить доступ.");
+      notifyError(error, "Не удалось сохранить доступ.");
       event.currentTarget.disabled = false;
       event.currentTarget.textContent = "Сохранить";
+    }
+  });
+
+  document.getElementById("advancedAccessConfirmAction")?.addEventListener("click", async event => {
+    const pending = viewState.pendingConfirmAction;
+    if (!pending) return;
+    event.currentTarget.disabled = true;
+    event.currentTarget.textContent = "Отзываем…";
+    try {
+      await getStore().revokeAccess(pending.userId);
+      closeConfirmDialog();
+      await afterMutation();
+    } catch (error) {
+      notifyError(error, "Не удалось отозвать доступ.");
+      event.currentTarget.disabled = false;
+      event.currentTarget.textContent = "Отозвать доступ";
     }
   });
 }
@@ -335,7 +456,8 @@ async function renderAccessPage() {
   let status = { isAdmin: false };
   try {
     status = await window.harvestHubAdvancedModeAccess?.refresh?.() || status;
-  } catch {
+  } catch (error) {
+    console.warn("Не удалось обновить статус владельца:", error);
     status = window.harvestHubAdvancedModeAccess?.getStatus?.() || status;
   }
   if (!status.isAdmin) {
@@ -344,15 +466,11 @@ async function renderAccessPage() {
   }
 
   viewState.tab = getStore().getAdminTab();
-  try {
-    await loadAdminData();
-  } catch (error) {
-    window.harvestHubNotifications?.error(error, "Не удалось загрузить данные доступа.");
-    container.innerHTML = renderEmpty("Данные доступа пока недоступны.");
-  }
+  await loadAdminData();
 }
 
 export function init() {
   document.getElementById("advancedAccessBackToProfile")?.addEventListener("click", () => window.loadPage?.("profile.html"));
+  document.addEventListener("keydown", handleModalKeydown, { signal: window.harvestHubPageAbortController?.signal });
   renderAccessPage();
 }
