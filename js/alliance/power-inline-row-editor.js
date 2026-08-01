@@ -100,7 +100,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     state.dirty = false;
     state.loading = false;
     state.requestToken += 1;
-    syncTable();
+    syncTable(true);
     return true;
   }
 
@@ -154,11 +154,22 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     if (bulkControls && !state.canManage) bulkControls.hidden = true;
   }
 
-  function injectEditor() {
-    document.querySelectorAll(".power-inline-editor-row").forEach(row => row.remove());
+  function injectEditor(force = false) {
+    const rows = [...document.querySelectorAll(".power-inline-editor-row")];
     const table = byId("powerTable");
     if (table) table.dataset.powerRowEditing = state.editingId ? "true" : "false";
-    if (!state.editingId) return;
+
+    if (!state.editingId) {
+      rows.forEach(row => row.remove());
+      return;
+    }
+
+    const existing = rows.find(row => row.dataset.powerEditorFor === state.editingId) || null;
+    rows.forEach(row => {
+      if (row !== existing) row.remove();
+    });
+    if (existing && !force) return;
+    existing?.remove();
 
     const button = document.querySelector(`#powerTableBody [data-power-edit="${CSS.escape(state.editingId)}"]`);
     const baseRow = button?.closest("tr");
@@ -176,16 +187,16 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
 
   function observeTable() {
     const target = byId("powerTableBody");
-    if (observer && target) observer.observe(target, { childList: true, subtree: true });
+    if (observer && target) observer.observe(target, { childList: true });
   }
 
-  function syncTable() {
+  function syncTable(forceEditor = false) {
     clearTimeout(state.syncTimer);
     state.syncTimer = window.setTimeout(() => {
       if (!byId("alliancePowerSection")) return;
       observer?.disconnect();
       decorateButtons();
-      injectEditor();
+      injectEditor(forceEditor);
       observeTable();
       window.harvestHubTableScrollbars?.refresh?.();
     }, 0);
@@ -210,7 +221,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     state.dirty = false;
     state.values = ["", "", "", "", ""];
     state.missing = false;
-    syncTable();
+    syncTable(true);
 
     const { data, error } = await fetchAllianceSquadPowerMeasurement(
       window.harvestHubSupabase,
@@ -223,13 +234,13 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     state.loading = false;
     if (error) {
       showMessage(error.message || "Не удалось загрузить замер.", "error");
-      syncTable();
+      syncTable(true);
       return;
     }
     state.missing = Boolean(data?.missing);
     state.values = [1, 2, 3, 4, 5].map(index => inputPower(data?.[`squad_${index}`]));
     state.dirty = false;
-    syncTable();
+    syncTable(true);
   }
 
   async function openEditor(participantId) {
@@ -243,9 +254,13 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
   }
 
   async function changeDate(value) {
-    if (!value || value > localDateValue()) return;
+    const dateInput = document.querySelector("[data-power-row-date]");
+    if (!value || value > localDateValue()) {
+      if (dateInput) dateInput.value = state.date;
+      return;
+    }
     if (state.dirty && !confirmDiscard()) {
-      syncTable();
+      if (dateInput) dateInput.value = state.date;
       return;
     }
     state.date = rememberDate(value);
@@ -264,7 +279,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
   function toggleMissing() {
     state.missing = !state.missing;
     state.dirty = true;
-    syncTable();
+    syncTable(true);
   }
 
   async function saveRow(form) {
@@ -285,7 +300,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     }
 
     state.saving = true;
-    syncTable();
+    syncTable(true);
     const scrollTop = window.scrollY;
     const successText = state.missing ? "Отметка «не сдал» сохранена." : "Замер силы сохранён.";
     const { error } = await saveAllianceSquadPower(window.harvestHubSupabase, activeAllianceId(), {
@@ -296,7 +311,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     state.saving = false;
     if (error) {
       showMessage(error.message || "Не удалось сохранить замер силы.", "error");
-      syncTable();
+      syncTable(true);
       return;
     }
 
@@ -336,13 +351,22 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
   }
 
   function handleInput(event) {
+    const date = event.target.closest("[data-power-row-date]");
+    if (date) {
+      event.stopImmediatePropagation();
+      return;
+    }
     const squad = event.target.closest("[data-power-row-squad]");
     if (squad) updateValue(squad);
   }
 
   function handleChange(event) {
     const date = event.target.closest("[data-power-row-date]");
-    if (date) changeDate(date.value);
+    if (date) {
+      event.stopImmediatePropagation();
+      changeDate(date.value);
+      return;
+    }
     if (event.target.id === "powerBulkDate" && event.target.value) {
       state.date = rememberDate(event.target.value);
     }
@@ -377,7 +401,7 @@ export function initPowerInlineRowEditor({ canManage = false, currentParticipant
     if (previousPage === PAGE_PATH && pageName !== PAGE_PATH) destroy({ clearDate: true });
   }, { signal });
 
-  observer = new MutationObserver(syncTable);
+  observer = new MutationObserver(() => syncTable());
   observeTable();
 
   const bulkDate = byId("powerBulkDate");
