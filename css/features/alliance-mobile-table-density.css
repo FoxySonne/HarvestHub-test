@@ -2,6 +2,32 @@
   display: none;
 }
 
+@media (max-width: 899px) {
+  body:has(#page-content .alliance-subpage) #right-sidebar {
+    display: none !important;
+  }
+
+  body:has(#page-content .alliance-subpage) .container {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  body:has(#page-content .alliance-subpage) .power-table-wrap,
+  body:has(#page-content .alliance-subpage) .vs-table-wrap,
+  body:has(#page-content .alliance-subpage) .reservoir-table-wrap,
+  body:has(#page-content .alliance-subpage) #rosterTableContainer {
+    height: min(72svh, 680px);
+    max-height: none;
+    min-height: 460px;
+  }
+
+  body:has(#page-content .alliance-subpage) .is-alliance-table-fullscreen,
+  body:has(#page-content .alliance-subpage) .power-statistics-card.is-expanded .power-table-wrap {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
 @media (max-width: 767px) {
   .alliance-table,
   .power-table,
@@ -232,6 +258,14 @@
 }
 
 @media (max-width: 420px) {
+  body:has(#page-content .alliance-subpage) .power-table-wrap,
+  body:has(#page-content .alliance-subpage) .vs-table-wrap,
+  body:has(#page-content .alliance-subpage) .reservoir-table-wrap,
+  body:has(#page-content .alliance-subpage) #rosterTableContainer {
+    height: 68svh;
+    min-height: 430px;
+  }
+
   .power-table th:nth-child(2),
   .power-table td:nth-child(2),
   .vs-table th:nth-child(2),
