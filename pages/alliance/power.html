@@ -4,11 +4,24 @@
   <div id="allianceMessage" class="alliance-message" hidden></div>
 
   <div id="alliancePowerSection">
-
     <section id="powerSeasonSettings" class="card power-season-card" hidden>
       <div class="card-header"><div><h3>Начало сезона</h3></div></div>
       <form id="powerSeasonForm" class="power-season-form"><label><span>Начало текущего сезона</span><input id="powerSeasonStart" type="date" data-no-persist="true"></label><button type="submit">Сохранить дату</button></form>
     </section>
+
+    <details id="powerEditorCard" class="card power-single-editor-card">
+      <summary><span id="powerEditorTitle">Ввести замер одного игрока</span></summary>
+      <form id="powerForm" class="power-form power-single-editor-form">
+        <label class="power-single-player"><span>Игрок</span><select id="powerParticipant" data-no-persist="true"></select></label>
+        <label class="power-single-date"><span>Дата замера</span><input id="powerDate" type="date" data-no-persist="true" required></label>
+        <label><span>1-й отряд, млн</span><input id="powerSquad1" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <label><span>2-й отряд, млн</span><input id="powerSquad2" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <label><span>3-й отряд, млн</span><input id="powerSquad3" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <label><span>4-й отряд, млн</span><input id="powerSquad4" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <label><span>5-й отряд, млн</span><input id="powerSquad5" type="text" inputmode="decimal" data-no-persist="true"></label>
+        <div class="alliance-actions power-single-editor-actions"><button type="submit">Сохранить</button><button id="powerEditCancel" type="button" class="secondary-button" hidden>Отменить изменение</button></div>
+      </form>
+    </details>
 
     <section id="powerStatisticsCard" class="card alliance-list-card power-statistics-card">
       <button id="powerCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button>
