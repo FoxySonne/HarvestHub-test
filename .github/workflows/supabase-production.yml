@@ -1,0 +1,74 @@
+name: Supabase production migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Only inspect migrations or apply them to production"
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+      migration_reviewed:
+        description: "I reviewed the migration and the latest repository checks are green"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: ${{ inputs.mode == 'apply' && 'Apply reviewed migrations' || 'Preview pending migrations' }}
+    if: ${{ inputs.migration_reviewed }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+
+    steps:
+      - name: Checkout reviewed main branch
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase link --project-ref dfbenhembawizjhachwz --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Show migration status
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase migration list
+
+      - name: Preview pending migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push --dry-run
+
+      - name: Apply reviewed migrations
+        if: ${{ inputs.mode == 'apply' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push
+
+      - name: Verify migration status
+        if: ${{ inputs.mode == 'apply' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase migration list
