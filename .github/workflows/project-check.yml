@@ -1,5 +1,6 @@
 name: CI and GitHub Pages
 
+# Required checks are managed by the main branch ruleset.
 on:
   workflow_dispatch:
   push:
