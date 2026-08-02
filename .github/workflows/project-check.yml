@@ -113,7 +113,6 @@ jobs:
             --exclude 'supabase/' \
             --exclude 'package.json' \
             --exclude 'package-lock.json'
-          printf '%s\n' 'harvesthub.ru' > dist/CNAME
           test -f dist/index.html
 
       - name: Upload Pages artifact
