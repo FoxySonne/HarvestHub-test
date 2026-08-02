@@ -1,4 +1,4 @@
-name: Project check
+name: CI and GitHub Pages
 
 on:
   workflow_dispatch:
@@ -9,31 +9,48 @@ on:
       - "chore/**"
       - "fix/**"
       - "feature/**"
+      - "puhvalja/**"
   pull_request:
 
 permissions:
   contents: read
 
 concurrency:
-  group: project-check-${{ github.workflow }}-${{ github.ref }}
+  group: ci-pages-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  check:
+  validate:
+    name: Validate repository
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Check repository structure and code
+      - name: Install dependencies when lockfile exists
+        if: ${{ hashFiles('package-lock.json') != '' }}
+        run: npm ci
+
+      - name: Check repository structure, JavaScript, HTML, CSS and Supabase migrations
         run: npm run check:ci 2> project-check-errors.txt
+
+      - name: Check formatting and whitespace
+        run: git diff --check
+
+      - name: Audit npm dependencies when lockfile exists
+        if: ${{ hashFiles('package-lock.json') != '' }}
+        run: npm audit --audit-level=high
 
       - name: Build repository audit
         if: always()
@@ -56,3 +73,71 @@ jobs:
           path: project-check-errors.txt
           if-no-files-found: ignore
           retention-days: 14
+
+  secret-scan:
+    name: Scan for leaked secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-pages:
+    name: Build GitHub Pages artifact
+    needs:
+      - validate
+      - secret-scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assemble static site
+        shell: bash
+        run: |
+          mkdir -p dist
+          rsync -a ./ dist/ \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            --exclude 'reports/' \
+            --exclude 'scripts/' \
+            --exclude 'supabase/' \
+            --exclude 'package.json' \
+            --exclude 'package-lock.json'
+          printf '%s\n' 'harvesthub.ru' > dist/CNAME
+          test -f dist/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy-pages:
+    name: Deploy GitHub Pages
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs:
+      - build-pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
