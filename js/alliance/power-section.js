@@ -177,14 +177,14 @@ function renderBulkTable(rows) {
   ensureBulkDraft(Array.isArray(state.data?.participants) ? state.data.participants : []);
   table.classList.add("is-bulk-editing");
   table.dataset.powerBulkMode = "true";
-  head.innerHTML = `<tr><th>Место</th><th>Участник</th><th>1-й отряд, млн</th><th>2-й отряд, млн</th><th>3-й отряд, млн</th><th>4-й отряд, млн</th><th>5-й отряд, млн</th><th>Не сдал</th></tr>`;
+  head.innerHTML = `<tr><th>Место</th><th>Участник</th><th>1-й отряд, млн</th><th>Не сдал</th></tr>`;
   body.innerHTML = rows.map((item, index) => {
     const values = state.bulkDraft.get(item.participant_id) || ["", "", "", "", ""];
     const missing = state.bulkMissing.has(item.participant_id);
     return `<tr class="${missing ? "is-power-missing" : ""}" data-bulk-participant="${escapeHtml(item.participant_id)}">
       <td>${index + 1}</td>
       <td><strong>${escapeHtml(item.nickname)}</strong><small>${escapeHtml(item.rank_name || "—")}</small></td>
-      ${values.map((value, squadIndex) => `<td><input type="text" inputmode="decimal" data-bulk-squad="${squadIndex + 1}" value="${missing ? "" : escapeHtml(value)}" data-no-persist="true" aria-label="${escapeHtml(item.nickname)}, ${squadIndex + 1}-й отряд" ${missing ? "disabled" : ""}></td>`).join("")}
+      <td><input type="text" inputmode="decimal" data-bulk-squad="1" value="${missing ? "" : escapeHtml(values[0])}" data-no-persist="true" aria-label="${escapeHtml(item.nickname)}, 1-й отряд" ${missing ? "disabled" : ""}></td>
       <td><button type="button" class="secondary-button power-missing-toggle ${missing ? "is-active" : ""}" data-power-missing="${escapeHtml(item.participant_id)}" aria-pressed="${missing}" title="${missing ? "Снять отметку «не сдал»" : "Игрок не сдал силу на выбранную дату"}">—</button></td>
     </tr>`;
   }).join("");
@@ -354,10 +354,9 @@ function updateBulkDraft(event) {
   if (!input) return;
   const row = input.closest("[data-bulk-participant]");
   const participantId = row?.dataset.bulkParticipant;
-  const squadIndex = Number(input.dataset.bulkSquad) - 1;
-  if (!participantId || squadIndex < 0 || squadIndex > 4) return;
+  if (!participantId || input.dataset.bulkSquad !== "1") return;
   const values = state.bulkDraft.get(participantId) || ["", "", "", "", ""];
-  values[squadIndex] = input.value;
+  values[0] = input.value;
   state.bulkDraft.set(participantId, values);
   state.bulkTouched.add(participantId);
 }
@@ -370,11 +369,9 @@ function toggleBulkMissing(participantId) {
   if (!participantId) return;
   if (state.bulkMissing.has(participantId)) {
     state.bulkMissing.delete(participantId);
-    const values = (state.bulkDraft.get(participantId) || []).map(parsePower);
-    const original = state.bulkOriginal.get(participantId) || [null, null, null, null, null];
-    if (values.every((value, index) => powersEqual(value, original[index]))) {
-      state.bulkTouched.delete(participantId);
-    }
+    const value = parsePower((state.bulkDraft.get(participantId) || [""])[0]);
+    const original = (state.bulkOriginal.get(participantId) || [null])[0];
+    if (powersEqual(value, original)) state.bulkTouched.delete(participantId);
   } else {
     state.bulkMissing.add(participantId);
     state.bulkTouched.add(participantId);
@@ -389,31 +386,29 @@ async function saveBulk() {
 
   for (const [participantId, draft] of state.bulkDraft.entries()) {
     const missing = state.bulkMissing.has(participantId);
-    const values = draft.map(parsePower);
+    const value = parsePower(draft[0]);
     const item = participants.get(participantId);
-    const invalidIndex = missing ? -1 : values.findIndex(value => value === undefined);
-    if (invalidIndex >= 0) {
-      const visibleInput = document.querySelector(`[data-bulk-participant="${CSS.escape(participantId)}"] [data-bulk-squad="${invalidIndex + 1}"]`);
+    if (!missing && value === undefined) {
+      const visibleInput = document.querySelector(`[data-bulk-participant="${CSS.escape(participantId)}"] [data-bulk-squad="1"]`);
       visibleInput?.focus();
-      return showMessage(`Проверь значение у игрока ${item?.nickname || "—"}, ${invalidIndex + 1}-й отряд.`, "error");
+      return showMessage(`Проверь значение у игрока ${item?.nickname || "—"}, 1-й отряд.`, "error");
     }
 
     const original = state.bulkOriginal.get(participantId) || [null, null, null, null, null];
-    const valuesChanged = values.some((value, index) => !powersEqual(value, original[index]));
-    if (!state.bulkTouched.has(participantId) && !valuesChanged) continue;
+    if (!state.bulkTouched.has(participantId) && powersEqual(value, original[0])) continue;
 
-    if (!missing && values.every(value => value === null)) {
-      return showMessage(`У игрока ${item?.nickname || "—"} должен быть заполнен хотя бы один отряд или поставлен прочерк.`, "error");
+    if (!missing && value === null) {
+      return showMessage(`У игрока ${item?.nickname || "—"} должен быть заполнен 1-й отряд или поставлен прочерк.`, "error");
     }
 
     payloads.push({
       participant_id: participantId,
       measured_on: date,
-      squad_1: missing ? null : values[0],
-      squad_2: missing ? null : values[1],
-      squad_3: missing ? null : values[2],
-      squad_4: missing ? null : values[3],
-      squad_5: missing ? null : values[4]
+      squad_1: missing ? null : value,
+      squad_2: original[1],
+      squad_3: original[2],
+      squad_4: original[3],
+      squad_5: original[4]
     });
   }
 
@@ -488,6 +483,9 @@ export function initPowerSection() {
   byId("powerBulkClose")?.addEventListener("click", stopBulkEditing);
   byId("powerBulkSave")?.addEventListener("click", saveBulk);
   byId("powerExpandTable")?.addEventListener("click", () => toggleExpandedTable());
-  byId("powerCloseTable")?.addEventListener("click", () => toggleExpandedTable(false));
+  window.addEventListener("harvesthub:page-change", () => {
+    if (state.expanded) toggleExpandedTable(false);
+  }, { once: true });
+  resetEditor();
   load();
 }
