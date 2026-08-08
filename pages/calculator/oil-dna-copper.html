@@ -64,6 +64,57 @@
         <div id="territoryThreatList" class="season-results season-results-compact"></div>
       </div>
     </section>
+
+    <section class="card season-card season-compact-card">
+      <div class="card-header season-card-header">
+        <div>
+          <h3>Логово</h3>
+          <p>Расчёт минимального количества ударов, необходимого, чтобы выйти по очкам выше всех соперников.</p>
+        </div>
+      </div>
+
+      <div class="season-panel">
+        <h4>Текущая ситуация</h4>
+        <div class="season-form-grid season-form-grid-compact">
+          <label class="season-field">
+            <span>Размер логова</span>
+            <select id="territoryLairSize"></select>
+          </label>
+
+          <label class="season-field">
+            <span>Наш текущий счёт</span>
+            <input id="territoryLairOurScore" type="text" inputmode="decimal" placeholder="Например, 35К">
+          </label>
+
+          <label class="season-field">
+            <span>Количество соперников</span>
+            <select id="territoryLairOpponentCount">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="territoryLairOpponents"></div>
+
+      <section id="territoryLairStatus" class="season-deadline-card" data-state="neutral" aria-live="polite">
+        <h4 id="territoryLairStatusTitle">Введите текущие очки</h4>
+        <p id="territoryLairStatusMessage">Калькулятор покажет минимальное количество ударов, после которого ваш счёт станет выше счёта всех соперников.</p>
+      </section>
+
+      <div class="season-results season-results-compact">
+        <div><span>Главный соперник</span><strong id="territoryLairMainThreat">—</strong></div>
+        <div><span>Очков за один удар</span><strong id="territoryLairPointsPerHit">—</strong></div>
+        <div><span>Нужно ударов / якорей</span><strong id="territoryLairHitsNeeded">—</strong></div>
+        <div><span>Нужно набрать очков</span><strong id="territoryLairPointsNeeded">—</strong></div>
+        <div><span>Наш счёт после ударов</span><strong id="territoryLairTargetScore">—</strong></div>
+        <div><span>Преимущество</span><strong id="territoryLairLead">—</strong></div>
+      </div>
+
+      <p>Расчёт выполнен при условии, что соперники больше не атакуют логово.</p>
+    </section>
   </div>
 
   <div class="calculator-data-actions">
