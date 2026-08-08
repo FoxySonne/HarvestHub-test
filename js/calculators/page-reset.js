@@ -6,6 +6,7 @@
     "calculator/ipk.html": { label: "Игра по-крупному", sync: "forms", custom: true },
     "calculator/turbo-vs.html": { label: "Турбочерепашка & VS", sync: "turbo" },
     "calculator/season-resources.html": { label: "Сезонные ресурсы", sync: "forms" },
+    "calculator/oil-dna-copper.html": { label: "Нефть/ДНК/Медь", sync: "forms" },
     "calculator/troop-training.html": { label: "Обучение войск", sync: "forms", clearTransfer: true }
   };
 
