@@ -6,6 +6,52 @@ export const seasonDatabase = {
     maxDiscountDiamonds: 12000
   },
 
+  territoryEvent: {
+    calculatorPage: {
+      name: "Нефть/ДНК/Медь",
+      description: "Расчёты по захвату вышек и логова"
+    },
+
+    schedule: {
+      startMsk: "03:00",
+      endMsk: "02:50",
+      startUtc: "00:00",
+      endUtc: "23:50"
+    },
+
+    anchors: {
+      baseDaily: 8,
+      weeklyPassDaily: 10,
+      maxPurchasableDaily: 7,
+      statedMaxDaily: 32,
+      oneAnchorHits: 1,
+      maxDailyNeedsVerification: true
+    },
+
+    scoring: {
+      barrelPointsPerMinute: 2,
+      cranePointsPerMinute: 1,
+      successfulCapturePoints: 1,
+      calculationSafetyMinutes: 2,
+      scoreDisplayStepPoints: 10,
+      conservativeHiddenPointsBufferPerSide: 10
+    },
+
+    lairs: [
+      { size: "XS", pointsPerHit: 4400, anchorCostPerHit: 1, allianceResourcePerDay: 100 },
+      { size: "S", pointsPerHit: 7400, anchorCostPerHit: 1, allianceResourcePerDay: 200 },
+      { size: "M", pointsPerHit: 13400, anchorCostPerHit: 1, allianceResourcePerDay: 375 }
+    ],
+
+    towers: [
+      { size: "S", barrels: 1, cranes: 1, maxPointsPerMinute: 3, allianceResourcePerDay: 300 },
+      { size: "M", barrels: 1, cranes: 2, maxPointsPerMinute: 4, allianceResourcePerDay: 400 },
+      { size: "L", barrels: 1, cranes: 2, maxPointsPerMinute: 4, allianceResourcePerDay: 600 },
+      { size: "XL", barrels: 2, cranes: 2, maxPointsPerMinute: 6, allianceResourcePerDay: 1000 },
+      { size: "XXL", barrels: 2, cranes: 2, maxPointsPerMinute: 6, allianceResourcePerDay: 2000 }
+    ]
+  },
+
   alphaDrops: [
     { level: 1, primary: 10, secondary: 1000 },
     { level: 2, primary: 20, secondary: 1000 },
