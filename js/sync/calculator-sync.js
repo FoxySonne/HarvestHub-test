@@ -7,6 +7,7 @@
   const CALCULATOR_PAGES = new Set([
     "calculator/ipk.html",
     "calculator/season-resources.html",
+    "calculator/oil-dna-copper.html",
     "calculator/troop-training.html"
   ]);
 
