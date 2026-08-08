@@ -2,7 +2,7 @@
   <h1>Нефть/ДНК/Медь</h1>
   <p>Расчёты по захвату вышек и логова.</p>
 
-  <div class="season-layout season-compact-layout">
+  <div class="season-layout">
     <section class="card season-card season-compact-card">
       <div class="card-header season-card-header">
         <div>
@@ -63,44 +63,6 @@
         <h4>Если соперник заберёт всю вышку прямо сейчас</h4>
         <div id="territoryThreatList" class="season-results season-results-compact"></div>
       </div>
-    </section>
-
-    <section class="card season-card season-compact-card">
-      <div class="card-header season-card-header">
-        <div>
-          <h3>Логово</h3>
-          <p>Базовый расчёт очков по количеству доступных якорей. Один якорь = один удар.</p>
-        </div>
-      </div>
-
-      <div class="season-form-grid season-form-grid-compact">
-        <label class="season-field">
-          <span>Размер логова</span>
-          <select id="territoryLairSize"></select>
-        </label>
-
-        <label class="season-field">
-          <span>Доступно якорей / ударов</span>
-          <input id="territoryLairHits" type="number" min="0" step="1" value="0">
-        </label>
-
-        <label class="season-field">
-          <span>Сколько очков нужно набрать</span>
-          <input id="territoryLairTarget" type="number" min="0" step="1" value="0">
-        </label>
-      </div>
-
-      <div class="season-results season-results-compact">
-        <div><span>Очков за один удар</span><strong id="territoryLairPointsPerHit">—</strong></div>
-        <div><span>Можно набрать</span><strong id="territoryLairTotalPoints">0</strong></div>
-        <div><span>Нужно ударов / якорей</span><strong id="territoryLairHitsNeeded">—</strong></div>
-        <div><span>Останется / не хватит якорей</span><strong id="territoryLairAnchorBalance">—</strong></div>
-      </div>
-
-      <section id="territoryLairStatus" class="season-deadline-card" data-state="neutral" aria-live="polite">
-        <h4 id="territoryLairStatusTitle">Введите нужное количество очков</h4>
-        <p id="territoryLairStatusMessage">Калькулятор покажет, сколько ударов и якорей потребуется.</p>
-      </section>
     </section>
   </div>
 
