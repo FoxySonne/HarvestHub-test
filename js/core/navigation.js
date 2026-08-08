@@ -26,6 +26,7 @@
     { title: "Игра по-крупному", path: "calculator/ipk.html", group: "Калькуляторы" },
     { title: "Турбочерепашка & VS", path: "calculator/turbo-vs.html", group: "Калькуляторы" },
     { title: "Сезонные ресурсы", path: "calculator/season-resources.html", group: "Калькуляторы" },
+    { title: "Нефть/ДНК/Медь", path: "calculator/oil-dna-copper.html", group: "Калькуляторы" },
     { title: "Обучение войск", path: "calculator/troop-training.html", group: "Калькуляторы" }
   ];
   const pageModulePaths = {
@@ -45,7 +46,8 @@
     ipk: "../calculators/ipk.js",
     "turbo-vs": "../calculators/turbo-vs.js",
     "troop-training": "../calculators/troop-training.js",
-    "season-resources": "../season/season-resources.js"
+    "season-resources": "../season/season-resources.js",
+    "oil-dna-copper": "../season/oil-dna-copper.js"
   };
 
   let currentLoadedPage = localStorage.getItem("currentPage") || "";
@@ -91,6 +93,7 @@
       "calculator/ipk.html",
       "calculator/turbo-vs.html",
       "calculator/season-resources.html",
+      "calculator/oil-dna-copper.html",
       "calculator/troop-training.html",
       "calculator.html"
     ].map(getPageByPath).filter(Boolean);
