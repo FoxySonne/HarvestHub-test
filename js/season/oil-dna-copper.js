@@ -92,26 +92,13 @@ function getSelectedTower() {
   return EVENT.towers.find(item => item.size === size) || EVENT.towers[0];
 }
 
-function getSelectedLair() {
-  const size = byId("territoryLairSize")?.value;
-  return EVENT.lairs.find(item => item.size === size) || EVENT.lairs[0];
-}
-
-function fillDatabaseSelects() {
+function fillTowerSelect() {
   const towerSelect = byId("territoryTowerSize");
-  const lairSelect = byId("territoryLairSize");
+  if (!towerSelect) return;
 
-  if (towerSelect) {
-    towerSelect.innerHTML = EVENT.towers
-      .map(item => `<option value="${item.size}">${item.size}</option>`)
-      .join("");
-  }
-
-  if (lairSelect) {
-    lairSelect.innerHTML = EVENT.lairs
-      .map(item => `<option value="${item.size}">${item.size}</option>`)
-      .join("");
-  }
+  towerSelect.innerHTML = EVENT.towers
+    .map(item => `<option value="${item.size}">${item.size}</option>`)
+    .join("");
 }
 
 function renderOpponentFields() {
@@ -369,54 +356,10 @@ function updateTowerCalculator() {
   );
 }
 
-function setLairStatus(state, title, message) {
-  const card = byId("territoryLairStatus");
-  if (card) card.dataset.state = state;
-  setText("territoryLairStatusTitle", title);
-  setText("territoryLairStatusMessage", message);
-}
-
-function updateLairCalculator() {
-  const lair = getSelectedLair();
-  const hits = readInteger("territoryLairHits", 0);
-  const target = readInteger("territoryLairTarget", 0);
-  const totalPoints = hits * lair.pointsPerHit;
-
-  setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
-  setText("territoryLairTotalPoints", formatNumber(totalPoints));
-
-  if (target <= 0) {
-    setText("territoryLairHitsNeeded", "—");
-    setText("territoryLairAnchorBalance", "—");
-    setLairStatus("neutral", "Введите нужное количество очков", "Один якорь равен одному удару по логову.");
-    return;
-  }
-
-  const hitsNeeded = Math.ceil(target / lair.pointsPerHit);
-  const balance = hits - hitsNeeded;
-
-  setText("territoryLairHitsNeeded", formatNumber(hitsNeeded));
-  setText(
-    "territoryLairAnchorBalance",
-    balance >= 0 ? `останется ${formatNumber(balance)}` : `не хватит ${formatNumber(Math.abs(balance))}`
-  );
-
-  if (balance >= 0) {
-    setLairStatus("success", "Якорей достаточно", `Для ${formatNumber(target)} очков потребуется ${formatNumber(hitsNeeded)} ударов.`);
-  } else {
-    setLairStatus("danger", "Якорей недостаточно", `Нужно ещё ${formatNumber(Math.abs(balance))} якорей для указанного количества очков.`);
-  }
-}
-
-function updateAll() {
-  updateTowerCalculator();
-  updateLairCalculator();
-}
-
 function bindInputs() {
   document.querySelectorAll(".season-page input, .season-page select").forEach(input => {
-    input.addEventListener("input", updateAll);
-    input.addEventListener("change", updateAll);
+    input.addEventListener("input", updateTowerCalculator);
+    input.addEventListener("change", updateTowerCalculator);
   });
 }
 
@@ -425,13 +368,13 @@ export function init() {
     window.clearInterval(window.harvestHubOilDnaCopperTimer);
   }
 
-  fillDatabaseSelects();
+  fillTowerSelect();
   renderOpponentFields();
   bindInputs();
 
   window.harvestHubStorage?.restorePageFormState?.(PAGE_NAME);
   syncOpponentVisibility();
-  updateAll();
+  updateTowerCalculator();
 
   window.harvestHubOilDnaCopperTimer = window.setInterval(updateTowerCalculator, UPDATE_INTERVAL_MS);
 }
