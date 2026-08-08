@@ -92,11 +92,25 @@ function getSelectedTower() {
   return EVENT.towers.find(item => item.size === size) || EVENT.towers[0];
 }
 
+function getSelectedLair() {
+  const size = byId("territoryLairSize")?.value;
+  return EVENT.lairs.find(item => item.size === size) || EVENT.lairs[0];
+}
+
 function fillTowerSelect() {
   const towerSelect = byId("territoryTowerSize");
   if (!towerSelect) return;
 
   towerSelect.innerHTML = EVENT.towers
+    .map(item => `<option value="${item.size}">${item.size}</option>`)
+    .join("");
+}
+
+function fillLairSelect() {
+  const lairSelect = byId("territoryLairSize");
+  if (!lairSelect) return;
+
+  lairSelect.innerHTML = EVENT.lairs
     .map(item => `<option value="${item.size}">${item.size}</option>`)
     .join("");
 }
@@ -126,10 +140,32 @@ function renderOpponentFields() {
   `).join("");
 }
 
+function renderLairOpponentFields() {
+  const container = byId("territoryLairOpponents");
+  if (!container) return;
+
+  container.innerHTML = [1, 2, 3].map(index => `
+    <section class="season-panel" data-territory-lair-opponent="${index}">
+      <h4>Соперник ${index}</h4>
+      <label class="season-field">
+        <span>Текущий счёт</span>
+        <input id="territoryLairOpponent${index}Score" type="text" inputmode="decimal" placeholder="Например, 68К">
+      </label>
+    </section>
+  `).join("");
+}
+
 function syncOpponentVisibility() {
   const count = Math.min(3, Math.max(1, readInteger("territoryOpponentCount", 1)));
   document.querySelectorAll("[data-territory-opponent]").forEach(section => {
     section.hidden = Number(section.dataset.territoryOpponent) > count;
+  });
+}
+
+function syncLairOpponentVisibility() {
+  const count = Math.min(3, Math.max(1, readInteger("territoryLairOpponentCount", 1)));
+  document.querySelectorAll("[data-territory-lair-opponent]").forEach(section => {
+    section.hidden = Number(section.dataset.territoryLairOpponent) > count;
   });
 }
 
@@ -146,11 +182,29 @@ function readOpponents() {
   });
 }
 
+function readLairOpponents() {
+  const count = Math.min(3, Math.max(1, readInteger("territoryLairOpponentCount", 1)));
+  return Array.from({ length: count }, (_, offset) => {
+    const index = offset + 1;
+    return {
+      index,
+      score: parseScore(byId(`territoryLairOpponent${index}Score`)?.value)
+    };
+  });
+}
+
 function setTowerStatus(state, title, message) {
   const card = byId("territoryTowerStatus");
   if (card) card.dataset.state = state;
   setText("territoryTowerStatusTitle", title);
   setText("territoryTowerStatusMessage", message);
+}
+
+function setLairStatus(state, title, message) {
+  const card = byId("territoryLairStatus");
+  if (card) card.dataset.state = state;
+  setText("territoryLairStatusTitle", title);
+  setText("territoryLairStatusMessage", message);
 }
 
 function clearTowerResults() {
@@ -163,6 +217,16 @@ function clearTowerResults() {
   ].forEach(id => setText(id, "—"));
   const list = byId("territoryThreatList");
   if (list) list.innerHTML = "";
+}
+
+function clearLairResults() {
+  [
+    "territoryLairMainThreat",
+    "territoryLairHitsNeeded",
+    "territoryLairPointsNeeded",
+    "territoryLairTargetScore",
+    "territoryLairLead"
+  ].forEach(id => setText(id, "—"));
 }
 
 function validateTowerRates(tower, ourRate, opponents) {
@@ -356,10 +420,71 @@ function updateTowerCalculator() {
   );
 }
 
+function updateLairCalculator() {
+  const lair = getSelectedLair();
+  const ourScoreRaw = parseScore(byId("territoryLairOurScore")?.value);
+  const opponentsRaw = readLairOpponents();
+
+  syncLairOpponentVisibility();
+  setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
+
+  if (ourScoreRaw == null || opponentsRaw.some(item => item.score == null)) {
+    clearLairResults();
+    setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
+    setLairStatus("neutral", "Введите текущие очки", "Можно вводить значения так, как их показывает игра: например 35К и 68К.");
+    return;
+  }
+
+  const conservative = conservativeScores(ourScoreRaw, opponentsRaw);
+  const mainThreat = conservative.opponents.reduce((highest, opponent) => {
+    if (!highest || opponent.conservativeScore > highest.conservativeScore) return opponent;
+    return highest;
+  }, null);
+
+  if (!mainThreat) {
+    clearLairResults();
+    setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
+    setLairStatus("neutral", "Введите счёт соперника", "Для расчёта нужен хотя бы один соперник.");
+    return;
+  }
+
+  const scoreGap = mainThreat.conservativeScore - conservative.our;
+  const hitsNeeded = scoreGap < 0 ? 0 : Math.floor(scoreGap / lair.pointsPerHit) + 1;
+  const pointsNeeded = hitsNeeded * lair.pointsPerHit;
+  const targetScore = ourScoreRaw + pointsNeeded;
+  const conservativeLead = conservative.our + pointsNeeded - mainThreat.conservativeScore;
+
+  setText("territoryLairMainThreat", `Соперник ${mainThreat.index}`);
+  setText("territoryLairHitsNeeded", formatNumber(hitsNeeded));
+  setText("territoryLairPointsNeeded", formatNumber(pointsNeeded));
+  setText("territoryLairTargetScore", `≈ ${formatGameScore(targetScore)}`);
+  setText("territoryLairLead", formatNumber(Math.max(0, conservativeLead)));
+
+  if (hitsNeeded === 0) {
+    setLairStatus(
+      "success",
+      "Вы уже впереди всех соперников",
+      "Если соперники больше не атакуют логово, дополнительных ударов для первого места не требуется."
+    );
+    return;
+  }
+
+  setLairStatus(
+    "success",
+    `Для захвата потребуется ${hitsNeeded} ${hitsNeeded === 1 ? "якорь" : "якоря/якорей"}`,
+    `После ${hitsNeeded} ${hitsNeeded === 1 ? "удара" : "ударов"} ваш счёт станет выше текущего счёта всех соперников.`
+  );
+}
+
+function updateAll() {
+  updateTowerCalculator();
+  updateLairCalculator();
+}
+
 function bindInputs() {
   document.querySelectorAll(".season-page input, .season-page select").forEach(input => {
-    input.addEventListener("input", updateTowerCalculator);
-    input.addEventListener("change", updateTowerCalculator);
+    input.addEventListener("input", updateAll);
+    input.addEventListener("change", updateAll);
   });
 }
 
@@ -369,12 +494,15 @@ export function init() {
   }
 
   fillTowerSelect();
+  fillLairSelect();
   renderOpponentFields();
+  renderLairOpponentFields();
   bindInputs();
 
   window.harvestHubStorage?.restorePageFormState?.(PAGE_NAME);
   syncOpponentVisibility();
-  updateTowerCalculator();
+  syncLairOpponentVisibility();
+  updateAll();
 
   window.harvestHubOilDnaCopperTimer = window.setInterval(updateTowerCalculator, UPDATE_INTERVAL_MS);
 }
