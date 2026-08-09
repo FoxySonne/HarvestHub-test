@@ -3,6 +3,8 @@ import { seasonDatabase } from "../../data/season-database.js";
 const PAGE_NAME = "calculator/oil-dna-copper.html";
 const EVENT = seasonDatabase.territoryEvent;
 const UPDATE_INTERVAL_MS = 30 * 1000;
+const EVENT_END_UTC_MINUTE = 23 * 60 + 50;
+const MOSCOW_UTC_OFFSET_MINUTES = 3 * 60;
 const TOWER_POINTS = [
   { key: "barrel1", type: "barrel", index: 1, rate: EVENT.scoring.barrelPointsPerMinute },
   { key: "barrel2", type: "barrel", index: 2, rate: EVENT.scoring.barrelPointsPerMinute },
@@ -113,13 +115,13 @@ function formatMoscowTime(date) {
 
 function getEventClock(now = new Date()) {
   const currentUtcMinute = now.getUTCHours() * 60 + now.getUTCMinutes();
-  const endUtcMinute = 23 * 60 + 50;
-  const isOpen = currentUtcMinute < endUtcMinute;
+  const isOpen = currentUtcMinute < EVENT_END_UTC_MINUTE;
 
   return {
     now,
+    currentUtcMinute,
     isOpen,
-    remainingMinutes: isOpen ? Math.max(0, endUtcMinute - currentUtcMinute) : 0
+    remainingMinutes: isOpen ? Math.max(0, EVENT_END_UTC_MINUTE - currentUtcMinute) : 0
   };
 }
 
@@ -321,6 +323,80 @@ function renderTowerProjectionMessage(message) {
   if (body) body.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
 }
 
+function renderTimeProjectionRows(rows) {
+  const body = byId("territoryTimeProjectionBody");
+  if (!body) return;
+
+  body.innerHTML = rows.map(row => `
+    <tr>
+      <td>${row.label}</td>
+      <td>${formatNumber(row.score)}</td>
+    </tr>
+  `).join("");
+}
+
+function renderTimeProjectionMessage(message) {
+  const body = byId("territoryTimeProjectionBody");
+  if (body) body.innerHTML = `<tr><td colspan="2">${message}</td></tr>`;
+}
+
+function readProjectionTarget(clock) {
+  const value = String(byId("territoryProjectionTime")?.value || "").trim();
+  if (!value) return { message: "Выберите время." };
+  if (!clock.isOpen) return { message: "Событие уже завершено." };
+
+  const match = value.match(/^(\d{2}):(\d{2})$/);
+  if (!match) return { message: "Укажите время в формате ЧЧ:ММ." };
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const targetMoscowMinute = hours * 60 + minutes;
+  const targetUtcMinute = (targetMoscowMinute - MOSCOW_UTC_OFFSET_MINUTES + 1440) % 1440;
+
+  if (targetUtcMinute > EVENT_END_UTC_MINUTE) {
+    return { message: "Событие заканчивается в 02:50 МСК." };
+  }
+  if (targetUtcMinute < clock.currentUtcMinute) {
+    return { message: "Выбранное время уже прошло." };
+  }
+
+  return {
+    label: value,
+    minutesAhead: targetUtcMinute - clock.currentUtcMinute
+  };
+}
+
+function updateTimeProjection({ clock, ourScore, opponents, ownership }) {
+  const target = readProjectionTarget(clock);
+  if (!target.label) {
+    setText("territoryTimeProjectionTitle", "Прогноз на выбранное время");
+    renderTimeProjectionMessage(target.message);
+    return;
+  }
+
+  setText("territoryTimeProjectionTitle", `Прогноз на ${target.label} МСК`);
+
+  if (!ourScore || opponents.some(item => !item.score)) {
+    renderTimeProjectionMessage("Введите текущие очки всех участников.");
+    return;
+  }
+
+  const rows = [{
+    label: "Мы",
+    score: ourScore.value + (ownership.rates.us || 0) * target.minutesAhead
+  }];
+
+  opponents.forEach(opponent => {
+    rows.push({
+      label: `Соперник ${opponent.index}`,
+      score: opponent.score.value
+        + (ownership.rates[`opponent${opponent.index}`] || 0) * target.minutesAhead
+    });
+  });
+
+  renderTimeProjectionRows(rows);
+}
+
 function calculateSafeStopMinute({ ourScore, opponents, ownership, remainingMinutes, towerMaxRate }) {
   const ourBase = conservativeOurScore(ourScore);
   const ourRate = ownership.rates.us || 0;
@@ -353,7 +429,6 @@ function calculateSafeStopMinute({ ourScore, opponents, ownership, remainingMinu
 function clearGuaranteeResults() {
   setText("territoryHoldTime", "—");
   setText("territorySafeTime", "—");
-  setText("territoryGuaranteePoints", "—");
   setText("territoryGuaranteeScore", "—");
 }
 
@@ -382,12 +457,10 @@ function updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate })
   const safeTime = new Date(clock.now.getTime() + recommendedMinute * 60 * 1000);
   const ourRate = ownership.rates.us || 0;
   const totalExpectedRetakes = opponents.reduce((sum, item) => sum + item.attacks, 0);
-  const pointsUntilGuarantee = ourRate * recommendedMinute + totalExpectedRetakes;
-  const scoreAtGuarantee = ourScore.value + pointsUntilGuarantee;
+  const scoreAtGuarantee = ourScore.value + ourRate * recommendedMinute + totalExpectedRetakes;
 
   setText("territoryHoldTime", formatDuration(recommendedMinute));
   setText("territorySafeTime", formatMoscowTime(safeTime));
-  setText("territoryGuaranteePoints", `${formatNumber(pointsUntilGuarantee)} очков`);
   setText("territoryGuaranteeScore", `≈ ${formatCompactScore(scoreAtGuarantee)}`);
 
   if (mathematicalMinute + safetyMinutes > clock.remainingMinutes) {
@@ -415,9 +488,11 @@ function updateTowerCalculator() {
   syncOpponentVisibility();
   syncOwnershipMatrix();
   const ownership = getOwnershipState();
+
   setText("territoryCurrentTime", formatMoscowTime(clock.now));
   setText("territoryTimeLeft", clock.isOpen ? formatDuration(remainingMinutes) : "событие завершено");
   setText("territoryTowerMaxRate", `${formatNumber(towerMaxRate)} очк./мин`);
+  updateTimeProjection({ clock, ourScore, opponents, ownership });
 
   if (!ourScore || opponents.some(item => !item.score)) {
     renderTowerProjectionMessage("Введите текущие очки всех участников.");
