@@ -16,7 +16,7 @@
 
         <div class="territory-config-row">
           <label class="season-field">
-            <span>Размер вышки</span>
+            <span>Вышка</span>
             <select id="territoryTowerSize"></select>
           </label>
           <label class="season-field territory-count-field">
@@ -28,8 +28,8 @@
         <div class="season-panel-title"><h4>Текущий счёт</h4></div>
         <div class="territory-score-row">
           <label class="season-field">
-            <span>Мы</span>
-            <input id="territoryOurScore" data-score-input type="text" inputmode="decimal" placeholder="1,46">
+            <span>Наш союз</span>
+            <input id="territoryOurScore" data-score-input type="text" inputmode="decimal">
           </label>
           <div id="territoryOpponents" class="territory-dynamic-score-fields"></div>
         </div>
@@ -48,11 +48,11 @@
           </thead>
           <tbody id="territoryOwnershipBody">
             <tr data-territory-owner-row="us">
-              <td>Мы</td>
-              <td><label class="checkbox"><input id="territoryPointUsBarrel1" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel1" aria-label="Мы держим Бочку 1"></label></td>
-              <td><label class="checkbox"><input id="territoryPointUsBarrel2" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel2" aria-label="Мы держим Бочку 2"></label></td>
-              <td><label class="checkbox"><input id="territoryPointUsCrane1" type="checkbox" data-territory-point-owner="us" data-territory-point="crane1" aria-label="Мы держим Кран 1"></label></td>
-              <td><label class="checkbox"><input id="territoryPointUsCrane2" type="checkbox" data-territory-point-owner="us" data-territory-point="crane2" aria-label="Мы держим Кран 2"></label></td>
+              <td>Наш союз</td>
+              <td><label class="checkbox"><input id="territoryPointUsBarrel1" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel1" aria-label="Наш союз держит Бочку 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointUsBarrel2" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel2" aria-label="Наш союз держит Бочку 2"></label></td>
+              <td><label class="checkbox"><input id="territoryPointUsCrane1" type="checkbox" data-territory-point-owner="us" data-territory-point="crane1" aria-label="Наш союз держит Кран 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointUsCrane2" type="checkbox" data-territory-point-owner="us" data-territory-point="crane2" aria-label="Наш союз держит Кран 2"></label></td>
             </tr>
           </tbody>
         </table>
@@ -97,7 +97,7 @@
 
         <div class="territory-config-row">
           <label class="season-field">
-            <span>Размер логова</span>
+            <span>Логово</span>
             <select id="territoryLairSize"></select>
           </label>
           <label class="season-field territory-count-field">
@@ -109,8 +109,8 @@
         <div class="season-panel-title"><h4>Текущий счёт</h4></div>
         <div class="territory-score-row">
           <label class="season-field">
-            <span>Мы</span>
-            <input id="territoryLairOurScore" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="4,04">
+            <span>Наш союз</span>
+            <input id="territoryLairOurScore" data-score-input data-score-required-unit="true" type="text" inputmode="decimal">
           </label>
           <div id="territoryLairOpponents" class="territory-dynamic-score-fields"></div>
         </div>
