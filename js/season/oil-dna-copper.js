@@ -20,15 +20,6 @@ function setText(id, value) {
   if (element) element.textContent = value;
 }
 
-function readNumber(id, fallback = 0) {
-  const value = Number(byId(id)?.value);
-  return Number.isFinite(value) ? value : fallback;
-}
-
-function readInteger(id, fallback = 0) {
-  return Math.max(0, Math.floor(readNumber(id, fallback)));
-}
-
 function getCount(id) {
   const input = byId(id);
   const count = Math.max(1, Math.floor(Number(input?.value) || 1));
@@ -139,20 +130,16 @@ function fillLairSelect() {
 function opponentFieldsMarkup(index) {
   return `
     <label class="season-field" data-territory-opponent="${index}">
-      <span>Соперник ${index} — текущий счёт</span>
-      <input id="territoryOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Например, 19">
-    </label>
-    <label class="season-field" data-territory-opponent="${index}">
-      <span>Соперник ${index} — успешных атак</span>
-      <input id="territoryOpponent${index}Attacks" type="number" min="0" step="1" value="0">
+      <span>Соперник ${index}</span>
+      <input id="territoryOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Счёт">
     </label>`;
 }
 
 function lairOpponentFieldMarkup(index) {
   return `
     <label class="season-field" data-territory-lair-opponent="${index}">
-      <span>Соперник ${index} — текущий счёт</span>
-      <input id="territoryLairOpponent${index}Score" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="Например, 4,04">
+      <span>Соперник ${index}</span>
+      <input id="territoryLairOpponent${index}Score" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="Счёт">
     </label>`;
 }
 
@@ -231,11 +218,7 @@ function syncOwnershipMatrix() {
 function readOpponents() {
   return Array.from({ length: getOpponentCount() }, (_, offset) => {
     const index = offset + 1;
-    return {
-      index,
-      score: readScoreInput(`territoryOpponent${index}Score`),
-      attacks: readInteger(`territoryOpponent${index}Attacks`, 0)
-    };
+    return { index, score: readScoreInput(`territoryOpponent${index}Score`) };
   });
 }
 
@@ -258,6 +241,7 @@ function getOwnershipState() {
   }
 
   const availablePoints = TOWER_POINTS.filter(point => isTowerPointAvailable(point, tower));
+
   availablePoints.forEach(point => {
     const checked = document.querySelector(`[data-territory-point-owner][data-territory-point="${point.key}"]:checked`);
     const owner = checked?.dataset.territoryPointOwner;
@@ -282,28 +266,26 @@ function optimisticScore(entry) {
 }
 
 function buildTowerParticipants(ourScore, opponents) {
-  const ourBonus = opponents.reduce((sum, item) => sum + item.attacks, 0);
   return [
-    { key: "us", label: "Мы", score: ourScore, bonus: ourBonus },
+    { key: "us", label: "Мы", score: ourScore },
     ...opponents.map(opponent => ({
       key: `opponent${opponent.index}`,
       label: `Соперник ${opponent.index}`,
-      score: opponent.score,
-      bonus: opponent.attacks
+      score: opponent.score
     }))
   ];
 }
 
 function nominalScoreAt(participant, ownership, minute) {
-  return participant.score.value + (ownership.rates[participant.key] || 0) * minute + (participant.bonus || 0);
+  return participant.score.value + (ownership.rates[participant.key] || 0) * minute;
 }
 
 function conservativeScoreAt(participant, ownership, minute) {
-  return conservativeScore(participant.score) + (ownership.rates[participant.key] || 0) * minute + (participant.bonus || 0);
+  return conservativeScore(participant.score) + (ownership.rates[participant.key] || 0) * minute;
 }
 
 function optimisticScoreAt(participant, ownership, minute) {
-  return optimisticScore(participant.score) + (ownership.rates[participant.key] || 0) * minute + (participant.bonus || 0);
+  return optimisticScore(participant.score) + (ownership.rates[participant.key] || 0) * minute;
 }
 
 function captureBonusFor(participant, ownership) {
@@ -442,9 +424,6 @@ function clearLairResults() {
 }
 
 function updateTowerCalculator() {
-  syncDynamicOpponentUi();
-  syncOwnershipMatrix();
-
   const clock = getEventClock();
   const tower = getSelectedTower();
   const ourScore = readScoreInput("territoryOurScore");
@@ -576,14 +555,8 @@ function bindOtherInputs() {
   ).forEach(input => {
     if (input.dataset.territoryBound === "true") return;
     input.dataset.territoryBound = "true";
-    input.addEventListener("input", () => {
-      if (input.id === "territoryOpponentCount" || input.id === "territoryLairOpponentCount") syncDynamicOpponentUi();
-      updateAll();
-    });
-    input.addEventListener("change", () => {
-      if (input.id === "territoryOpponentCount" || input.id === "territoryLairOpponentCount") syncDynamicOpponentUi();
-      updateAll();
-    });
+    input.addEventListener("input", updateAll);
+    input.addEventListener("change", updateAll);
   });
 }
 
