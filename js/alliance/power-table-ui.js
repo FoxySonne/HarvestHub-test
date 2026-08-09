@@ -90,6 +90,20 @@
     });
   }
 
+  function scrollSearchMatch(table) {
+    const row = table?.querySelector("tbody tr.alliance-table-search-match");
+    const wrapper = table?.closest(".power-table-wrap");
+    if (!row || !wrapper) return;
+
+    requestAnimationFrame(() => {
+      if (!row.isConnected || !wrapper.isConnected) return;
+      const rowRect = row.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const target = wrapper.scrollTop + (rowRect.top - wrapperRect.top) - ((wrapper.clientHeight - rowRect.height) / 2);
+      wrapper.scrollTop = Math.max(0, target);
+    });
+  }
+
   function setupHeaders(table) {
     if (!table) return;
     compactPowerContent(table);
@@ -123,7 +137,9 @@
 
   function setupCurrentPage() {
     const table = document.querySelector(TABLE_SELECTOR);
-    if (table) setupHeaders(table);
+    if (!table) return;
+    setupHeaders(table);
+    scrollSearchMatch(table);
   }
 
   document.addEventListener("harvesthub:page-loaded", setupCurrentPage);
@@ -131,7 +147,7 @@
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ["data-power-bulk-mode"]
+    attributeFilter: ["data-power-bulk-mode", "class"]
   });
   setupCurrentPage();
 })();
