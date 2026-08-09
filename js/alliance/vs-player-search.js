@@ -425,7 +425,7 @@
     }
 
     if (event.target.closest("#allianceFloatingSearch")) {
-      openSearch(activeTable?.offsetParent !== null ? activeTable : nearestVisibleTable());
+      openSearch((activeTable && activeTable.offsetParent !== null) ? activeTable : nearestVisibleTable());
       return;
     }
 
@@ -482,11 +482,11 @@
 
   window.addEventListener("keydown", event => {
     if (!document.querySelector(TABLE_SELECTOR)) return;
-    const isFindShortcut = (event.ctrlKey || event.metaKey) && (event.code === "KeyF" || event.key.toLocaleLowerCase() === "f");
+    const isFindShortcut = (event.ctrlKey || event.metaKey) && (event.code === "KeyF" || String(event.key || "").toLocaleLowerCase("ru-RU") === "f");
     if (isFindShortcut) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      openSearch(activeTable?.offsetParent !== null ? activeTable : nearestVisibleTable());
+      openSearch((activeTable && activeTable.offsetParent !== null) ? activeTable : nearestVisibleTable());
       return;
     }
     if (event.key === "Escape") {
