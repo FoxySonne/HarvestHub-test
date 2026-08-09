@@ -49,7 +49,8 @@ function readScoreInput(id) {
 
   if (!normalized) return null;
 
-  let multiplier = input.dataset.scorePlain === "true" ? 1 : 1000;
+  const requiresUnit = input.dataset.scoreRequiredUnit === "true";
+  let multiplier = requiresUnit || input.dataset.scorePlain !== "true" ? 1000 : 1;
   let numericPart = normalized;
 
   if (/[кk]$/.test(normalized)) {
@@ -118,7 +119,6 @@ function getEventClock(now = new Date()) {
 
   return {
     now,
-    currentUtcMinute,
     isOpen,
     remainingMinutes: isOpen ? Math.max(0, EVENT_END_UTC_MINUTE - currentUtcMinute) : 0
   };
@@ -151,19 +151,14 @@ function renderOpponentFields() {
   if (!container) return;
 
   container.innerHTML = [1, 2, 3].map(index => `
-    <section class="season-panel" data-territory-opponent="${index}">
-      <h4>Соперник ${index}</h4>
-      <div class="season-form-grid season-form-grid-compact">
-        <label class="season-field">
-          <span>Текущий счёт</span>
-          <input id="territoryOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Например, 19">
-        </label>
-        <label class="season-field">
-          <span>Предположим успешных атак будет</span>
-          <input id="territoryOpponent${index}Attacks" type="number" min="0" step="1" value="0">
-        </label>
-      </div>
-    </section>
+    <label class="season-field" data-territory-opponent="${index}">
+      <span>Соперник ${index} — текущий счёт</span>
+      <input id="territoryOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Например, 19">
+    </label>
+    <label class="season-field" data-territory-opponent="${index}">
+      <span>Соперник ${index} — успешных атак</span>
+      <input id="territoryOpponent${index}Attacks" type="number" min="0" step="1" value="0">
+    </label>
   `).join("");
 }
 
@@ -172,13 +167,10 @@ function renderLairOpponentFields() {
   if (!container) return;
 
   container.innerHTML = [1, 2, 3].map(index => `
-    <section class="season-panel" data-territory-lair-opponent="${index}">
-      <h4>Соперник ${index}</h4>
-      <label class="season-field">
-        <span>Текущий счёт</span>
-        <input id="territoryLairOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Например, 68">
-      </label>
-    </section>
+    <label class="season-field" data-territory-lair-opponent="${index}">
+      <span>Соперник ${index} — текущий счёт</span>
+      <input id="territoryLairOpponent${index}Score" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="Например, 4,04">
+    </label>
   `).join("");
 }
 
@@ -188,15 +180,15 @@ function isTowerPointAvailable(point, tower) {
 
 function syncOpponentVisibility() {
   const count = getOpponentCount();
-  document.querySelectorAll("[data-territory-opponent]").forEach(section => {
-    section.hidden = Number(section.dataset.territoryOpponent) > count;
+  document.querySelectorAll("[data-territory-opponent]").forEach(element => {
+    element.hidden = Number(element.dataset.territoryOpponent) > count;
   });
 }
 
 function syncLairOpponentVisibility() {
   const count = getLairOpponentCount();
-  document.querySelectorAll("[data-territory-lair-opponent]").forEach(section => {
-    section.hidden = Number(section.dataset.territoryLairOpponent) > count;
+  document.querySelectorAll("[data-territory-lair-opponent]").forEach(element => {
+    element.hidden = Number(element.dataset.territoryLairOpponent) > count;
   });
 }
 
@@ -272,13 +264,6 @@ function getOwnershipState() {
     pointCounts,
     availablePointCount: availablePoints.length
   };
-}
-
-function setLairStatus(state, title, message) {
-  const card = byId("territoryLairStatus");
-  if (card) card.dataset.state = state;
-  setText("territoryLairStatusTitle", title);
-  setText("territoryLairStatusMessage", message);
 }
 
 function clearLairResults() {
@@ -586,7 +571,7 @@ function updateLairCalculator() {
   if (!ourScore || opponents.some(item => !item.score)) {
     clearLairResults();
     setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
-    setLairStatus("neutral", "Введите текущие очки", "К счёту без обозначения автоматически добавляется «К». Если это обычные очки, удалите «К».");
+    setText("territoryLairResultNote", "Введите текущие очки. Значение без обозначения считается тысячами («К»), также можно вводить «М».");
     return;
   }
 
@@ -602,7 +587,7 @@ function updateLairCalculator() {
   if (!mainThreat) {
     clearLairResults();
     setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
-    setLairStatus("neutral", "Введите счёт соперника", "Для расчёта нужен хотя бы один соперник.");
+    setText("territoryLairResultNote", "Для расчёта нужен хотя бы один соперник.");
     return;
   }
 
@@ -619,18 +604,13 @@ function updateLairCalculator() {
   setText("territoryLairLead", formatNumber(Math.max(0, conservativeLead)));
 
   if (hitsNeeded === 0) {
-    setLairStatus(
-      "success",
-      "Вы уже впереди всех соперников",
-      "Если соперники больше не атакуют логово, дополнительных ударов для первого места не требуется."
-    );
+    setText("territoryLairResultNote", "Вы уже впереди всех соперников. Если они больше не атакуют логово, дополнительных ударов не требуется.");
     return;
   }
 
-  setLairStatus(
-    "success",
-    `Для захвата потребуется ${hitsNeeded} ${hitsNeeded === 1 ? "якорь" : "якоря/якорей"}`,
-    `После ${hitsNeeded} ${hitsNeeded === 1 ? "удара" : "ударов"} ваш счёт станет выше текущего счёта всех соперников.`
+  setText(
+    "territoryLairResultNote",
+    `Для захвата потребуется ${hitsNeeded} ${hitsNeeded === 1 ? "якорь" : "якоря/якорей"}. Расчёт предполагает, что соперники больше не атакуют логово.`
   );
 }
 
@@ -649,13 +629,12 @@ function bindScoreInputs() {
     input.addEventListener("input", () => {
       const previous = String(input.dataset.scorePreviousValue || "").trim();
       const current = String(input.value || "").trim();
+      const requiresUnit = input.dataset.scoreRequiredUnit === "true";
       const previousWithoutK = previous.replace(/[кk]$/i, "").trim();
 
-      if (/[кk]$/i.test(previous) && current && current === previousWithoutK) {
+      if (!requiresUnit && /[кk]$/i.test(previous) && current && current === previousWithoutK) {
         input.dataset.scorePlain = "true";
-      } else if (/[кkмm]$/i.test(current)) {
-        delete input.dataset.scorePlain;
-      } else if (!current) {
+      } else if (requiresUnit || /[кkмm]$/i.test(current) || !current) {
         delete input.dataset.scorePlain;
       }
 
@@ -665,7 +644,8 @@ function bindScoreInputs() {
 
     input.addEventListener("blur", () => {
       const value = String(input.value || "").trim();
-      if (!value || /[кkмm]$/i.test(value) || input.dataset.scorePlain === "true") return;
+      if (!value || /[кkмm]$/i.test(value)) return;
+      if (input.dataset.scorePlain === "true" && input.dataset.scoreRequiredUnit !== "true") return;
 
       input.value = `${value}К`;
       input.dataset.scorePreviousValue = input.value;
@@ -674,11 +654,19 @@ function bindScoreInputs() {
   });
 }
 
-function markRestoredPlainScores() {
+function normalizeRestoredScores() {
   document.querySelectorAll("[data-score-input]").forEach(input => {
     const value = String(input.value || "").trim();
-    if (value && !/[кkмm]$/i.test(value)) input.dataset.scorePlain = "true";
-    input.dataset.scorePreviousValue = value;
+    const requiresUnit = input.dataset.scoreRequiredUnit === "true";
+
+    if (requiresUnit && value && !/[кkмm]$/i.test(value)) {
+      input.value = `${value}К`;
+      delete input.dataset.scorePlain;
+    } else if (!requiresUnit && value && !/[кkмm]$/i.test(value)) {
+      input.dataset.scorePlain = "true";
+    }
+
+    input.dataset.scorePreviousValue = input.value;
   });
 }
 
@@ -722,7 +710,7 @@ export function init() {
   bindOtherInputs();
 
   window.harvestHubStorage?.restorePageFormState?.(PAGE_NAME);
-  markRestoredPlainScores();
+  normalizeRestoredScores();
   updateAll();
 
   window.harvestHubOilDnaCopperTimer = window.setInterval(updateTowerCalculator, UPDATE_INTERVAL_MS);
