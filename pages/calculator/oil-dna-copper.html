@@ -134,6 +134,25 @@
         <p>Расчёт предполагает, что до выбранного времени никто никого не выбивает и распределение точек не меняется.</p>
       </div>
 
+      <div class="season-panel">
+        <h4>До какого времени ещё есть шанс победить</h4>
+        <div class="alliance-table-wrap" data-horizontal-scroll>
+          <table class="alliance-table">
+            <thead>
+              <tr>
+                <th>Участник</th>
+                <th>Всю вышку нужно забрать не позже</th>
+                <th>Осталось времени</th>
+              </tr>
+            </thead>
+            <tbody id="territoryLastChanceBody">
+              <tr><td colspan="3">Введите текущие очки.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>До указанного момента считается, что текущие точки остаются у своих владельцев. Затем участник забирает всю вышку и получает +1 очко за каждую точку, которую ему пришлось захватить.</p>
+      </div>
+
       <div class="season-results season-results-compact">
         <div><span>Держать ещё</span><strong id="territoryHoldTime">—</strong></div>
         <div><span>Можно перестать сражаться в</span><strong id="territorySafeTime">—</strong></div>
