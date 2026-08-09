@@ -350,10 +350,16 @@ function calculateSafeStopMinute({ ourScore, opponents, ownership, remainingMinu
   return null;
 }
 
+function clearGuaranteeResults() {
+  setText("territoryHoldTime", "—");
+  setText("territorySafeTime", "—");
+  setText("territoryGuaranteePoints", "—");
+  setText("territoryGuaranteeScore", "—");
+}
+
 function updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate }) {
   if (!clock.isOpen || !ourScore || opponents.some(item => !item.score)) {
-    setText("territoryHoldTime", "—");
-    setText("territorySafeTime", "—");
+    clearGuaranteeResults();
     return;
   }
 
@@ -366,8 +372,7 @@ function updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate })
   });
 
   if (mathematicalMinute == null) {
-    setText("territoryHoldTime", "—");
-    setText("territorySafeTime", "—");
+    clearGuaranteeResults();
     setText("territorySafetyNote", "При текущем раскладе безопасного момента до конца события нет.");
     return;
   }
@@ -375,9 +380,15 @@ function updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate })
   const safetyMinutes = EVENT.scoring.calculationSafetyMinutes;
   const recommendedMinute = Math.min(clock.remainingMinutes, mathematicalMinute + safetyMinutes);
   const safeTime = new Date(clock.now.getTime() + recommendedMinute * 60 * 1000);
+  const ourRate = ownership.rates.us || 0;
+  const totalExpectedRetakes = opponents.reduce((sum, item) => sum + item.attacks, 0);
+  const pointsUntilGuarantee = ourRate * recommendedMinute + totalExpectedRetakes;
+  const scoreAtGuarantee = ourScore.value + pointsUntilGuarantee;
 
   setText("territoryHoldTime", formatDuration(recommendedMinute));
   setText("territorySafeTime", formatMoscowTime(safeTime));
+  setText("territoryGuaranteePoints", `${formatNumber(pointsUntilGuarantee)} очков`);
+  setText("territoryGuaranteeScore", `≈ ${formatCompactScore(scoreAtGuarantee)}`);
 
   if (mathematicalMinute + safetyMinutes > clock.remainingMinutes) {
     setText(
