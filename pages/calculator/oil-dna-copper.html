@@ -11,24 +11,28 @@
         </div>
       </div>
 
-      <div class="season-panel">
+      <div class="season-panel territory-input-panel">
         <h4>Данные для расчёта</h4>
-        <div class="season-form-grid season-form-grid-compact">
+
+        <div class="territory-config-row">
           <label class="season-field">
             <span>Размер вышки</span>
             <select id="territoryTowerSize"></select>
           </label>
-          <label class="season-field">
-            <span>Наш текущий счёт</span>
-            <input id="territoryOurScore" data-score-input type="text" inputmode="decimal" placeholder="Например, 1,46">
-          </label>
-          <label class="season-field">
-            <span>Количество соперников</span>
+          <label class="season-field territory-count-field">
+            <span>Соперников</span>
             <input id="territoryOpponentCount" type="number" min="1" step="1" value="1">
           </label>
         </div>
 
-        <div id="territoryOpponents" class="season-form-grid season-form-grid-compact"></div>
+        <div class="season-panel-title"><h4>Текущий счёт</h4></div>
+        <div class="territory-score-row">
+          <label class="season-field">
+            <span>Мы</span>
+            <input id="territoryOurScore" data-score-input type="text" inputmode="decimal" placeholder="1,46">
+          </label>
+          <div id="territoryOpponents" class="territory-dynamic-score-fields"></div>
+        </div>
         <small class="territory-calculator-note">Без обозначения счёт считается в «К». Для обычных очков на вышке «К» можно удалить.</small>
 
         <div class="season-panel-title"><h4>Кто сейчас держит точки</h4></div>
@@ -88,24 +92,28 @@
         </div>
       </div>
 
-      <div class="season-panel">
+      <div class="season-panel territory-input-panel">
         <h4>Данные для расчёта</h4>
-        <div class="season-form-grid season-form-grid-compact">
+
+        <div class="territory-config-row">
           <label class="season-field">
             <span>Размер логова</span>
             <select id="territoryLairSize"></select>
           </label>
-          <label class="season-field">
-            <span>Наш текущий счёт</span>
-            <input id="territoryLairOurScore" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="Например, 4,04">
-          </label>
-          <label class="season-field">
-            <span>Количество соперников</span>
+          <label class="season-field territory-count-field">
+            <span>Соперников</span>
             <input id="territoryLairOpponentCount" type="number" min="1" step="1" value="1">
           </label>
         </div>
 
-        <div id="territoryLairOpponents" class="season-form-grid season-form-grid-compact"></div>
+        <div class="season-panel-title"><h4>Текущий счёт</h4></div>
+        <div class="territory-score-row">
+          <label class="season-field">
+            <span>Мы</span>
+            <input id="territoryLairOurScore" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="4,04">
+          </label>
+          <div id="territoryLairOpponents" class="territory-dynamic-score-fields"></div>
+        </div>
         <small class="territory-calculator-note">Без обозначения сайт добавит «К». Можно вводить значения с «К» или «М».</small>
       </div>
 
