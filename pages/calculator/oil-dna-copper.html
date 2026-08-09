@@ -85,14 +85,17 @@
         </div>
       </div>
 
-      <div class="season-results season-results-compact">
-        <div><span>Сейчас по Москве</span><strong id="territoryCurrentTime">—</strong></div>
-        <div><span>До конца события</span><strong id="territoryTimeLeft">—</strong></div>
-        <div><span>Максимум всей вышки</span><strong id="territoryTowerMaxRate">—</strong></div>
+      <div class="season-panel">
+        <h4>Событие</h4>
+        <div class="season-results season-results-compact">
+          <div><span>Сейчас по Москве</span><strong id="territoryCurrentTime">—</strong></div>
+          <div><span>До конца события</span><strong id="territoryTimeLeft">—</strong></div>
+          <div><span>Максимум всей вышки</span><strong id="territoryTowerMaxRate">—</strong></div>
+        </div>
       </div>
 
       <div class="season-panel">
-        <h4>Прогноз к 02:50 МСК</h4>
+        <h4>Что будет к 02:50 МСК</h4>
         <div class="alliance-table-wrap" data-horizontal-scroll>
           <table class="alliance-table">
             <thead>
@@ -111,38 +114,14 @@
       </div>
 
       <div class="season-panel">
-        <h4 id="territoryTimeProjectionTitle">Прогноз на выбранное время</h4>
-        <div class="season-form-grid season-form-grid-compact">
-          <label class="season-field">
-            <span>Время по Москве</span>
-            <input id="territoryProjectionTime" type="time" step="60">
-          </label>
-        </div>
+        <h4>До какого времени ещё можно победить</h4>
         <div class="alliance-table-wrap" data-horizontal-scroll>
           <table class="alliance-table">
             <thead>
               <tr>
                 <th>Участник</th>
-                <th>Будет очков</th>
-              </tr>
-            </thead>
-            <tbody id="territoryTimeProjectionBody">
-              <tr><td colspan="2">Выберите время.</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>Расчёт предполагает, что до выбранного времени никто никого не выбивает и распределение точек не меняется.</p>
-      </div>
-
-      <div class="season-panel">
-        <h4>До какого времени ещё есть шанс победить</h4>
-        <div class="alliance-table-wrap" data-horizontal-scroll>
-          <table class="alliance-table">
-            <thead>
-              <tr>
-                <th>Участник</th>
-                <th>Всю вышку нужно забрать не позже</th>
-                <th>Осталось времени</th>
+                <th>Победа ещё возможна, если забрать всю вышку до</th>
+                <th>После этого</th>
               </tr>
             </thead>
             <tbody id="territoryLastChanceBody">
@@ -150,15 +129,18 @@
             </tbody>
           </table>
         </div>
-        <p>До указанного момента считается, что текущие точки остаются у своих владельцев. Затем участник забирает всю вышку и получает +1 очко за каждую точку, которую ему пришлось захватить.</p>
+        <p>До указанного времени точки остаются у текущих владельцев. Затем выбранный участник забирает всю вышку и получает +1 очко за каждую захваченную точку.</p>
       </div>
 
-      <div class="season-results season-results-compact">
-        <div><span>Держать ещё</span><strong id="territoryHoldTime">—</strong></div>
-        <div><span>Можно перестать сражаться в</span><strong id="territorySafeTime">—</strong></div>
-        <div><span>Гарантированный счёт</span><strong id="territoryGuaranteeScore">—</strong></div>
+      <div class="season-panel">
+        <h4>Когда вышка уже точно наша</h4>
+        <div class="season-results season-results-compact">
+          <div><span>Держать ещё</span><strong id="territoryHoldTime">—</strong></div>
+          <div><span>Можно перестать сражаться в</span><strong id="territorySafeTime">—</strong></div>
+          <div><span>Гарантированный счёт</span><strong id="territoryGuaranteeScore">—</strong></div>
+        </div>
+        <p id="territorySafetyNote">Безопасное время уже включает дополнительные 2 минуты запаса и учитывает +1 очко сопернику за каждую нашу точку, которую он сможет выбить после нашего ухода.</p>
       </div>
-      <p id="territorySafetyNote">Безопасное время уже включает дополнительные 2 минуты запаса и учитывает +1 очко сопернику за каждую нашу точку, которую он сможет выбить после нашего ухода.</p>
     </section>
 
     <section class="card season-card season-compact-card">
@@ -200,16 +182,18 @@
         <p id="territoryLairStatusMessage">Калькулятор покажет минимальное количество ударов, после которого ваш счёт станет выше счёта всех соперников.</p>
       </section>
 
-      <div class="season-results season-results-compact">
-        <div><span>Главный соперник</span><strong id="territoryLairMainThreat">—</strong></div>
-        <div><span>Очков за один удар</span><strong id="territoryLairPointsPerHit">—</strong></div>
-        <div><span>Нужно ударов / якорей</span><strong id="territoryLairHitsNeeded">—</strong></div>
-        <div><span>Нужно набрать очков</span><strong id="territoryLairPointsNeeded">—</strong></div>
-        <div><span>Наш счёт после ударов</span><strong id="territoryLairTargetScore">—</strong></div>
-        <div><span>Преимущество</span><strong id="territoryLairLead">—</strong></div>
+      <div class="season-panel">
+        <h4>Результат</h4>
+        <div class="season-results season-results-compact">
+          <div><span>Главный соперник</span><strong id="territoryLairMainThreat">—</strong></div>
+          <div><span>Очков за один удар</span><strong id="territoryLairPointsPerHit">—</strong></div>
+          <div><span>Нужно ударов / якорей</span><strong id="territoryLairHitsNeeded">—</strong></div>
+          <div><span>Нужно набрать очков</span><strong id="territoryLairPointsNeeded">—</strong></div>
+          <div><span>Наш счёт после ударов</span><strong id="territoryLairTargetScore">—</strong></div>
+          <div><span>Преимущество</span><strong id="territoryLairLead">—</strong></div>
+        </div>
+        <p>Расчёт выполнен при условии, что соперники больше не атакуют логово.</p>
       </div>
-
-      <p>Расчёт выполнен при условии, что соперники больше не атакуют логово.</p>
     </section>
   </div>
 
