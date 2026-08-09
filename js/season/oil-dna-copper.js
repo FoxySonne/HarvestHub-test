@@ -3,6 +3,12 @@ import { seasonDatabase } from "../../data/season-database.js";
 const PAGE_NAME = "calculator/oil-dna-copper.html";
 const EVENT = seasonDatabase.territoryEvent;
 const UPDATE_INTERVAL_MS = 30 * 1000;
+const TOWER_POINTS = [
+  { key: "barrel1", type: "barrel", index: 1, rate: EVENT.scoring.barrelPointsPerMinute },
+  { key: "barrel2", type: "barrel", index: 2, rate: EVENT.scoring.barrelPointsPerMinute },
+  { key: "crane1", type: "crane", index: 1, rate: EVENT.scoring.cranePointsPerMinute },
+  { key: "crane2", type: "crane", index: 2, rate: EVENT.scoring.cranePointsPerMinute }
+];
 
 function byId(id) {
   return document.getElementById(id);
@@ -22,8 +28,19 @@ function readInteger(id, fallback = 0) {
   return Math.max(0, Math.floor(readNumber(id, fallback)));
 }
 
-function parseScore(value) {
-  const normalized = String(value || "")
+function getOpponentCount() {
+  return Math.min(3, Math.max(1, readInteger("territoryOpponentCount", 1)));
+}
+
+function getLairOpponentCount() {
+  return Math.min(3, Math.max(1, readInteger("territoryLairOpponentCount", 1)));
+}
+
+function readScoreInput(id) {
+  const input = byId(id);
+  if (!input) return null;
+
+  const normalized = String(input.value || "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "")
@@ -31,7 +48,7 @@ function parseScore(value) {
 
   if (!normalized) return null;
 
-  let multiplier = 1;
+  let multiplier = input.dataset.scorePlain === "true" ? 1 : 1000;
   let numericPart = normalized;
 
   if (/[кk]$/.test(normalized)) {
@@ -44,18 +61,37 @@ function parseScore(value) {
 
   const parsed = Number(numericPart);
   if (!Number.isFinite(parsed) || parsed < 0) return null;
-  return Math.round(parsed * multiplier);
+
+  return {
+    value: Math.round(parsed * multiplier),
+    multiplier,
+    abbreviated: multiplier !== 1
+  };
 }
 
 function formatNumber(value) {
   return Math.round(Number(value) || 0).toLocaleString("ru-RU");
 }
 
-function formatGameScore(value) {
-  const step = EVENT.scoring.scoreDisplayStepPoints;
-  const rounded = Math.ceil(Math.max(0, Number(value) || 0) / step) * step;
-  if (rounded < 1000) return formatNumber(rounded);
-  return `${(rounded / 1000).toFixed(2).replace(".", ",")}К`;
+function formatDecimal(value, maximumFractionDigits = 2) {
+  return Number(value).toLocaleString("ru-RU", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits
+  });
+}
+
+function formatCompactScore(value) {
+  const numeric = Math.max(0, Number(value) || 0);
+  if (numeric >= 1000000) return `${formatDecimal(numeric / 1000000)}М`;
+  if (numeric >= 1000) return `${formatDecimal(numeric / 1000)}К`;
+  return formatNumber(numeric);
+}
+
+function formatEnteredScore(entry) {
+  if (!entry) return "—";
+  if (entry.multiplier === 1000000) return `${formatDecimal(entry.value / 1000000)}М`;
+  if (entry.multiplier === 1000) return `${formatDecimal(entry.value / 1000)}К`;
+  return formatNumber(entry.value);
 }
 
 function formatDuration(minutes) {
@@ -98,21 +134,15 @@ function getSelectedLair() {
 }
 
 function fillTowerSelect() {
-  const towerSelect = byId("territoryTowerSize");
-  if (!towerSelect) return;
-
-  towerSelect.innerHTML = EVENT.towers
-    .map(item => `<option value="${item.size}">${item.size}</option>`)
-    .join("");
+  const select = byId("territoryTowerSize");
+  if (!select) return;
+  select.innerHTML = EVENT.towers.map(item => `<option value="${item.size}">${item.size}</option>`).join("");
 }
 
 function fillLairSelect() {
-  const lairSelect = byId("territoryLairSize");
-  if (!lairSelect) return;
-
-  lairSelect.innerHTML = EVENT.lairs
-    .map(item => `<option value="${item.size}">${item.size}</option>`)
-    .join("");
+  const select = byId("territoryLairSize");
+  if (!select) return;
+  select.innerHTML = EVENT.lairs.map(item => `<option value="${item.size}">${item.size}</option>`).join("");
 }
 
 function renderOpponentFields() {
@@ -125,11 +155,7 @@ function renderOpponentFields() {
       <div class="season-form-grid season-form-grid-compact">
         <label class="season-field">
           <span>Текущий счёт</span>
-          <input id="territoryOpponent${index}Score" type="text" inputmode="decimal" placeholder="Например, 1,68К">
-        </label>
-        <label class="season-field">
-          <span class="tooltip" data-tooltip="За бочку 2 очка в минуту, за кран — 1">Очков в минуту</span>
-          <input id="territoryOpponent${index}Rate" type="number" min="0" step="1" value="0">
+          <input id="territoryOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Например, 19">
         </label>
         <label class="season-field">
           <span>Предположим успешных атак будет</span>
@@ -149,48 +175,102 @@ function renderLairOpponentFields() {
       <h4>Соперник ${index}</h4>
       <label class="season-field">
         <span>Текущий счёт</span>
-        <input id="territoryLairOpponent${index}Score" type="text" inputmode="decimal" placeholder="Например, 68К">
+        <input id="territoryLairOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Например, 68">
       </label>
     </section>
   `).join("");
 }
 
+function isTowerPointAvailable(point, tower) {
+  return point.type === "barrel" ? point.index <= tower.barrels : point.index <= tower.cranes;
+}
+
 function syncOpponentVisibility() {
-  const count = Math.min(3, Math.max(1, readInteger("territoryOpponentCount", 1)));
+  const count = getOpponentCount();
   document.querySelectorAll("[data-territory-opponent]").forEach(section => {
     section.hidden = Number(section.dataset.territoryOpponent) > count;
   });
 }
 
 function syncLairOpponentVisibility() {
-  const count = Math.min(3, Math.max(1, readInteger("territoryLairOpponentCount", 1)));
+  const count = getLairOpponentCount();
   document.querySelectorAll("[data-territory-lair-opponent]").forEach(section => {
     section.hidden = Number(section.dataset.territoryLairOpponent) > count;
   });
 }
 
+function syncOwnershipMatrix() {
+  const tower = getSelectedTower();
+  const count = getOpponentCount();
+
+  document.querySelectorAll("[data-territory-owner-row]").forEach(row => {
+    const owner = row.dataset.territoryOwnerRow;
+    const opponentIndex = owner.startsWith("opponent") ? Number(owner.replace("opponent", "")) : 0;
+    row.hidden = opponentIndex > count;
+  });
+
+  document.querySelectorAll("[data-territory-point-owner]").forEach(input => {
+    const point = TOWER_POINTS.find(item => item.key === input.dataset.territoryPoint);
+    const owner = input.dataset.territoryPointOwner;
+    const opponentIndex = owner.startsWith("opponent") ? Number(owner.replace("opponent", "")) : 0;
+    const ownerActive = opponentIndex === 0 || opponentIndex <= count;
+    const available = point ? isTowerPointAvailable(point, tower) : false;
+    input.disabled = !ownerActive || !available;
+    if (input.disabled) input.checked = false;
+  });
+}
+
 function readOpponents() {
-  const count = Math.min(3, Math.max(1, readInteger("territoryOpponentCount", 1)));
+  const count = getOpponentCount();
   return Array.from({ length: count }, (_, offset) => {
     const index = offset + 1;
     return {
       index,
-      score: parseScore(byId(`territoryOpponent${index}Score`)?.value),
-      rate: Math.max(0, readNumber(`territoryOpponent${index}Rate`, 0)),
+      score: readScoreInput(`territoryOpponent${index}Score`),
       attacks: readInteger(`territoryOpponent${index}Attacks`, 0)
     };
   });
 }
 
 function readLairOpponents() {
-  const count = Math.min(3, Math.max(1, readInteger("territoryLairOpponentCount", 1)));
+  const count = getLairOpponentCount();
   return Array.from({ length: count }, (_, offset) => {
     const index = offset + 1;
     return {
       index,
-      score: parseScore(byId(`territoryLairOpponent${index}Score`)?.value)
+      score: readScoreInput(`territoryLairOpponent${index}Score`)
     };
   });
+}
+
+function getOwnershipState() {
+  const tower = getSelectedTower();
+  const count = getOpponentCount();
+  const rates = { us: 0 };
+  const pointCounts = { us: 0 };
+
+  for (let index = 1; index <= count; index += 1) {
+    rates[`opponent${index}`] = 0;
+    pointCounts[`opponent${index}`] = 0;
+  }
+
+  const availablePoints = TOWER_POINTS.filter(point => isTowerPointAvailable(point, tower));
+
+  availablePoints.forEach(point => {
+    const checked = document.querySelector(
+      `[data-territory-point-owner][data-territory-point="${point.key}"]:checked`
+    );
+    const owner = checked?.dataset.territoryPointOwner;
+    if (!owner || !Object.prototype.hasOwnProperty.call(rates, owner)) return;
+    rates[owner] += point.rate;
+    pointCounts[owner] += 1;
+  });
+
+  return {
+    rates,
+    pointCounts,
+    availablePointCount: availablePoints.length
+  };
 }
 
 function setLairStatus(state, title, message) {
@@ -210,15 +290,16 @@ function clearLairResults() {
   ].forEach(id => setText(id, "—"));
 }
 
-function conservativeScores(ourScore, opponents) {
-  const buffer = EVENT.scoring.conservativeHiddenPointsBufferPerSide;
-  return {
-    our: Math.max(0, ourScore - buffer),
-    opponents: opponents.map(item => ({
-      ...item,
-      conservativeScore: item.score + buffer
-    }))
-  };
+function scoreUncertainty(entry) {
+  return entry?.abbreviated ? EVENT.scoring.conservativeHiddenPointsBufferPerSide : 0;
+}
+
+function conservativeOurScore(entry) {
+  return Math.max(0, entry.value - scoreUncertainty(entry));
+}
+
+function conservativeOpponentScore(entry) {
+  return entry.value + scoreUncertainty(entry);
 }
 
 function renderTowerProjectionRows(rows) {
@@ -228,10 +309,8 @@ function renderTowerProjectionRows(rows) {
   body.innerHTML = rows.map(row => `
     <tr>
       <td>${row.label}</td>
-      <td>${formatNumber(row.score)}</td>
-      <td>+${formatNumber(row.currentGain)}</td>
+      <td>${formatEnteredScore(row.score)}</td>
       <td>${formatNumber(row.currentFinal)}</td>
-      <td>+${formatNumber(row.fullGain)}</td>
       <td>${formatNumber(row.fullFinal)}</td>
     </tr>
   `).join("");
@@ -239,82 +318,162 @@ function renderTowerProjectionRows(rows) {
 
 function renderTowerProjectionMessage(message) {
   const body = byId("territoryTowerProjectionBody");
-  if (body) body.innerHTML = `<tr><td colspan="6">${message}</td></tr>`;
+  if (body) body.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
+}
+
+function calculateSafeStopMinute({ ourScore, opponents, ownership, remainingMinutes, towerMaxRate }) {
+  const ourBase = conservativeOurScore(ourScore);
+  const ourRate = ownership.rates.us || 0;
+  const ourPointCount = ownership.pointCounts.us || 0;
+
+  for (let minute = 0; minute <= remainingMinutes; minute += 1) {
+    const allSafe = opponents.every(opponent => {
+      const opponentKey = `opponent${opponent.index}`;
+      const opponentRate = ownership.rates[opponentKey] || 0;
+      const afterStopMinutes = Math.max(0, remainingMinutes - minute);
+      const captureBonus = afterStopMinutes > 0 ? ourPointCount : 0;
+      const pairedAttackBonus = opponent.attacks;
+
+      const ourFinal = ourBase + ourRate * minute + pairedAttackBonus;
+      const opponentFinal = conservativeOpponentScore(opponent.score)
+        + opponentRate * minute
+        + pairedAttackBonus
+        + towerMaxRate * afterStopMinutes
+        + captureBonus;
+
+      return ourFinal > opponentFinal;
+    });
+
+    if (allSafe) return minute;
+  }
+
+  return null;
+}
+
+function updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate }) {
+  if (!clock.isOpen || !ourScore || opponents.some(item => !item.score)) {
+    setText("territoryHoldTime", "—");
+    setText("territorySafeTime", "—");
+    return;
+  }
+
+  const mathematicalMinute = calculateSafeStopMinute({
+    ourScore,
+    opponents,
+    ownership,
+    remainingMinutes: clock.remainingMinutes,
+    towerMaxRate
+  });
+
+  if (mathematicalMinute == null) {
+    setText("territoryHoldTime", "—");
+    setText("territorySafeTime", "—");
+    setText("territorySafetyNote", "При текущем раскладе безопасного момента до конца события нет.");
+    return;
+  }
+
+  const safetyMinutes = EVENT.scoring.calculationSafetyMinutes;
+  const recommendedMinute = Math.min(clock.remainingMinutes, mathematicalMinute + safetyMinutes);
+  const safeTime = new Date(clock.now.getTime() + recommendedMinute * 60 * 1000);
+
+  setText("territoryHoldTime", formatDuration(recommendedMinute));
+  setText("territorySafeTime", formatMoscowTime(safeTime));
+
+  if (mathematicalMinute + safetyMinutes > clock.remainingMinutes) {
+    setText(
+      "territorySafetyNote",
+      "Математическая граница слишком близко к окончанию события, поэтому безопаснее держать вышку до 02:50 МСК."
+    );
+    return;
+  }
+
+  setText(
+    "territorySafetyNote",
+    `Время уже включает дополнительные ${safetyMinutes} минуты запаса и +1 очко сопернику за каждую нашу точку, которую он сможет выбить после нашего ухода.`
+  );
 }
 
 function updateTowerCalculator() {
   const clock = getEventClock();
   const tower = getSelectedTower();
-  const ourScore = parseScore(byId("territoryOurScore")?.value);
-  const ourRate = Math.max(0, readNumber("territoryOurRate", 0));
+  const ourScore = readScoreInput("territoryOurScore");
   const opponents = readOpponents();
   const remainingMinutes = clock.remainingMinutes;
   const towerMaxRate = tower.maxPointsPerMinute;
 
+  syncOpponentVisibility();
+  syncOwnershipMatrix();
+  const ownership = getOwnershipState();
   setText("territoryCurrentTime", formatMoscowTime(clock.now));
   setText("territoryTimeLeft", clock.isOpen ? formatDuration(remainingMinutes) : "событие завершено");
   setText("territoryTowerMaxRate", `${formatNumber(towerMaxRate)} очк./мин`);
-  syncOpponentVisibility();
 
-  if (ourScore == null || opponents.some(item => item.score == null)) {
+  if (!ourScore || opponents.some(item => !item.score)) {
     renderTowerProjectionMessage("Введите текущие очки всех участников.");
-    return;
-  }
-
-  const totalCurrentRate = ourRate + opponents.reduce((sum, item) => sum + item.rate, 0);
-  if (ourRate > towerMaxRate || opponents.some(item => item.rate > towerMaxRate) || totalCurrentRate > towerMaxRate) {
-    renderTowerProjectionMessage(`Проверьте очки в минуту: максимум вышки ${tower.size} — ${towerMaxRate} очк./мин.`);
+    updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate });
     return;
   }
 
   const totalExpectedRetakes = opponents.reduce((sum, item) => sum + item.attacks, 0);
-  const ourCurrentGain = ourRate * remainingMinutes + totalExpectedRetakes;
-  const ourFullGain = towerMaxRate * remainingMinutes + totalExpectedRetakes;
+  const ourCurrentFinal = ourScore.value + (ownership.rates.us || 0) * remainingMinutes + totalExpectedRetakes;
+  const ourCaptureBonus = clock.isOpen
+    ? ownership.availablePointCount - (ownership.pointCounts.us || 0)
+    : 0;
+  const ourFullFinal = ourScore.value + towerMaxRate * remainingMinutes + totalExpectedRetakes + ourCaptureBonus;
 
   const rows = [{
     label: "Мы",
     score: ourScore,
-    currentGain: ourCurrentGain,
-    currentFinal: ourScore + ourCurrentGain,
-    fullGain: ourFullGain,
-    fullFinal: ourScore + ourFullGain
+    currentFinal: ourCurrentFinal,
+    fullFinal: ourFullFinal
   }];
 
   opponents.forEach(opponent => {
-    const currentGain = opponent.rate * remainingMinutes + opponent.attacks;
-    const fullGain = towerMaxRate * remainingMinutes + opponent.attacks;
+    const ownerKey = `opponent${opponent.index}`;
+    const currentFinal = opponent.score.value
+      + (ownership.rates[ownerKey] || 0) * remainingMinutes
+      + opponent.attacks;
+    const captureBonus = clock.isOpen
+      ? ownership.availablePointCount - (ownership.pointCounts[ownerKey] || 0)
+      : 0;
+    const fullFinal = opponent.score.value
+      + towerMaxRate * remainingMinutes
+      + opponent.attacks
+      + captureBonus;
 
     rows.push({
       label: `Соперник ${opponent.index}`,
       score: opponent.score,
-      currentGain,
-      currentFinal: opponent.score + currentGain,
-      fullGain,
-      fullFinal: opponent.score + fullGain
+      currentFinal,
+      fullFinal
     });
   });
 
   renderTowerProjectionRows(rows);
+  updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate });
 }
 
 function updateLairCalculator() {
   const lair = getSelectedLair();
-  const ourScoreRaw = parseScore(byId("territoryLairOurScore")?.value);
-  const opponentsRaw = readLairOpponents();
+  const ourScore = readScoreInput("territoryLairOurScore");
+  const opponents = readLairOpponents();
 
   syncLairOpponentVisibility();
   setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
 
-  if (ourScoreRaw == null || opponentsRaw.some(item => item.score == null)) {
+  if (!ourScore || opponents.some(item => !item.score)) {
     clearLairResults();
     setText("territoryLairPointsPerHit", formatNumber(lair.pointsPerHit));
-    setLairStatus("neutral", "Введите текущие очки", "Можно вводить значения так, как их показывает игра: например 35К и 68К.");
+    setLairStatus("neutral", "Введите текущие очки", "К счёту без обозначения автоматически добавляется «К». Если это обычные очки, удалите «К».");
     return;
   }
 
-  const conservative = conservativeScores(ourScoreRaw, opponentsRaw);
-  const mainThreat = conservative.opponents.reduce((highest, opponent) => {
-    if (!highest || opponent.conservativeScore > highest.conservativeScore) return opponent;
+  const ourConservative = conservativeOurScore(ourScore);
+  const mainThreat = opponents.reduce((highest, opponent) => {
+    const value = conservativeOpponentScore(opponent.score);
+    if (!highest || value > highest.conservativeScore) {
+      return { ...opponent, conservativeScore: value };
+    }
     return highest;
   }, null);
 
@@ -325,16 +484,16 @@ function updateLairCalculator() {
     return;
   }
 
-  const scoreGap = mainThreat.conservativeScore - conservative.our;
+  const scoreGap = mainThreat.conservativeScore - ourConservative;
   const hitsNeeded = scoreGap < 0 ? 0 : Math.floor(scoreGap / lair.pointsPerHit) + 1;
   const pointsNeeded = hitsNeeded * lair.pointsPerHit;
-  const targetScore = ourScoreRaw + pointsNeeded;
-  const conservativeLead = conservative.our + pointsNeeded - mainThreat.conservativeScore;
+  const targetScore = ourScore.value + pointsNeeded;
+  const conservativeLead = ourConservative + pointsNeeded - mainThreat.conservativeScore;
 
   setText("territoryLairMainThreat", `Соперник ${mainThreat.index}`);
   setText("territoryLairHitsNeeded", formatNumber(hitsNeeded));
   setText("territoryLairPointsNeeded", formatNumber(pointsNeeded));
-  setText("territoryLairTargetScore", `≈ ${formatGameScore(targetScore)}`);
+  setText("territoryLairTargetScore", `≈ ${formatCompactScore(targetScore)}`);
   setText("territoryLairLead", formatNumber(Math.max(0, conservativeLead)));
 
   if (hitsNeeded === 0) {
@@ -354,12 +513,74 @@ function updateLairCalculator() {
 }
 
 function updateAll() {
+  syncOpponentVisibility();
+  syncLairOpponentVisibility();
+  syncOwnershipMatrix();
   updateTowerCalculator();
   updateLairCalculator();
 }
 
-function bindInputs() {
-  document.querySelectorAll(".season-page input, .season-page select").forEach(input => {
+function bindScoreInputs() {
+  document.querySelectorAll("[data-score-input]").forEach(input => {
+    input.dataset.scorePreviousValue = input.value;
+
+    input.addEventListener("input", () => {
+      const previous = String(input.dataset.scorePreviousValue || "").trim();
+      const current = String(input.value || "").trim();
+      const previousWithoutK = previous.replace(/[кk]$/i, "").trim();
+
+      if (/[кk]$/i.test(previous) && current && current === previousWithoutK) {
+        input.dataset.scorePlain = "true";
+      } else if (/[кkмm]$/i.test(current)) {
+        delete input.dataset.scorePlain;
+      } else if (!current) {
+        delete input.dataset.scorePlain;
+      }
+
+      input.dataset.scorePreviousValue = current;
+      updateAll();
+    });
+
+    input.addEventListener("blur", () => {
+      const value = String(input.value || "").trim();
+      if (!value || /[кkмm]$/i.test(value) || input.dataset.scorePlain === "true") return;
+
+      input.value = `${value}К`;
+      input.dataset.scorePreviousValue = input.value;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+}
+
+function markRestoredPlainScores() {
+  document.querySelectorAll("[data-score-input]").forEach(input => {
+    const value = String(input.value || "").trim();
+    if (value && !/[кkмm]$/i.test(value)) input.dataset.scorePlain = "true";
+    input.dataset.scorePreviousValue = value;
+  });
+}
+
+function bindOwnershipInputs() {
+  document.querySelectorAll("[data-territory-point-owner]").forEach(input => {
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        document.querySelectorAll(
+          `[data-territory-point-owner][data-territory-point="${input.dataset.territoryPoint}"]`
+        ).forEach(other => {
+          if (other !== input) other.checked = false;
+        });
+      }
+
+      window.savePageFormState?.(PAGE_NAME);
+      updateAll();
+    });
+  });
+}
+
+function bindOtherInputs() {
+  document.querySelectorAll(
+    ".season-page select, .season-page input:not([data-score-input]):not([data-territory-point-owner])"
+  ).forEach(input => {
     input.addEventListener("input", updateAll);
     input.addEventListener("change", updateAll);
   });
@@ -374,11 +595,12 @@ export function init() {
   fillLairSelect();
   renderOpponentFields();
   renderLairOpponentFields();
-  bindInputs();
+  bindScoreInputs();
+  bindOwnershipInputs();
+  bindOtherInputs();
 
   window.harvestHubStorage?.restorePageFormState?.(PAGE_NAME);
-  syncOpponentVisibility();
-  syncLairOpponentVisibility();
+  markRestoredPlainScores();
   updateAll();
 
   window.harvestHubOilDnaCopperTimer = window.setInterval(updateTowerCalculator, UPDATE_INTERVAL_MS);
