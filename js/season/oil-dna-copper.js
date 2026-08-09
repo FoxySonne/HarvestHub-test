@@ -4,7 +4,6 @@ const PAGE_NAME = "calculator/oil-dna-copper.html";
 const EVENT = seasonDatabase.territoryEvent;
 const UPDATE_INTERVAL_MS = 30 * 1000;
 const EVENT_END_UTC_MINUTE = 23 * 60 + 50;
-const MOSCOW_UTC_OFFSET_MINUTES = 3 * 60;
 const TOWER_POINTS = [
   { key: "barrel1", type: "barrel", index: 1, rate: EVENT.scoring.barrelPointsPerMinute },
   { key: "barrel2", type: "barrel", index: 2, rate: EVENT.scoring.barrelPointsPerMinute },
@@ -342,80 +341,6 @@ function renderTowerProjectionMessage(message) {
   if (body) body.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
 }
 
-function renderTimeProjectionRows(rows) {
-  const body = byId("territoryTimeProjectionBody");
-  if (!body) return;
-
-  body.innerHTML = rows.map(row => `
-    <tr>
-      <td>${row.label}</td>
-      <td>${formatNumber(row.score)}</td>
-    </tr>
-  `).join("");
-}
-
-function renderTimeProjectionMessage(message) {
-  const body = byId("territoryTimeProjectionBody");
-  if (body) body.innerHTML = `<tr><td colspan="2">${message}</td></tr>`;
-}
-
-function readProjectionTarget(clock) {
-  const value = String(byId("territoryProjectionTime")?.value || "").trim();
-  if (!value) return { message: "Выберите время." };
-  if (!clock.isOpen) return { message: "Событие уже завершено." };
-
-  const match = value.match(/^(\d{2}):(\d{2})$/);
-  if (!match) return { message: "Укажите время в формате ЧЧ:ММ." };
-
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const targetMoscowMinute = hours * 60 + minutes;
-  const targetUtcMinute = (targetMoscowMinute - MOSCOW_UTC_OFFSET_MINUTES + 1440) % 1440;
-
-  if (targetUtcMinute > EVENT_END_UTC_MINUTE) {
-    return { message: "Событие заканчивается в 02:50 МСК." };
-  }
-  if (targetUtcMinute < clock.currentUtcMinute) {
-    return { message: "Выбранное время уже прошло." };
-  }
-
-  return {
-    label: value,
-    minutesAhead: targetUtcMinute - clock.currentUtcMinute
-  };
-}
-
-function updateTimeProjection({ clock, ourScore, opponents, ownership }) {
-  const target = readProjectionTarget(clock);
-  if (!target.label) {
-    setText("territoryTimeProjectionTitle", "Прогноз на выбранное время");
-    renderTimeProjectionMessage(target.message);
-    return;
-  }
-
-  setText("territoryTimeProjectionTitle", `Прогноз на ${target.label} МСК`);
-
-  if (!ourScore || opponents.some(item => !item.score)) {
-    renderTimeProjectionMessage("Введите текущие очки всех участников.");
-    return;
-  }
-
-  const rows = [{
-    label: "Мы",
-    score: ourScore.value + (ownership.rates.us || 0) * target.minutesAhead
-  }];
-
-  opponents.forEach(opponent => {
-    rows.push({
-      label: `Соперник ${opponent.index}`,
-      score: opponent.score.value
-        + (ownership.rates[`opponent${opponent.index}`] || 0) * target.minutesAhead
-    });
-  });
-
-  renderTimeProjectionRows(rows);
-}
-
 function canWinAfterFullCapture({ candidate, participants, ownership, minute, remainingMinutes, towerMaxRate }) {
   const candidateRate = ownership.rates[candidate.key] || 0;
   const captureBonus = Math.max(
@@ -475,22 +400,32 @@ function renderLastChanceRows({ clock, participants, ownership, towerMaxRate }) 
         <tr>
           <td>${participant.label}</td>
           <td>Шанса уже нет</td>
-          <td>—</td>
+          <td>Даже полный захват прямо сейчас не поможет</td>
+        </tr>
+      `;
+    }
+
+    if (minute === clock.remainingMinutes) {
+      return `
+        <tr>
+          <td>${participant.label}</td>
+          <td>До конца события — 02:50 МСК</td>
+          <td>Шанс сохраняется до конца события</td>
         </tr>
       `;
     }
 
     const deadline = new Date(clock.now.getTime() + minute * 60 * 1000);
-    const deadlineText = minute === clock.remainingMinutes
-      ? "02:50 МСК"
-      : `${formatMoscowTime(deadline)} МСК`;
-    const remainingText = minute === 0 ? "прямо сейчас" : formatDuration(minute);
+    const deadlineText = `${formatMoscowTime(deadline)} МСК`;
+    const afterText = minute === 0
+      ? "Если не забрать прямо сейчас, шансов уже не будет"
+      : `После ${deadlineText} шансов на победу уже нет`;
 
     return `
       <tr>
         <td>${participant.label}</td>
         <td>${deadlineText}</td>
-        <td>${remainingText}</td>
+        <td>${afterText}</td>
       </tr>
     `;
   }).join("");
@@ -593,7 +528,6 @@ function updateTowerCalculator() {
   setText("territoryCurrentTime", formatMoscowTime(clock.now));
   setText("territoryTimeLeft", clock.isOpen ? formatDuration(remainingMinutes) : "событие завершено");
   setText("territoryTowerMaxRate", `${formatNumber(towerMaxRate)} очк./мин`);
-  updateTimeProjection({ clock, ourScore, opponents, ownership });
   renderLastChanceRows({ clock, participants, ownership, towerMaxRate });
 
   if (!ourScore || opponents.some(item => !item.score)) {
