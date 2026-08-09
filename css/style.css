@@ -143,3 +143,28 @@
     justify-self: start;
   }
 }
+
+/* Нефть/ДНК/Медь: две карточки рядом только когда обе помещаются целиком. */
+.territory-calculator-layout {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px), 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.territory-calculator-card {
+  min-width: 0;
+}
+
+.territory-calculator-page .territory-calculator-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.territory-calculator-page .territory-calculator-table th,
+.territory-calculator-page .territory-calculator-table td {
+  padding: 8px 6px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
