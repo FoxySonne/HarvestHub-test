@@ -186,3 +186,62 @@
   font-size: 11px;
   line-height: 1.35;
 }
+
+.territory-input-panel {
+  gap: 12px;
+}
+
+.territory-config-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 180px) 110px;
+  gap: 10px;
+  align-items: end;
+}
+
+.territory-config-row .season-field span,
+.territory-score-row .season-field span {
+  min-height: 0;
+}
+
+.territory-count-field {
+  width: 110px;
+}
+
+.territory-score-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 140px));
+  gap: 8px;
+  align-items: end;
+  justify-content: start;
+}
+
+.territory-dynamic-score-fields {
+  display: contents;
+}
+
+.territory-score-row .season-field {
+  min-width: 0;
+}
+
+.territory-score-row .season-field span {
+  font-size: 12px;
+}
+
+.territory-score-row .season-field input {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 420px) {
+  .territory-config-row {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+
+  .territory-count-field {
+    width: 90px;
+  }
+
+  .territory-score-row {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+}
