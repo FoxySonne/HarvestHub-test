@@ -6,10 +6,10 @@
 ========================================================== */
 
 :root {
-  --site-max-width: 1920px;
-  --reading-max-width: 1440px;
-  --page-padding: clamp(12px, 1.25vw, 24px);
-  --layout-gap: clamp(12px, 1.25vw, 24px);
+  --site-max-width: 2400px;
+  --reading-max-width: 100%;
+  --page-padding: clamp(12px, 1vw, 20px);
+  --layout-gap: clamp(12px, 0.9vw, 18px);
   --card-padding-responsive: clamp(14px, 1vw, 22px);
   --font-body-responsive: clamp(15px, 0.22vw + 14px, 19px);
   --font-small-responsive: clamp(12px, 0.14vw + 11px, 15px);
@@ -311,11 +311,6 @@ button[data-full-width="true"] {
 }
 
 @media (min-width: 1920px) {
-  :root {
-    --sidebar-width: 240px;
-    --rightbar-width: 280px;
-  }
-
   .container {
     width: min(calc(100% - 32px), var(--site-max-width));
   }
