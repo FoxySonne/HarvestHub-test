@@ -405,10 +405,10 @@ async function saveBulk() {
       participant_id: participantId,
       measured_on: date,
       squad_1: missing ? null : value,
-      squad_2: original[1],
-      squad_3: original[2],
-      squad_4: original[3],
-      squad_5: original[4]
+      squad_2: missing ? null : original[1],
+      squad_3: missing ? null : original[2],
+      squad_4: missing ? null : original[3],
+      squad_5: missing ? null : original[4]
     });
   }
 
@@ -483,9 +483,6 @@ export function initPowerSection() {
   byId("powerBulkClose")?.addEventListener("click", stopBulkEditing);
   byId("powerBulkSave")?.addEventListener("click", saveBulk);
   byId("powerExpandTable")?.addEventListener("click", () => toggleExpandedTable());
-  window.addEventListener("harvesthub:page-change", () => {
-    if (state.expanded) toggleExpandedTable(false);
-  }, { once: true });
-  resetEditor();
+  byId("powerCloseTable")?.addEventListener("click", () => toggleExpandedTable(false));
   load();
 }
