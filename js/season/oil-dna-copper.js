@@ -193,30 +193,11 @@ function readLairOpponents() {
   });
 }
 
-function setTowerStatus(state, title, message) {
-  const card = byId("territoryTowerStatus");
-  if (card) card.dataset.state = state;
-  setText("territoryTowerStatusTitle", title);
-  setText("territoryTowerStatusMessage", message);
-}
-
 function setLairStatus(state, title, message) {
   const card = byId("territoryLairStatus");
   if (card) card.dataset.state = state;
   setText("territoryLairStatusTitle", title);
   setText("territoryLairStatusMessage", message);
-}
-
-function clearTowerResults() {
-  [
-    "territoryMainThreat",
-    "territoryPointsNeeded",
-    "territoryTargetScore",
-    "territoryHoldTime",
-    "territorySafeTime"
-  ].forEach(id => setText(id, "—"));
-  const list = byId("territoryThreatList");
-  if (list) list.innerHTML = "";
 }
 
 function clearLairResults() {
@@ -227,17 +208,6 @@ function clearLairResults() {
     "territoryLairTargetScore",
     "territoryLairLead"
   ].forEach(id => setText(id, "—"));
-}
-
-function validateTowerRates(tower, ourRate, opponents) {
-  const totalRate = ourRate + opponents.reduce((sum, item) => sum + item.rate, 0);
-  if (ourRate > tower.maxPointsPerMinute || opponents.some(item => item.rate > tower.maxPointsPerMinute)) {
-    return `Одна из скоростей выше максимума для вышки ${tower.size}: ${tower.maxPointsPerMinute} очк./мин.`;
-  }
-  if (totalRate > tower.maxPointsPerMinute) {
-    return `Сумма введённых скоростей ${totalRate} очк./мин выше максимума вышки ${tower.size}: ${tower.maxPointsPerMinute} очк./мин.`;
-  }
-  return "";
 }
 
 function conservativeScores(ourScore, opponents) {
@@ -251,173 +221,80 @@ function conservativeScores(ourScore, opponents) {
   };
 }
 
-function canWinWithCurrentDistribution(ourScore, ourRate, opponents, remainingMinutes) {
-  return opponents.every(opponent => {
-    const pairedCaptures = opponent.attacks;
-    const ourFinal = ourScore + ourRate * remainingMinutes + pairedCaptures;
-    const opponentFinal = opponent.conservativeScore
-      + opponent.rate * remainingMinutes
-      + pairedCaptures;
-    return ourFinal > opponentFinal;
-  });
+function renderTowerProjectionRows(rows) {
+  const body = byId("territoryTowerProjectionBody");
+  if (!body) return;
+
+  body.innerHTML = rows.map(row => `
+    <tr>
+      <td>${row.label}</td>
+      <td>${formatNumber(row.score)}</td>
+      <td>+${formatNumber(row.currentGain)}</td>
+      <td>${formatNumber(row.currentFinal)}</td>
+      <td>+${formatNumber(row.fullGain)}</td>
+      <td>${formatNumber(row.fullFinal)}</td>
+    </tr>
+  `).join("");
 }
 
-function findSafeMinuteAgainstOpponent({
-  ourScore,
-  ourRate,
-  opponent,
-  towerMaxRate,
-  remainingMinutes
-}) {
-  for (let minute = 0; minute <= remainingMinutes; minute += 1) {
-    const pairedCaptures = opponent.attacks;
-    const ourFinal = ourScore + ourRate * minute + pairedCaptures;
-    const opponentFinal = opponent.conservativeScore
-      + opponent.rate * minute
-      + pairedCaptures
-      + towerMaxRate * (remainingMinutes - minute);
-
-    if (ourFinal > opponentFinal) return minute;
-  }
-  return null;
-}
-
-function renderThreatList({ ourScore, opponents, towerMaxRate, remainingMinutes }) {
-  const list = byId("territoryThreatList");
-  if (!list) return;
-
-  list.innerHTML = opponents.map(opponent => {
-    const pairedCaptures = opponent.attacks;
-    const ourLockedScore = ourScore + pairedCaptures;
-    const opponentMaximum = opponent.conservativeScore
-      + pairedCaptures
-      + towerMaxRate * remainingMinutes;
-    const canCatch = opponentMaximum >= ourLockedScore;
-
-    return `<div><span>Соперник ${opponent.index}</span><strong>${canCatch ? "может догнать" : "уже не догонит"}</strong></div>`;
-  }).join("");
+function renderTowerProjectionMessage(message) {
+  const body = byId("territoryTowerProjectionBody");
+  if (body) body.innerHTML = `<tr><td colspan="6">${message}</td></tr>`;
 }
 
 function updateTowerCalculator() {
   const clock = getEventClock();
   const tower = getSelectedTower();
-  const ourScoreRaw = parseScore(byId("territoryOurScore")?.value);
+  const ourScore = parseScore(byId("territoryOurScore")?.value);
   const ourRate = Math.max(0, readNumber("territoryOurRate", 0));
-  const opponentsRaw = readOpponents();
-
-  setText("territoryCurrentTime", formatMoscowTime(clock.now));
-  setText("territoryTimeLeft", clock.isOpen ? formatDuration(clock.remainingMinutes) : "событие завершено");
-
-  syncOpponentVisibility();
-
-  if (!clock.isOpen) {
-    clearTowerResults();
-    setTowerStatus("neutral", "Событие завершено", "Новый игровой день начнётся в 03:00 МСК.");
-    return;
-  }
-
-  if (ourScoreRaw == null || opponentsRaw.some(item => item.score == null)) {
-    clearTowerResults();
-    setTowerStatus("neutral", "Введите текущие очки", "Можно вводить значения так, как их показывает игра: например 1,93К и 1,68К.");
-    return;
-  }
-
-  const rateError = validateTowerRates(tower, ourRate, opponentsRaw);
-  if (rateError) {
-    clearTowerResults();
-    setTowerStatus("danger", "Проверьте очки в минуту", rateError);
-    return;
-  }
-
-  const conservative = conservativeScores(ourScoreRaw, opponentsRaw);
-  const opponents = conservative.opponents;
+  const opponents = readOpponents();
   const remainingMinutes = clock.remainingMinutes;
   const towerMaxRate = tower.maxPointsPerMinute;
-  const winPossible = canWinWithCurrentDistribution(
-    conservative.our,
-    ourRate,
-    opponents,
-    remainingMinutes
-  );
 
-  const safeByOpponent = opponents.map(opponent => ({
-    opponent,
-    minute: findSafeMinuteAgainstOpponent({
-      ourScore: conservative.our,
-      ourRate,
-      opponent,
-      towerMaxRate,
-      remainingMinutes
-    })
-  }));
+  setText("territoryCurrentTime", formatMoscowTime(clock.now));
+  setText("territoryTimeLeft", clock.isOpen ? formatDuration(remainingMinutes) : "событие завершено");
+  setText("territoryTowerMaxRate", `${formatNumber(towerMaxRate)} очк./мин`);
+  syncOpponentVisibility();
 
-  const unresolved = safeByOpponent.some(item => item.minute == null);
-  const mainThreat = safeByOpponent.reduce((worst, item) => {
-    if (!worst) return item;
-    const current = item.minute == null ? Infinity : item.minute;
-    const previous = worst.minute == null ? Infinity : worst.minute;
-    return current > previous ? item : worst;
-  }, null);
+  if (ourScore == null || opponents.some(item => item.score == null)) {
+    renderTowerProjectionMessage("Введите текущие очки всех участников.");
+    return;
+  }
 
-  setText("territoryMainThreat", mainThreat ? `Соперник ${mainThreat.opponent.index}` : "—");
-  renderThreatList({
-    ourScore: conservative.our,
-    opponents,
-    towerMaxRate,
-    remainingMinutes
+  const totalCurrentRate = ourRate + opponents.reduce((sum, item) => sum + item.rate, 0);
+  if (ourRate > towerMaxRate || opponents.some(item => item.rate > towerMaxRate) || totalCurrentRate > towerMaxRate) {
+    renderTowerProjectionMessage(`Проверьте очки в минуту: максимум вышки ${tower.size} — ${towerMaxRate} очк./мин.`);
+    return;
+  }
+
+  const totalExpectedRetakes = opponents.reduce((sum, item) => sum + item.attacks, 0);
+  const ourCurrentGain = ourRate * remainingMinutes + totalExpectedRetakes;
+  const ourFullGain = towerMaxRate * remainingMinutes + totalExpectedRetakes;
+
+  const rows = [{
+    label: "Мы",
+    score: ourScore,
+    currentGain: ourCurrentGain,
+    currentFinal: ourScore + ourCurrentGain,
+    fullGain: ourFullGain,
+    fullFinal: ourScore + ourFullGain
+  }];
+
+  opponents.forEach(opponent => {
+    const currentGain = opponent.rate * remainingMinutes + opponent.attacks;
+    const fullGain = towerMaxRate * remainingMinutes + opponent.attacks;
+
+    rows.push({
+      label: `Соперник ${opponent.index}`,
+      score: opponent.score,
+      currentGain,
+      currentFinal: opponent.score + currentGain,
+      fullGain,
+      fullFinal: opponent.score + fullGain
+    });
   });
 
-  if (!winPossible || unresolved) {
-    setText("territoryPointsNeeded", "—");
-    setText("territoryTargetScore", "—");
-    setText("territoryHoldTime", "до конца недостаточно");
-    setText("territorySafeTime", "—");
-    setTowerStatus(
-      "danger",
-      "При текущем распределении забрать вышку невозможно",
-      "Если очки в минуту не изменятся, хотя бы один соперник закончит событие не ниже вас. Нужно изменить распределение точек и ввести данные заново."
-    );
-    return;
-  }
-
-  const mathematicalSafeMinute = Math.max(...safeByOpponent.map(item => item.minute));
-  const safetyMinutes = EVENT.scoring.calculationSafetyMinutes;
-  const recommendedMinute = mathematicalSafeMinute + safetyMinutes;
-  const hasFullSafetyMargin = recommendedMinute <= remainingMinutes;
-  const holdMinutes = Math.min(recommendedMinute, remainingMinutes);
-  const totalExpectedRetakes = opponentsRaw.reduce((sum, item) => sum + item.attacks, 0);
-  const pointsNeeded = Math.max(0, Math.round(ourRate * holdMinutes + totalExpectedRetakes));
-  const targetScore = ourScoreRaw + pointsNeeded;
-  const safeTime = new Date(clock.now.getTime() + holdMinutes * 60 * 1000);
-
-  setText("territoryPointsNeeded", formatNumber(pointsNeeded));
-  setText("territoryTargetScore", `≈ ${formatGameScore(targetScore)}`);
-  setText("territoryHoldTime", formatDuration(holdMinutes));
-  setText("territorySafeTime", formatMoscowTime(safeTime));
-
-  if (!hasFullSafetyMargin) {
-    setTowerStatus(
-      "success",
-      "Забрать вышку возможно, но уходить раньше конца не стоит",
-      "Математическая граница достигается слишком близко к окончанию события, поэтому полный дополнительный запас 2 минуты не помещается."
-    );
-    return;
-  }
-
-  if (mathematicalSafeMinute === 0) {
-    setTowerStatus(
-      "success",
-      "Вышка уже математически гарантирована",
-      `Для дополнительного запаса калькулятор рекомендует сохранить текущую ситуацию ещё ${safetyMinutes} минуты.`
-    );
-    return;
-  }
-
-  setTowerStatus(
-    "success",
-    "Забрать вышку возможно",
-    `После указанного безопасного момента ни один из ${opponents.length} соперников не сможет обойти вас, даже если затем получит всю вышку до конца события.`
-  );
+  renderTowerProjectionRows(rows);
 }
 
 function updateLairCalculator() {
