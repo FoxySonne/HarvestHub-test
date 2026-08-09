@@ -7,7 +7,7 @@
       <div class="card-header season-card-header">
         <div>
           <h3>Вышка</h3>
-          <p>Расчёт возможности забрать вышку и безопасного момента, после которого соперники уже не смогут обойти вас по очкам.</p>
+          <p>Расчёт итоговых очков к концу игрового дня при текущем распределении точек и при полном захвате вышки.</p>
         </div>
       </div>
 
@@ -42,26 +42,31 @@
 
       <div id="territoryOpponents"></div>
 
-      <section id="territoryTowerStatus" class="season-deadline-card" data-state="neutral" aria-live="polite">
-        <h4 id="territoryTowerStatusTitle">Введите текущие очки</h4>
-        <p id="territoryTowerStatusMessage">Калькулятор учитывает текущие очки в минуту, всех соперников и худший сценарий полного захвата вышки одним из них.</p>
-      </section>
-
       <div class="season-results season-results-compact">
         <div><span>Сейчас по Москве</span><strong id="territoryCurrentTime">—</strong></div>
         <div><span>До конца события</span><strong id="territoryTimeLeft">—</strong></div>
-        <div><span>Самый опасный соперник</span><strong id="territoryMainThreat">—</strong></div>
-        <div><span>Нужно набрать ещё</span><strong id="territoryPointsNeeded">—</strong></div>
-        <div><span>Ориентир нашего счёта</span><strong id="territoryTargetScore">—</strong></div>
-        <div><span>Держать ещё</span><strong id="territoryHoldTime">—</strong></div>
-        <div><span>Безопасный момент</span><strong id="territorySafeTime">—</strong></div>
+        <div><span>Максимум всей вышки</span><strong id="territoryTowerMaxRate">—</strong></div>
       </div>
 
-      <p id="territorySafetyNote">Результат включает дополнительный запас 2 минуты. Если счёт или распределение точек изменились, введите новые данные.</p>
-
       <div class="season-panel">
-        <h4>Если соперник заберёт всю вышку прямо сейчас</h4>
-        <div id="territoryThreatList" class="season-results season-results-compact"></div>
+        <h4>Прогноз к 02:50 МСК</h4>
+        <div class="alliance-table-wrap" data-horizontal-scroll>
+          <table class="alliance-table">
+            <thead>
+              <tr>
+                <th>Участник</th>
+                <th>Сейчас</th>
+                <th>+ при текущем раскладе</th>
+                <th>Итог при текущем раскладе</th>
+                <th>+ если вся вышка его</th>
+                <th>Итог при полном захвате</th>
+              </tr>
+            </thead>
+            <tbody id="territoryTowerProjectionBody">
+              <tr><td colspan="6">Введите текущие очки.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
