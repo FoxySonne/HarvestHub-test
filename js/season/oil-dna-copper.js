@@ -304,6 +304,25 @@ function conservativeOpponentScore(entry) {
   return entry.value + scoreUncertainty(entry);
 }
 
+function optimisticScore(entry) {
+  return entry.value + scoreUncertainty(entry);
+}
+
+function pessimisticScore(entry) {
+  return Math.max(0, entry.value - scoreUncertainty(entry));
+}
+
+function buildTowerParticipants(ourScore, opponents) {
+  return [
+    { key: "us", label: "Мы", score: ourScore },
+    ...opponents.map(opponent => ({
+      key: `opponent${opponent.index}`,
+      label: `Соперник ${opponent.index}`,
+      score: opponent.score
+    }))
+  ];
+}
+
 function renderTowerProjectionRows(rows) {
   const body = byId("territoryTowerProjectionBody");
   if (!body) return;
@@ -397,23 +416,104 @@ function updateTimeProjection({ clock, ourScore, opponents, ownership }) {
   renderTimeProjectionRows(rows);
 }
 
+function canWinAfterFullCapture({ candidate, participants, ownership, minute, remainingMinutes, towerMaxRate }) {
+  const candidateRate = ownership.rates[candidate.key] || 0;
+  const captureBonus = Math.max(
+    0,
+    ownership.availablePointCount - (ownership.pointCounts[candidate.key] || 0)
+  );
+  const afterCaptureMinutes = Math.max(0, remainingMinutes - minute);
+  const candidateFinal = optimisticScore(candidate.score)
+    + candidateRate * minute
+    + captureBonus
+    + towerMaxRate * afterCaptureMinutes;
+
+  return participants.every(other => {
+    if (other.key === candidate.key) return true;
+    const otherFinal = pessimisticScore(other.score)
+      + (ownership.rates[other.key] || 0) * minute;
+    return candidateFinal > otherFinal;
+  });
+}
+
+function findLastChanceMinute({ candidate, participants, ownership, remainingMinutes, towerMaxRate }) {
+  for (let minute = remainingMinutes; minute >= 0; minute -= 1) {
+    if (canWinAfterFullCapture({
+      candidate,
+      participants,
+      ownership,
+      minute,
+      remainingMinutes,
+      towerMaxRate
+    })) {
+      return minute;
+    }
+  }
+  return null;
+}
+
+function renderLastChanceRows({ clock, participants, ownership, towerMaxRate }) {
+  const body = byId("territoryLastChanceBody");
+  if (!body) return;
+
+  if (!clock.isOpen || participants.some(item => !item.score)) {
+    body.innerHTML = `<tr><td colspan="3">${clock.isOpen ? "Введите текущие очки всех участников." : "Событие уже завершено."}</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = participants.map(participant => {
+    const minute = findLastChanceMinute({
+      candidate: participant,
+      participants,
+      ownership,
+      remainingMinutes: clock.remainingMinutes,
+      towerMaxRate
+    });
+
+    if (minute == null) {
+      return `
+        <tr>
+          <td>${participant.label}</td>
+          <td>Шанса уже нет</td>
+          <td>—</td>
+        </tr>
+      `;
+    }
+
+    const deadline = new Date(clock.now.getTime() + minute * 60 * 1000);
+    const deadlineText = minute === clock.remainingMinutes
+      ? "02:50 МСК"
+      : `${formatMoscowTime(deadline)} МСК`;
+    const remainingText = minute === 0 ? "прямо сейчас" : formatDuration(minute);
+
+    return `
+      <tr>
+        <td>${participant.label}</td>
+        <td>${deadlineText}</td>
+        <td>${remainingText}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
 function calculateSafeStopMinute({ ourScore, opponents, ownership, remainingMinutes, towerMaxRate }) {
   const ourBase = conservativeOurScore(ourScore);
   const ourRate = ownership.rates.us || 0;
-  const ourPointCount = ownership.pointCounts.us || 0;
+  const totalExpectedRetakes = opponents.reduce((sum, item) => sum + item.attacks, 0);
 
   for (let minute = 0; minute <= remainingMinutes; minute += 1) {
     const allSafe = opponents.every(opponent => {
       const opponentKey = `opponent${opponent.index}`;
       const opponentRate = ownership.rates[opponentKey] || 0;
       const afterStopMinutes = Math.max(0, remainingMinutes - minute);
-      const captureBonus = afterStopMinutes > 0 ? ourPointCount : 0;
-      const pairedAttackBonus = opponent.attacks;
+      const captureBonus = afterStopMinutes > 0
+        ? Math.max(0, ownership.availablePointCount - (ownership.pointCounts[opponentKey] || 0))
+        : 0;
 
-      const ourFinal = ourBase + ourRate * minute + pairedAttackBonus;
+      const ourFinal = ourBase + ourRate * minute + totalExpectedRetakes;
       const opponentFinal = conservativeOpponentScore(opponent.score)
         + opponentRate * minute
-        + pairedAttackBonus
+        + opponent.attacks
         + towerMaxRate * afterStopMinutes
         + captureBonus;
 
@@ -473,7 +573,7 @@ function updateSafeTime({ clock, ourScore, opponents, ownership, towerMaxRate })
 
   setText(
     "territorySafetyNote",
-    `Время уже включает дополнительные ${safetyMinutes} минуты запаса и +1 очко сопернику за каждую нашу точку, которую он сможет выбить после нашего ухода.`
+    `Время уже включает дополнительные ${safetyMinutes} минуты запаса и +1 очко сопернику за каждую точку, которую ему придётся захватить после нашего ухода.`
   );
 }
 
@@ -488,11 +588,13 @@ function updateTowerCalculator() {
   syncOpponentVisibility();
   syncOwnershipMatrix();
   const ownership = getOwnershipState();
+  const participants = buildTowerParticipants(ourScore, opponents);
 
   setText("territoryCurrentTime", formatMoscowTime(clock.now));
   setText("territoryTimeLeft", clock.isOpen ? formatDuration(remainingMinutes) : "событие завершено");
   setText("territoryTowerMaxRate", `${formatNumber(towerMaxRate)} очк./мин`);
   updateTimeProjection({ clock, ourScore, opponents, ownership });
+  renderLastChanceRows({ clock, participants, ownership, towerMaxRate });
 
   if (!ourScore || opponents.some(item => !item.score)) {
     renderTowerProjectionMessage("Введите текущие очки всех участников.");
