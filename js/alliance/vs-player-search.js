@@ -178,13 +178,16 @@
     const form = document.createElement("form");
     form.className = "alliance-table-search";
     form.dataset.allianceTableSearchFor = tableId(table);
+    form.dataset.allianceSearchIndex = "-1";
+    form.dataset.allianceSearchQuery = "";
     form.hidden = true;
     form.innerHTML = `
-      <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока" aria-autocomplete="list">
-      <button type="submit">Найти</button>
-      <button type="button" class="secondary-button" data-alliance-search-close aria-label="Закрыть поиск">×</button>
-      <div class="alliance-table-search-results" data-alliance-search-results hidden></div>
-      <small data-alliance-search-status></small>`;
+      <input type="search" placeholder="Найти игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока" aria-autocomplete="list">
+      <small data-alliance-search-status aria-live="polite">0/0</small>
+      <button type="button" class="secondary-button alliance-table-search-nav" data-alliance-search-prev aria-label="Предыдущее совпадение">↑</button>
+      <button type="submit" class="secondary-button alliance-table-search-nav" aria-label="Следующее совпадение">↓</button>
+      <button type="button" class="secondary-button alliance-table-search-close" data-alliance-search-close aria-label="Закрыть поиск">×</button>
+      <div class="alliance-table-search-results" data-alliance-search-results hidden></div>`;
     wrapper.before(form);
 
     const trigger = document.createElement("button");
@@ -227,12 +230,34 @@
     clearTimeout(highlightTimer);
   }
 
+  function verticalScrollContainer(row) {
+    let node = row.parentElement;
+    while (node && node !== document.body) {
+      const style = window.getComputedStyle(node);
+      if (/(auto|scroll|overlay)/.test(style.overflowY) && node.scrollHeight > node.clientHeight + 2) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  function scrollRowIntoView(row) {
+    const scroller = verticalScrollContainer(row);
+    if (!scroller) {
+      row.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      return;
+    }
+    const rowRect = row.getBoundingClientRect();
+    const scrollRect = scroller.getBoundingClientRect();
+    const target = scroller.scrollTop + (rowRect.top - scrollRect.top) - ((scroller.clientHeight - rowRect.height) / 2);
+    scroller.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+  }
+
   function revealRow(row, table) {
     clearHighlight();
     row.classList.add(HIGHLIGHT_CLASS);
-    row.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    scrollRowIntoView(row);
     const wrapper = tableWrapper(table);
-    if (wrapper) wrapper.scrollLeft = 0;
+    if (wrapper) wrapper.scrollTo({ left: 0, behavior: "smooth" });
     window.setTimeout(() => {
       const input = [...row.querySelectorAll("input, select, textarea")].find(field => !field.disabled && field.offsetParent !== null);
       input?.focus({ preventScroll: true });
@@ -270,72 +295,83 @@
     const status = form.querySelector("[data-alliance-search-status]");
     const results = form.querySelector("[data-alliance-search-results]");
     const query = normalize(input?.value);
+    form.dataset.allianceSearchIndex = "-1";
+    form.dataset.allianceSearchQuery = query;
     if (!table || !results || !query) {
       clearSuggestions(form);
-      if (status) status.textContent = query ? "Таблица не найдена." : "Начни вводить никнейм.";
+      if (status) status.textContent = "0/0";
       return [];
     }
 
     const matches = rankedMatches(table, query);
     if (!matches.length) {
       clearSuggestions(form);
-      if (status) status.textContent = "Игроки не найдены.";
+      if (status) status.textContent = "0/0";
       return [];
     }
 
-    results.innerHTML = matches.slice(0, 12).map(({ row, nickname, priority }) => `
+    results.innerHTML = matches.slice(0, 12).map(({ row, nickname }) => `
       <button type="button" class="alliance-table-search-result" data-alliance-search-result="${rowSearchId(row)}">
         <strong>${nickname.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong>
-        <small>${priority <= 1 ? "начинается с запроса" : "содержит запрос"}</small>
       </button>`).join("");
     results.hidden = false;
-    if (status) status.textContent = `Найдено: ${matches.length}. Сначала показаны совпадения по началу ника.`;
+    if (status) status.textContent = `0/${matches.length}`;
     return matches;
   }
 
-  function chooseResult(form, row) {
+  function chooseResult(form, row, index = -1, total = 0) {
     const table = tableBySearchId(form.dataset.allianceTableSearchFor);
     const status = form.querySelector("[data-alliance-search-status]");
     if (!table || !row) return;
-    if (status) status.textContent = `Выбран: ${rowNickname(row, table).trim()}`;
+    if (index >= 0) form.dataset.allianceSearchIndex = String(index);
+    if (status) status.textContent = index >= 0 && total ? `${index + 1}/${total}` : "1/1";
     activeTable = table;
     clearSuggestions(form);
     revealRow(row, table);
   }
 
-  function runSearch(form) {
+  function runSearch(form, direction = 1) {
     const table = tableBySearchId(form.dataset.allianceTableSearchFor);
     const input = form.querySelector('input[type="search"]');
     const status = form.querySelector("[data-alliance-search-status]");
     const query = normalize(input?.value);
     if (!table || !query) {
-      if (status) status.textContent = "Введите никнейм игрока.";
+      if (status) status.textContent = "0/0";
       input?.focus();
       return;
     }
-    const match = rankedMatches(table, query)[0];
-    if (!match) {
-      if (status) status.textContent = "Игроки не найдены.";
+    const matches = rankedMatches(table, query);
+    if (!matches.length) {
+      if (status) status.textContent = "0/0";
       input?.focus();
       input?.select?.();
       return;
     }
-    chooseResult(form, match.row);
+    const sameQuery = form.dataset.allianceSearchQuery === query;
+    let index = sameQuery ? Number(form.dataset.allianceSearchIndex || -1) : -1;
+    index = direction < 0
+      ? (index <= 0 ? matches.length - 1 : index - 1)
+      : (index + 1) % matches.length;
+    form.dataset.allianceSearchQuery = query;
+    chooseResult(form, matches[index].row, index, matches.length);
   }
 
   function openSearch(table) {
     if (!table) return;
     activeTable = table;
     createSearchForm(table);
+    document.querySelectorAll(".alliance-table-search").forEach(item => {
+      if (item.dataset.allianceTableSearchFor !== tableId(table)) item.hidden = true;
+    });
     const form = document.querySelector(`[data-alliance-table-search-for="${CSS.escape(tableId(table))}"]`);
     if (!form) return;
     form.hidden = false;
-    form.scrollIntoView({ behavior: "smooth", block: "center" });
     window.setTimeout(() => {
       const input = form.querySelector('input[type="search"]');
       input?.focus();
+      input?.select?.();
       if (input?.value) renderSuggestions(form);
-    }, 100);
+    }, 0);
   }
 
   function nearestVisibleTable() {
@@ -374,7 +410,11 @@
     if (resultButton) {
       const form = resultButton.closest(".alliance-table-search");
       const table = form && tableBySearchId(form.dataset.allianceTableSearchFor);
-      chooseResult(form, table && rowBySearchId(table, resultButton.dataset.allianceSearchResult));
+      const row = table && rowBySearchId(table, resultButton.dataset.allianceSearchResult);
+      const query = normalize(form?.querySelector('input[type="search"]')?.value);
+      const matches = table && query ? rankedMatches(table, query) : [];
+      const index = row ? matches.findIndex(item => item.row === row) : -1;
+      chooseResult(form, row, index, matches.length);
       return;
     }
 
@@ -386,6 +426,12 @@
 
     if (event.target.closest("#allianceFloatingSearch")) {
       openSearch(activeTable?.offsetParent !== null ? activeTable : nearestVisibleTable());
+      return;
+    }
+
+    const previous = event.target.closest("[data-alliance-search-prev]");
+    if (previous) {
+      runSearch(previous.closest(".alliance-table-search"), -1);
       return;
     }
 
@@ -431,7 +477,7 @@
     const form = event.target.closest(".alliance-table-search");
     if (!form) return;
     event.preventDefault();
-    runSearch(form);
+    runSearch(form, 1);
   });
 
   window.addEventListener("keydown", event => {
@@ -440,7 +486,7 @@
     if (isFindShortcut) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      openSearch(nearestVisibleTable());
+      openSearch(activeTable?.offsetParent !== null ? activeTable : nearestVisibleTable());
       return;
     }
     if (event.key === "Escape") {
