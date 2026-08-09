@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 
-@import url("core/variables.css?v=20260721-light-theme-1");
+@import url("core/variables.css?v=20260809-wide-layout-1");
 @import url("core/base.css?v=20260723-hidden-1");
 @import url("core/layout.css?v=20260721-light-theme-1");
 @import url("ui/forms.css?v=20260726-responsive-components-1");
@@ -43,7 +43,7 @@
 @import url("features/advanced-access.css?v=20260723-access-profile-1");
 @import url("features/sync-status.css?v=20260721-light-theme-1");
 @import url("features/account-mobile.css?v=20260721-light-theme-1");
-@import url("core/responsive-foundation.css?v=20260726-responsive-foundation-2");
+@import url("core/responsive-foundation.css?v=20260809-wide-layout-1");
 @import url("features/ordinary-pages-responsive.css?v=20260727-ordinary-layout-final-1");
 @import url("features/alliance-complex-responsive.css?v=20260809-alliance-table-scroll-1");
 @import url("features/layout-review-fixes.css?v=20260727-visual-review-1");
