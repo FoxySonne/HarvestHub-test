@@ -110,6 +110,30 @@
         </div>
       </div>
 
+      <div class="season-panel">
+        <h4 id="territoryTimeProjectionTitle">Прогноз на выбранное время</h4>
+        <div class="season-form-grid season-form-grid-compact">
+          <label class="season-field">
+            <span>Время по Москве</span>
+            <input id="territoryProjectionTime" type="time" step="60">
+          </label>
+        </div>
+        <div class="alliance-table-wrap" data-horizontal-scroll>
+          <table class="alliance-table">
+            <thead>
+              <tr>
+                <th>Участник</th>
+                <th>Будет очков</th>
+              </tr>
+            </thead>
+            <tbody id="territoryTimeProjectionBody">
+              <tr><td colspan="2">Выберите время.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Расчёт предполагает, что до выбранного времени никто никого не выбивает и распределение точек не меняется.</p>
+      </div>
+
       <div class="season-results season-results-compact">
         <div><span>Держать ещё</span><strong id="territoryHoldTime">—</strong></div>
         <div><span>Можно перестать сражаться в</span><strong id="territorySafeTime">—</strong></div>
