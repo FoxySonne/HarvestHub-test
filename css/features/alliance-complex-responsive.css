@@ -51,8 +51,8 @@
 .reservoir-table-wrap,
 .advanced-access-table-wrap {
   overflow-x: auto;
-  overflow-y: visible;
-  overscroll-behavior-x: contain;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
