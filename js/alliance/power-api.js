@@ -26,12 +26,9 @@ export function saveAllianceSquadPower(client, allianceId, payload) {
 }
 
 export function saveAllianceSquadPowerBatch(client, allianceId, rows) {
-  const normalizedRows = rows.map(row => row.squad_1 === null
-    ? { ...row, squad_2: null, squad_3: null, squad_4: null, squad_5: null }
-    : row);
   return client.rpc("save_alliance_squad_power_batch", {
     target_alliance_id: allianceId,
-    target_rows: normalizedRows
+    target_rows: rows
   });
 }
 
