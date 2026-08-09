@@ -1,9 +1,9 @@
-<section class="page-section season-page season-compact-page">
+<section class="page-section season-page season-compact-page territory-calculator-page">
   <h1>Нефть/ДНК/Медь</h1>
   <p>Расчёты по захвату вышек и логова.</p>
 
-  <div class="season-layout">
-    <section class="card season-card season-compact-card">
+  <div class="season-layout territory-calculator-layout">
+    <section class="card season-card season-compact-card territory-calculator-card">
       <div class="card-header season-card-header">
         <div>
           <h3>Вышка</h3>
@@ -12,7 +12,7 @@
       </div>
 
       <div class="season-panel">
-        <h4>Текущая ситуация</h4>
+        <h4>Данные для расчёта</h4>
         <div class="season-form-grid season-form-grid-compact">
           <label class="season-field">
             <span>Размер вышки</span>
@@ -33,117 +33,103 @@
             </select>
           </label>
         </div>
+
+        <div id="territoryOpponents" class="season-form-grid season-form-grid-compact"></div>
         <p>К счёту без обозначения автоматически добавляется «К». Если это обычные очки, удалите «К» из поля.</p>
-      </div>
 
-      <div id="territoryOpponents"></div>
-
-      <div class="season-panel">
-        <h4>Кто сейчас держит точки</h4>
-        <div class="alliance-table-wrap" data-horizontal-scroll>
-          <table class="alliance-table">
-            <thead>
-              <tr>
-                <th>Участник</th>
-                <th>Бочка 1<br>+2/мин</th>
-                <th>Бочка 2<br>+2/мин</th>
-                <th>Кран 1<br>+1/мин</th>
-                <th>Кран 2<br>+1/мин</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr data-territory-owner-row="us">
-                <td>Мы</td>
-                <td><label class="checkbox" title="Мы держим Бочку 1"><input id="territoryPointUsBarrel1" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel1" aria-label="Мы держим Бочку 1"></label></td>
-                <td><label class="checkbox" title="Мы держим Бочку 2"><input id="territoryPointUsBarrel2" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel2" aria-label="Мы держим Бочку 2"></label></td>
-                <td><label class="checkbox" title="Мы держим Кран 1"><input id="territoryPointUsCrane1" type="checkbox" data-territory-point-owner="us" data-territory-point="crane1" aria-label="Мы держим Кран 1"></label></td>
-                <td><label class="checkbox" title="Мы держим Кран 2"><input id="territoryPointUsCrane2" type="checkbox" data-territory-point-owner="us" data-territory-point="crane2" aria-label="Мы держим Кран 2"></label></td>
-              </tr>
-              <tr data-territory-owner-row="opponent1">
-                <td>Соперник 1</td>
-                <td><label class="checkbox"><input id="territoryPointOpponent1Barrel1" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="barrel1" aria-label="Соперник 1 держит Бочку 1"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent1Barrel2" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="barrel2" aria-label="Соперник 1 держит Бочку 2"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent1Crane1" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="crane1" aria-label="Соперник 1 держит Кран 1"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent1Crane2" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="crane2" aria-label="Соперник 1 держит Кран 2"></label></td>
-              </tr>
-              <tr data-territory-owner-row="opponent2">
-                <td>Соперник 2</td>
-                <td><label class="checkbox"><input id="territoryPointOpponent2Barrel1" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="barrel1" aria-label="Соперник 2 держит Бочку 1"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent2Barrel2" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="barrel2" aria-label="Соперник 2 держит Бочку 2"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent2Crane1" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="crane1" aria-label="Соперник 2 держит Кран 1"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent2Crane2" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="crane2" aria-label="Соперник 2 держит Кран 2"></label></td>
-              </tr>
-              <tr data-territory-owner-row="opponent3">
-                <td>Соперник 3</td>
-                <td><label class="checkbox"><input id="territoryPointOpponent3Barrel1" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="barrel1" aria-label="Соперник 3 держит Бочку 1"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent3Barrel2" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="barrel2" aria-label="Соперник 3 держит Бочку 2"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent3Crane1" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="crane1" aria-label="Соперник 3 держит Кран 1"></label></td>
-                <td><label class="checkbox"><input id="territoryPointOpponent3Crane2" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="crane2" aria-label="Соперник 3 держит Кран 2"></label></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="season-panel-title">
+          <h4>Кто сейчас держит точки</h4>
         </div>
+        <table class="alliance-table territory-calculator-table">
+          <thead>
+            <tr>
+              <th>Участник</th>
+              <th>Бочка 1<br>+2/мин</th>
+              <th>Бочка 2<br>+2/мин</th>
+              <th>Кран 1<br>+1/мин</th>
+              <th>Кран 2<br>+1/мин</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-territory-owner-row="us">
+              <td>Мы</td>
+              <td><label class="checkbox" title="Мы держим Бочку 1"><input id="territoryPointUsBarrel1" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel1" aria-label="Мы держим Бочку 1"></label></td>
+              <td><label class="checkbox" title="Мы держим Бочку 2"><input id="territoryPointUsBarrel2" type="checkbox" data-territory-point-owner="us" data-territory-point="barrel2" aria-label="Мы держим Бочку 2"></label></td>
+              <td><label class="checkbox" title="Мы держим Кран 1"><input id="territoryPointUsCrane1" type="checkbox" data-territory-point-owner="us" data-territory-point="crane1" aria-label="Мы держим Кран 1"></label></td>
+              <td><label class="checkbox" title="Мы держим Кран 2"><input id="territoryPointUsCrane2" type="checkbox" data-territory-point-owner="us" data-territory-point="crane2" aria-label="Мы держим Кран 2"></label></td>
+            </tr>
+            <tr data-territory-owner-row="opponent1">
+              <td>Соперник 1</td>
+              <td><label class="checkbox"><input id="territoryPointOpponent1Barrel1" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="barrel1" aria-label="Соперник 1 держит Бочку 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent1Barrel2" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="barrel2" aria-label="Соперник 1 держит Бочку 2"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent1Crane1" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="crane1" aria-label="Соперник 1 держит Кран 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent1Crane2" type="checkbox" data-territory-point-owner="opponent1" data-territory-point="crane2" aria-label="Соперник 1 держит Кран 2"></label></td>
+            </tr>
+            <tr data-territory-owner-row="opponent2">
+              <td>Соперник 2</td>
+              <td><label class="checkbox"><input id="territoryPointOpponent2Barrel1" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="barrel1" aria-label="Соперник 2 держит Бочку 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent2Barrel2" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="barrel2" aria-label="Соперник 2 держит Бочку 2"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent2Crane1" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="crane1" aria-label="Соперник 2 держит Кран 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent2Crane2" type="checkbox" data-territory-point-owner="opponent2" data-territory-point="crane2" aria-label="Соперник 2 держит Кран 2"></label></td>
+            </tr>
+            <tr data-territory-owner-row="opponent3">
+              <td>Соперник 3</td>
+              <td><label class="checkbox"><input id="territoryPointOpponent3Barrel1" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="barrel1" aria-label="Соперник 3 держит Бочку 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent3Barrel2" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="barrel2" aria-label="Соперник 3 держит Бочку 2"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent3Crane1" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="crane1" aria-label="Соперник 3 держит Кран 1"></label></td>
+              <td><label class="checkbox"><input id="territoryPointOpponent3Crane2" type="checkbox" data-territory-point-owner="opponent3" data-territory-point="crane2" aria-label="Соперник 3 держит Кран 2"></label></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div class="season-panel">
-        <h4>Событие</h4>
-        <div class="season-results season-results-compact">
-          <div><span>Сейчас по Москве</span><strong id="territoryCurrentTime">—</strong></div>
-          <div><span>До конца события</span><strong id="territoryTimeLeft">—</strong></div>
-          <div><span>Максимум всей вышки</span><strong id="territoryTowerMaxRate">—</strong></div>
-        </div>
+      <div class="season-panel-title"><h4>Событие</h4></div>
+      <div class="season-results season-results-compact">
+        <div><span>Сейчас по Москве</span><strong id="territoryCurrentTime">—</strong></div>
+        <div><span>До конца события</span><strong id="territoryTimeLeft">—</strong></div>
+        <div><span>Максимум всей вышки</span><strong id="territoryTowerMaxRate">—</strong></div>
       </div>
 
-      <div class="season-panel">
-        <h4>Что будет к 02:50 МСК</h4>
-        <div class="alliance-table-wrap" data-horizontal-scroll>
-          <table class="alliance-table">
-            <thead>
-              <tr>
-                <th>Участник</th>
-                <th>Сейчас</th>
-                <th>Если так и сидим к концу дня будет</th>
-                <th>Если заберёт всю вышку — к концу дня будет</th>
-              </tr>
-            </thead>
-            <tbody id="territoryTowerProjectionBody">
-              <tr><td colspan="4">Введите текущие очки.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div class="season-panel-title"><h4>Что будет к 02:50 МСК</h4></div>
+      <table class="alliance-table territory-calculator-table">
+        <thead>
+          <tr>
+            <th>Участник</th>
+            <th>Сейчас</th>
+            <th>Если так и сидим к концу дня будет</th>
+            <th>Если заберёт всю вышку — к концу дня будет</th>
+          </tr>
+        </thead>
+        <tbody id="territoryTowerProjectionBody">
+          <tr><td colspan="4">Введите текущие очки.</td></tr>
+        </tbody>
+      </table>
 
-      <div class="season-panel">
-        <h4>До какого времени ещё можно победить</h4>
-        <div class="alliance-table-wrap" data-horizontal-scroll>
-          <table class="alliance-table">
-            <thead>
-              <tr>
-                <th>Участник</th>
-                <th>Победа ещё возможна, если забрать всю вышку до</th>
-                <th>После этого</th>
-              </tr>
-            </thead>
-            <tbody id="territoryLastChanceBody">
-              <tr><td colspan="3">Введите текущие очки.</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>До указанного времени точки остаются у текущих владельцев. Затем выбранный участник забирает всю вышку и получает +1 очко за каждую захваченную точку.</p>
-      </div>
+      <div class="season-panel-title"><h4>До какого времени ещё можно победить</h4></div>
+      <table class="alliance-table territory-calculator-table">
+        <thead>
+          <tr>
+            <th>Участник</th>
+            <th>Победа ещё возможна, если забрать всю вышку до</th>
+            <th>После этого</th>
+          </tr>
+        </thead>
+        <tbody id="territoryLastChanceBody">
+          <tr><td colspan="3">Введите текущие очки.</td></tr>
+        </tbody>
+      </table>
+      <p>До указанного времени точки остаются у текущих владельцев. Затем выбранный участник забирает всю вышку и получает +1 очко за каждую захваченную точку.</p>
 
-      <div class="season-panel">
-        <h4>Когда вышка уже точно наша</h4>
-        <div class="season-results season-results-compact">
-          <div><span>Держать ещё</span><strong id="territoryHoldTime">—</strong></div>
-          <div><span>Можно перестать сражаться в</span><strong id="territorySafeTime">—</strong></div>
-          <div><span>Гарантированный счёт</span><strong id="territoryGuaranteeScore">—</strong></div>
-        </div>
-        <p id="territorySafetyNote">Безопасное время уже включает дополнительные 2 минуты запаса и учитывает +1 очко сопернику за каждую нашу точку, которую он сможет выбить после нашего ухода.</p>
+      <div class="season-panel-title"><h4>Когда вышка уже точно наша</h4></div>
+      <div class="season-results season-results-compact">
+        <div><span>Держать ещё</span><strong id="territoryHoldTime">—</strong></div>
+        <div><span>Можно перестать сражаться в</span><strong id="territorySafeTime">—</strong></div>
+        <div><span>Гарантированный счёт</span><strong id="territoryGuaranteeScore">—</strong></div>
       </div>
+      <p id="territorySafetyNote">Безопасное время уже включает дополнительные 2 минуты запаса и учитывает +1 очко сопернику за каждую нашу точку, которую он сможет выбить после нашего ухода.</p>
     </section>
 
-    <section class="card season-card season-compact-card">
+    <section class="card season-card season-compact-card territory-calculator-card">
       <div class="card-header season-card-header">
         <div>
           <h3>Логово</h3>
@@ -152,7 +138,7 @@
       </div>
 
       <div class="season-panel">
-        <h4>Текущая ситуация</h4>
+        <h4>Данные для расчёта</h4>
         <div class="season-form-grid season-form-grid-compact">
           <label class="season-field">
             <span>Размер логова</span>
@@ -161,7 +147,7 @@
 
           <label class="season-field">
             <span>Наш текущий счёт</span>
-            <input id="territoryLairOurScore" data-score-input type="text" inputmode="decimal" placeholder="Например, 35">
+            <input id="territoryLairOurScore" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="Например, 4,04">
           </label>
 
           <label class="season-field">
@@ -173,27 +159,21 @@
             </select>
           </label>
         </div>
+
+        <div id="territoryLairOpponents" class="season-form-grid season-form-grid-compact"></div>
+        <p>Если обозначение не указано, сайт автоматически добавит «К». Можно вводить и значения с «М».</p>
       </div>
 
-      <div id="territoryLairOpponents"></div>
-
-      <section id="territoryLairStatus" class="season-deadline-card" data-state="neutral" aria-live="polite">
-        <h4 id="territoryLairStatusTitle">Введите текущие очки</h4>
-        <p id="territoryLairStatusMessage">Калькулятор покажет минимальное количество ударов, после которого ваш счёт станет выше счёта всех соперников.</p>
-      </section>
-
-      <div class="season-panel">
-        <h4>Результат</h4>
-        <div class="season-results season-results-compact">
-          <div><span>Главный соперник</span><strong id="territoryLairMainThreat">—</strong></div>
-          <div><span>Очков за один удар</span><strong id="territoryLairPointsPerHit">—</strong></div>
-          <div><span>Нужно ударов / якорей</span><strong id="territoryLairHitsNeeded">—</strong></div>
-          <div><span>Нужно набрать очков</span><strong id="territoryLairPointsNeeded">—</strong></div>
-          <div><span>Наш счёт после ударов</span><strong id="territoryLairTargetScore">—</strong></div>
-          <div><span>Преимущество</span><strong id="territoryLairLead">—</strong></div>
-        </div>
-        <p>Расчёт выполнен при условии, что соперники больше не атакуют логово.</p>
+      <div class="season-panel-title"><h4>Результат</h4></div>
+      <div class="season-results season-results-compact">
+        <div><span>Главный соперник</span><strong id="territoryLairMainThreat">—</strong></div>
+        <div><span>Очков за один удар</span><strong id="territoryLairPointsPerHit">—</strong></div>
+        <div><span>Нужно ударов / якорей</span><strong id="territoryLairHitsNeeded">—</strong></div>
+        <div><span>Нужно набрать очков</span><strong id="territoryLairPointsNeeded">—</strong></div>
+        <div><span>Наш счёт после ударов</span><strong id="territoryLairTargetScore">—</strong></div>
+        <div><span>Преимущество</span><strong id="territoryLairLead">—</strong></div>
       </div>
+      <p id="territoryLairResultNote" aria-live="polite">Расчёт выполнен при условии, что соперники больше не атакуют логово.</p>
     </section>
   </div>
 
