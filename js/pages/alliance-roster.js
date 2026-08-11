@@ -102,14 +102,11 @@ function rankWeight(rank) {
 }
 
 function filteredParticipants() {
-  const search = byId("participantSearch").value.trim().toLowerCase();
-  const rank = byId("participantRankFilter").value;
-  const sort = byId("participantSort").value;
+  const rank = byId("participantRankFilter")?.value || "";
   return [...state.context.participants]
     .filter(item => item.member_status !== "left")
-    .filter(item => !search || item.nickname.toLowerCase().includes(search))
     .filter(item => !rank || item.rank_name === rank)
-    .sort((a, b) => sort === "nickname" ? a.nickname.localeCompare(b.nickname, "ru") : rankWeight(b.rank_name) - rankWeight(a.rank_name) || a.nickname.localeCompare(b.nickname, "ru"));
+    .sort((a, b) => rankWeight(b.rank_name) - rankWeight(a.rank_name) || a.nickname.localeCompare(b.nickname, "ru"));
 }
 
 function render() {
@@ -121,6 +118,9 @@ function render() {
   byId("participantTableBody").innerHTML = renderParticipantRows(participants, canEdit, canEdit);
   byId("participantCount").textContent = `${participants.length} участников`;
   byId("participantEmptyState").hidden = participants.length > 0;
+  const table = byId("participantTableBody")?.closest("table");
+  window.harvestHubTableSorting?.refresh(table);
+  window.harvestHubTableScrollbars?.refresh();
 }
 
 function fillPrimaryAccountOptions(selectedId = "") {
@@ -305,7 +305,7 @@ export async function init() {
   byId("participantIsTwin")?.addEventListener("change", syncTwinFields);
   byId("participantPrimaryAccount")?.addEventListener("change", syncTwinFields);
   byId("participantTableBody")?.addEventListener("click", tableClick);
-  ["participantSearch", "participantRankFilter", "participantSort"].forEach(id => byId(id)?.addEventListener(id === "participantSearch" ? "input" : "change", render));
+  byId("participantRankFilter")?.addEventListener("change", render);
   byId("rosterExpandTable")?.addEventListener("click", () => toggleFullscreen(true));
   byId("rosterCloseTable")?.addEventListener("click", () => toggleFullscreen(false));
 
