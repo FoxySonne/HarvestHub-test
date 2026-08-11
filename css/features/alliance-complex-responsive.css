@@ -150,12 +150,6 @@
   overflow-wrap: anywhere;
 }
 
-.vs-table-controls .vs-search-open {
-  width: 44px;
-  min-width: 44px;
-  justify-self: start;
-}
-
 /* Сводные карточки не получают слишком много пустого места на больших экранах. */
 .power-summary,
 .vs-summary,
@@ -306,10 +300,6 @@
   .vs-table-controls button {
     width: 100%;
     margin-left: 0;
-  }
-
-  .vs-table-controls .vs-search-open {
-    width: 44px;
   }
 
   .alliance-invite-box {

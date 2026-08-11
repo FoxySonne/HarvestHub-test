@@ -1,14 +1,9 @@
 (() => {
   function showMessage(message, type = "") {
     const element = document.getElementById("accountMessage");
-    if (!element) return;
-    if (type === "error" && message) {
-      element.textContent = "";
-      window.harvestHubNotifications?.error(message, "Не удалось выполнить действие с профилем.");
-      return;
-    }
-    element.textContent = message || "";
-    element.dataset.type = type;
+    window.harvestHubNotifications?.renderMessage(element, message, type || "info", {
+      fallback: "Не удалось выполнить действие с профилем."
+    });
   }
 
   function setTab(tab) {

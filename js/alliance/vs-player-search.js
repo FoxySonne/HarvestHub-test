@@ -1,6 +1,7 @@
 (() => {
   const HIGHLIGHT_CLASS = "alliance-table-search-match";
-  const TABLE_SELECTOR = "#page-content .alliance-table";
+  const TABLE_SELECTOR = "#page-content .data-table";
+  const SEARCHABLE_TABLE_SELECTOR = "#page-content .alliance-subpage .data-table";
   const RANK_WEIGHT = { "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 };
   const sortState = new Map();
   let highlightTimer = null;
@@ -16,15 +17,12 @@
   }
 
   function stableTableKey(table) {
-    if (table.dataset.allianceStableTableKey) return table.dataset.allianceStableTableKey;
     const tables = [...document.querySelectorAll(TABLE_SELECTOR)];
     const index = Math.max(0, tables.indexOf(table));
     const headers = [...table.querySelectorAll("thead th")]
       .map(header => normalize(header.childNodes[0]?.textContent || header.textContent))
       .join("|");
-    const key = `${currentPageName()}::${table.id || index}::${headers}`;
-    table.dataset.allianceStableTableKey = key;
-    return key;
+    return `${currentPageName()}::${table.id || index}::${headers}`;
   }
 
   function tableId(table) {
@@ -35,18 +33,19 @@
   }
 
   function tableBySearchId(id) {
-    return [...document.querySelectorAll(TABLE_SELECTOR)].find(table => table.dataset.allianceTableId === id) || null;
+    return [...document.querySelectorAll(SEARCHABLE_TABLE_SELECTOR)]
+      .find(table => table.dataset.allianceTableId === id) || null;
   }
 
   function tableWrapper(table) {
-    return table.closest(".alliance-table-wrap") || table.parentElement;
+    return table.closest(".data-table-wrap") || table.parentElement;
   }
 
   function nicknameColumn(table) {
     const headers = [...table.querySelectorAll("thead th")];
     let index = headers.findIndex(th => /^(участник|никнейм|игрок)$/i.test(th.childNodes[0]?.textContent?.trim() || th.textContent.trim()));
     if (index < 0) index = headers.findIndex(th => /(участник|никнейм|игрок)/i.test(th.textContent));
-    return index >= 0 ? index : Math.min(1, headers.length - 1);
+    return index;
   }
 
   function rowNickname(row, table) {
@@ -55,9 +54,10 @@
   }
 
   function rows(table) {
-    return [...table.tBodies]
-      .flatMap(body => [...body.rows])
-      .filter(row => row.cells.length > 1 && !row.classList.contains("power-inline-editor-row"));
+    return [...table.querySelectorAll("tbody > tr")]
+      .filter(row => row.cells.length > 1
+        && !row.classList.contains("power-inline-editor-row")
+        && !row.classList.contains("vs-inline-editor-row"));
   }
 
   function rowSearchId(row) {
@@ -88,38 +88,88 @@
   function columnType(headerText) {
     const text = normalize(headerText);
     if (text.includes("ранг")) return "rank";
-    if (/(место|сила|очки|сумма|прирост|выполнено|пн|вт|ср|чт|пт|сб|дни|недел|месяц|сезон|%)/i.test(text)) return "number";
-    if (text.includes("дата") || text.includes("день рождения")) return "date";
+    if (/(дата|неделя|день рождения|регистрация|окончание|время)/i.test(text)) return "date";
+    if (/(место|сила|очки|сумма|прирост|выполнено|сч[её]т|количество|всего|процент|%|пн|вт|ср|чт|пт|сб|дни|месяц|сезон)/i.test(text)) return "number";
     return "text";
   }
 
+  function cellText(cell) {
+    if (!cell) return "";
+    if (cell.dataset.sortValue !== undefined) return cell.dataset.sortValue;
+    const select = cell.querySelector("select");
+    if (select) return select.selectedOptions[0]?.textContent || select.value;
+    const input = cell.querySelector('input:not([type="checkbox"]), textarea');
+    if (input) return input.value;
+    return cell.querySelector("strong")?.textContent || cell.textContent || "";
+  }
+
+  function parseDateValue(value) {
+    const text = String(value || "").trim();
+    const iso = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (iso) return Number(`${iso[1]}${String(iso[2]).padStart(2, "0")}${String(iso[3]).padStart(2, "0")}`);
+    const date = text.match(/(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?/);
+    if (date) return Number(`${date[3] || 2000}${String(date[2]).padStart(2, "0")}${String(date[1]).padStart(2, "0")}`);
+    const time = text.match(/(\d{1,2})(?::(\d{2}))?/);
+    return time ? Number(time[1]) * 60 + Number(time[2] || 0) : 0;
+  }
+
   function cellSortValue(row, index, type) {
-    const text = row.cells[index]?.textContent?.trim() || "";
+    const text = cellText(row.cells[index]).trim();
     if (type === "rank") return RANK_WEIGHT[text.split(/\s+/)[0]] || 0;
     if (type === "number") return parseCompactNumber(text);
-    if (type === "date") {
-      const parts = text.match(/(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?/);
-      return parts ? Number(`${parts[3] || 2000}${String(parts[2]).padStart(2, "0")}${String(parts[1]).padStart(2, "0")}`) : 0;
-    }
+    if (type === "date") return parseDateValue(text);
     return normalize(text);
   }
 
-  function updateSortButtons(table, index, direction) {
-    table.querySelectorAll(".alliance-column-sort").forEach(button => {
-      button.dataset.direction = "";
-      button.setAttribute("aria-pressed", "false");
-    });
-    const button = table.querySelectorAll("thead th")[index]?.querySelector(".alliance-column-sort");
-    if (button) {
-      button.dataset.direction = direction;
-      button.setAttribute("aria-pressed", "true");
-    }
+  function sortingBlocked(table) {
+    return table?.dataset.powerRowEditing === "true"
+      || table?.dataset.powerBulkMode === "true"
+      || table?.dataset.vsBulkMode === "true";
   }
 
-  function sortTable(table, index, direction, updateButton = true) {
-    if (!table || table.dataset.powerRowEditing === "true" || table.dataset.powerBulkMode === "true") return;
+  function columnHasSortableValues(table, index) {
+    const currentRows = rows(table);
+    if (!currentRows.length) return true;
+    return currentRows.some(row => {
+      const cell = row.cells[index];
+      if (!cell) return false;
+      if (cell.dataset.sortValue !== undefined) return true;
+      if (cell.querySelector('select, input:not([type="checkbox"]), textarea')) return true;
+      return Boolean(cell.textContent.trim());
+    });
+  }
+
+  function sortableHeader(table, header, index) {
+    const label = (header.childNodes[0]?.textContent || header.textContent).trim();
+    return label && !/^(действие|действия)$/i.test(label) && columnHasSortableValues(table, index);
+  }
+
+  function updateSortHeaders(table, index, direction) {
+    table.querySelectorAll("thead th").forEach((header, headerIndex) => {
+      const active = headerIndex === index && header.classList.contains("data-table-sortable");
+      header.classList.toggle("data-table-sort-active", active);
+      header.dataset.tableSortDirection = active ? direction : "";
+      if (header.classList.contains("data-table-sortable")) {
+        header.setAttribute("aria-sort", active ? (direction === "asc" ? "ascending" : "descending") : "none");
+      } else {
+        header.removeAttribute("aria-sort");
+      }
+    });
+  }
+
+  function updatePlaces(table) {
+    const headers = [...table.querySelectorAll("thead th")];
+    const placeIndex = headers.findIndex(header => /^место$/i.test((header.childNodes[0]?.textContent || header.textContent).trim()));
+    if (placeIndex < 0) return;
+    rows(table).forEach((row, index) => {
+      if (row.cells[placeIndex]) row.cells[placeIndex].textContent = String(index + 1);
+    });
+  }
+
+  function sortTable(table, index, direction, remember = true) {
+    if (!table || sortingBlocked(table)) return;
     const header = table.querySelectorAll("thead th")[index];
-    if (!header) return;
+    if (!header || !header.classList.contains("data-table-sortable")) return;
     const type = columnType(header.childNodes[0]?.textContent || header.textContent);
     const currentRows = rows(table);
     const sortedRows = [...currentRows].sort((a, b) => {
@@ -130,48 +180,69 @@
     });
     const body = table.tBodies[0];
     if (!body) return;
-    sortedRows.forEach(row => body.append(row));
+    sortedRows.forEach((row, rowIndex) => {
+      if (body.children[rowIndex] !== row) body.append(row);
+    });
     table.dataset.sortColumn = String(index);
     table.dataset.sortDirection = direction;
-    sortState.set(stableTableKey(table), { index, direction });
-    if (updateButton) updateSortButtons(table, index, direction);
+    if (remember) sortState.set(stableTableKey(table), { index, direction });
+    updatePlaces(table);
+    updateSortHeaders(table, index, direction);
+  }
+
+  function clearSortingHeaders(table) {
+    table.querySelectorAll("thead th").forEach(header => {
+      header.classList.remove("data-table-sortable", "data-table-sort-active");
+      header.removeAttribute("tabindex");
+      header.removeAttribute("role");
+      header.removeAttribute("aria-label");
+      header.removeAttribute("aria-sort");
+      delete header.dataset.tableSortColumn;
+      delete header.dataset.tableSortDirection;
+    });
   }
 
   function setupSorting(table) {
     const headers = [...table.querySelectorAll("thead th")];
     if (!headers.length) return;
+    if (sortingBlocked(table)) {
+      clearSortingHeaders(table);
+      return;
+    }
     headers.forEach((header, index) => {
       const label = (header.childNodes[0]?.textContent || header.textContent).trim();
-      if (!label || header.querySelector(".alliance-column-sort") || /^(действия)?$/i.test(label)) return;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "alliance-column-sort";
-      button.dataset.column = String(index);
-      button.setAttribute("aria-label", `Сортировать по столбцу ${label}`);
-      button.setAttribute("aria-pressed", "false");
-      header.append(button);
+      if (!sortableHeader(table, header, index)) {
+        header.classList.remove("data-table-sortable", "data-table-sort-active");
+        header.removeAttribute("tabindex");
+        header.removeAttribute("role");
+        header.removeAttribute("aria-label");
+        header.removeAttribute("aria-sort");
+        delete header.dataset.tableSortColumn;
+        delete header.dataset.tableSortDirection;
+        return;
+      }
+      header.classList.add("data-table-sortable");
+      header.dataset.tableSortColumn = String(index);
+      header.tabIndex = 0;
+      header.setAttribute("role", "button");
+      header.setAttribute("aria-label", `Сортировать по столбцу ${label}`);
     });
 
     const saved = sortState.get(stableTableKey(table));
-    if (saved) {
-      window.setTimeout(() => {
-        sortTable(table, saved.index, saved.direction, false);
-        updateSortButtons(table, saved.index, saved.direction);
-      }, 0);
-      return;
-    }
-
-    if (!table.dataset.sortInitialized) {
-      table.dataset.sortInitialized = "true";
-      const nicknameIndex = nicknameColumn(table);
-      window.setTimeout(() => {
-        sortTable(table, nicknameIndex, "asc", false);
-        updateSortButtons(table, nicknameIndex, "asc");
-      }, 0);
+    const initialIndex = Number(table.dataset.sortInitialColumn);
+    const state = saved || (Number.isInteger(initialIndex) && initialIndex >= 0
+      ? { index: initialIndex, direction: table.dataset.sortInitialDirection === "asc" ? "asc" : "desc" }
+      : null);
+    if (state) window.setTimeout(() => sortTable(table, state.index, state.direction, Boolean(saved)), 0);
+    else {
+      delete table.dataset.sortColumn;
+      delete table.dataset.sortDirection;
+      updateSortHeaders(table, -1, "");
     }
   }
 
   function createSearchForm(table) {
+    if (nicknameColumn(table) < 0) return;
     const wrapper = tableWrapper(table);
     if (!wrapper || document.querySelector(`[data-alliance-table-search-for="${CSS.escape(tableId(table))}"]`)) return;
 
@@ -185,7 +256,7 @@
       <input type="search" placeholder="Найти игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока" aria-autocomplete="list">
       <small data-alliance-search-status aria-live="polite">0/0</small>
       <button type="button" class="secondary-button alliance-table-search-nav" data-alliance-search-prev aria-label="Предыдущее совпадение">↑</button>
-      <button type="submit" class="secondary-button alliance-table-search-nav" aria-label="Следующее совпадение">↓</button>
+      <button type="button" class="secondary-button alliance-table-search-nav" data-alliance-search-next aria-label="Следующее совпадение">↓</button>
       <button type="button" class="secondary-button alliance-table-search-close" data-alliance-search-close aria-label="Закрыть поиск">×</button>
       <div class="alliance-table-search-results" data-alliance-search-results hidden></div>`;
     wrapper.before(form);
@@ -208,7 +279,16 @@
   }
 
   function hideOldControls() {
-    ["participantSearch", "participantSort", "vsSort"].forEach(id => {
+    [
+      "participantSearch",
+      "participantSort",
+      "powerSearch",
+      "powerSort",
+      "reservoirSearch",
+      "vsSort",
+      "vsStatsSearch",
+      "vsStatsSort"
+    ].forEach(id => {
       const element = document.getElementById(id);
       if (!element) return;
       const label = element.closest("label");
@@ -220,8 +300,8 @@
     hideOldControls();
     document.querySelectorAll(TABLE_SELECTOR).forEach(table => {
       setupSorting(table);
-      createSearchForm(table);
     });
+    document.querySelectorAll(SEARCHABLE_TABLE_SELECTOR).forEach(createSearchForm);
     ensureFloatingButton();
   }
 
@@ -287,6 +367,19 @@
     if (!results) return;
     results.hidden = true;
     results.innerHTML = "";
+  }
+
+  function suggestionButtons(form) {
+    return [...form.querySelectorAll("[data-alliance-search-result]")];
+  }
+
+  function focusSuggestion(form, index) {
+    const buttons = suggestionButtons(form);
+    const button = buttons[index];
+    if (!button) return false;
+    button.focus();
+    button.scrollIntoView({ block: "nearest" });
+    return true;
   }
 
   function renderSuggestions(form) {
@@ -375,14 +468,16 @@
   }
 
   function nearestVisibleTable() {
-    const visible = [...document.querySelectorAll(TABLE_SELECTOR)].filter(table => table.offsetParent !== null);
+    const visible = [...document.querySelectorAll(SEARCHABLE_TABLE_SELECTOR)]
+      .filter(table => nicknameColumn(table) >= 0 && table.offsetParent !== null);
     if (!visible.length) return null;
     const center = window.innerHeight / 2;
     return visible.sort((a, b) => Math.abs(a.getBoundingClientRect().top - center) - Math.abs(b.getBoundingClientRect().top - center))[0];
   }
 
   function ensureFloatingButton() {
-    const hasTables = Boolean(document.querySelector(TABLE_SELECTOR));
+    const hasTables = [...document.querySelectorAll(SEARCHABLE_TABLE_SELECTOR)]
+      .some(table => nicknameColumn(table) >= 0);
     let button = document.getElementById("allianceFloatingSearch");
     if (!button && hasTables) {
       button = document.createElement("button");
@@ -396,12 +491,13 @@
   }
 
   document.addEventListener("click", event => {
-    const sortButton = event.target.closest(".alliance-column-sort");
-    if (sortButton) {
+    const sortHeader = event.target.closest("th.data-table-sortable");
+    const otherInteractiveTarget = event.target.closest("button, a, input, select, textarea");
+    if (sortHeader && !otherInteractiveTarget) {
       event.preventDefault();
-      const table = sortButton.closest("table");
-      const index = Number(sortButton.dataset.column);
-      const next = sortButton.dataset.direction === "asc" ? "desc" : "asc";
+      const table = sortHeader.closest("table");
+      const index = Number(sortHeader.dataset.tableSortColumn);
+      const next = table.dataset.sortColumn === String(index) && table.dataset.sortDirection === "desc" ? "asc" : "desc";
       sortTable(table, index, next);
       return;
     }
@@ -435,6 +531,12 @@
       return;
     }
 
+    const next = event.target.closest("[data-alliance-search-next]");
+    if (next) {
+      runSearch(next.closest(".alliance-table-search"), 1);
+      return;
+    }
+
     const close = event.target.closest("[data-alliance-search-close]");
     if (close) {
       const form = close.closest(".alliance-table-search");
@@ -451,24 +553,47 @@
   });
 
   document.addEventListener("keydown", event => {
+    const sortHeader = event.target.closest?.("th.data-table-sortable");
+    if (sortHeader && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      const table = sortHeader.closest("table");
+      const index = Number(sortHeader.dataset.tableSortColumn);
+      const next = table.dataset.sortColumn === String(index) && table.dataset.sortDirection === "desc" ? "asc" : "desc";
+      sortTable(table, index, next);
+      return;
+    }
+
     const input = event.target.closest?.('.alliance-table-search input[type="search"]');
-    if (input && event.key === "ArrowDown") {
-      const first = input.closest(".alliance-table-search")?.querySelector("[data-alliance-search-result]");
-      if (first) {
+    if (input && (event.key === "ArrowDown" || event.key === "ArrowUp" || (event.key === "Tab" && !event.shiftKey))) {
+      const form = input.closest(".alliance-table-search");
+      const buttons = suggestionButtons(form);
+      const index = event.key === "ArrowUp" ? buttons.length - 1 : 0;
+      if (focusSuggestion(form, index)) {
         event.preventDefault();
-        first.focus();
       }
       return;
     }
 
     const result = event.target.closest?.("[data-alliance-search-result]");
-    if (result && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
-      const buttons = [...result.parentElement.querySelectorAll("[data-alliance-search-result]")];
+    if (result && event.key === "Enter") {
+      event.preventDefault();
+      result.click();
+      return;
+    }
+
+    if (result && (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Tab")) {
+      const form = result.closest(".alliance-table-search");
+      const buttons = suggestionButtons(form);
       const index = buttons.indexOf(result);
-      const next = event.key === "ArrowDown" ? buttons[index + 1] : buttons[index - 1];
-      if (next) {
+      const step = event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey) ? -1 : 1;
+      const nextIndex = index + step;
+      if (focusSuggestion(form, nextIndex)) {
         event.preventDefault();
-        next.focus();
+      } else if (nextIndex < 0) {
+        event.preventDefault();
+        form.querySelector('input[type="search"]')?.focus();
+      } else if (event.key !== "Tab") {
+        event.preventDefault();
       }
     }
   });
@@ -477,12 +602,12 @@
     const form = event.target.closest(".alliance-table-search");
     if (!form) return;
     event.preventDefault();
-    runSearch(form, 1);
   });
 
   window.addEventListener("keydown", event => {
-    if (!document.querySelector(TABLE_SELECTOR)) return;
-    const isFindShortcut = (event.ctrlKey || event.metaKey) && (event.code === "KeyF" || String(event.key || "").toLocaleLowerCase("ru-RU") === "f");
+    if (!document.querySelector(SEARCHABLE_TABLE_SELECTOR)) return;
+    const isFindShortcut = (event.ctrlKey || event.metaKey)
+      && (event.code === "KeyF" || String(event.key || "").toLocaleLowerCase("ru-RU") === "f");
     if (isFindShortcut) {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -504,5 +629,11 @@
     observerTimer = window.setTimeout(setupTables, 80);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
+  window.harvestHubTableSorting = {
+    refresh(table) {
+      if (table) setupSorting(table);
+      else document.querySelectorAll(TABLE_SELECTOR).forEach(setupSorting);
+    }
+  };
   setupTables();
 })();

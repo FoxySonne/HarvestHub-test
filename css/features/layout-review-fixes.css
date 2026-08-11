@@ -176,8 +176,8 @@ td,
 }
 
 .vs-table-controls {
-  grid-template-columns: minmax(180px, 240px) max-content minmax(160px, 1fr) minmax(190px, 1.15fr) 44px !important;
-  grid-template-areas: "sort saturday edit expand search";
+  grid-template-columns: minmax(180px, 240px) max-content minmax(160px, 1fr) minmax(190px, 1.15fr) !important;
+  grid-template-areas: "sort saturday edit expand";
   align-items: end;
 }
 
@@ -185,7 +185,6 @@ td,
 .vs-table-controls .vs-saturday-total-toggle { grid-area: saturday; }
 #vsBulkOpen { grid-area: edit; }
 #vsExpandTable { grid-area: expand; }
-.vs-table-controls .vs-search-open { grid-area: search; }
 
 .vs-table-controls .vs-saturday-total-toggle {
   display: flex !important;
@@ -200,12 +199,6 @@ td,
 
 .vs-table-controls .vs-saturday-total-toggle span {
   white-space: nowrap !important;
-}
-
-.vs-table-controls .vs-search-open {
-  width: 44px !important;
-  min-width: 44px;
-  justify-self: start;
 }
 
 .vs-table {
@@ -354,8 +347,7 @@ td,
     grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) !important;
     grid-template-areas:
       "sort saturday"
-      "edit expand"
-      "search search";
+      "edit expand";
   }
 
   .reservoir-filters {
@@ -405,8 +397,7 @@ td,
       "sort"
       "saturday"
       "edit"
-      "expand"
-      "search";
+      "expand";
   }
 
   .vs-current-form .alliance-actions {

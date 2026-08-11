@@ -9,7 +9,6 @@ const PAGE_PATH = "alliance/vs.html";
 const WEEK_MEMORY_KEY = "harvestHubVsSelectedWeekStart";
 const DATE_MEMORY_KEY = "harvestHubVsInlineDate";
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
-const SORTABLE_COLUMNS = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 const pad = value => String(value).padStart(2, "0");
 
 function dateValue(date) {
@@ -93,15 +92,9 @@ function isMemberOn(participant, date) {
 
 function showMessage(text, type = "info") {
   const box = document.getElementById("allianceMessage");
-  if (!box) return;
-  if (type === "error" && text) {
-    box.hidden = true;
-    window.harvestHubNotifications?.error(text, "Не удалось изменить данные VS.");
-    return;
-  }
-  box.hidden = !text;
-  box.textContent = text;
-  box.dataset.type = type;
+  window.harvestHubNotifications?.renderMessage(box, text, type, {
+    fallback: "Не удалось изменить данные VS."
+  });
 }
 
 function initEditor() {
@@ -120,8 +113,6 @@ function initEditor() {
     hasEntry: false,
     dirty: false,
     saving: false,
-    sortColumn: 8,
-    sortDirection: "desc",
     bulkMode: false,
     bulkSaving: false,
     normalHead: "",
@@ -206,62 +197,6 @@ function initEditor() {
       </form>`;
   }
 
-  function dataRows() {
-    const body = document.getElementById("vsTableBody");
-    return [...body?.rows || []].filter(row => !row.classList.contains("vs-inline-editor-row"));
-  }
-
-  function scoreFromText(value) {
-    const text = String(value || "").trim();
-    if (!text || text === "—" || text === "О") return 0;
-    const normalized = text.replace(/\s/g, "").replace(",", ".").toUpperCase();
-    const match = normalized.match(/(-?\d+(?:\.\d+)?)([KМMBВTТ]?)/);
-    if (!match) return 0;
-    const multiplier = { "": 1, K: 1e3, М: 1e6, M: 1e6, В: 1e9, B: 1e9, Т: 1e12, T: 1e12 }[match[2]] || 1;
-    return Number(match[1]) * multiplier;
-  }
-
-  function sortValue(row, index) {
-    const cell = row.cells[index];
-    if (!cell) return 0;
-    if (index === 1) return String(cell.querySelector("strong")?.textContent || cell.textContent || "").trim().toLocaleLowerCase("ru-RU");
-    if (index === 9) return Number(String(cell.textContent || "").match(/\d+/)?.[0] || 0);
-    return scoreFromText(cell.textContent);
-  }
-
-  function applySort() {
-    const table = document.querySelector("#vsCurrentTableContainer .vs-table");
-    if (!table || state.bulkMode || state.editingId) return;
-    const body = document.getElementById("vsTableBody");
-    const rows = dataRows();
-    rows.sort((a, b) => {
-      const left = sortValue(a, state.sortColumn);
-      const right = sortValue(b, state.sortColumn);
-      const result = typeof left === "string" ? left.localeCompare(right, "ru", { numeric: true }) : left - right;
-      return state.sortDirection === "asc" ? result : -result;
-    });
-    rows.forEach((row, index) => {
-      body.append(row);
-      if (row.cells[0]) row.cells[0].textContent = String(index + 1);
-    });
-  }
-
-  function decorateHeaders() {
-    document.querySelectorAll("#vsTableHead th").forEach((header, index) => {
-      const sortable = SORTABLE_COLUMNS.has(index) && !state.bulkMode;
-      header.classList.toggle("is-vs-sortable", sortable);
-      header.classList.toggle("is-vs-sort-active", sortable && index === state.sortColumn);
-      header.dataset.vsSortDirection = sortable && index === state.sortColumn ? state.sortDirection : "";
-      if (sortable) {
-        header.tabIndex = 0;
-        header.setAttribute("role", "button");
-      } else {
-        header.removeAttribute("tabindex");
-        header.removeAttribute("role");
-      }
-    });
-  }
-
   function decorateButtons() {
     if (state.bulkMode) return;
     document.querySelectorAll("#vsTableBody [data-vs-edit]").forEach(button => {
@@ -300,7 +235,6 @@ function initEditor() {
       table.dataset.vsBulkMode = String(state.bulkMode);
       table.dataset.powerBulkMode = String(state.bulkMode);
       table.dataset.powerRowEditing = String(Boolean(state.editingId));
-      table.dataset.sortInitialized = "true";
     }
     const open = document.getElementById("vsBulkOpen");
     const controls = document.getElementById("vsBulkControls");
@@ -315,14 +249,14 @@ function initEditor() {
     state.syncTimer = window.setTimeout(() => {
       if (!mounted()) return;
       state.tableObserver?.disconnect();
+      updateBulkControls();
+      const table = document.querySelector("#vsCurrentTableContainer .vs-table");
+      window.harvestHubTableSorting?.refresh?.(table);
       if (!state.bulkMode) {
-        applySort();
-        decorateHeaders();
         decorateButtons();
         injectEditor();
       }
       syncWeekControl();
-      updateBulkControls();
       const body = document.getElementById("vsTableBody");
       if (body && state.tableObserver) state.tableObserver.observe(body, { childList: true });
       window.harvestHubTableScrollbars?.refresh?.();
@@ -539,15 +473,6 @@ function initEditor() {
     await refreshData();
   }
 
-  function runHeaderSort(header) {
-    const index = [...header.parentElement.children].indexOf(header);
-    if (!SORTABLE_COLUMNS.has(index) || state.bulkMode || state.editingId) return;
-    state.sortDirection = state.sortColumn === index && state.sortDirection === "desc" ? "asc" : "desc";
-    state.sortColumn = index;
-    applySort();
-    decorateHeaders();
-  }
-
   function handleClick(event) {
     if (!mounted()) return;
     const bulkOpen = event.target.closest("#vsBulkOpen");
@@ -566,12 +491,6 @@ function initEditor() {
     }
     if (event.target.closest("#vsBulkSave")) {
       state.bulkSaving = true;
-      return;
-    }
-    const header = event.target.closest("#vsTableHead th.is-vs-sortable");
-    if (header) {
-      event.preventDefault();
-      runHeaderSort(header);
       return;
     }
     const editButton = event.target.closest("[data-vs-edit]");
@@ -593,12 +512,6 @@ function initEditor() {
   }
 
   function handleKeydown(event) {
-    const header = event.target.closest?.("#vsTableHead th.is-vs-sortable");
-    if (header && (event.key === "Enter" || event.key === " ")) {
-      event.preventDefault();
-      runHeaderSort(header);
-      return;
-    }
     const form = event.target.closest?.("[data-vs-inline-form]");
     const saveByEnter = event.target.matches?.("[data-vs-inline-points], [data-vs-inline-vacation]");
     if (form && saveByEnter && event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {

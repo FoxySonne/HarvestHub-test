@@ -1,4 +1,5 @@
 (() => {
+  const COLLAPSED_SHELL_QUERY = "(max-width: 1099px)";
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
   const openButton = document.getElementById("openMenu");
@@ -18,7 +19,7 @@
   }
 
   function openMenu() {
-    if (!sidebar || window.matchMedia("(min-width: 900px)").matches) return;
+    if (!sidebar || !window.matchMedia(COLLAPSED_SHELL_QUERY).matches) return;
     window.dispatchEvent(new CustomEvent("harvesthub:left-menu-open"));
     sidebar.classList.add("active");
     sidebar.setAttribute("aria-hidden", "false");
@@ -43,7 +44,7 @@
   });
 
   window.addEventListener("resize", () => {
-    if (window.matchMedia("(min-width: 900px)").matches) closeMenu();
+    if (!window.matchMedia(COLLAPSED_SHELL_QUERY).matches) closeMenu();
   });
 
   window.harvestHubMenu = {

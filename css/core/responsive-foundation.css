@@ -107,6 +107,7 @@ button[data-full-width="true"] {
 }
 
 .table-wrap,
+.data-table-wrap,
 .alliance-table-wrap,
 .power-table-wrap,
 .vs-table-wrap,
@@ -115,6 +116,22 @@ button[data-full-width="true"] {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 899px) {
+  button,
+  .button,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px !important;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea {
+    min-height: 44px !important;
+  }
+
 }
 
 @media (max-width: 479px) {

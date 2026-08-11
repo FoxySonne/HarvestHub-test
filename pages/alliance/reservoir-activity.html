@@ -29,14 +29,14 @@
       <select id="reservoirAttendanceFilter" data-no-persist="true"><option value="">Все посещения</option><option value="present">Был</option><option value="ready">Был готов зайти</option><option value="absent_excused">Уважительная причина</option><option value="absent">Не был</option><option value="empty">Не указано</option></select>
     </div>
     <button id="reservoirExpandTable" type="button" class="secondary-button alliance-table-open-button">Открыть таблицу целиком</button>
-    <div id="reservoirTableContainer" class="alliance-table-wrap reservoir-table-wrap" data-horizontal-scroll>
+    <div id="reservoirTableContainer" class="data-table-wrap alliance-table-wrap reservoir-table-wrap" data-horizontal-scroll>
       <button id="reservoirCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button>
-      <table class="alliance-table reservoir-table">
+      <table class="data-table alliance-table reservoir-table">
         <thead><tr><th>Участник</th><th>Ранг</th><th>Локальное время</th><th>Время</th><th>Статус</th><th>Состав</th><th>Посещение</th><th>Комментарий</th></tr></thead>
         <tbody id="reservoirTableBody"></tbody>
       </table>
     </div>
-    <div id="reservoirEmptyState" class="alliance-empty-state" hidden>Участники не найдены.</div>
+    <div id="reservoirEmptyState" class="empty-state alliance-empty-state" hidden>Участники не найдены.</div>
   </section>
 
   <section class="card reservoir-history-card">
@@ -47,9 +47,9 @@
       <label><span>По</span><input id="reservoirHistoryTo" type="date" data-no-persist="true"></label>
       <button id="reservoirApplyHistory" type="button" class="secondary-button">Показать период</button>
     </div>
-    <div class="alliance-table-wrap" data-horizontal-scroll>
-      <table class="alliance-table reservoir-history-table"><thead><tr><th>Неделя</th><th>Время</th><th>Основа</th><th>Резерв</th><th>Сумма баллов</th><th></th></tr></thead><tbody id="reservoirHistoryBody"></tbody></table>
+    <div class="data-table-wrap alliance-table-wrap" data-horizontal-scroll>
+      <table class="data-table alliance-table reservoir-history-table"><thead><tr><th>Неделя</th><th>Время</th><th>Основа</th><th>Резерв</th><th>Сумма баллов</th><th></th></tr></thead><tbody id="reservoirHistoryBody"></tbody></table>
     </div>
-    <div id="reservoirHistoryEmpty" class="alliance-empty-state" hidden>Прошлых недель пока нет.</div>
+    <div id="reservoirHistoryEmpty" class="empty-state alliance-empty-state" hidden>Прошлых недель пока нет.</div>
   </section>
 </section>

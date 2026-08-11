@@ -1,15 +1,9 @@
 (() => {
   function setMessage(text, type = "info") {
     const box = document.getElementById("allianceMessage");
-    if (!box) return;
-    if (type === "error" && text) {
-      box.hidden = true;
-      window.harvestHubNotifications?.error(text, "Не удалось изменить пригласительный код.");
-      return;
-    }
-    box.hidden = !text;
-    box.textContent = text;
-    box.dataset.type = type;
+    window.harvestHubNotifications?.renderMessage(box, text, type, {
+      fallback: "Не удалось изменить пригласительный код."
+    });
   }
 
   async function rotateInviteCode(button) {

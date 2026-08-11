@@ -1,8 +1,6 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260731-roster-unsaved-1";
-  const DEFAULT_STYLESHEET = "css/style.css?v=20260809-wide-layout-1";
-  const VS_STYLESHEET = "css/style-vs-main.css?v=20260728-membership-periods-1";
-  const VS_PAGE = "alliance/vs.html";
+  const SITE_ASSET_VERSION = "20260811-interface-followup-1";
+  const DEFAULT_STYLESHEET = "css/style.css?v=20260811-interface-followup-1";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
@@ -52,10 +50,10 @@
 
   let currentLoadedPage = localStorage.getItem("currentPage") || "";
 
-  function setPageStylesheet(pageName) {
+  function setPageStylesheet() {
     const link = document.getElementById("siteStylesheet");
     if (!link) return Promise.resolve();
-    const target = pageName === VS_PAGE ? VS_STYLESHEET : DEFAULT_STYLESHEET;
+    const target = DEFAULT_STYLESHEET;
     if (link.dataset.stylesheetTarget === target) return Promise.resolve();
 
     return new Promise(resolve => {
@@ -206,7 +204,10 @@
       if (typeof window[globalInitName] === "function") await window[globalInitName]();
     }
 
-    if (containerId === "rightbar-container") renderQuickLinks();
+    if (containerId === "rightbar-container") {
+      renderQuickLinks();
+      window.renderHarvestHubClock?.();
+    }
     return true;
   }
 
@@ -221,6 +222,7 @@
       window.savePageFormState(currentLoadedPage);
     }
     const previousPage = currentLoadedPage;
+    window.harvestHubNotifications?.clearPage?.();
     localStorage.setItem("currentPage", pageName);
     await setPageStylesheet(pageName);
     const isLoaded = await loadBlock("page-content", `pages/${pageName}`);

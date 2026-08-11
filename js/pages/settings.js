@@ -41,14 +41,9 @@ async function clearSiteCache() {
 
 function setSettingsMessage(id, message, type = "") {
     const element = document.getElementById(id);
-    if (!element) return;
-    if (type === "error" && message) {
-        element.textContent = "";
-        window.harvestHubNotifications?.error(message, "Не удалось изменить настройки аккаунта.");
-        return;
-    }
-    element.textContent = message || "";
-    element.dataset.type = type;
+    window.harvestHubNotifications?.renderMessage(element, message, type || "info", {
+        fallback: "Не удалось изменить настройки аккаунта."
+    });
 }
 
 function getSettingsAuthError(error, fallback = "Не удалось выполнить действие.") {

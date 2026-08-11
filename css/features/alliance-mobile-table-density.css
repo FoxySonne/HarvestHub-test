@@ -3,6 +3,7 @@
 }
 
 @media (max-width: 899px) {
+  body:has(#page-content .alliance-hub-page) #right-sidebar,
   body:has(#page-content .alliance-subpage) #right-sidebar {
     display: none !important;
   }

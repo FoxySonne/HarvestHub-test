@@ -38,11 +38,8 @@
 .account-modal.is-recovery .account-standard-content{display:none}
 .account-modal.is-recovery .password-recovery-form{display:block}
 .account-warning{margin:2px 0 14px;padding:9px 11px;border-left:2px solid var(--accent);border-radius:8px;background:var(--accent-selection);font-size:12px;line-height:1.4;color:var(--text-soft);overflow-wrap:anywhere}
-.account-message{min-height:24px;margin:14px 0 0}
-.account-message[data-type="success"],.settings-form-message[data-type="success"]{color:var(--accent)}
 .account-security-card h4{margin:0 0 14px}
 .settings-account-form{max-width:560px}
-.settings-form-message{min-height:20px;margin:10px 0 0;font-size:13px}
 .settings-danger-zone{max-width:720px;margin-top:28px;padding-top:24px;border-top:1px solid var(--border)}
 .settings-danger-zone p{max-width:650px;color:var(--text-soft);line-height:1.5}
 .account-delete-modal[hidden]{display:none}
@@ -106,7 +103,6 @@
   .password-field button{right:5px;font-size:11px}
   .account-panel button[type="submit"],.password-recovery-form button[type="submit"]{min-height:38px;font-size:13px}
   .account-warning{margin:0 0 10px;padding:8px 9px;font-size:11px;line-height:1.3}
-  .account-message{min-height:18px;margin:8px 0 0;font-size:11px}
   .profile-title-row h1,.profile-hero>h1{font-size:34px}
   .profile-state{font-size:17px}
   .game-profiles-heading,.game-profile-card{align-items:stretch;flex-direction:column}

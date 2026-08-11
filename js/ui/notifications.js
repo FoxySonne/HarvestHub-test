@@ -2,6 +2,12 @@
   const CONTAINER_ID = "harvestHubNotifications";
   const OFFLINE_KEY = "network-offline";
   const visibleNotifications = new Map();
+  const TYPE_CONFIG = {
+    error: { title: "Ошибка", icon: "!", timeout: 0 },
+    success: { title: "Готово", icon: "✓", timeout: 5000 },
+    warning: { title: "Внимание", icon: "!", timeout: 8000 },
+    info: { title: "Информация", icon: "i", timeout: 6000 }
+  };
 
   const ERROR_PATTERNS = [
     {
@@ -112,41 +118,53 @@
     return container;
   }
 
-  function remove(key) {
-    const notification = visibleNotifications.get(key);
-    if (!notification) return;
-    notification.remove();
+  function remove(key, options = {}) {
+    const record = visibleNotifications.get(key);
+    if (!record) return;
+    window.clearTimeout(record.timer);
     visibleNotifications.delete(key);
+    if (options.immediate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      record.element.remove();
+      return;
+    }
+    record.element.classList.add("is-closing");
+    window.setTimeout(() => record.element.remove(), 180);
+  }
+
+  function scheduleRemoval(key, timeout) {
+    if (!timeout) return 0;
+    return window.setTimeout(() => remove(key), timeout);
   }
 
   function show(message, options = {}) {
     const text = String(message || "").trim();
     if (!text) return "";
 
-    const type = options.type || "error";
+    const type = TYPE_CONFIG[options.type] ? options.type : "info";
+    const config = TYPE_CONFIG[type];
     const key = options.key || `${type}:${text}`;
     const existing = visibleNotifications.get(key);
     if (existing) {
-      existing.focus({ preventScroll: true });
+      existing.element.focus({ preventScroll: true });
       return key;
     }
 
     const notification = document.createElement("section");
     notification.className = `site-notification site-notification--${type}`;
     notification.dataset.notificationKey = key;
-    notification.setAttribute("role", type === "error" ? "alert" : "status");
+    notification.setAttribute("role", type === "error" || type === "warning" ? "alert" : "status");
     notification.setAttribute("tabindex", "-1");
 
     const icon = document.createElement("span");
     icon.className = "site-notification__icon";
     icon.setAttribute("aria-hidden", "true");
-    icon.textContent = type === "error" ? "!" : "i";
+    icon.textContent = config.icon;
 
     const content = document.createElement("div");
     content.className = "site-notification__content";
 
     const title = document.createElement("strong");
-    title.textContent = options.title || (type === "error" ? "Ошибка" : "Уведомление");
+    title.textContent = options.title || config.title;
 
     const description = document.createElement("p");
     description.textContent = text;
@@ -161,7 +179,20 @@
 
     notification.append(icon, content, closeButton);
     ensureContainer().append(notification);
-    visibleNotifications.set(key, notification);
+    const timeout = Number.isFinite(options.timeout) ? Math.max(0, options.timeout) : config.timeout;
+    const record = { element: notification, timer: scheduleRemoval(key, timeout), timeout };
+    const pauseTimer = () => {
+      window.clearTimeout(record.timer);
+      record.timer = 0;
+    };
+    const resumeTimer = () => {
+      if (!record.timer && record.timeout) record.timer = scheduleRemoval(key, record.timeout);
+    };
+    notification.addEventListener("mouseenter", pauseTimer);
+    notification.addEventListener("mouseleave", resumeTimer);
+    notification.addEventListener("focusin", pauseTimer);
+    notification.addEventListener("focusout", resumeTimer);
+    visibleNotifications.set(key, record);
     return key;
   }
 
@@ -189,6 +220,26 @@
     remove(OFFLINE_KEY);
   }
 
+  function clearPage() {
+    [...visibleNotifications.keys()]
+      .filter(key => key !== OFFLINE_KEY)
+      .forEach(key => remove(key, { immediate: true }));
+  }
+
+  function renderMessage(element, message, type = "info", options = {}) {
+    const text = String(message || "").trim();
+    const normalizedType = TYPE_CONFIG[type] ? type : "info";
+    const useToast = normalizedType !== "info" && options.toast !== false;
+    if (element) {
+      element.hidden = !text || useToast;
+      element.textContent = useToast ? "" : text;
+      element.dataset.type = normalizedType;
+    }
+    if (!text || !useToast) return "";
+    if (normalizedType === "error") return showError(message, options.fallback, options);
+    return show(text, { ...options, type: normalizedType });
+  }
+
   window.addEventListener("offline", showOffline);
   window.addEventListener("online", handleOnline);
   window.addEventListener("error", event => {
@@ -206,6 +257,11 @@
   window.harvestHubNotifications = {
     show,
     error: showError,
+    success: (message, options) => show(message, { ...options, type: "success" }),
+    warning: (message, options) => show(message, { ...options, type: "warning" }),
+    info: (message, options) => show(message, { ...options, type: "info" }),
+    renderMessage,
+    clearPage,
     close: remove,
     translateError: toRussianError
   };

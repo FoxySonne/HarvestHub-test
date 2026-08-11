@@ -58,11 +58,11 @@ function notifyError(error, fallback) {
 }
 
 function renderEmpty(text) {
-  return `<div class="advanced-access-empty">${escapeAccessHtml(text)}</div>`;
+  return `<div class="empty-state advanced-access-empty">${escapeAccessHtml(text)}</div>`;
 }
 
 function renderLoadError() {
-  return `<div class="advanced-access-empty" role="alert">
+  return `<div class="empty-state advanced-access-empty" role="alert">
     <p>${escapeAccessHtml(viewState.loadError || "Данные доступа пока недоступны.")}</p>
     <button type="button" id="advancedAccessRetry">Повторить загрузку</button>
   </div>`;
@@ -71,8 +71,8 @@ function renderLoadError() {
 function renderRequestsTab() {
   if (!viewState.requests.length) return renderEmpty("Новых заявок пока нет.");
   return `
-    <div class="advanced-access-table-wrap">
-      <table class="advanced-access-table">
+    <div class="data-table-wrap advanced-access-table-wrap" data-horizontal-scroll>
+      <table class="data-table advanced-access-table">
         <thead><tr><th>Email</th><th>Никнейм</th><th>Заявка отправлена</th><th>Действия</th></tr></thead>
         <tbody>${viewState.requests.map(item => `
           <tr>
@@ -149,8 +149,8 @@ function renderGrantedTab() {
       </label>
     </div>
     ${items.length ? `
-      <div class="advanced-access-table-wrap">
-        <table class="advanced-access-table">
+      <div class="data-table-wrap advanced-access-table-wrap" data-horizontal-scroll>
+        <table class="data-table advanced-access-table">
           <thead><tr><th>Email</th><th>Никнейм</th><th>Регистрация</th><th>Доступ выдан</th><th>Окончание</th><th>Действия</th></tr></thead>
           <tbody>${items.map(item => `
             <tr>
