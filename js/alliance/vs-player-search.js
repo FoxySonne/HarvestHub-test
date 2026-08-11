@@ -3,6 +3,17 @@
   const TABLE_SELECTOR = "#page-content .data-table";
   const SEARCHABLE_TABLE_SELECTOR = "#page-content .alliance-subpage .data-table";
   const RANK_WEIGHT = { "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 };
+  const LEGACY_CONTROL_IDS = [
+    "participantSearch",
+    "participantSort",
+    "powerSearch",
+    "powerSort",
+    "reservoirSearch",
+    "vsSort",
+    "vsStatsSearch",
+    "vsStatsSort"
+  ];
+  const NON_SORTABLE_HEADER = /^(?:№|место|позиция|действие|действия)$/i;
   const sortState = new Map();
   let highlightTimer = null;
   let activeTable = null;
@@ -133,15 +144,16 @@
     return currentRows.some(row => {
       const cell = row.cells[index];
       if (!cell) return false;
-      if (cell.dataset.sortValue !== undefined) return true;
-      if (cell.querySelector('select, input:not([type="checkbox"]), textarea')) return true;
-      return Boolean(cell.textContent.trim());
+      return !/^(?:|—|-)$/.test(cellText(cell).trim());
     });
   }
 
   function sortableHeader(table, header, index) {
     const label = (header.childNodes[0]?.textContent || header.textContent).trim();
-    return label && !/^(действие|действия)$/i.test(label) && columnHasSortableValues(table, index);
+    return label
+      && !NON_SORTABLE_HEADER.test(label)
+      && !header.hasAttribute("data-no-sort")
+      && columnHasSortableValues(table, index);
   }
 
   function updateSortHeaders(table, index, direction) {
@@ -162,7 +174,9 @@
     const placeIndex = headers.findIndex(header => /^место$/i.test((header.childNodes[0]?.textContent || header.textContent).trim()));
     if (placeIndex < 0) return;
     rows(table).forEach((row, index) => {
-      if (row.cells[placeIndex]) row.cells[placeIndex].textContent = String(index + 1);
+      const cell = row.cells[placeIndex];
+      const place = String(index + 1);
+      if (cell && cell.textContent !== place) cell.textContent = place;
     });
   }
 
@@ -180,9 +194,8 @@
     });
     const body = table.tBodies[0];
     if (!body) return;
-    sortedRows.forEach((row, rowIndex) => {
-      if (body.children[rowIndex] !== row) body.append(row);
-    });
+    const orderChanged = sortedRows.some((row, rowIndex) => currentRows[rowIndex] !== row);
+    if (orderChanged) sortedRows.forEach(row => body.append(row));
     table.dataset.sortColumn = String(index);
     table.dataset.sortDirection = direction;
     if (remember) sortState.set(stableTableKey(table), { index, direction });
@@ -233,8 +246,11 @@
     const state = saved || (Number.isInteger(initialIndex) && initialIndex >= 0
       ? { index: initialIndex, direction: table.dataset.sortInitialDirection === "asc" ? "asc" : "desc" }
       : null);
-    if (state) window.setTimeout(() => sortTable(table, state.index, state.direction, Boolean(saved)), 0);
+    if (state && headers[state.index]?.classList.contains("data-table-sortable")) {
+      window.setTimeout(() => sortTable(table, state.index, state.direction, Boolean(saved)), 0);
+    }
     else {
+      if (saved) sortState.delete(stableTableKey(table));
       delete table.dataset.sortColumn;
       delete table.dataset.sortDirection;
       updateSortHeaders(table, -1, "");
@@ -251,6 +267,7 @@
     form.dataset.allianceTableSearchFor = tableId(table);
     form.dataset.allianceSearchIndex = "-1";
     form.dataset.allianceSearchQuery = "";
+    form.setAttribute("role", "search");
     form.hidden = true;
     form.innerHTML = `
       <input type="search" placeholder="Найти игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока" aria-autocomplete="list">
@@ -266,33 +283,23 @@
     trigger.className = "secondary-button alliance-table-search-trigger";
     trigger.dataset.allianceSearchOpen = tableId(table);
     trigger.setAttribute("aria-label", "Найти игрока");
+    trigger.setAttribute("aria-expanded", "false");
 
-    const controls = form.previousElementSibling;
-    if (controls?.classList?.contains("alliance-actions") || controls?.classList?.contains("vs-table-controls") || controls?.classList?.contains("alliance-roster-tools")) {
-      controls.append(trigger);
-    } else {
-      const toolbar = document.createElement("div");
-      toolbar.className = "alliance-table-search-toolbar";
-      toolbar.append(trigger);
-      form.before(toolbar);
-    }
+    const toolbar = document.createElement("div");
+    toolbar.className = "alliance-table-search-toolbar";
+    toolbar.append(trigger);
+    form.before(toolbar);
   }
 
   function hideOldControls() {
-    [
-      "participantSearch",
-      "participantSort",
-      "powerSearch",
-      "powerSort",
-      "reservoirSearch",
-      "vsSort",
-      "vsStatsSearch",
-      "vsStatsSort"
-    ].forEach(id => {
+    LEGACY_CONTROL_IDS.forEach(id => {
       const element = document.getElementById(id);
       if (!element) return;
       const label = element.closest("label");
-      (label || element).hidden = true;
+      const control = label || element;
+      control.hidden = true;
+      control.classList.add("alliance-table-legacy-control");
+      control.setAttribute("aria-hidden", "true");
     });
   }
 
@@ -302,7 +309,6 @@
       setupSorting(table);
     });
     document.querySelectorAll(SEARCHABLE_TABLE_SELECTOR).forEach(createSearchForm);
-    ensureFloatingButton();
   }
 
   function clearHighlight() {
@@ -454,11 +460,15 @@
     activeTable = table;
     createSearchForm(table);
     document.querySelectorAll(".alliance-table-search").forEach(item => {
-      if (item.dataset.allianceTableSearchFor !== tableId(table)) item.hidden = true;
+      if (item.dataset.allianceTableSearchFor !== tableId(table)) {
+        item.hidden = true;
+        document.querySelector(`[data-alliance-search-open="${CSS.escape(item.dataset.allianceTableSearchFor)}"]`)?.setAttribute("aria-expanded", "false");
+      }
     });
     const form = document.querySelector(`[data-alliance-table-search-for="${CSS.escape(tableId(table))}"]`);
     if (!form) return;
     form.hidden = false;
+    document.querySelector(`[data-alliance-search-open="${CSS.escape(tableId(table))}"]`)?.setAttribute("aria-expanded", "true");
     window.setTimeout(() => {
       const input = form.querySelector('input[type="search"]');
       input?.focus();
@@ -473,21 +483,6 @@
     if (!visible.length) return null;
     const center = window.innerHeight / 2;
     return visible.sort((a, b) => Math.abs(a.getBoundingClientRect().top - center) - Math.abs(b.getBoundingClientRect().top - center))[0];
-  }
-
-  function ensureFloatingButton() {
-    const hasTables = [...document.querySelectorAll(SEARCHABLE_TABLE_SELECTOR)]
-      .some(table => nicknameColumn(table) >= 0);
-    let button = document.getElementById("allianceFloatingSearch");
-    if (!button && hasTables) {
-      button = document.createElement("button");
-      button.id = "allianceFloatingSearch";
-      button.type = "button";
-      button.className = "alliance-floating-search";
-      button.setAttribute("aria-label", "Найти игрока");
-      document.body.append(button);
-    }
-    if (button) button.hidden = !hasTables;
   }
 
   document.addEventListener("click", event => {
@@ -520,11 +515,6 @@
       return;
     }
 
-    if (event.target.closest("#allianceFloatingSearch")) {
-      openSearch((activeTable && activeTable.offsetParent !== null) ? activeTable : nearestVisibleTable());
-      return;
-    }
-
     const previous = event.target.closest("[data-alliance-search-prev]");
     if (previous) {
       runSearch(previous.closest(".alliance-table-search"), -1);
@@ -543,6 +533,7 @@
       if (form) {
         clearSuggestions(form);
         form.hidden = true;
+        document.querySelector(`[data-alliance-search-open="${CSS.escape(form.dataset.allianceTableSearchFor)}"]`)?.setAttribute("aria-expanded", "false");
       }
     }
   });
@@ -620,6 +611,7 @@
         event.preventDefault();
         clearSuggestions(form);
         form.hidden = true;
+        document.querySelector(`[data-alliance-search-open="${CSS.escape(form.dataset.allianceTableSearchFor)}"]`)?.setAttribute("aria-expanded", "false");
       }
     }
   }, true);

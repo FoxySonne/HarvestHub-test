@@ -168,7 +168,7 @@
   width: min(100%, 620px);
 }
 
-.alliance-table { min-width: 840px; }
+.alliance-table { min-width: 100%; }
 
 .participant-nickname-history::after { white-space: pre-line; }
 .participant-nickname-cell { display: grid; gap: 6px; min-width: 0; }

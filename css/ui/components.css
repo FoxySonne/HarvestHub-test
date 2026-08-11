@@ -79,10 +79,10 @@
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
-  overscroll-behavior-x: contain;
+  overscroll-behavior: contain;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  scrollbar-gutter: stable;
+  scrollbar-gutter: stable both-edges;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -161,8 +161,37 @@
 }
 
 .data-table [data-column-kind="number"] {
+  width: 1%;
+  min-width: 66px;
   text-align: right !important;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.data-table [data-column-kind="position"] {
+  width: 42px;
+  min-width: 42px;
+  max-width: 48px;
+  padding-inline: 5px;
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.data-table [data-column-kind="rank"] {
+  width: 54px;
+  min-width: 54px;
+  white-space: nowrap;
+}
+
+.data-table [data-column-kind="date"] {
+  min-width: 88px;
+  white-space: nowrap;
+}
+
+.data-table [data-column-kind="action"] {
+  width: 48px;
+  min-width: 48px;
 }
 
 .data-table [data-column-kind="date"],
@@ -170,6 +199,42 @@
 .data-table [data-column-kind="action"] {
   text-align: center !important;
   font-variant-numeric: tabular-nums;
+}
+
+.data-table [data-column-kind="text"] {
+  min-width: 76px;
+}
+
+.data-table [data-column-kind="player"] {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 148px;
+  background: var(--card);
+  box-shadow: 1px 0 0 var(--border);
+  text-align: left !important;
+}
+
+.data-table thead th[data-column-kind="player"] {
+  z-index: 7;
+  background: var(--panel);
+}
+
+.data-table [data-column-kind="player"],
+.data-table [data-column-kind="player"] > :where(strong, small, span, a) {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  white-space: normal !important;
+}
+
+.data-table [data-column-empty="true"] {
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  padding-inline: 5px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
 }
 
 .data-table [data-column-kind="name"],

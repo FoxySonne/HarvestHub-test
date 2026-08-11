@@ -117,9 +117,8 @@
   margin-bottom: 14px;
 }
 
-.vs-table,
 .vs-bulk-table {
-  min-width: 1080px;
+  min-width: 900px;
 }
 
 .vs-table td:nth-child(2) strong,
@@ -141,10 +140,6 @@
   margin: 0 0 14px;
   color: var(--text-soft);
   font-size: 14px;
-}
-
-.vs-bulk-table {
-  min-width: 900px;
 }
 
 .vs-bulk-table input {

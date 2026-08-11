@@ -69,15 +69,18 @@ td,
 /* Таблица прокручивается внутри видимой рабочей области. */
 .power-table-wrap,
 .vs-table-wrap,
-.reservoir-table-wrap {
-  max-height: clamp(360px, calc(100vh - 330px), 680px);
+.reservoir-table-wrap,
+#rosterTableContainer {
+  height: clamp(520px, 72dvh, 860px);
+  max-height: none;
   overflow: auto !important;
   overscroll-behavior: contain;
 }
 
 .power-table-wrap thead th,
 .vs-table-wrap thead th,
-.reservoir-table-wrap thead th {
+.reservoir-table-wrap thead th,
+#rosterTableContainer thead th {
   position: sticky;
   top: 0;
   z-index: 4;
@@ -88,6 +91,7 @@ td,
 .power-statistics-card.is-expanded .power-table-wrap,
 .vs-statistics-card.is-expanded .vs-table-wrap,
 .is-alliance-table-fullscreen {
+  height: auto;
   max-height: none;
 }
 
@@ -96,8 +100,9 @@ td,
 .power-table,
 .vs-table,
 .reservoir-table {
-  width: 100% !important;
-  table-layout: fixed;
+  width: max-content !important;
+  min-width: 100% !important;
+  table-layout: auto;
 }
 
 .power-table th,
@@ -120,32 +125,6 @@ td,
 .power-table td:not(:nth-child(2)),
 .vs-table td:not(:nth-child(2)),
 .reservoir-table td:not(:first-child) {
-  white-space: nowrap;
-}
-
-/* Сила отрядов. */
-.power-table {
-  min-width: 1100px !important;
-}
-
-.power-table th:nth-child(1),
-.power-table td:nth-child(1) { width: 48px; }
-.power-table th:nth-child(2),
-.power-table td:nth-child(2) { width: 170px; }
-.power-table th:nth-child(3),
-.power-table td:nth-child(3) { width: 105px; }
-.power-table th:nth-child(4),
-.power-table td:nth-child(4) { width: 140px; }
-.power-table th:nth-child(n+5):nth-child(-n+9),
-.power-table td:nth-child(n+5):nth-child(-n+9) { width: 110px; }
-.power-table th:nth-child(10),
-.power-table td:nth-child(10) { width: 88px; }
-
-.power-table td:nth-child(2) strong,
-.power-table td:nth-child(2) small {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -201,31 +180,6 @@ td,
   white-space: nowrap !important;
 }
 
-.vs-table {
-  min-width: 900px !important;
-}
-
-.vs-table th:nth-child(1),
-.vs-table td:nth-child(1) { width: 46px; }
-.vs-table th:nth-child(2),
-.vs-table td:nth-child(2) { width: 180px; }
-.vs-table th:nth-child(n+3):nth-child(-n+8),
-.vs-table td:nth-child(n+3):nth-child(-n+8) { width: 56px; }
-.vs-table th:nth-child(9),
-.vs-table td:nth-child(9) { width: 105px; }
-.vs-table th:nth-child(10),
-.vs-table td:nth-child(10) { width: 120px; }
-.vs-table th:last-child,
-.vs-table td:last-child { width: 86px; }
-
-.vs-table td:nth-child(2) strong,
-.vs-table td:nth-child(2) small {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* Активность резервуара: компактные фильтры и рабочая таблица в пределах экрана. */
 .reservoir-filters {
   grid-template-columns: minmax(180px, 1.25fr) repeat(4, minmax(140px, 1fr));
@@ -238,27 +192,6 @@ td,
   align-items: end;
   gap: 10px;
 }
-
-.reservoir-table {
-  min-width: 1000px !important;
-}
-
-.reservoir-table th:nth-child(1),
-.reservoir-table td:nth-child(1) { width: 165px; }
-.reservoir-table th:nth-child(2),
-.reservoir-table td:nth-child(2) { width: 58px; }
-.reservoir-table th:nth-child(3),
-.reservoir-table td:nth-child(3) { width: 92px; }
-.reservoir-table th:nth-child(4),
-.reservoir-table td:nth-child(4) { width: 105px; }
-.reservoir-table th:nth-child(5),
-.reservoir-table td:nth-child(5) { width: 120px; }
-.reservoir-table th:nth-child(6),
-.reservoir-table td:nth-child(6) { width: 125px; }
-.reservoir-table th:nth-child(7),
-.reservoir-table td:nth-child(7) { width: 155px; }
-.reservoir-table th:nth-child(8),
-.reservoir-table td:nth-child(8) { width: 180px; }
 
 .reservoir-table select,
 .reservoir-table input,

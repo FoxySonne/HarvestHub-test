@@ -6,8 +6,8 @@
 #vsCurrentTableContainer,
 #vsStatsTableContainer {
   width: 100%;
-  height: clamp(380px, 58dvh, 660px);
-  max-height: calc(100dvh - 190px);
+  height: clamp(520px, 72dvh, 860px);
+  max-height: none;
   overflow: auto !important;
   overscroll-behavior: contain;
   scrollbar-gutter: stable both-edges;
@@ -54,52 +54,11 @@
   font-size: 13px;
 }
 
-/* Текущая неделя: таблица целиком помещается в обычную ширину страницы. */
+/* Ширина определяется содержимым и общими типами столбцов. */
 #vsCurrentTableContainer .vs-table {
-  width: 100% !important;
-  min-width: 790px !important;
-  table-layout: fixed !important;
-}
-
-#vsCurrentTableContainer .vs-table th:nth-child(1),
-#vsCurrentTableContainer .vs-table td:nth-child(1) {
-  width: 38px;
-}
-
-#vsCurrentTableContainer .vs-table th:nth-child(2),
-#vsCurrentTableContainer .vs-table td:nth-child(2) {
-  width: 150px;
-}
-
-#vsCurrentTableContainer .vs-table th:nth-child(n+3):nth-child(-n+8),
-#vsCurrentTableContainer .vs-table td:nth-child(n+3):nth-child(-n+8) {
-  width: 54px;
-}
-
-#vsCurrentTableContainer .vs-table th:nth-child(9),
-#vsCurrentTableContainer .vs-table td:nth-child(9) {
-  width: 92px;
-}
-
-#vsCurrentTableContainer .vs-table th:nth-child(10),
-#vsCurrentTableContainer .vs-table td:nth-child(10) {
-  width: 94px;
-}
-
-#vsCurrentTableContainer .vs-table th:last-child,
-#vsCurrentTableContainer .vs-table td:last-child {
-  width: 78px;
-}
-
-#vsCurrentTableContainer .vs-table td:nth-child(2) strong,
-#vsCurrentTableContainer .vs-table td:nth-child(2) small,
-#vsStatsTableContainer .vs-table td:nth-child(2) strong,
-#vsStatsTableContainer .vs-table td:nth-child(2) small {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  width: max-content !important;
+  min-width: 100% !important;
+  table-layout: auto !important;
 }
 
 #vsCurrentTableContainer .vs-row-edit {
@@ -108,34 +67,11 @@
   padding: 7px 8px;
 }
 
-/* Статистика: обычная неделя и сравнение занимают доступную ширину.
-   Длинный период расширяется только внутри рабочей области. */
+/* Статистика расширяется только внутри рабочей области. */
 #vsStatsTableContainer .vs-table {
   width: max-content !important;
   min-width: 100% !important;
   table-layout: auto !important;
-}
-
-#vsStatsTableContainer .vs-table th:first-child,
-#vsStatsTableContainer .vs-table td:first-child {
-  width: 38px;
-  min-width: 38px;
-}
-
-#vsStatsTableContainer .vs-table th:nth-child(2),
-#vsStatsTableContainer .vs-table td:nth-child(2) {
-  width: 150px;
-  min-width: 150px;
-}
-
-#vsStatsTableContainer .vs-table th:nth-child(n+3),
-#vsStatsTableContainer .vs-table td:nth-child(n+3) {
-  min-width: 62px;
-}
-
-#vsStatsTableContainer .vs-table th:last-child,
-#vsStatsTableContainer .vs-table td:last-child {
-  min-width: 86px;
 }
 
 .table-scrollbar-top + #vsCurrentTableContainer,
@@ -146,12 +82,8 @@
 @media (max-width: 1099px) {
   #vsCurrentTableContainer,
   #vsStatsTableContainer {
-    height: clamp(340px, 62dvh, 600px);
-    max-height: calc(100dvh - 130px);
-  }
-
-  #vsCurrentTableContainer .vs-table {
-    min-width: 760px !important;
+    height: min(78svh, 780px);
+    max-height: none;
   }
 
   #vsCurrentTableContainer .vs-table th,
@@ -165,12 +97,8 @@
 @media (max-width: 599px) {
   #vsCurrentTableContainer,
   #vsStatsTableContainer {
-    height: 64dvh;
-    max-height: 620px;
-  }
-
-  #vsCurrentTableContainer .vs-table {
-    min-width: 720px !important;
+    height: 78svh;
+    max-height: none;
   }
 
   #vsCurrentTableContainer .vs-table td,
