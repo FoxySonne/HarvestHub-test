@@ -5,7 +5,7 @@
 @import url("core/layout.css?v=20260721-light-theme-1");
 @import url("ui/forms.css?v=20260811-interface-audit-1");
 @import url("ui/buttons.css?v=20260811-interface-audit-1");
-@import url("ui/components.css?v=20260811-unified-table-sort-1");
+@import url("ui/components.css?v=20260811-table-regression-1");
 @import url("features/home.css?v=20260726-responsive-pages-1");
 @import url("features/season-resources.css?v=20260721-light-theme-1");
 @import url("features/season-building-links.css?v=20260721-light-theme-1");
@@ -20,19 +20,19 @@
 @import url("ui/cards.css?v=20260811-interface-audit-1");
 @import url("core/desktop.css?v=20260726-responsive-shell-1");
 @import url("ui/time-converter.css?v=20260721-mobile-fit-1");
-@import url("features/alliance.css?v=20260811-interface-audit-1");
+@import url("features/alliance.css?v=20260811-table-regression-1");
 @import url("features/alliance-twin-labels.css?v=20260724-alliance-twins-1");
 @import url("features/alliance-fixes.css?v=20260721-light-theme-1");
-@import url("features/alliance-power.css?v=20260811-unified-table-sort-1");
-@import url("features/alliance-vs.css?v=20260724-compact-controls-1");
-@import url("features/alliance-vs-table-layout.css?v=20260728-vs-table-scroll-1");
+@import url("features/alliance-power.css?v=20260811-table-regression-1");
+@import url("features/alliance-vs.css?v=20260811-table-regression-1");
+@import url("features/alliance-vs-table-layout.css?v=20260811-table-regression-1");
 @import url("features/alliance-membership-periods.css?v=20260728-membership-periods-1");
 @import url("features/alliance-vs-proposals.css?v=20260724-vs-proposals-2");
-@import url("features/alliance-table-search.css?v=20260811-unified-table-sort-1");
+@import url("features/alliance-table-search.css?v=20260811-table-regression-1");
 @import url("features/alliance-roles.css?v=20260724-management-fit-5");
 @import url("features/alliance-player-profile.css?v=20260724-profile-action-row-1");
 @import url("features/alliance-pages.css?v=20260724-hub-summary-layout-1");
-@import url("features/alliance-reservoir.css?v=20260721-1");
+@import url("features/alliance-reservoir.css?v=20260811-table-regression-1");
 @import url("features/alliance-reservoir-layout.css?v=20260722-3");
 @import url("features/alliance-reservoir-layout-fixes.css?v=20260723-buildings-6");
 @import url("features/alliance-reservoir-layout-usability.css?v=20260727-reservoir-layout-final-1");
@@ -46,7 +46,7 @@
 @import url("core/responsive-foundation.css?v=20260811-interface-followup-1");
 @import url("features/ordinary-pages-responsive.css?v=20260727-ordinary-layout-final-1");
 @import url("features/alliance-complex-responsive.css?v=20260811-interface-audit-1");
-@import url("features/layout-review-fixes.css?v=20260811-interface-audit-1");
+@import url("features/layout-review-fixes.css?v=20260811-table-regression-1");
 
 /* VS: компактная панель без перекрывающихся кликабельных областей. */
 .vs-table-controls {

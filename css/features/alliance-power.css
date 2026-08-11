@@ -79,14 +79,6 @@
   min-width: 150px;
 }
 
-.power-table {
-  min-width: 1280px;
-}
-
-.power-table.is-bulk-editing {
-  min-width: 980px;
-}
-
 .power-table td:nth-child(2) strong,
 .power-table td:nth-child(2) small {
   display: block;

@@ -16,9 +16,9 @@
   body:has(#page-content .alliance-subpage) .vs-table-wrap,
   body:has(#page-content .alliance-subpage) .reservoir-table-wrap,
   body:has(#page-content .alliance-subpage) #rosterTableContainer {
-    height: min(72svh, 680px);
+    height: min(78svh, 780px);
     max-height: none;
-    min-height: 460px;
+    min-height: min(560px, calc(100svh - 96px));
   }
 
   body:has(#page-content .alliance-subpage) .is-alliance-table-fullscreen,
@@ -81,36 +81,6 @@
     margin-bottom: 4px;
   }
 
-  .power-table th:first-child,
-  .power-table td:first-child,
-  .vs-table th:first-child,
-  .vs-table td:first-child {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-    padding-inline: 3px;
-    text-align: center;
-  }
-
-  .power-table th:nth-child(2),
-  .power-table td:nth-child(2),
-  .vs-table th:nth-child(2),
-  .vs-table td:nth-child(2) {
-    width: 132px;
-    min-width: 132px;
-    max-width: 132px;
-  }
-
-  .power-table td:nth-child(2) strong,
-  .power-table td:nth-child(2) small,
-  .vs-table td:nth-child(2) strong,
-  .vs-table td:nth-child(2) small {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .power-table td:nth-child(2) small,
   .vs-table td:nth-child(2) small {
     margin-top: 2px;
@@ -127,36 +97,13 @@
 
   .power-table:not(.is-bulk-editing) {
     width: max-content !important;
-    min-width: 0 !important;
-    table-layout: fixed;
+    min-width: 100% !important;
+    table-layout: auto;
   }
 
   .power-table:not(.is-bulk-editing) th:nth-child(3),
   .power-table:not(.is-bulk-editing) td:nth-child(3) {
     display: none;
-  }
-
-  .power-table:not(.is-bulk-editing) th:nth-child(4),
-  .power-table:not(.is-bulk-editing) td:nth-child(4) {
-    width: 72px;
-    min-width: 72px;
-    max-width: 72px;
-    padding-inline: 5px;
-    text-align: right;
-  }
-
-  .power-table:not(.is-bulk-editing) th:nth-child(n+5):nth-child(-n+9),
-  .power-table:not(.is-bulk-editing) td:nth-child(n+5):nth-child(-n+9) {
-    width: 78px;
-    min-width: 78px;
-    max-width: 78px;
-  }
-
-  .power-table:not(.is-bulk-editing) th:last-child,
-  .power-table:not(.is-bulk-editing) td:last-child {
-    width: 72px;
-    min-width: 72px;
-    max-width: 72px;
   }
 
   .power-date-full {
@@ -187,44 +134,8 @@
 
   .alliance-roster-table {
     width: max-content;
-    min-width: 650px;
-    table-layout: fixed;
-  }
-
-  .alliance-roster-table th:first-child,
-  .alliance-roster-table td:first-child {
-    width: 150px;
-    min-width: 150px;
-    max-width: 150px;
-    padding-inline: 8px;
-    text-align: left;
-  }
-
-  .alliance-roster-table th:nth-child(2),
-  .alliance-roster-table td:nth-child(2) {
-    width: 48px;
-    min-width: 48px;
-    max-width: 48px;
-    padding-inline: 5px;
-    text-align: center;
-  }
-
-  .alliance-roster-table th:nth-child(3),
-  .alliance-roster-table td:nth-child(3) {
-    width: 92px;
-    min-width: 92px;
-    max-width: 92px;
-    padding-inline: 6px;
-    white-space: nowrap;
-  }
-
-  .alliance-roster-table th:nth-child(4),
-  .alliance-roster-table td:nth-child(4) {
-    width: 76px;
-    min-width: 76px;
-    max-width: 76px;
-    padding-inline: 6px;
-    white-space: nowrap;
+    min-width: 100%;
+    table-layout: auto;
   }
 
   .alliance-roster-table .participant-nickname-cell,
@@ -234,19 +145,9 @@
     max-width: 100%;
   }
 
-  .alliance-roster-table .participant-nickname {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .alliance-roster-table .participant-twin-details {
     display: block;
     margin-top: 3px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     font-size: 10px;
   }
 
@@ -263,23 +164,7 @@
   body:has(#page-content .alliance-subpage) .vs-table-wrap,
   body:has(#page-content .alliance-subpage) .reservoir-table-wrap,
   body:has(#page-content .alliance-subpage) #rosterTableContainer {
-    height: 68svh;
-    min-height: 430px;
-  }
-
-  .power-table th:nth-child(2),
-  .power-table td:nth-child(2),
-  .vs-table th:nth-child(2),
-  .vs-table td:nth-child(2) {
-    width: 124px;
-    min-width: 124px;
-    max-width: 124px;
-  }
-
-  .alliance-roster-table th:first-child,
-  .alliance-roster-table td:first-child {
-    width: 138px;
-    min-width: 138px;
-    max-width: 138px;
+    height: 78svh;
+    min-height: min(540px, calc(100svh - 96px));
   }
 }
