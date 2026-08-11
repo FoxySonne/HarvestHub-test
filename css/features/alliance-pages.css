@@ -185,6 +185,10 @@
   position: fixed;
   inset: 0;
   z-index: 1300;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
   overflow: auto;
   padding: 64px 12px 12px;
   background: var(--card);
@@ -236,7 +240,8 @@
 }
 
 .is-alliance-table-fullscreen table {
-  min-width: max-content;
+  width: max-content;
+  min-width: 100% !important;
 }
 
 @media (max-width: 899px) {
