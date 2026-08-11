@@ -160,9 +160,11 @@
     table.querySelectorAll("thead th").forEach((header, headerIndex) => {
       const active = headerIndex === index && header.classList.contains("data-table-sortable");
       header.classList.toggle("data-table-sort-active", active);
-      header.dataset.tableSortDirection = active ? direction : "";
+      const sortDirection = active ? direction : "";
+      if (header.dataset.tableSortDirection !== sortDirection) header.dataset.tableSortDirection = sortDirection;
       if (header.classList.contains("data-table-sortable")) {
-        header.setAttribute("aria-sort", active ? (direction === "asc" ? "ascending" : "descending") : "none");
+        const ariaSort = active ? (direction === "asc" ? "ascending" : "descending") : "none";
+        if (header.getAttribute("aria-sort") !== ariaSort) header.setAttribute("aria-sort", ariaSort);
       } else {
         header.removeAttribute("aria-sort");
       }
@@ -235,10 +237,11 @@
         return;
       }
       header.classList.add("data-table-sortable");
-      header.dataset.tableSortColumn = String(index);
-      header.tabIndex = 0;
-      header.setAttribute("role", "button");
-      header.setAttribute("aria-label", `Сортировать по столбцу ${label}`);
+      if (header.dataset.tableSortColumn !== String(index)) header.dataset.tableSortColumn = String(index);
+      if (header.tabIndex !== 0) header.tabIndex = 0;
+      if (header.getAttribute("role") !== "button") header.setAttribute("role", "button");
+      const ariaLabel = `Сортировать по столбцу ${label}`;
+      if (header.getAttribute("aria-label") !== ariaLabel) header.setAttribute("aria-label", ariaLabel);
     });
 
     const saved = sortState.get(stableTableKey(table));
@@ -621,6 +624,7 @@
     observerTimer = window.setTimeout(setupTables, 80);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener("harvesthub:page-loaded", () => requestAnimationFrame(setupTables));
   window.harvestHubTableSorting = {
     refresh(table) {
       if (table) setupSorting(table);

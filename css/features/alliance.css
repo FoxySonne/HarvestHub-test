@@ -163,9 +163,10 @@
 }
 .alliance-roster-tools {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) repeat(2, minmax(130px, auto));
+  grid-template-columns: minmax(150px, 220px);
+  justify-content: end;
   gap: 10px;
-  width: min(100%, 620px);
+  width: min(100%, 220px);
 }
 
 .alliance-table { min-width: 100%; }

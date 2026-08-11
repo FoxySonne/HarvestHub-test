@@ -117,7 +117,7 @@
 }
 
 .data-table thead th.data-table-sortable {
-  padding-right: 20px;
+  padding-right: 30px;
   cursor: pointer;
   user-select: none;
 }
@@ -125,12 +125,20 @@
 .data-table thead th.data-table-sortable::after {
   content: "↕";
   position: absolute;
-  right: 6px;
+  right: 7px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-soft);
-  font-size: 10px;
-  opacity: .62;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 21px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  background: var(--card);
+  font-size: 13px;
+  line-height: 1;
+  opacity: 1;
 }
 
 .data-table thead th.data-table-sort-active::after {
@@ -209,22 +217,28 @@
   position: sticky;
   left: 0;
   z-index: 2;
-  min-width: 148px;
-  background: var(--card);
+  width: 168px;
+  min-width: 168px;
+  max-width: 168px;
+  background: var(--card) !important;
   box-shadow: 1px 0 0 var(--border);
   text-align: left !important;
 }
 
 .data-table thead th[data-column-kind="player"] {
   z-index: 7;
-  background: var(--panel);
+  background: var(--panel) !important;
 }
 
 .data-table [data-column-kind="player"],
 .data-table [data-column-kind="player"] > :where(strong, small, span, a) {
   word-break: normal !important;
-  overflow-wrap: normal !important;
+  overflow-wrap: anywhere !important;
   white-space: normal !important;
+}
+
+.data-table tbody tr:hover td[data-column-kind="player"] {
+  background: color-mix(in srgb, var(--card) 92%, var(--accent)) !important;
 }
 
 .data-table [data-column-empty="true"] {
@@ -335,5 +349,11 @@
   .data-table th,
   .data-table td {
     padding: 7px 8px;
+  }
+
+  .data-table [data-column-kind="player"] {
+    width: 132px;
+    min-width: 132px;
+    max-width: 132px;
   }
 }
