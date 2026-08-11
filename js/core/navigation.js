@@ -1,6 +1,6 @@
 (() => {
-  const SITE_ASSET_VERSION = "20260811-table-visual-fix-1";
-  const DEFAULT_STYLESHEET = "css/style.css?v=20260811-table-visual-fix-1";
+  const SITE_ASSET_VERSION = "20260811-fullscreen-viewport-1";
+  const DEFAULT_STYLESHEET = "css/style.css?v=20260811-fullscreen-viewport-1";
   const QUICK_LINKS_STORAGE_KEY = "harvesthub_page_visits";
   const MAX_QUICK_LINKS = 5;
   const pagesDatabase = [
