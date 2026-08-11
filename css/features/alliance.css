@@ -5,16 +5,6 @@
   line-height: 1.5;
 }
 
-.alliance-message {
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--text);
-}
-
-.alliance-message[data-type="success"] { border-color: var(--success); }
-
 .alliance-auth-card,
 .alliance-setup-card,
 .alliance-editor-card,
@@ -69,13 +59,6 @@
 .alliance-session-card button,
 .alliance-invite-box button,
 .participant-row-actions button { width: auto; }
-
-.secondary-button {
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.secondary-button:hover { background: var(--card-hover); }
 
 .alliance-workspace,
 .alliance-data-area { display: flex; flex-direction: column; gap: 18px; }
@@ -185,17 +168,7 @@
   width: min(100%, 620px);
 }
 
-.alliance-table-wrap { overflow-x: auto; }
-.alliance-table { width: 100%; min-width: 840px; border-collapse: collapse; }
-.alliance-table th,
-.alliance-table td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-  vertical-align: top;
-}
-.alliance-table th { color: var(--text-soft); font-size: 13px; font-weight: 600; }
-.alliance-table td { color: var(--text); }
+.alliance-table { min-width: 840px; }
 
 .participant-nickname-history::after { white-space: pre-line; }
 .participant-nickname-cell { display: grid; gap: 6px; min-width: 0; }
@@ -219,14 +192,6 @@
   padding: 6px 10px;
   font-size: 13px;
   white-space: nowrap;
-}
-
-.alliance-empty-state {
-  padding: 18px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  color: var(--text-muted);
-  text-align: center;
 }
 
 .alliance-page:has(#allianceDataArea:not([hidden])) .alliance-guest-card,

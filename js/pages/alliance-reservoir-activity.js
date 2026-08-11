@@ -27,15 +27,9 @@ const labels = {
 
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
-  if (!box) return;
-  if (type === "error" && text) {
-    box.hidden = true;
-    window.harvestHubNotifications?.error(text, "Не удалось изменить данные активности резервуара.");
-    return;
-  }
-  box.hidden = !text;
-  box.textContent = text;
-  box.dataset.type = type;
+  window.harvestHubNotifications?.renderMessage(box, text, type, {
+    fallback: "Не удалось изменить данные активности резервуара."
+  });
 }
 
 function dateValue(date) {

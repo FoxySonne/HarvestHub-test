@@ -6,15 +6,9 @@ const state = { client: null, session: null, memberships: [], choosingAlliance: 
 
 function showMessage(text, type = "info") {
   const box = byId("allianceMessage");
-  if (!box) return;
-  if (type === "error" && text) {
-    box.hidden = true;
-    window.harvestHubNotifications?.error(text, "Не удалось выполнить действие в союзном штабе.");
-    return;
-  }
-  box.hidden = !text;
-  box.textContent = text;
-  box.dataset.type = type;
+  window.harvestHubNotifications?.renderMessage(box, text, type, {
+    fallback: "Не удалось выполнить действие в союзном штабе."
+  });
 }
 
 function getReadableError(error) {

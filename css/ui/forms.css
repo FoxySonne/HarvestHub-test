@@ -80,6 +80,18 @@ input[type=time]::-webkit-calendar-picker-indicator {
   opacity: .8;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+input:not(:disabled):hover,
+textarea:not(:disabled):hover,
+select:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+
 textarea {
   min-height: 120px;
   padding: 14px 16px;
@@ -94,6 +106,26 @@ select:focus {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--field) 72%, var(--bg));
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: .72;
+}
+
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+select[aria-invalid="true"],
+input:user-invalid,
+textarea:user-invalid,
+select:user-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
 select {
   cursor: pointer;
 }
@@ -105,6 +137,14 @@ select {
   gap: 12px;
   min-width: 0;
   margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.checkbox input,
+.radio input,
+input[type=checkbox],
+input[type=radio] {
+  accent-color: var(--accent);
 }
 
 .checkbox input,
@@ -112,7 +152,20 @@ select {
   flex: 0 0 auto;
   width: 20px;
   height: 20px;
-  accent-color: var(--accent);
+}
+
+.checkbox:has(input:disabled),
+.radio:has(input:disabled) {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: .72;
+}
+
+.checkbox:has(input:focus-visible),
+.radio:has(input:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-small);
 }
 
 @media (max-width: 1099px) {

@@ -9,6 +9,11 @@
     sat: "суббота",
     sun: "воскресенье"
   };
+  const LOCAL_WEEKDAY_FORMATTER = new Intl.DateTimeFormat("ru-RU", { weekday: "long" });
+  const LOCAL_TIME_FORMATTER = new Intl.DateTimeFormat("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 
   let currentUtcDayId = "";
   let utcClockTimerId = null;
@@ -48,6 +53,26 @@
     return getHarvestHubUtcTime(date).dayId;
   }
 
+  function capitalize(value) {
+    const text = String(value || "");
+    return text ? text.charAt(0).toLocaleUpperCase("ru-RU") + text.slice(1) : "—";
+  }
+
+  function renderHarvestHubClock(time = window.harvestHubUtcTime || getHarvestHubUtcTime()) {
+    const localWeekday = document.getElementById("localClockWeekday");
+    const localClock = document.getElementById("localClockTime");
+    const utcWeekday = document.getElementById("utcClockWeekday");
+    const utcClock = document.getElementById("utcClockTime");
+    if (!localWeekday || !localClock || !utcWeekday || !utcClock) return;
+
+    localWeekday.textContent = capitalize(LOCAL_WEEKDAY_FORMATTER.format(time.date));
+    localClock.textContent = LOCAL_TIME_FORMATTER.format(time.date);
+    localClock.dateTime = time.iso;
+    utcWeekday.textContent = capitalize(time.dayName);
+    utcClock.textContent = `${padTimePart(time.hours)}:${padTimePart(time.minutes)}`;
+    utcClock.dateTime = time.iso;
+  }
+
   function applyHarvestHubUtcTime() {
     const time = getHarvestHubUtcTime();
     const previousDayId = currentUtcDayId;
@@ -64,6 +89,7 @@
     }
 
     window.harvestHubUtcTime = time;
+    renderHarvestHubClock(time);
     window.dispatchEvent(new CustomEvent("harvesthub:utc-time-change", { detail: time }));
 
     if (previousDayId && previousDayId !== time.dayId) {
@@ -81,6 +107,7 @@
   window.getHarvestHubUtcTime = getHarvestHubUtcTime;
   window.getHarvestHubUtcDayId = getHarvestHubUtcDayId;
   window.applyHarvestHubUtcTime = applyHarvestHubUtcTime;
+  window.renderHarvestHubClock = renderHarvestHubClock;
   window.startHarvestHubUtcClock = startHarvestHubUtcClock;
 
   startHarvestHubUtcClock();

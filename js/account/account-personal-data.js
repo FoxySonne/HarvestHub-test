@@ -31,14 +31,9 @@
 
   function setMessage(text, type = "info") {
     const message = byId("accountPersonalDataMessage");
-    if (!message) return;
-    if (type === "error" && text) {
-      message.textContent = "";
-      window.harvestHubNotifications?.error(text, "Не удалось сохранить личные данные.");
-      return;
-    }
-    message.textContent = text;
-    message.dataset.type = type;
+    window.harvestHubNotifications?.renderMessage(message, text, type, {
+      fallback: "Не удалось сохранить личные данные."
+    });
   }
 
   async function save(event) {

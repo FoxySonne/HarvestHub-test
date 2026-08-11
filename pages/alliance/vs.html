@@ -20,13 +20,13 @@
 
   <div id="vsBulkCard" hidden aria-hidden="true">
     <span id="vsBulkWeekLabel"></span>
-    <table><tbody id="vsBulkBody"></tbody></table>
+    <table class="internal-data-table"><tbody id="vsBulkBody"></tbody></table>
   </div>
 
   <section id="vsReviewCard" class="card" hidden>
     <div class="card-header"><div><h3>Заявки VS</h3><p>Результаты, которые игроки отправили на подтверждение.</p></div></div>
     <div id="vsReviewList" class="alliance-player-vs-review-list"></div>
-    <div id="vsReviewEmpty" class="alliance-empty-state" hidden>Новых заявок VS пока нет.</div>
+    <div id="vsReviewEmpty" class="empty-state alliance-empty-state" hidden>Новых заявок VS пока нет.</div>
     <p id="vsReviewMessage" class="alliance-form-message" aria-live="polite"></p>
   </section>
 
@@ -47,19 +47,11 @@
         <small data-vs-draft-status aria-live="polite"></small>
       </div>
       <button id="vsExpandTable" type="button" class="secondary-button">Открыть таблицу целиком</button>
-      <button type="button" class="secondary-button vs-search-open" data-vs-search-open="main" aria-label="Найти игрока"></button>
     </div>
     <p id="vsBulkHint" class="vs-bulk-hint" hidden>Сохраняются только изменённые ячейки. Число без буквы считается миллионами. Буква «О» обозначает отпуск. Enter сохраняет локальный черновик и переводит курсор на следующего игрока.</p>
-    <form id="vsMainSearch" class="vs-player-search" data-vs-search="main" hidden>
-      <input type="search" placeholder="Введите никнейм игрока" autocomplete="off" data-no-persist="true" aria-label="Никнейм игрока">
-      <button type="submit">Найти</button>
-      <button type="button" class="secondary-button" data-vs-search-close aria-label="Закрыть поиск">×</button>
-      <small data-vs-search-status></small>
-    </form>
-    <div id="vsCurrentTableContainer" class="alliance-table-wrap vs-table-wrap" data-horizontal-scroll><button id="vsCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button><table class="alliance-table vs-table" data-sort-initialized="true"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
-    <div id="vsEmptyState" class="alliance-empty-state">Пока нет участников.</div>
+    <div id="vsCurrentTableContainer" class="data-table-wrap alliance-table-wrap vs-table-wrap" data-horizontal-scroll><button id="vsCloseTable" type="button" class="alliance-fullscreen-close" aria-label="Закрыть таблицу">×</button><table class="data-table alliance-table vs-table" data-sort-initial-column="8" data-sort-initial-direction="desc"><thead id="vsTableHead"></thead><tbody id="vsTableBody"></tbody></table></div>
+    <div id="vsEmptyState" class="empty-state alliance-empty-state">Пока нет участников.</div>
     <div id="vsSummary" class="vs-summary" hidden></div>
   </section>
 
-  <button id="vsFloatingSearch" type="button" class="vs-floating-search" aria-label="Найти игрока"></button>
 </section>

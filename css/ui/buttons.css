@@ -33,10 +33,49 @@ input[type=button]:hover {
   background: var(--button-hover);
 }
 
+.button:focus-visible,
+button:focus-visible,
+input[type=submit]:focus-visible,
+input[type=button]:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.button:active,
+button:active,
+input[type=submit]:active,
+input[type=button]:active {
+  transform: translateY(1px);
+}
+
 .button:disabled,
-button:disabled {
+button:disabled,
+input[type=submit]:disabled,
+input[type=button]:disabled {
   opacity: .5;
   cursor: not-allowed;
+  transform: none;
+}
+
+.button:disabled:hover,
+button:disabled:hover,
+input[type=submit]:disabled:hover,
+input[type=button]:disabled:hover {
+  background: var(--button);
+}
+
+.secondary-button {
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.secondary-button:hover {
+  background: var(--card-hover);
+}
+
+.secondary-button:disabled:hover {
+  background: var(--panel);
 }
 
 .button-group {
@@ -84,6 +123,10 @@ button:disabled {
   background: #a43a3a !important;
 }
 
+.danger-button:disabled:hover {
+  background: #8b3030 !important;
+}
+
 .calculator-data-actions {
   display: flex;
   flex-wrap: wrap;
@@ -107,5 +150,14 @@ button:disabled {
   input[type=button] {
     min-height: 44px;
     padding: 10px 14px;
+  }
+}
+
+@media (max-width: 899px) {
+  .icon-button,
+  .alliance-fullscreen-close {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
   }
 }

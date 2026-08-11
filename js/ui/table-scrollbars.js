@@ -2,6 +2,37 @@
   const TABLE_SELECTOR = "[data-horizontal-scroll]";
   const instances = new Map();
 
+  function normalizedHeader(header) {
+    return String(header?.childNodes?.[0]?.textContent || header?.textContent || "")
+      .trim()
+      .toLocaleLowerCase("ru-RU");
+  }
+
+  function columnKind(label) {
+    if (!label || /^(действия?|управление)$/i.test(label)) return "action";
+    if (/(участник|никнейм|игрок|email|комментарий|союз)/i.test(label)) return "name";
+    if (/ранг/i.test(label)) return "rank";
+    if (/(дата|неделя|день рождения|регистрация|окончание|время)/i.test(label)) return "date";
+    if (/(место|сила|очки|сумма|прирост|выполнено|счёт|количество|всего|процент|%|пн|вт|ср|чт|пт|сб)/i.test(label)) return "number";
+    return "text";
+  }
+
+  function applyColumnKinds(table) {
+    if (!(table instanceof HTMLTableElement)) return;
+    const headers = [...table.querySelectorAll("thead th")];
+    headers.forEach((header, index) => {
+      const kind = columnKind(normalizedHeader(header));
+      if (header.dataset.columnKind !== kind) header.dataset.columnKind = kind;
+      [...table.tBodies].forEach(body => {
+        [...body.rows].forEach(row => {
+          if (row.cells[index] && row.cells[index].dataset.columnKind !== kind) {
+            row.cells[index].dataset.columnKind = kind;
+          }
+        });
+      });
+    });
+  }
+
   function createTopScrollbar(wrapper) {
     if (!(wrapper instanceof HTMLElement) || instances.has(wrapper)) return;
 
@@ -18,6 +49,7 @@
     function update() {
       if (!wrapper.isConnected || !scrollbar.isConnected) return;
       const table = wrapper.querySelector("table");
+      applyColumnKinds(table);
       const scrollWidth = Math.max(wrapper.scrollWidth, table?.scrollWidth || 0);
       spacer.style.width = `${scrollWidth}px`;
       scrollbar.hidden = scrollWidth <= wrapper.clientWidth + 1;
@@ -49,6 +81,7 @@
   }
 
   function refreshTableScrollbars(root = document) {
+    root.querySelectorAll?.(".data-table").forEach(applyColumnKinds);
     root.querySelectorAll?.(TABLE_SELECTOR).forEach(createTopScrollbar);
 
     instances.forEach((instance, wrapper) => {

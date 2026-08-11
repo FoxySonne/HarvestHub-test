@@ -3,7 +3,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 
 const root = process.cwd();
-const ignoredDirectories = new Set([".git", "node_modules", "upload", "dist", "coverage"]);
+const ignoredDirectories = new Set([".git", "node_modules", "upload", "dist", "coverage", "reports"]);
 const textExtensions = new Set([".css", ".html", ".js", ".json", ".md", ".mjs", ".sql", ".ts", ".yml", ".yaml"]);
 
 function collectFiles(directory) {
@@ -83,6 +83,33 @@ const inlineHtmlCode = records
     return findings.length ? [{ path: record.path, findings }] : [];
   });
 
+const tableMarkup = records
+  .filter(record => [".html", ".js"].includes(record.extension))
+  .flatMap(record => [...record.source.matchAll(/<table\b[^>]*>/gi)].map(match => ({
+    path: record.path,
+    tag: match[0],
+  })));
+function tagHasClass(tag, className) {
+  const classAttribute = tag.match(/\bclass\s*=\s*["']([^"']*)["']/i)?.[1] || "";
+  return classAttribute.split(/\s+/).includes(className);
+}
+const interfaceStandards = {
+  tables: {
+    total: tableMarkup.length,
+    standardized: tableMarkup.filter(item => tagHasClass(item.tag, "data-table")).length,
+    internal: tableMarkup.filter(item => tagHasClass(item.tag, "internal-data-table")).length,
+    violations: tableMarkup
+      .filter(item => !tagHasClass(item.tag, "data-table") && !tagHasClass(item.tag, "internal-data-table"))
+      .map(item => item.path),
+  },
+  browserFindOverrides: records
+    .filter(record => record.extension === ".js" && /(?:KeyF|isFindShortcut)/.test(record.source))
+    .map(record => record.path),
+  legacyVsStylesheets: records
+    .filter(record => record.path === "css/style-vs-main.css" || record.path.startsWith("css/legacy-vs/"))
+    .map(record => record.path),
+};
+
 const extensionSummary = Object.values(records.reduce((summary, record) => {
   const key = record.extension || "без расширения";
   summary[key] ??= { extension: key, files: 0, lines: 0, bytes: 0 };
@@ -105,6 +132,7 @@ const report = {
   normalizedDuplicates,
   largeFiles,
   inlineHtmlCode,
+  interfaceStandards,
   supabase: {
     rootSqlFiles: rootSupabaseSql,
     migrationFiles: migrationSql.length,
@@ -127,6 +155,10 @@ const markdown = [
   `- Совпадений после удаления комментариев и пробелов: ${normalizedDuplicates.length}`,
   `- Крупных файлов: ${largeFiles.length}`,
   `- HTML-файлов со встроенным кодом: ${inlineHtmlCode.length}`,
+  `- Таблиц с общим стандартом: ${interfaceStandards.tables.standardized} из ${interfaceStandards.tables.total - interfaceStandards.tables.internal}`,
+  `- Нарушений табличного стандарта: ${interfaceStandards.tables.violations.length}`,
+  `- Перехватов браузерного поиска: ${interfaceStandards.browserFindOverrides.length}`,
+  `- Устаревших VS-стилей: ${interfaceStandards.legacyVsStylesheets.length}`,
   `- Исторических SQL-файлов вне migrations: ${rootSupabaseSql.length}`,
   `- Миграций: ${migrationSql.length}`,
   "",

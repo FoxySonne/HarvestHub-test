@@ -49,14 +49,9 @@ function escapeHtml(value) {
 
 function setMessage(id, text, type = "info") {
   const element = byId(id);
-  if (!element) return;
-  if (type === "error" && text) {
-    element.textContent = "";
-    window.harvestHubNotifications?.error(text, "Не удалось обработать заявку VS.");
-    return;
-  }
-  element.textContent = text;
-  element.dataset.type = type;
+  window.harvestHubNotifications?.renderMessage(element, text, type, {
+    fallback: "Не удалось обработать заявку VS."
+  });
 }
 
 function canReview(context) {
