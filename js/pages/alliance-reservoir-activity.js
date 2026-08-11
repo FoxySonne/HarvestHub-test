@@ -12,7 +12,7 @@ import {
   closeReservoirWeek
 } from "../alliance/reservoir-api.js?v=20260726-role-batch-1";
 import { escapeHtml } from "../alliance/view.js?v=20260726-role-batch-1";
-import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
+import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260811-fullscreen-viewport-1";
 
 const byId = id => document.getElementById(id);
 const pad = value => String(value).padStart(2, "0");

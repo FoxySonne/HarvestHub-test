@@ -4,7 +4,7 @@ import {
   fillAllianceCompactHeader,
   getActiveAllianceId
 } from "../alliance/page-context.js?v=20260728-membership-periods-1";
-import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
+import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260811-fullscreen-viewport-1";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const byId = id => document.getElementById(id);
