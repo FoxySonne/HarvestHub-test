@@ -12,7 +12,7 @@ import {
   canEditAlliance,
   getActiveAllianceId
 } from "../alliance/page-context.js?v=20260728-membership-periods-1";
-import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260721-1";
+import { setAllianceTableFullscreen } from "../alliance/fullscreen-table.js?v=20260811-fullscreen-viewport-1";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const RANK_WEIGHT = { "Р5": 5, "Р4": 4, "Р3": 3, "Р2": 2, "Р1": 1 };

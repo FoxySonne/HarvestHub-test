@@ -1,7 +1,7 @@
 import { fetchAllianceSquadPower, saveAllianceSquadPower, saveAllianceSquadPowerBatch, setAlliancePowerSeasonStart } from "./power-api.js?v=20260726-power-batch-1";
 import { ACTIVE_ALLIANCE_STORAGE_KEY } from "./config.js";
 import { escapeHtml } from "./view.js?v=20260726-power-batch-1";
-import { setAllianceTableFullscreen } from "./fullscreen-table.js?v=20260721-1";
+import { setAllianceTableFullscreen } from "./fullscreen-table.js?v=20260811-fullscreen-viewport-1";
 
 const state = {
   client: null,
