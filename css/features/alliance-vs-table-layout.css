@@ -23,12 +23,6 @@
   box-shadow: 0 1px 0 var(--border);
 }
 
-#vsCurrentTableContainer.is-alliance-table-fullscreen,
-#vsStatsTableContainer.is-alliance-table-fullscreen {
-  height: auto;
-  max-height: none;
-}
-
 #vsCurrentTableContainer .vs-table,
 #vsStatsTableContainer .vs-table {
   margin: 0;

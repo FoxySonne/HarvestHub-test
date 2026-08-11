@@ -21,7 +21,6 @@
     min-height: min(560px, calc(100svh - 96px));
   }
 
-  body:has(#page-content .alliance-subpage) .is-alliance-table-fullscreen,
   body:has(#page-content .alliance-subpage) .power-statistics-card.is-expanded .power-table-wrap {
     height: auto;
     min-height: 0;

@@ -89,8 +89,7 @@ td,
 }
 
 .power-statistics-card.is-expanded .power-table-wrap,
-.vs-statistics-card.is-expanded .vs-table-wrap,
-.is-alliance-table-fullscreen {
+.vs-statistics-card.is-expanded .vs-table-wrap {
   height: auto;
   max-height: none;
 }
