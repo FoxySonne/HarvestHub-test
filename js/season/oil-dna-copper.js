@@ -131,7 +131,7 @@ function opponentFieldsMarkup(index) {
   return `
     <label class="season-field" data-territory-opponent="${index}">
       <span>Соперник ${index}</span>
-      <input id="territoryOpponent${index}Score" data-score-input type="text" inputmode="decimal" placeholder="Счёт">
+      <input id="territoryOpponent${index}Score" data-score-input type="text" inputmode="decimal">
     </label>`;
 }
 
@@ -139,7 +139,7 @@ function lairOpponentFieldMarkup(index) {
   return `
     <label class="season-field" data-territory-lair-opponent="${index}">
       <span>Соперник ${index}</span>
-      <input id="territoryLairOpponent${index}Score" data-score-input data-score-required-unit="true" type="text" inputmode="decimal" placeholder="Счёт">
+      <input id="territoryLairOpponent${index}Score" data-score-input data-score-required-unit="true" type="text" inputmode="decimal">
     </label>`;
 }
 
