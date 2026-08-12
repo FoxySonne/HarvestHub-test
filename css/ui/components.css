@@ -226,12 +226,12 @@
 }
 
 .data-table thead th[data-column-kind="player"] {
-  z-index: 7;
+  z-index: 7 !important;
   background: var(--panel) !important;
 }
 
 .data-table [data-column-kind="player"],
-.data-table [data-column-kind="player"] > :where(strong, small, span, a) {
+.data-table [data-column-kind="player"] :where(strong, small, span, a) {
   word-break: normal !important;
   overflow-wrap: anywhere !important;
   white-space: normal !important;
@@ -352,8 +352,8 @@
   }
 
   .data-table [data-column-kind="player"] {
-    width: 132px;
-    min-width: 132px;
-    max-width: 132px;
+    width: 112px;
+    min-width: 112px;
+    max-width: 112px;
   }
 }

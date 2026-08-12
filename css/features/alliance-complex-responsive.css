@@ -315,8 +315,10 @@
   .vs-table-wrap,
   .reservoir-table-wrap,
   .advanced-access-table-wrap {
+    width: calc(100% + (var(--card-padding-responsive) * 2));
+    max-width: none;
     margin-inline: calc(var(--card-padding-responsive) * -1);
-    padding-inline: var(--card-padding-responsive);
+    padding-inline: 0;
   }
 
   .power-statistics-card.is-expanded,
